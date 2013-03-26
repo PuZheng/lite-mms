@@ -1,0 +1,85 @@
+{% extends "layout.html" %}
+{% block custom_external %}
+    <script type="text/javascript">
+        $(function () {
+            {% if work_command.urgent %}
+                $("#urgent-input").attr("checked", "checked");
+            {% endif %}
+            $("#procedure").val({{ work_command.procedure.id }});
+            {% if work_command.status == 2 %}
+                $("button").click(function () {
+                    location.href = "{{ purl }}"
+                });
+            {% endif %}
+            $("#department_id").val({{ default_department_id }});
+            var default_depart = $('#department_id option:selected').html();
+            $("#department_id").change(function(){
+                if ($("#department_id").val() != {{ default_department_id }}){
+                    alert("产品的默认车间为"+default_depart);
+                }
+            });
+            var departments = {{ department_list|tojson|safe }};
+            function update_procedure() {
+                $("#procedure_id").empty();
+                var selected_department_id = $("#department_id").val();
+                for (i=0; i < departments.length; ++i) {
+                    if (departments[i].id == selected_department_id) {
+                        var procedure_list = departments[i].procedure_list;
+                        for (j=0; j < procedure_list.length; ++j) {
+                            $("#procedure_id").append("<option value=" + procedure_list[j].id + ">" + procedure_list[j].name + "</option>");
+                        }
+                    }
+                }
+            }
+            update_procedure(); 
+            $("#department_id").change(update_procedure);
+        });
+    </script>
+{% endblock %}
+{% block body %}
+    <div class="ym-wrapper">
+        <div class="wbox">
+            <form class="ym-form linearize-form"
+                  action="{{ url_for('manufacture.schedule') }}"
+                  method="POST">
+                <div class="ym-fbox-text">
+                    <label><b>数量(单位:{{ work_command.unit }})</b></label>
+                    {{ work_command.org_cnt }}
+                </div>
+                <div class="ym-fbox-text">
+                    <label for="department_id"><b>车间</b></label>
+                    <select size="1" name="department_id" id="department_id"
+                            required='required'>
+                    {% for department in department_list %}
+                        <option value="{{department.id}}">{{department.name}}</option>
+                    {% endfor %}
+                    </select>
+                </div>
+                <div class="ym-fbox-text">
+                    <label for="tech_req"><b>技术要求</b></label>
+                    <input size="10" name="tech_req" id="tech_req"
+                           type="text" value="{{ work_command.tech_req }}"/>
+                </div>
+                <div class="ym-fbox-check">
+                    <input name="urgent" id="urgent-input"
+                           type="checkbox"/>
+                    <label for="urgent-input">加急</label>
+                </div>
+                <div class="ym-fbox-text">
+                    <label for="procedure_id"><b>工序：</b></label>
+                    <select size="1" name="procedure_id" id="procedure_id"
+                            required='required'>
+                        <!--<option value="" selected="selected"-->
+                                <!--disabled="disabled">请选择-->
+                        <!--</option>-->
+                    </select>
+                </div>
+                <input type="hidden" name="id" value="{{ work_command.id }}"/>
+                <input type="hidden" name="purl" value="{{ purl }}"/>
+                <button class="ym-button ym-save">确定</button>
+                <a class="ym-button ym-delete" href="{{ purl }}">返回</a>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}

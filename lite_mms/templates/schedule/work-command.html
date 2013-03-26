@@ -1,0 +1,82 @@
+<script type="text/javascript">
+    $(function () {
+        {% if sub_order.urgent %}
+            $("#urgent-input").attr("checked", "checked");
+        {% endif %}
+        {% if sub_order.returned %}
+            $("#procedure").val(9);
+        {% endif %}
+        function f() {
+            var value = $("#schedule_count").val();
+            value = Math.min(value, {{ sub_order.remaining_quantity }});
+            $("#schedule_count").val(value);
+            value = Math.round(value / {{ sub_order.remaining_quantity }} * {{ sub_order.remaining_weight }});
+            $("#schedule_weight").val(value);
+        }
+
+        $("#schedule_count").change(f);
+        $("#schedule_count").keyup(f);
+        $("button[type=button]").click(function () {
+            $("#pre-schedule-dialog").dialog("close");
+        });
+    });
+</script>
+<form class="ym-form  ym-columnar linearize-form"
+      action="{{ url_for('schedule.work_command') }}"
+      method="POST">
+    <div class="ym-fbox-text">
+        <label>默认车间</label>
+        {{ department.name }}
+    </div>
+    {% if not sub_order.measured_by_weight %}
+        <div class="ym-fbox-text"><p class="box info">平均每（{{ sub_order.unit }}）重量为：{{ sub_order.weight/sub_order.quantity }}（KG）</p>
+        </div>
+        <div class="ym-fbox-text">
+            <label for="schedule_count"><b>排产数量(单位:
+                {{ sub_order.unit }})</b></label>
+            <input size="10" name="schedule_count"
+                   id="schedule_count" type="number"
+                   value="{{ sub_order.remaining_quantity }}"
+                   max="{{ sub_order.remaining_quantity }}" min="1"
+                   required="required"/>
+        </div>
+    {% endif %}
+    <div class="ym-fbox-text">
+        <label for="schedule_weight"><b>排产重量(KG)</b></label>
+        <input size="10" name="schedule_weight"
+               id="schedule_weight" type="number"
+               value="{{ sub_order.remaining_weight }}"
+               max="{{ sub_order.remaining_weight }}" min="1"
+                {% if not sub_order.measured_by_weight %}
+               readonly="readonly"
+                {% endif %}
+               required="required"/>
+    </div>
+
+    <div class="ym-fbox-text">
+        <label for="tech_req"><b>技术要求</b></label>
+        <input size="10" name="tech_req" id="tech_req"
+               type="text" value="{{ sub_order.tech_req }}"/>
+    </div>
+    <div class="ym-fbox-check">
+        <input name="urgent" id="urgent-input"
+               type="checkbox"/>
+        <label for="urgent-input">加急</label>
+    </div>
+    {% if not sub_order.returned %}
+        <div class="ym-fbox-text">
+            <label for="procedure"><b>工序</b></label>
+            <select size="1" name="procedure" id="procedure"
+                    required='required'>
+                {% for procedure in procedure_list %}
+                    <option value="{{ procedure.id }}">{{ procedure.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    {% endif %}
+    <input type="hidden" name="id" value="{{ sub_order.id }}"/>
+    <input type="hidden" name="order_id" value="{{ sub_order.order_id }}">
+    <button class="ym-button ym-save">添加</button>
+    <button type="button" class="ym-button ym-delete">返回</button>
+</form>
+

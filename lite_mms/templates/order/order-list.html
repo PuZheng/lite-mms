@@ -1,0 +1,253 @@
+{% extends "layout.html" %}
+{% block custom_external %}
+<style>
+    #order-list {
+        width: 100em;
+    }
+    .ym-vlist {
+        margin-top: 2em; 
+    }
+    .ym-vlist h5 {
+        background: #F7F7F0;
+    }
+    .ym-vlist ul {
+        background: #F7F7F0;
+    }
+</style>
+<script type="text/javascript">
+    $(function () {
+        $("select[name=sbp]").val({{ request.args.get("sbp", 1) }});
+        function f() {
+            if ($("select[name=sbp]").val() != 2) {
+                $("#can_finish_div").hide();
+                $("#can_finish_div input").attr("disabled", true);
+                $("#can_finish_div select").attr("disabled", true);
+            } else {
+                $("#can_finish_div").show();
+                $("#can_finish_div input").attr("disabled", false);
+                $("#can_finish_div select").attr("disabled", false);
+            {% if request.args.get('customer') %}
+                $("select[name='customer']").val({{ request.args.get('customer') }});
+                $("input[type='date']").val('{{ request.args.get('deadline') }}');
+            {% endif %}
+            }
+        }
+        f();
+        $("select[name=sbp]").change(function(){f();});
+        $("#check_all").click(function () {
+            $("input:checkbox[name='order_id']").attr("checked", this.checked);
+        });
+        $("#act_button").click(
+                function () {
+                    if ($("input[name='order_id']:checked").val() == undefined) {
+                        alert("请选择需要盘点的订单");
+                        return false;
+                    }
+                }
+            );
+        $("#time_span").val("{{ time_span }}");
+        $("#time_span").change(
+            function () {
+              $(this).parents("form").submit();
+            });
+        $("#act_dispatch").click(
+            function () {
+                if ($("input:checkbox[name='order_id'][checked='checked']").length) {
+                    if (confirm("{{ _("您确认要下发订单") }}？")) {
+                        $("#act_form").submit();
+                    }
+                } else {
+                    alert("{{ _("请选择要下发的订单") }}");
+                    return false;
+                }
+                });
+        setTimeout(function () {
+            $(".flash").fadeOut("slow")
+        }, 3000);
+        $(document).tooltip();
+        $("#customer_dialog").dialog({
+            autoOpen: false,
+            height: 360,
+            buttons: {
+                确认: function () {
+                    $(this).dialog("close");
+                    $("input[name='customer_id']").val($("#customer_dialog input[name='customer_id']:checked").val()); 
+                    $(".filters form").submit();
+                },
+                取消: function () {
+                    $(this).dialog("close");
+                }
+            }
+        });
+        $("#customer_name").focusin(function () {
+            $("#customer_dialog").dialog("open");
+        });
+        $("#customer_dialog input:first").keyup(function () {
+            var needle = $(this).val(); 
+            if (needle.length == 0) {
+                $("#customer_dialog tr").show();
+            } else {
+                $("#customer_dialog tr").each(function (idx, e) {
+                    if (idx == 0) {
+                        return;
+                    }
+                    var haystack = $(e).children("td:last").children("input").val().toLowerCase();
+                    if (haystack.search(needle) == 0) {
+                        $(e).show() 
+                    } else {
+                        $(e).hide();    
+                    }
+                });       
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% block body %}
+<div class="ym-wrapper" id="order-list">
+<div class="ym-grid">
+    <div class="ym-g960-2 nav-wrapper ym-gl">
+        <nav class="ym-vlist ym-gbox">
+            <h5 class="ym-vtitle"><em>--{{ _("订单分类") }}--</em></h5>
+            <ul>
+                {% if category == "all"%}
+                <li class="active"><strong>{{ _("所有订单") }}</strong></li>
+                {% else %}
+                <li><a href="?category=all">{{ _("所有订单") }}</a></li>
+                {% endif %}
+                {% if category == "undispatched" or not category %}
+                <li class="active"><strong>{{ _("待下发订单") }}</strong></li>
+                {% else %}
+                <li><a href="?category=undispatched" title="{{ _("未经收发员下发的订单，调度员不能排产") }}">{{ _("待下发订单") }}</a></li>
+                {% endif %}
+                {% if category == "deliverable" %}
+                <li class="active"><strong>{{ _("可发货订单") }}</strong></li>
+                {% else %}
+                <li><a href="?category=deliverable" title="{{ _("订单中全部或部分产品可以发货，注意请催促质检员及时打印仓单") }}">{{ _("可发货订单") }}</a></li>
+                {% endif %}
+                {% if category == "accountable" %}
+                <li class="active"><strong>{{ _("待盘点订单") }}</strong></li>
+                {% else %}
+                <li><a href="?category=accountable" title="{{ _("订单已经生产完毕（指已经全部分配给车间生产，最终生产完成，并通过质检），但是仍然有部分仓单没有发货。盘点后，这部分仓单会自动关闭。") }}">{{ _("待盘点订单") }}</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    <div class="ym-g960-12 ym-gl">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="success box flash">{{ messages[0] }}</div>
+        {% endif %}
+    {% endwith %}
+        <div class="ym-grid filters">
+            <form id="" action="{{ url_for('order.order_list') }}" method="GET" class="form-search">
+                <input type="hidden" name="category" value="{{category}}"/>
+                <span>
+                    {{ _("创建时间范围") }}:
+                    <select id="time_span" name="time_span">
+                        <option value="day">当天</option>
+                        <option value="week">本周</option>
+                        <option value="month">本月</option>
+                        <option value="unlimited">不限</option>
+                    </select>
+                </span>
+                <input type="hidden" name="customer_id" value="{%if customer %}{{customer.id}}{% else %}0{% endif %}" />
+                <span class="customer-name-input">
+                    {{ _("客户名称") }}:
+                    <input type="text" id="customer_name" value="{%if customer %}{{ customer.name }}{% else %}不限客户{% endif %}" >
+                </span>
+          </form>
+        </div>
+        <div>
+        {% if order_list %}
+        <form action="{{ url_for('order.order_list') }}" method="POST" id="act_form">
+            <table id="order_list_table" class="bordertable">
+                <thead>
+                    <tr>
+                        {% if category == "accountable" or category == "undispatched" %}
+                        <th><input type="checkbox" name="check_all" id="check_all"></th>
+                        {% endif %}
+                        <th>订单编号</th>
+                        <th>公司名称</th>
+                        <th>创建时间</th>
+                        <th>是否加急</th>
+                        <th>收货单号</th>
+                        <th>收货重量</th>
+                        <th>未预排产</th>
+                        <th>生产中</th>
+                        <th>已发货</th>
+                        <th>待发货</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for order in order_list %}
+                    <tr {% if not order.refined %}class="warning" title="此订单没有子订单或者有一个子订单没有填写交货日期, 请先完善此订单"{% endif %}>
+                    {% if category == "accountable" or category == "undispatched" %}
+                        <td>
+                        {% if order.refined %}
+                            <input type="checkbox" name="order_id" value="{{ order.id }}">
+                        {% endif %}
+                        </td>
+                    {% endif %}
+                        <td>
+                            {% if order.warning %}
+                                <img src="{{ url_for("static",filename="alert.jpg") }}" title="此订单的收货重量大于实际的重量" alt="警告">
+                            {% endif %}
+                            <a href="{{ url_for('order.order', id=order.id, purl=request.url)}}" {% if order.warning %}
+                            title = "此订单的收货重量大于实际的重量"
+                            {% endif %}>{{ order.customer_order_number }}</a>
+                        </td>
+                        <td>{{ order.customer.name }}</td>
+                        <td>{{ order.create_time|_datetimeformat("%Y-%m-%d %H:%M") }}</td>
+                        <td>{% if order.urgent %}是{% else %}否{% endif %}</td>
+                        <td><a href="{{ url_for('cargo.goods_receipt', id=order.goods_receipt_id, purl=request.url) }}">{{ order.goods_receipt.receipt_id }}</a></td>
+                        <td>{{ order.net_weight }}(公斤)</td>
+                        <td>{{ order.remaining_weight }}(公斤)</td>
+                        <td>{{ order.manufacturing_weight }}(公斤)</td>
+                        <td>{{ order.delivered_weight }}(公斤)</td>
+                        <td>{{ order.to_deliver_weight }}(公斤)</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% from "pagination.html" import render_pagination %}
+        {{ render_pagination(pagination) }}
+        <span>
+            <input type="hidden" name="customer_id" value="{% if customer %}{{ customer.id }}{% else %}0{% endif %}"/>
+        {% if category == "undispatched" %}
+            <input type="hidden" name="act" value="dispatch"/>
+            <input id="act_dispatch" type="button" class="ym-button" value="{{ _("下发") }}" />
+        {% elif category == "accountable" %}
+            <input type="hidden" name="act" value="account"/>
+            <input type="submit" id="act_account" class="ym-button" value="{{ _("盘点") }}" />
+        {% endif %}
+        </span>
+        </form>
+        {% else %}
+            <p class="highlight"><strong>* {{ _("对不起，没有符合条件的订单") }}</strong></p>
+        {% endif %}
+        </div>
+  </div>
+    </div>
+    </div>
+<div id="customer_dialog" title="选择客户">
+    <form action="#">
+        <input type="text" placeholder="输入客户名称拼音首字母搜索..."/>
+        <table class="narrow">
+            <tbody>
+                <tr>
+                    <td><input type="radio" name="customer_id" value="0" checked/></td>
+                    <td>不限客户<input type="hidden" value=""></td>
+                </tr>
+            {% for c in customer_list %}
+                <tr>
+                    <td><input type="radio" name="customer_id" value="{{ c.id }}"/></td>
+                    <td>{{c.name}}<input type="hidden" value="{{ c.abbr }}"></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </form>
+</div>
+
+{% endblock %}

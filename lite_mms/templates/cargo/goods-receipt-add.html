@@ -1,0 +1,37 @@
+<div id="new-receipt-dialog" title="{{ _("创建收货单") }}">
+    <form class="ym-form" action="{{ url_for("cargo.goods_receipt") }}"
+          method="POST">
+        <fieldset>
+            <div class="ym-gbox ym-fbox-select">
+                <label for="customer">
+                    <b>请选择公司名称</b><sup class="ym-required"
+                                       title="请选择公司名称.">*</sup>
+                </label>
+                <select name="customer" id="customer" size="1"
+                        required="required">
+                </select>
+            </div>
+
+            <div class="ym-gbox ym-fbox-select">
+                <label for="order_type"><b>请选择订单模板</b><sup class="ym-required"
+                                                         title="请选择模板.">*</sup>
+                </label>
+                <select name="order_type" id="order_type" size="1"
+                        required="required">
+                    {% for item in order_types %}
+                        <option value="{{ item.id }}">{{ item.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="ym-fbox-button">
+                <button class="ym-button button-close">
+                    提交
+                </button>
+                <button class="ym-button button-close" type="button">返回
+                </button>
+            </div>
+            <input type="hidden" id="unload_session_id"
+                   name="unload_session_id" value=""/>
+        </fieldset>
+    </form>
+</div>

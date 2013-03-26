@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block custom_external %}
+
+{% endblock %}
+{% block body %}
+    <div class="ym-wrapper">
+        <div class="ym-wbox">
+            <table class="bordertable">
+                <thead>
+                <tr>
+                    <th>工单编号</th>
+                    <th>车间</th>
+                    <th>班组</th>
+                    <th>重量</th>
+                    <th>数量</th>
+                    <th>状态</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for work_command in work_list %}
+                    <tr>
+                        <td>{{ work_command.id }}</td>
+                        <td>{% if work_command.department != none %}
+                            {{ work_command.department.name }}
+                        {% endif %} </td>
+                        <td>{% if work_command.team != none %}
+                            {{ work_command.team.name }}
+                        {% endif %} </td>
+                        <td>{{ work_command.org_weight }}</td>
+                        <td>{{ work_command.org_cnt }}</td>
+                        <td>{{ work_command.status_name }}
+                        </td>
+                    </tr>
+                {% endfor %}
+                <tbody>
+            </table>
+{#            {% from "pagination.html" import render_pagination %}#}
+{#            {{ render_pagination(pagination) }}#}
+            <div><a class="ym-button ym-delete" href="{{ request.headers.get("referer") }}">返回</a></div>
+        </div>
+    </div>
+{% endblock %}

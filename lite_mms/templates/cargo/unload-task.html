@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+{% block custom_external %}
+    <script type="text/javascript">
+        $(function () {
+            var products = {{ products|safe }};
+            var selected_product_type = $("#product_type").val();
+            $.each(products[selected_product_type], function (idx, entry) {
+                $("#product").append('<option value="' + entry.id + '">' + entry.name + '</option>');
+            });
+            var product_id = {{ task.product.id }};
+            $("#product").children().filter("option[value=" + product_id + "]").attr("selected", "selected");
+            $("#product_type").change(function (ui) {
+                var selected_product_type = $("#product_type").val();
+                $("#product").empty();
+                $.each(products[selected_product_type], function (idx, entry) {
+                    $("#product").append("<option value=" + entry.id + ">" + entry.name + "</option>");
+                    $("#product").children().filter("option[value=" + product_id + "]").attr("selected", "selected");
+                });
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block body %}
+    <div class="ym-wrapper">
+        <div class="ym-wbox">
+            <div class="box success">
+                车辆
+                <mark>{{ plate }}</mark>
+                在卸货点
+                <mark>{{ task.harbor.name }}</mark>
+                完成了一次属于客户
+                <mark>{{ task.customer.name }}</mark>
+                的卸货任务
+            </div>
+            <form class="ym-form linearize-form ym-columnar" method="POST"
+                  action="{{ url_for('cargo.unload_task') }}">
+
+                <div class="ym-fbox-select">
+                    <label for="product_type"><b>产品类型：</b></label>
+                    <select id="product_type" name="product_type">
+                        {% for pt in product_types %}
+                            <option value="{{ pt.id }}" {% if pt.id == task.product.type_id %}selected="selected"{% endif %}>{{ pt.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="ym-fbox-select">
+                    <label for="product"><b>产品名称：</b></label>
+                    <select name="product" id="product">
+                    </select>
+                </div>
+
+                <div class="ym-fbox-text">
+                    <label><b>上次称重重量(KG)</b> </label>{{ task.last_weight }}
+                </div>
+
+                <div class="ym-fbox-text">
+                    <label><b><strong>上次称重是否车上有人:</strong></b> </label>
+                    <strong>{{ task.unload_session.with_person_des }}</strong>
+                </div>
+                <div class="ym-fbox-text">
+                    <label for="weight"><b>本次称重的重量为(KG)</b></label> <input
+                        type="number"
+                        name="weight" id="weight" size="20" required="True"
+                        min="1" max="{{ task.last_weight - 1 }}"/>
+                </div>
+                <div class="ym-fbox-text">
+                    <label for="pic-url">
+                        <b>此次卸货的图片</b>
+                    </label>
+                    <img class="float-left bordered" src="{{ task.pic_url }}"
+                         alt="图片" id="pic-url">
+                </div>
+                <div class="ym-fbox-button">
+                    <input type="hidden" name="task_id" id="task_id"
+                           value="{{ task.id }}"/>
+                    <input type="submit" name="submit" class="ym-button"
+                           value="提交"/>
+                    <input type="button" class="ym-button"
+                           onclick="window.history.back()" value="返回"/>
+                </div>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+
+{% block body %}
+    <div class="ym-wrapper">
+        <div class="ym-wbox">
+            <form class="ym-form" action="{{ url_for("auth.login") }}"
+                  method="POST">
+                <div class="ym-fbox-text ym-error" role="alert"
+                     aria-live="assertive">
+                    <p class="ym-message">{{ error }}</p>
+                </div>
+                <div class="ym-fbox-text">
+                    <label for="username">{{ _("姓名") }}<sup
+                            class="ym-required">*</sup>:</label>
+                    <input type="text" id="username" name="username"
+                           required="true" class="input-medium"/>
+                </div>
+
+                <div class="ym-fbox-text">
+                    <label for="password">{{ _("密码") }}<sup
+                            class="ym-required">*</sup>:</label>
+                    <input type="password" id="password" name="password"
+                           required="true" class="input-medium"/>
+                </div>
+
+
+                <div class="ym-fbox-button">
+                    <input type="submit" class="ym-button"
+                           value="{{ _("登录") }}" id="submit" name="submit"/>
+                </div>
+                {% if next_url %}
+                    <input type="hidden" name="next_url" value="{{ next_url }}">
+                {% endif %}
+            </form>
+        </div>
+    </div>
+{% endblock %}

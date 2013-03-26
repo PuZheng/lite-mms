@@ -1,0 +1,157 @@
+{% extends "layout.html" %}
+{% block custom_external %}
+<script type="text/javascript">
+    $(function () {
+        function makeRed(select, value) {
+            select.each(function (i) {
+                if ($.trim($(this).text()) == value) {
+                    $(this).css("color", "red")
+                }
+            });
+        }
+        makeRed($(".td-printed"), "否");
+        $("img").height("120px");
+        $("#print_button").click(function () {
+            window.location = "store-bill" + "/" + $("input[name='store_bill_id']:checked").val();
+            });
+        $("#customer_dialog").dialog({
+            autoOpen: false,
+            height: 360,
+            buttons: {
+                "确认": function () {
+                    $(this).dialog("close");
+                    $("#filters input[name='customer_id']").val($("#customer_dialog input[name='customer_id']:checked").val()); 
+                    $("#filters").submit();
+                },
+                "取消": function () {
+                    $(this).dialog("close");
+                }
+            }
+            });
+        $(".customer-name-input input").focusin(function () {
+            $("#customer_dialog").dialog("open");
+            return false;
+        });
+        $("select[name='time_span']").val("{{ time_span }}");
+        $("select[name='printed_plan']").val("{{ printed_plan }}");
+        $("select").change(function () {
+                $(this).parents("form").submit(); 
+                });
+        $("#customer_dialog input:first").keyup(function () {
+            var needle = $(this).val(); 
+            if (needle.length == 0) {
+                $("#customer_dialog tr").show();
+            } else {
+                $("#customer_dialog tr").each(function (idx, e) {
+                    if (idx == 0) {
+                        return;
+                    }
+                    var haystack = $(e).children("td:last").children("input").val().toLowerCase();
+                    if (haystack.search(needle) == 0) {
+                        $(e).show() 
+                    } else {
+                        $(e).hide();    
+                    }
+                });       
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% block body %}
+<div class="store-bill-list">
+    <form id="filters" action="{{ url_for('store_bill.store_bill_list') }}" class="ym-columnar">
+        时间范围:
+        <select name="time_span" class="time-span-select">
+            <option value="week">本周</option>
+            <option value="month">本月</option>
+            <option value="unlimited">不限</option>
+        </select>
+        打印情况:
+        <select name="printed_plan" id="printed_plan">
+            <option value="1">未打印</option>
+            <option value="0">全部</option>
+        </select>
+        <input type="hidden" name="customer_id" value="{% if customer %}{{customer.id}}{% else %}0{% endif %}" />
+        <span class="customer-name-input">
+            客户: 
+            <input type="text" title="点击修改" value="{% if customer %}{{ customer.name }}{% else %}不限客户{% endif %}" id="customer_name" />
+        </span>
+        <span class="highlight"><em>* 红色仓单代表未打印</em></span>
+    </form>
+    <table class="bordertable">
+        <thead>
+            <tr>
+                <th></th>
+                <th>仓单号</th>
+                <th>客户</th>
+                <th>产品</th>
+                <th>重量</th>
+                <th>数量</th>
+                <th>订单号</th>
+                <th>质检员</th>
+                <th>创建时间</th>
+                <th>工单号</th>
+                <th>存放点</th>
+                <th>图片</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for store_bill in store_bills %}
+            <tr {% if not store_bill.printed %}class="highlight" title="尚未打印"{% endif %}>
+                <td>
+                    <div class="ym-fbox-check center">
+                        <input type="radio" name="store_bill_id" value="{{store_bill.id}}" {% if loop.first %}checked{% endif %}/>
+                    </div>
+                </td>
+                <td>
+                    <a href="{{ url_for('store_bill.store_bill', id_=store_bill.id) }}">{{ store_bill.id }}</a>
+                </td>
+                <td>{{ store_bill.customer.name }}</td>
+                <td>{{ store_bill.product_name }}</td>
+                <td>{{ store_bill.weight }}(公斤)</td>
+                <td>{{ store_bill.quantity }}({{ store_bill.sub_order.unit }})</td>
+                <td>{{ store_bill.sub_order.order.customer_order_number }}</td>
+                <td>{{ store_bill.qir.reporter.username }}</td>
+                <td>{{ store_bill.create_time|_datetimeformat("%Y-%m-%d") }}</td>
+                <td>
+                    <a href="{{ url_for('manufacture.work_command', id_=store_bill.qir.work_command.id, backref=request.url) }}">{{ store_bill.qir.work_command_id }}</a>
+                </td>
+                <td>{{ store_bill.harbor.name if store_bill.harbor or "" }}</td>
+                <td>{% if store_bill.pic_path %}
+                    <a href="{{ store_bill.pic_url }}"
+                       class="fancybox" rel="group"
+                       title="{{ store_bill.product_name }}">
+                        <img src="{{ store_bill.pic_url }}"
+                             class="bordered"
+                             alt="{{ store_bill.product_name }}"/>
+                    </a>{% endif %}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <input type="hidden" name="purl"/>
+    {% from "pagination.html" import render_pagination %}
+    {{ render_pagination(pagination) }}
+    <button class="ym-button" id="print_button">打印</button>
+</div>
+<div id="customer_dialog" title="选择客户">
+    <form action="#">
+        <input type="text" placeholder="输入客户名称拼音首字母搜索..."/>
+        <table class="narrow">
+            <tbody>
+                <tr>
+                    <td><input type="radio" name="customer_id" value="0" checked/></td>
+                    <td>不限客户<input type="hidden" value=""></td>
+                </tr>
+            {% for c in customer_list %}
+                <tr>
+                    <td><input type="radio" name="customer_id" value="{{ c.id }}"/></td>
+                    <td>{{c.name}}<input type="hidden" value="{{ c.abbr }}"></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </form>
+</div>
+{% endblock %}

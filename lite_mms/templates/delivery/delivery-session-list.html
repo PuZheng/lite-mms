@@ -1,0 +1,100 @@
+{% extends "layout.html" %}
+
+{% block custom_external %}
+    <script src="{{ url_for("static", filename="js/new-consignment-dialog.js") }}"></script>
+    <script type="text/javascript">
+        $(function () {
+            $('#delivery_session_id').val($('input[type="radio"]:checked').val());
+            $('input[type="radio"]').click(function () {
+                // insert the selected session id into new receipt dialog
+                $('#delivery_session_id').val($(this).val());
+            });
+            $('#view-consignment-dialog').dialog({
+                autoOpen:false
+            });
+            $('#view-consignment').click(function () {
+                // pop a list of generated goods consignment
+                var session_id = $("#delivery_session_id").val();
+                if (jQuery.type(session_id) == "undefined") {
+                    alert("当前无记录");
+                    return;
+                }
+                var dialog = $("#view-consignment-dialog");
+                $("#view-consignment-dialog").children('ul').children('li').remove();
+                $.getJSON("/delivery/ajax/consignment-list?delivery_session_id=" +
+                        session_id,
+                        function (data) {
+                            dialog.children("ul").empty();
+                            $.each(data, function (idx, v) {
+                                dialog.children("ul").append(
+                                        '<li><a href="{{ url_for('delivery.consignment') }}' + v.id + '?url=' + encodeURIComponent(location.href) + '">' + v.consignment_id + '(' + v.customer + ')' + '</a></li>'
+                                )
+                                ;
+                            });
+                            $('#view-consignment-dialog').dialog("open");
+                        }).error(function (data) {
+                            alert(data.responseText);
+                        }
+                );
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block body %}
+    <div class="ym-wrapper">
+        <div class="ym-wbox">
+            <div class="ym-fbox-button">
+                <a href="{{ url_for('delivery.session_add') }}"
+                   class="ym-button ym-add">{{ _("创建会话") }}</a>
+                <a href="{{ url_for('delivery.store_bill_add') }}"
+                   class="ym-button ym-next">{{ _("查看仓单") }}</a>
+                <button class="ym-button ym-edit"
+                        id="new-consignment">{{ _("创建发货单") }}</button>
+                <button class="ym-button ym-next"
+                        id="view-consignment">
+                    {{ _("查看发货单") }}</button>
+            </div>
+            <table class="bordertable">
+                <thead>
+                <tr>
+                    <th>&nbsp;</th>
+                    <th>{{ _("编号") }}</th>
+                    <th>{{ _("车牌号") }}</th>
+                    <th>{{ _("创建时间") }}</th>
+                    <th>{{ _("结束时间") }}</th>
+                    <th>{{ _("状态") }}</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for session in sessions %}
+                    <tr>
+                        <td><input type="radio" value="{{ session.id }}"
+                                   name="session_group"
+                                {% if loop.first %} checked=true {% endif %}/>
+                        </td>
+                        <td>
+                            <a href="
+                            {{ url_for('delivery.session_detail', id=session.id) }}">{{ session.id }}</a>
+                        </td>
+                        <td>{{ session.plate }}</td>
+                        <td>{{ session.create_time }}</td>
+                        <td>{{ session.finish_time|default("----", true)}}</td>
+                        <td>
+                            {{ session.status }}
+                        </td>
+                    </tr>
+                {% endfor %}
+                <tbody>
+            </table>
+            {% from "pagination.html" import render_pagination %}
+            {{ render_pagination(pagination) }}
+        </div>
+    </div>
+    {% include "delivery/consignment-add.html" %}
+
+    <div id="view-consignment-dialog" title="{{ _("查看发货单") }}">
+        <ul></ul>
+    </div>
+
+{% endblock %}

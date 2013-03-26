@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+{% block custom_external %}
+    <script src="{{ url_for("static", filename="js/combobox.js") }}"></script>
+    <script type="text/javascript">
+        $(function(){
+            var plate_list={{ working_plate_list|safe }};
+            $("form").submit(function(){
+                for (l in plate_list){
+                    if($("#combobox").val()==plate_list[l]){
+                        alert("该车正在卸货或者装货中，不能重复选择");
+                        return false;
+                    }
+                }
+            });
+        })
+    </script>
+    <style type="text/css">
+        .ui-combobox {
+            position: relative;
+            display: inline-block;
+        }
+
+        .ui-combobox-toggle {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            margin-left: 116px;
+            padding: 0;
+            /* adjust styles for IE 6/7 */
+            *height: 1.7em;
+            *top: 0.1em;
+        }
+
+        .ui-combobox-input {
+            margin: 0;
+            padding: 0.3em;
+        }
+        input#grossWeight{
+            width: 156px;
+        }
+
+    </style>
+{% endblock %}
+{% block body %}
+    <div class="ym-wrapper">
+        <div class="ym-wbox">
+            <form class="ym-form linearize-form ym-columnar" action=
+                    "{{ url_for('cargo.session_add') }}" method="POST">
+                <div class="ym-fbox-select ui-widget">
+                    <label for="combobox">车辆车牌号<sup class="ym-required"
+                                                    title="请选择车牌号.">*</sup>
+                    </label>
+                    <select name="plateNumber" id="combobox" size="1">
+                        <option value="" selected="selected"
+                                disabled="disabled">请选择
+                        </option>
+                        {% for item in plateNumbers %}
+                            <option value="{{ item }}">{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="ym-fbox-text">
+                    <label for="grossWeight">车辆毛重(KG)<sup class="ym-required"
+                                                          title="请输入车辆毛重.">*</sup></label>
+                    <input name="grossWeight" id="grossWeight" size="20"
+                           type="number" required="true" min="0" class="input-small">
+                </div>
+                <div class="ym-fbox-check">
+                    <label for="with_person">称重时车上是否有人<sup class="ym-required"
+                                                          title="如果有人请打钩">*</sup></label>
+                    <input type="checkbox" id="with_person" name="with_person"/>
+                </div>
+                <div class="ym-fbox-button">
+                    <button class="ym-button ym-save">提交</button>
+                    <a class="ym-button ym-delete"
+                       href="{{ url_for('cargo.unload_session_list') }}">返回</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}

@@ -1,0 +1,807 @@
+# -*- coding: utf-8 -*-
+from datetime import datetime
+from lite_mms.constants import STANDARD_ORDER_TYPE
+from lite_mms.constants.work_command import STATUS_DISPATCHING, HT_NORMAL
+import lite_mms.constants.cargo as cargo_const
+from lite_mms.database import db
+
+permission_and_group_table = db.Table("TB_PERMISSION_AND_GROUP",
+                                      db.Column("permission_name",
+                                                db.String(64),
+                                                db.ForeignKey(
+                                                    'TB_PERMISSION.name')),
+                                      db.Column("group_id", db.Integer,
+                                                db.ForeignKey("TB_GROUP.id")))
+
+user_and_group_table = db.Table('TB_ASSOCIATION',
+                                db.Column('user_id', db.Integer,
+                                          db.ForeignKey('TB_USER.id')),
+                                db.Column('group_id', db.Integer,
+                                          db.ForeignKey('TB_GROUP.id')))
+
+department_and_user_table = db.Table("TB_DEPARTMENT_AND_USER",
+                                     db.Column("department_id", db.Integer,
+                                               db.ForeignKey(
+                                                   'TB_DEPARTMENT.id')),
+                                     db.Column("user_id", db.Integer,
+                                               db.ForeignKey('TB_USER.id')))
+
+procedure_and_department_table = db.Table("TB_PROCEDURE_AND_DEPARTMENT",
+                                          db.Column("procedure_id", db.Integer,
+                                                    db.ForeignKey(
+                                                        "TB_PROCEDURE.id")),
+                                          db.Column("department_id",
+                                                    db.Integer,
+                                                    db.ForeignKey(
+                                                        "TB_DEPARTMENT.id")))
+
+class Permission(db.Model):
+    __tablename__ = "TB_PERMISSION"
+    name = db.Column(db.String(64), primary_key=True)
+
+    def __unicode__(self):
+        return self.name
+
+    def __repr__(self):
+        return "<Permission: %s>" % self.name.encode("utf-8")
+
+class Group(db.Model):
+    __tablename__ = "TB_GROUP"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(32), nullable=False, unique=True)
+    permissions = db.relationship("Permission",
+                                  secondary=permission_and_group_table)
+    default_url = db.Column(db.String(256))
+
+    def __init__(self, name, default_url="", group_id=None):
+        self.name = name
+        self.default_url = default_url
+        if group_id is not None:
+            self.group_id = group_id
+
+    def __unicode__(self):
+        return self.name
+
+    def __repr__(self):
+        return "<Group: %d>" % self.id
+
+class User(db.Model):
+    __tablename__ = "TB_USER"
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(32), nullable=False, unique=True)
+    password = db.Column(db.String(128), nullable=False)
+    groups = db.relationship("Group", secondary=user_and_group_table,
+                             backref="users")
+    tag = db.Column(db.String(32), nullable=True)
+
+    def __init__(self, username, password, groups, tag=""):
+        self.username = username
+        self.password = password
+        self.groups.extend(groups)
+        self.tag = tag
+
+    def __unicode__(self):
+        return self.username
+
+    def __repr__(self):
+        return "<User %d>" % self.id
+
+class UnloadSession(db.Model):
+    __tablename__ = "TB_UNLOAD_SESSION"
+
+    id = db.Column(db.Integer, primary_key=True)
+    plate = db.Column(db.String(32), db.ForeignKey('TB_VEHICLE.plate'))
+    vehicle = db.relationship("Vehicle")
+    gross_weight = db.Column(db.Integer, nullable=False)
+    with_person = db.Column(db.Boolean, default=False)
+    status = db.Column(db.Integer, default=cargo_const.STATUS_LOADING, nullable=False)
+    create_time = db.Column(db.DateTime, default=datetime.now)
+    finish_time = db.Column(db.DateTime)
+    #task_list = db.relationship(
+        #"UnloadTask", backref="unload_session",
+        #cascade="all, delete-orphan")
+    goods_receipt_list = db.relationship(
+        "GoodsReceipt", backref="unload_session",
+        cascade="all, delete-orphan"
+    )
+
+    #def __init__(self, plate, gross_weight, with_person=False, create_time=None,
+                 #finish_time=None):
+        #self.with_person = with_person
+        #self.plate = plate
+        #self.gross_weight = gross_weight
+        #self.create_time = create_time or datetime.now()
+        #self.finish_time = finish_time
+
+    def __unicode__(self):
+        return self.plate
+
+    def __repr__(self):
+        return "<UnloadSession %d>" % self.id
+
+class UnloadTask(db.Model):
+    __tablename__ = "TB_UNLOAD_TASK"
+
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.Integer,
+                           db.ForeignKey('TB_UNLOAD_SESSION.id')
+    )
+    unload_session = db.relationship("UnloadSession", backref="task_list")
+    harbor_name = db.Column(db.String(32), db.ForeignKey('TB_HABOR.name'))
+    harbor = db.relationship("Harbor")
+    customer_id = db.Column(db.Integer, db.ForeignKey('TB_CUSTOMER.id'))
+    customer = db.relationship("Customer")
+    creator_id = db.Column(db.Integer, db.ForeignKey('TB_USER.id'))
+    creator = db.relationship("User")
+    pic_path = db.Column(db.String(256))
+    create_time = db.Column(db.DateTime, default=datetime.now)
+    weight = db.Column(db.Integer, default=0)
+    product_id = db.Column(db.Integer, db.ForeignKey("TB_PRODUCT.id"))
+    product = db.relationship("Product")
+    is_last = db.Column(db.Boolean, default=False)
+
+    def __init__(self, unload_session, harbor, customer, creator,
+                 product, pic_path, create_time=None, weight=0):
+        self.unload_session = unload_session
+        self.harbor = harbor
+        self.customer = customer
+        self.creator = creator
+        self.pic_path = pic_path
+        self.product = product
+        self.create_time = create_time or datetime.now()
+        self.weight = weight
+
+    def __unicode__(self):
+        return self.id
+
+    def __repr__(self):
+        return "<UnloadTask %d>" % self.id
+
+class Customer(db.Model):
+    __tablename__ = "TB_CUSTOMER"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(32), nullable=False, unique=True)
+    abbr = db.Column(db.String(32))
+    MSSQL_ID = db.Column(db.Integer, default=0, nullable=False)
+
+    def __init__(self, name, abbr, MSSQL_ID=0):
+        self.name = name
+        self.abbr = abbr
+        self.MSSQL_ID = MSSQL_ID
+
+    def __unicode__(self):
+        return self.name
+
+    def __repr__(self):
+        return "<Customer %s>" % self.id
+
+class Harbor(db.Model):
+    __tablename__ = "TB_HABOR"
+    name = db.Column(db.String(32), nullable=False, primary_key=True)
+    department_id = db.Column(db.Integer, db.ForeignKey("TB_DEPARTMENT.id"))
+    department = db.relationship("Department", backref="harbor_list")
+
+    def __init__(self, name, department):
+        self.name = name
+        self.department = department
+
+    def __unicode__(self):
+        return self.name
+
+    def __repr__(self):
+        return "<Harbor %s>" % self.name.encode("utf-8")
+
+class ProductType(db.Model):
+    __tablename__ = "TB_PRODUCT_TYPE"
+    id = db.Column(db.Integer, primary_key=True)
+    MSSQL_ID = db.Column(db.Integer, default=0, nullable=True)
+    name = db.Column(db.String(32), unique=True)
+
+    def __init__(self, name, MSSQL_ID=0):
+        self.name = name
+        self.MSSQL_ID = MSSQL_ID
+
+    def __unicode__(self):
+        return self.name
+
+    def __repr__(self):
+        return "<ProductType: %d>" % self.id
+
+
+class Product(db.Model):
+    __tablename__ = "TB_PRODUCT"
+    id = db.Column(db.Integer, primary_key=True)
+    MSSQL_ID = db.Column(db.Integer, default=0, nullable=True)
+    name = db.Column(db.String(32))
+    product_type_id = db.Column(db.Integer,
+                                db.ForeignKey("TB_PRODUCT_TYPE.id"))
+    product_type = db.relationship("ProductType", backref="products")
+
+    def __init__(self, name, product_type, MSSQL_ID=0):
+        self.name = name
+        self.product_type = product_type
+        self.MSSQL_ID = MSSQL_ID
+
+    def __unicode__(self):
+        return self.name
+
+    def __repr__(self):
+        return "<Product %d>" % self.id
+
+class Department(db.Model):
+    __tablename__ = "TB_DEPARTMENT"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(32), nullable=False, unique=True)
+    team_list = db.relationship("Team", backref="department")
+    leader_list = db.relationship("User", secondary=department_and_user_table,
+                                  backref="department_list")
+
+    def __init__(self, name, leaders=None):
+        self.name = name
+        self.leader_list = leaders or []
+
+    def __unicode__(self):
+        return self.name
+
+    def __repr__(self):
+        return "<Department %d>" % self.id
+
+
+class Team(db.Model):
+    __tablename__ = "TB_TEAM"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(32), nullable=False, unique=True)
+    department_id = db.Column(db.Integer, db.ForeignKey('TB_DEPARTMENT.id'))
+    leader_id = db.Column(db.Integer, db.ForeignKey('TB_USER.id'))
+    leader = db.relationship("User", backref=db.backref("team", uselist=False))
+
+    def __init__(self, name, department, leader):
+        self.name = name
+        self.department = department
+        self.leader = leader
+
+    def __unicode__(self):
+        return self.name
+
+    def __repr__(self):
+        return "<Team %s>" % self.id
+
+
+class GoodsReceipt(db.Model):
+    __tablename__ = "TB_GOODS_RECEIPT"
+
+    id = db.Column(db.Integer, primary_key=True)
+    receipt_id = db.Column(db.String(15), unique=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('TB_CUSTOMER.id'))
+    customer = db.relationship(Customer)
+    unload_session_id = db.Column(db.Integer,
+                                  db.ForeignKey('TB_UNLOAD_SESSION.id'))
+    create_time = db.Column(db.DateTime, default=datetime.now)
+    printed = db.Column(db.Boolean, default=False)
+    order = db.relationship(
+        "Order", backref=db.backref("goods_receipt", uselist=False),
+        cascade="all, delete-orphan", uselist=False)
+
+    def __init__(self, customer, unload_session, create_time=None):
+        self.customer = customer
+        self.unload_session = unload_session
+        self.create_time = create_time or datetime.now()
+        self.receipt_id = self.id_generator()
+
+    def id_generator(self):
+        return self.create_time.strftime('%Y%m%d%H%M%S') +\
+               str((self.unload_session.id + self.customer.id) % 100)[0]
+
+    def __unicode__(self):
+        return self.receipt_id
+
+    def __repr__(self):
+        return "<GoodsReceipt %d>" % self.id
+
+class Order(db.Model):
+
+    __modelname__ = u"订单"
+    __tablename__ = "TB_ORDER"
+
+    id = db.Column(db.Integer, primary_key=True)
+    customer_order_number = db.Column(db.String(15), unique=True)
+    goods_receipt_id = db.Column(db.Integer,
+                                 db.ForeignKey('TB_GOODS_RECEIPT.id'))
+    create_time = db.Column(db.DateTime)
+    finish_time = db.Column(db.DateTime)
+    sub_order_list = db.relationship(
+        "SubOrder", backref="order",
+        cascade="all, delete-orphan")
+    dispatched = db.Column(db.Boolean)
+    creator_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
+    creator = db.relationship("User")
+    refined = db.Column(db.Boolean, default=False)
+
+    def __init__(self, goods_receipt, creator,
+                 create_time=None, finish_time=None, dispatched=False):
+        self.goods_receipt = goods_receipt
+        self.create_time = create_time or datetime.now()
+        self.finish_time = finish_time
+        self.customer_order_number = goods_receipt.receipt_id
+        self.dispatched = dispatched
+        self.creator = creator
+
+    def __unicode__(self):
+        return self.customer_order_number
+
+    def __repr__(self):
+        return "<Order %s>" % self.id
+
+class SubOrder(db.Model):
+    __tablename__ = "TB_SUB_ORDER"
+
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("TB_PRODUCT.id"))
+    product = db.relationship("Product")
+    task_id = db.Column(db.Integer, db.ForeignKey("TB_UNLOAD_TASK.id"))
+    unload_task = db.relationship("UnloadTask", backref=db.backref(
+        "sub_order", uselist=False), uselist=False)
+    spec = db.Column(db.String(64))
+    type = db.Column(db.String(64))
+    weight = db.Column(db.Integer, default=0)
+    harbor_name = db.Column(db.String(32), db.ForeignKey('TB_HABOR.name'))
+    harbor = db.relationship("Harbor")
+    order_id = db.Column(db.Integer, db.ForeignKey("TB_ORDER.id"))
+    urgent = db.Column(db.Boolean)
+    returned = db.Column(db.Boolean)
+    pic_path = db.Column(db.String(256))
+    tech_req = db.Column(db.String(64))
+    create_time = db.Column(db.DateTime)
+    finish_time = db.Column(db.DateTime)
+    quantity = db.Column(db.Integer, default=0)
+    unit = db.Column(db.String(16), default=u'')
+    due_time = db.Column(db.DateTime)
+    order_type = db.Column(db.Integer)
+    remaining_quantity = db.Column(db.Integer)
+    work_command_list = db.relationship("WorkCommand",
+                                        backref=db.backref(
+                                            "sub_order", uselist=False),
+                                        cascade="all, delete-orphan"
+    )
+
+
+
+    @property
+    def unit_weight(self):
+        try:
+            return self.weight / float(self.quantity)
+        except ZeroDivisionError:
+            return 0
+
+    def __init__(self, product, weight, harbor, order,
+                 quantity, unit, order_type=STANDARD_ORDER_TYPE,
+                 create_time=None, finish_time=None, urgent=False,
+                 returned=False, pic_path="", tech_req="", due_time=None,
+                 spec="", type="", unload_task=None):
+        self.product = product
+        self.spec = spec
+        self.type = type
+        self.weight = weight
+        self.harbor = harbor
+        self.remaining_quantity = self.quantity = quantity
+        self.unit = unit
+        self.order = order
+        self.create_time = create_time or datetime.now()
+        self.finish_time = finish_time
+        self.urgent = urgent
+        self.returned = returned
+        self.pic_path = pic_path
+        self.tech_req = tech_req
+        self.due_time = due_time
+        self.order_type = order_type
+        self.unload_task = unload_task
+
+    def __unicode__(self):
+        return self.id
+
+    def __repr__(self):
+        return "<SubOrder %d>" % self.id
+
+class WorkCommand(db.Model):
+    __tablename__ = "TB_WORK_COMMAND"
+
+    id = db.Column(db.Integer, primary_key=True)
+    create_time = db.Column(db.DateTime)
+    department = db.relationship("Department", order_by=User.id,
+                                 backref="work_comman_list")
+    department_id = db.Column(db.Integer, db.ForeignKey("TB_DEPARTMENT.id"),
+                              nullable=True)
+    last_mod = db.Column(db.DateTime)
+    org_cnt = db.Column(db.Integer)
+    org_weight = db.Column(db.Integer)
+    urgent = db.Column(db.Boolean)
+    previous_procedure_id = db.Column(db.Integer,
+                                      db.ForeignKey("TB_PROCEDURE.id"))
+    previous_procedure = db.relationship("Procedure",
+                                         primaryjoin="Procedure"
+                                                     ".id==WorkCommand"
+                                                     ".previous_procedure_id")
+    procedure_id = db.Column(db.Integer, db.ForeignKey("TB_PROCEDURE.id"))
+    procedure = db.relationship("Procedure",
+                                primaryjoin="Procedure.id==WorkCommand"
+                                            ".procedure_id")
+    processed_cnt = db.Column(db.Integer)
+    processed_weight = db.Column(db.Integer)
+    status = db.Column(db.Integer)
+    sub_order_id = db.Column(db.Integer, db.ForeignKey("TB_SUB_ORDER.id"))
+    tag = db.Column(db.String(32))
+    team = db.relationship("Team", backref="work_comman_list")
+    team_id = db.Column(db.Integer, db.ForeignKey("TB_TEAM.id"), nullable=True)
+    tech_req = db.Column(db.String(32))
+    qir_list = db.relationship("QIReport", backref="work_command",
+                               cascade="all, delete-orphan",
+                              primaryjoin="WorkCommand.id==QIReport.work_command_id")
+    pic_path = db.Column(db.String(256))
+    handle_type = db.Column(db.Integer)
+
+    @property
+    def unit_weight(self):
+        try:
+            return self.org_weight / float(self.org_cnt)
+        except ZeroDivisionError:
+            return 0
+
+    @property
+    def processed_unit_weight(self):
+        try:
+            return self.processed_weight / float(self.processed_cnt)
+        except ZeroDivisionError:
+            return 0
+
+    def __init__(self, sub_order, org_weight, procedure, urgent=False,
+                 status=STATUS_DISPATCHING, department=None,
+                 create_time=None,
+                 last_mod=datetime.now(),
+                 processed_weight=0, team=None, previous_procedure=None,
+                 tag="", tech_req="", org_cnt=0, processed_cnt=0, pic_path="",
+                 handle_type=HT_NORMAL):
+        self.sub_order = sub_order
+        self.urgent = urgent
+        self.org_weight = org_weight
+        self.procedure = procedure
+        self.status = status
+        self.create_time = create_time or datetime.now()
+        self.last_mod = last_mod
+        self.processed_weight = processed_weight
+        self.team = team
+        self.department = department
+        self.previous_procedure = previous_procedure
+        self.tag = tag
+        self.tech_req = tech_req
+        self.org_cnt = org_cnt
+        self.processed_cnt = processed_cnt
+        self.pic_path = pic_path
+        self.handle_type = handle_type
+
+    def set_status(self, new_status):
+        """
+        set new status, and UPDATE last_mod field, so DON'T UPDATE STATUS
+        DIRECTLY!
+        """
+        self.status = new_status
+        self.last_mod = datetime.now()
+    
+    def __unicode__(self):
+        return self.id
+
+    def __repr__(self):
+        return "<WorkCommand %d>" % self.id
+
+
+class QIReport(db.Model):
+    __tablename__ = "TB_QI_REPORT"
+
+    id = db.Column(db.Integer, primary_key=True)
+    work_command_id = db.Column(db.Integer,
+                                db.ForeignKey("TB_WORK_COMMAND.id"))
+    generated_work_command_id = db.Column(db.Integer,
+                                         db.ForeignKey("TB_WORK_COMMAND.id"))
+    generated_work_command = db.relationship("WorkCommand", backref=db.backref("parent_qir", uselist=False),
+            primaryjoin="WorkCommand.id==QIReport.generated_work_command_id")
+    quantity = db.Column(db.Integer)
+    weight = db.Column(db.Integer)
+    result = db.Column(db.Integer)
+    report_time = db.Column(db.DateTime)
+    actor_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
+    actor = db.relationship(User)
+    pic_path = db.Column(db.String(256))
+
+    def __init__(self, work_command, quantity, weight, result, actor_id,
+                 report_time=None, pic_path=""):
+        self.work_command = work_command
+        self.quantity = quantity
+        self.weight = weight
+        self.result = result
+        self.actor_id = actor_id
+        self.report_time = report_time
+        self.pic_path = pic_path
+
+    def __unicode__(self):
+        return self.id
+
+    def __repr__(self):
+        return "<QIReport %d>" % self.id
+
+
+class DeliverySession(db.Model):
+    __tablename__ = "TB_DELIVERY_SESSION"
+
+    id = db.Column(db.Integer, primary_key=True)
+    plate = db.Column(db.String(32))
+    tare = db.Column(db.Integer)
+    create_time = db.Column(db.DateTime, default=datetime.now)
+    finish_time = db.Column(db.DateTime)
+    with_person = db.Column(db.Boolean, default=False)
+    delivery_task_list = db.relationship("DeliveryTask",
+                                backref=db.backref("delivery_session",
+                                                   uselist=False),
+                                cascade="all, delete-orphan")
+
+    def __init__(self, plate, tare, with_person=False, create_time=None,
+                 finish_time=None):
+        self.with_person = with_person
+        self.plate = plate
+        self.tare = tare
+        self.create_time = create_time or datetime.now()
+        self.finish_time = finish_time
+
+    def __unicode__(self):
+        return self.plate
+
+    def __repr__(self):
+        return "<DeliverySession %d>" % self.id
+
+class StoreBill(db.Model):
+    __tablename__ = "TB_STORE_BILL"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    harbor_name = db.Column(db.String(32), db.ForeignKey('TB_HABOR.name'))
+    harbor = db.relationship("Harbor")
+    sub_order_id = db.Column(db.Integer, db.ForeignKey("TB_SUB_ORDER.id"))
+    sub_order = db.relationship("SubOrder",
+                                backref=db.backref("store_bill_list",
+                                                   cascade="all, delete-orphan"))
+    qir_id = db.Column(db.Integer, db.ForeignKey("TB_QI_REPORT.id"))
+    qir = db.relationship("QIReport",
+                          backref=db.backref("store_bill_list",
+                                             cascade="all"))
+    quantity = db.Column(db.Integer)
+    weight = db.Column(db.Integer, default=0)
+    customer_id = db.Column(db.Integer, db.ForeignKey("TB_CUSTOMER.id"))
+    customer = db.relationship("Customer")
+    delivery_session_id = db.Column(db.Integer,
+                                    db.ForeignKey("TB_DELIVERY_SESSION.id"),
+                                    nullable=True)
+    delivery_session = db.relationship("DeliverySession",
+                                       backref="store_bill_list")
+    delivery_task_id = db.Column(db.Integer,
+                                 db.ForeignKey("TB_DELIVERY_TASK.id"),
+                                 nullable=True)
+    delivery_task = db.relationship("DeliveryTask", backref="store_bill_list")
+    create_time = db.Column(db.DateTime)
+    printed = db.Column(db.Boolean, default=False)
+
+    @property
+    def unit_weight(self):
+        try:
+            return self.weight / float(self.quantity)
+        except ZeroDivisionError:
+            return 0
+
+    def __init__(self, qir, create_time=None):
+        self.qir = qir
+        self.weight = qir.weight
+        self.quantity = qir.quantity
+        self.customer_id = qir.work_command.sub_order.order.goods_receipt\
+        .customer_id
+        self.create_time = create_time or datetime.now()
+        self.sub_order = qir.work_command.sub_order
+
+
+    def __unicode__(self):
+        return self.id
+
+    def __repr__(self):
+        return "<StoreBill %d>" % self.id
+
+class DeliveryTask(db.Model):
+    __tablename__ = "TB_DELIVERY_TASK"
+
+    id = db.Column(db.Integer, primary_key=True)
+    delivery_session_id = db.Column(db.Integer,
+                                    db.ForeignKey("TB_DELIVERY_SESSION.id"))
+    actor_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
+    create_time = db.Column(db.DateTime, default=datetime.now)
+    quantity = db.Column(db.Integer)
+    weight = db.Column(db.Integer, default=0)
+    returned_weight = db.Column(db.Integer, default=0)
+
+    def __init__(self, delivery_session, actor_id,
+                 create_time=None):
+        self.delivery_session = delivery_session
+        self.actor_id = actor_id
+        self.create_time = create_time or datetime.now()
+
+    @property
+    def customer(self):
+        if self.store_bill_list:
+            return self.store_bill_list[0].customer
+        else:
+            return ""
+
+    @property
+    def product(self):
+        if self.store_bill_list:
+            sb = self.store_bill_list[0]
+            return sb.qir.work_command.sub_order.product
+        else:
+            return ""
+
+    def __unicode__(self):
+        return self.id
+
+    def __repr__(self):
+        return "<DeliveryTask %d>" % self.id
+
+class Consignment(db.Model):
+    __tablename__ = "TB_CONSIGNMENT"
+
+    id = db.Column(db.Integer, primary_key=True)
+    consignment_id = db.Column(db.String(15), unique=True)
+    delivery_session_id = db.Column(db.Integer,
+                                    db.ForeignKey("TB_DELIVERY_SESSION.id"))
+    delivery_session = db.relationship("DeliverySession",
+                                       backref="consignment_list")
+    actor_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
+    create_time = db.Column(db.DateTime, default=datetime.now)
+    customer_id = db.Column(db.Integer, db.ForeignKey("TB_CUSTOMER.id"))
+    customer = db.relationship("Customer")
+    pay_in_cash = db.Column(db.Boolean, default=False)
+    is_paid = db.Column(db.Boolean, default=False)
+    notes = db.Column(db.String(256))
+    MSSQL_ID = db.Column(db.Integer)
+
+
+    def __init__(self, customer, delivery_session, pay_in_cash,
+                 create_time=None):
+        self.delivery_session = delivery_session
+        self.customer = customer
+        self.pay_in_cash = pay_in_cash
+        self.create_time = create_time or datetime.now()
+        self.consignment_id = self.id_generator()
+
+    def id_generator(self):
+        return self.create_time.strftime('%Y%m%d%H%M%S') +\
+               str((self.delivery_session.id + self.customer.id) % 100)[0]
+
+    def __unicode__(self):
+        return self.id
+
+    def __repr__(self):
+        return "<Consignment %d>" % self.id
+
+class Procedure(db.Model):
+    __tablename__ = "TB_PROCEDURE"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(32), unique=True)
+    department_list = db.relationship("Department",
+                                      secondary=procedure_and_department_table,
+                                      backref="procedure_list")
+
+    def __init__(self, name, department_list):
+        self.name = name
+        self.department_list = department_list
+
+    def __unicode__(self):
+        return self.name
+
+    def __repr__(self):
+        return "<Procedure %d>" % self.id
+
+class Deduction(db.Model):
+    __tablename__ = "TB_DEDUCTION"
+
+    id = db.Column(db.Integer, primary_key=True)
+    weight = db.Column(db.Integer, doc=u"单位为公斤", nullable=False)
+    work_command_id = db.Column(db.Integer,
+                                db.ForeignKey("TB_WORK_COMMAND.id"))
+    work_command = db.relationship("WorkCommand", backref="deduction_list")
+    team_id = db.Column(db.Integer, db.ForeignKey("TB_TEAM.id"), nullable=False)
+    team = db.relationship("Team", backref="deduction_list")
+    actor_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"), nullable=False)
+    actor = db.relationship(User)
+    create_time = db.Column(db.DateTime,default=datetime.now)
+    remark = db.Column(db.String(256))
+
+    def __init__(self, weight=None, actor=None, team=None, work_command=None, create_time=None, remark=None):
+        self.weight = weight
+        self.work_command = work_command
+        self.actor = actor
+        self.team = team
+        self.create_time = create_time or datetime.now()
+        self.remark = remark
+
+    def __unicode__(self):
+        return self.id
+
+    def __repr__(self):
+        return "<Deduction %d>" % self.id
+
+class ConsignmentProduct(db.Model):
+
+    __tablename__ = "TB_CONSIGNMENT_PRODUCT"
+
+    id = db.Column(db.Integer, primary_key=True)
+    consignment_id = db.Column(db.Integer, db.ForeignKey("TB_CONSIGNMENT.id"), nullable=False)
+    consignment = db.relationship("Consignment", backref="product_list")
+    product_id = db.Column(db.Integer, db.ForeignKey("TB_PRODUCT.id"), nullable=False)
+    product = db.relationship("Product")
+    delivery_task_id = db.Column(db.Integer, db.ForeignKey("TB_DELIVERY_TASK.id"), nullable=False)
+    delivery_task = db.relationship("DeliveryTask")
+    weight = db.Column(db.Integer)
+    quantity = db.Column(db.Integer)
+    unit = db.Column(db.String(16), default="")
+    spec = db.Column(db.String(64))
+    type = db.Column(db.String(64))
+    returned_weight = db.Column(db.Integer)
+    team_id = db.Column(db.Integer,db.ForeignKey("TB_TEAM.id"), nullable=False)
+    team = db.relationship("Team")
+
+    def __init__(self, product, delivery_task, consignment):
+        self.product = product
+        self.delivery_task = delivery_task
+        self.consignment = consignment
+
+    def __unicode__(self):
+        return self.id
+
+    def __repr__(self):
+        return "<DeliveryProduct %d>" % self.id
+
+class Vehicle(db.Model):
+    __tablename__ = "TB_VEHICLE"
+
+    id = db.Column(db.Integer, primary_key=True)
+    plate = db.Column(db.String(64), nullable=False, unique=True)
+    def __unicode__(self):
+        return self.plate
+    def __repr__(self):
+        return "<Vehicle %s>" % self.name
+
+class Log(db.Model):
+
+    __tablename__ = "TB_LOG"
+
+    # MAIN PART
+    id = db.Column(db.Integer, primary_key=True)
+    actor_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
+    actor = db.relationship("User")
+    obj_cls = db.Column(db.String(256), nullable=False)
+    obj_pk = db.Column(db.String(256), nullable=False)
+    action = db.Column(db.String(256), nullable=False)
+    create_time = db.Column(db.DateTime, default=datetime.now)
+
+    # SUPPLEMENT PART
+    name = db.Column(db.String(256))
+    level = db.Column(db.String(256))
+    module = db.Column(db.String(256))
+    func_name = db.Column(db.String(256))
+    line_no = db.Column(db.Integer)
+    thread = db.Column(db.Integer)
+    thread_name = db.Column(db.String(256))
+    process = db.Column(db.Integer)
+    message = db.Column(db.String(256))
+    args = db.Column(db.String(256))
+    extra = db.Column(db.String(256))
+

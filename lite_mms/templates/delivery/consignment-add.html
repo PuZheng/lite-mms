@@ -1,0 +1,37 @@
+<div id="new-consignment-dialog" title="{{ _("创建发货单") }}">
+    <form class="ym-form" action="{{ url_for("delivery.consignment") }}"
+          method="POST">
+        <fieldset>
+            <div class="ym-gbox ym-fbox-select">
+                <label for="customer">
+                    <b>请选择公司名称</b><sup class="ym-required"
+                                       title="请选择公司名称.">*</sup>
+                </label>
+                <select name="customer" id="customer" size="1"
+                        required="required">
+                </select>
+            </div>
+            <div class="ym-gbox ym-fbox-select">
+                <label for="pay_mode">
+                    <b>请选择支付类型</b><sup class="ym-required"
+                                       title="请选择支付类型.">*</sup>
+                </label>
+                <select name="pay_mod" id="pay_mode" size="1"
+                        required="required">
+                    <option value="0">月结</option>
+                    <option value="1">现金支付</option>
+                </select>
+            </div>
+            <div class="ym-fbox-button">
+                <button class="ym-button button-close">
+                    提交
+                </button>
+                <button class="ym-button button-close" type="button">返回
+                </button>
+            </div>
+            <input type="hidden" id="delivery_session_id"
+                   name="delivery_session_id" value=""/>
+            <input type="hidden" id="url" name="url" value="{{ request.url }}">
+        </fieldset>
+    </form>
+</div>

@@ -1,0 +1,173 @@
+{% extends "layout.html" %}
+{% block custom_external %}
+    <script type="text/javascript">
+        $(function () {
+            $("#unload_session_id").val("{{ unload_session.id }}");
+            $("img").height("120px");
+            $(".fancybox").fancybox();
+            $('#view-receipts-dialog').dialog({
+                autoOpen:false
+            });
+            $('#view-receipts').click(function () {
+                // pop a list of generated goods receipts
+                var session_id = $("#unload_session_id").val();
+                var dialog = $("#view-receipts-dialog");
+                $("#view-receipts-dialog").children('ul').children('li').remove();
+                $.getJSON("/cargo/ajax/receipts-list?unload_session_id=" + session_id,
+                        function (data) {
+                            dialog.children("ul").empty()
+                            $.each(data, function (idx, v) {
+                                dialog.children("ul").append(
+                                        '<li><a href="/cargo/goods-receipt?id=' + v.id + '&purl=' + encodeURIComponent(location.href) + '">' + v.receipt_id + '(' + v.customer + ')' + '</a></li>');
+                            });
+                            $('#view-receipts-dialog').dialog("open");
+                        }).error(function (data) {
+                            alert(data.responseText);
+                        });
+            });
+            $("#finish_button").click(function () {
+                if (confirm("确认结束会话吗？")) {
+                    $("#finish_form").submit();
+                }
+            });
+            $("#reopen-button").click(function () {
+                if (confirm("确认重新打开会话吗？")) {
+                    $("#reopen-form").submit();
+                }
+            });
+            $("#delete-button").click(function () {
+                if (confirm("确认删除会话吗？")) {
+                    $("#delete-form").submit();
+                }
+            });
+        });
+    </script>
+    <script src="{{ url_for("static", filename="js/new-receipt-dialog.js") }}"></script>
+    <style type="text/css">
+        a:hover,a:focus {
+            background-color: transparent;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="ym-wrapper">
+        <div class="ym-wbox">
+            <div class="ym-form linearize-form ym-columnar">
+                <div class="ym-fbox-text">
+                    <label><b>车辆车牌号</b></label>
+                    {{ unload_session.plate }}
+                </div>
+                <div class="ym-fbox-text">
+                    <label><b>车辆毛重(KG)</b></label>
+                    {{ unload_session.gross_weight }}
+                </div>
+                <div class="ym-fbox-text">
+                    <label><b>上次称重时车上是否有人</b></label>
+                    {{ unload_session.with_person_des }}
+                </div>
+                {% if unload_session.closed %}
+                    <div class="ym-fbox-text">
+                        <label><b>会话完成时间</b></label>
+                        {{ unload_session.finish_time }}
+                    </div>
+                    <div class="ym-fbox-text">
+                        <form action="{{ url_for('cargo.session_reopen') }}" method="POST" id="reopen-form">
+                            <button class="ym-button ym-edit" type="button" id="reopen-button" title="重新打开会话后，装卸工又可以添加卸货任务">
+                                重新打开会话
+                            </button>
+                            <input type="hidden" name="id" value="{{ unload_session.id }}">
+                        </form>
+                    </div>
+                {% endif %}
+                {% if unload_session.closeable %}
+                    <div class="ym-fbox-text">
+                        <form action="{{ url_for('cargo.session_finish') }}" method="POST" id="finish_form">
+                            <button class="ym-button ym-save" type="button" id="finish_button"
+                                title="结束会话后，装卸工不能够再添加写货任务">
+                                结束会话
+                            </button>
+                            <input type="hidden" value="{{ unload_session.id }}" name="id"/>
+                        </form>
+                    </div>
+                {% endif %}
+
+                {% if unload_session.deleteable %}
+                    <div class="ym-fbox-text">
+                        <form action="{{ url_for('cargo.session_delete') }}" method="POST" id="delete-form">
+                            <button class="ym-button ym-delete" type="button" id="delete-button"
+                                    title="删除卸货会话">
+                                删除会话
+                            </button>
+                            <input type="hidden" value="{{ unload_session.id }}" name="id"/>
+                        </form>
+                    </div>
+                {% endif %}
+
+                <h6>收货任务列表</h6>
+
+                <div class="ym-fbox-button">
+                    <button class="ym-button"
+                            onclick="window.location.reload(true)">刷新
+                    </button>
+
+                    <table class="bordertable">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>卸货点</th>
+                            <th>产品名称</th>
+                            <th>客户名称</th>
+                            <th>净重(KG)</th>
+                            <th>是否已生成收货单</th>
+                            <th>图片</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for task in unload_session.task_list %}
+                            <tr>
+                                <td>{{ task.id }}</td>
+                                <td>{{ task.harbor.name }}</td>
+                                <td>{{ task.product.name }}</td>
+                                <td>{{ task.customer.name }}</td>
+                                <td>
+                                    {% if task.weight != 0 %}
+                                        {{ task.weight }}
+                                    {% else %}
+                                        <a href="{{ url_for('cargo.unload_task') }}?id={{ task.id }}"
+                                           class="ym-button">称重</a>
+                                    {% endif %}
+                                </td>
+                                <td>{% if task.goods_receipt %}
+                                    是
+                                    {% else %}
+                                    否
+                                {% endif %}</td>
+                                <td>{% if task.pic_path %}
+                                    <a href="{{ task.pic_url }}"
+                                       class="fancybox" rel="group"
+                                       title="{{ task.product.name }}">
+                                        <img src="{{ task.pic_url }}" class="bordered"
+                                             alt="{{ task.product.name }}"/>
+                                    </a>{% endif %}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <button class="ym-button ym-edit"
+                            id="new-receipt">{{ _("创建收货单") }}</button>
+                    <button class="ym-button ym-next"
+                            id="view-receipts" type="button">
+                        {{ _("查看收货单") }}</button>
+                    <a class="ym-button ym-delete"
+                       href="{{ request.args.get("backref") or url_for('cargo.unload_session_list') }}">返回</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include "cargo/goods-receipt-add.html" %}
+    <div id="view-receipts-dialog" title="{{ _("查看收货单") }}">
+        <ul></ul>
+    </div>
+{% endblock %}

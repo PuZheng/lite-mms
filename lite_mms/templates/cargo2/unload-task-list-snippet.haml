@@ -1,0 +1,27 @@
+%table class="table table-bordered table-condensed"
+  %thead
+    %tr 
+      %th << 编号
+      %th << 装卸点
+      %th << 客户
+      %th << 装卸工
+      %th << 产品
+      %th << 图片
+      %th << 重量
+  %tbody
+    -for row in field_value
+      %tr
+        %td << {{row.id}}
+        %td << {{row.harbor}}
+        %td << {{row.customer}}
+        %td << {{row.creator}}
+        %td << {{row.product}}
+        %td 
+          -if row.pic_path
+            %a href="{{ row.pic_url }}" class="fancybox" rel="group" title="{{ row.product.name }}"
+              %img src="{{ row.pic_url }}" class="bordered" alt="{{ row.product.name }}"
+        %td 
+          -if row.weight
+            {{ row.weight }} 
+          -else
+            %a href="{{ url_for('cargo2.unload_task', id_=row.id) }}" class="btn" << 称重

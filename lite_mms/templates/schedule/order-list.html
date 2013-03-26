@@ -1,0 +1,126 @@
+{% extends "layout.html" %}
+{% block custom_external %}
+    <script type="text/javascript">
+        $(function () {
+            function makeRed(select, value) {
+                select.each(function (i) {
+                    if ($.trim($(this).text()) == value) {
+                        $(this).css("color", "red")
+                    }
+                });
+            }
+
+            makeRed($(".td-urgent"), "是");
+            makeRed($(".td-remaining-weight"), "0");
+            makeRed($(".td-todo-cnt"), "0");
+            $("#customer_dialog").dialog({
+                autoOpen: false,
+                height: 360,
+                buttons: {
+                    确认: function () {
+                        $(this).dialog("close");
+                        $("input[name='customer_id']").val($("#customer_dialog input[name='customer_id']:checked").val());
+                        $("#search-form").submit();
+                    },
+                    取消: function () {
+                        $(this).dialog("close");
+                    }
+                }
+            });
+            $("#customer_name").focusin(function () {
+                $("#customer_dialog").dialog("open");
+            });
+            $("#customer_dialog input:first").keyup(function () {
+                var needle = $(this).val();
+                if (needle.length == 0) {
+                    $("#customer_dialog tr").show();
+                } else {
+                    $("#customer_dialog tr").each(function (idx, e) {
+                        if (idx == 0) {
+                            return;
+                        }
+                        var haystack = $(e).children("td:last").children("input").val().toLowerCase();
+                        if (haystack.search(needle) == 0) {
+                            $(e).show()
+                        } else {
+                            $(e).hide();
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+{% endblock %}
+{% block body %}
+    <div class="ym-wrapper">
+        <div class="ym-wbox">
+            <form id="search-form" action="{{ url_for('schedule.order_list') }}" method="GET">
+                <input type="hidden" name="customer_id" value="{%if customer %}{{customer.id}}{% else %}0{% endif %}" />
+                <span class="customer-name-input">
+                    {{ _("客户名称") }}:
+                    <input type="text" id="customer_name" value="{%if customer %}{{ customer.name }}{% else %}不限客户{% endif %}" >
+                </span>
+            </form>
+            <table id="order_list_table" class="bordertable">
+                <thead>
+                <tr>
+                    <th>订单编号</th>
+                    <th>公司名称</th>
+                    <th>产生日期</th>
+                    <th>总重(KG)</th>
+                    <th>未预排产重量(KG)</th>
+                    <th>待排产重量(KG)</th>
+                    <th>生产中重量(KG)</th>
+                    <th>是否加急</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for order in order_list %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('schedule.order', id_=order.id, backref=request.url) }}">{{ order.customer_order_number }}</a>
+                        </td>
+                        <td>{{ order.customer.name }}</td>
+                        <td>{{ order.create_time }}</td>
+                        <td>{{ order.net_weight }}</td>
+                        <td class="td-remaining-weight">{{ order.remaining_weight }}</td>
+                        <td>{% if order.to_work_weight == 0 %}
+                                {{ order.to_work_weight }}
+                            {% else %}
+                                <a name="todo" href="{{ url_for('schedule.work_command_list')}}?id={{ order.id }}&status=todo">{{ order.to_work_weight }}</a>
+                            {% endif %} </td>
+                        <td>{% if order.manufacturing_weight == 0 %}
+                                {{ order.manufacturing_weight }}
+                            {% else %}
+                                <a name="doing" href="{{ url_for('schedule.work_command_list')}}?id={{ order.id }}&status=doing">{{ order.manufacturing_weight }}</a>
+                            {% endif %} </td>
+                        <td class="td-urgent">{% if order.urgent %}
+                            是{% else %}否{% endif %}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% from "pagination.html" import render_pagination %}
+            {{ render_pagination(pagination) }}
+        </div>
+    </div>
+    <div id="customer_dialog" title="选择客户">
+        <form action="#">
+            <input type="text" placeholder="输入客户名称拼音首字母搜索..."/>
+            <table class="narrow">
+                <tbody>
+                <tr>
+                    <td><input type="radio" name="customer_id" value="0" checked/></td>
+                    <td>不限客户<input type="hidden" value=""></td>
+                </tr>
+                {% for c in customer_list %}
+                    <tr>
+                        <td><input type="radio" name="customer_id" value="{{ c.id }}"/></td>
+                        <td>{{c.name}}<input type="hidden" value="{{ c.abbr }}"></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </form>
+    </div>
+{% endblock %}

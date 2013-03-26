@@ -1,0 +1,53 @@
+
+-extends "__data_browser__/layout.haml"
+
+-block body
+  .alert.alert-info
+    * 正在为客户"<em>{{form.customer.name}}</em>"创建收货单
+
+  .container
+    %form action="url_for('cargo2_page.goods_receipt')" method="POST" class="form-horizontal"
+      .control-group
+        .control-label
+          %strong << 收货会话
+        .controls
+          %div 
+            %select readonly="readonly" class="input-medium"
+              %option value="{{ form.unload_session.id}}" selected="selected" << {{ form.unload_session.vehicle.plate }}
+
+      .control-group
+        .control-label
+          %strong << 客户
+        .controls
+          %div
+            %select readonly="readonly" class="input-medium"
+              %option value="{{ form.customer.id }}" selected="selected" << {{ form.customer.name }}
+      .control-group
+        .control-label
+          %strong << 对应卸货任务 
+        .controls
+          %div
+            %table.table.table-condensed.table-bordered
+              %thead
+                %tr
+                  %th << 编号
+                  %th << 装卸点
+                  %th << 装卸工
+                  %th << 重量
+                  %th << 产品
+                  %th << 规格-型号
+
+      %hr
+      .control-group
+        .control-label
+        .controls 
+          %input type="submit" value="确认创建" class="btn btn-primary"
+          %input type="submit" value="保存并为下个客户创建收货单" class="btn"
+          %a.btn href="{{purl}}"  << 取消
+
+
+-block __data_browser__customized_head_block
+  %script type="text/javascript"
+    $(function () {
+      $("select").select2();
+    });

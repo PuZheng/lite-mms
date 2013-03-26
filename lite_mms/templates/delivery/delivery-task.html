@@ -1,0 +1,58 @@
+{% extends "layout.html" %} {% block body %}
+    <div class="ym-wrapper">
+        <div class="ym-wbox">
+            <div class="box success">
+                车辆
+                <mark>{{ plate }}</mark>
+                在装货点
+                <mark>{{ task.harbor_name }}</mark>
+                完成了一次属于客户
+                <mark>{{ task.customer.name }}</mark>
+                的装货任务
+            </div>
+            <form class="ym-form linearize-form ym-columnar" method="POST"
+                  action="{{ url_for('delivery.task_modify') }}">
+
+                <div class="ym-fbox-text">
+                    <label for="product_name">加工件名称为：</label> <input
+                        type="text"
+                        name="product_name" id="product_name" size="20"
+                        required="True" readonly="readonly"
+                        value="{{ task.product.name }}"/>
+                </div>
+
+                <div class="ym-fbox-text">
+                    <label><b>上次称重重量(KG)</b> </label>{{ weight }}
+                </div>
+                <div class="ym-fbox-text">
+                    <label><b><strong>上次称重是否车上有人:</strong></b> </label>
+                    <strong>{{ task.delivery_session.with_person_des }}</strong>
+                </div>
+                <div class="ym-fbox-text">
+                    <label for="weight"><b>本次称重的重量为(KG)</b></label> <input
+                        type="number"
+                        name="weight" id="weight" size="20" required="True"
+                        min="{{ weight + 1 }}"/>
+                </div>
+                <div class="ym-fbox-text">
+                    <label>
+                        <b>此次装货的图片</b>
+                    </label>
+                    {% for pic_url in task.pic_url_list %}
+                    <img class="float-left bordered" src="{{ pic_url }}"
+                         alt="图片">
+                    {% endfor %}
+                </div>
+                <div class="ym-fbox-button">
+                    <input type="hidden" name="task_id" id="task_id"
+                           value="{{ task.id }}"/>
+                    <input type="submit" name="submit" class="ym-button"
+                           value="提交"/>
+                    <input type="button" class="ym-button"
+                           onclick="window.history.back()" value="返回"/>
+                </div>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}

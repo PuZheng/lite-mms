@@ -1,0 +1,101 @@
+{% extends "layout.html" %}
+{% block custom_external %}
+    <script type="text/javascript">
+        $(function () {
+            $("#department_id").val({{ default_department_id }});
+            var l = {{ default_department_dict|safe }};
+            $("#department_id").change(function () {
+                var current_depart = $('#department_id option:selected').html();
+                var hint="";
+                $.map(l, function (value, index) {
+                    if (value.name != current_depart) {
+                        hint += "工单号" + index + "的默认车间为\"" + value.name + "\"\n";
+                    }
+                });
+                if(hint!=""){
+                    alert(hint);
+                    hint="";
+                }
+                update_procedure()
+            })
+            var departments = {{ department_list|tojson|safe }};
+            function update_procedure() {
+                $("#procedure_id").children("option[value!='']").remove();
+                var selected_department_id = $("#department_id").val();
+                for (i=0; i < departments.length; ++i) {
+                    if (departments[i].id == selected_department_id) {
+                        var procedure_list = departments[i].procedure_list;
+                        for (j=0; j < procedure_list.length; ++j) {
+                            $("#procedure_id").append("<option value=" + procedure_list[j].id + ">" + procedure_list[j].name + "</option>");
+                        }
+                    }
+                }
+            }
+            update_procedure(); 
+        })
+
+    </script>
+{% endblock %}
+{% block body %}
+    <div class="ym-wrapper">
+        <div class="wbox">
+            <form class="ym-form linearize-form"
+                  action="{{ url_for('manufacture.schedule') }}"
+                  method="POST">
+                <div class="ym-fbox-text">
+                    <label><b>已选择的工单号：</b></label>
+                    {{ work_command_list|join(",",attribute="id") }}
+                </div>
+                <div class="ym-fbox-text">
+                    <label><b>数量(单位:KG)</b></label>
+                    {{ weight }}
+                </div>
+                <div class="ym-fbox-text">
+                    <label for="department_id"><b>车间</b></label>
+                    <select size="1" name="department_id" id="department_id"
+                            required='required'>
+                        <option value="" selected="selected"
+                                disabled="disabled">请选择
+                        </option>
+                        {% for department in department_list %}
+                            <option value="{{ department.id }}">{{ department.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="ym-fbox-text">
+                    <label for="tech_req"><b>技术要求</b></label>
+                    <input size="10" name="tech_req" id="tech_req"
+                           type="text"/>
+                </div>
+                <div class="ym-fbox-check">
+                    <input name="urgent" id="urgent-input"
+                           type="checkbox"/>
+                    <label for="urgent-input">加急</label>
+                </div>
+                <div class="ym-fbox-text">
+                    <label><b>工序：</b></label>
+                    {% for work_command in work_command_list %}
+                        {% for procedure in procedure_list %}
+                            {% if procedure[0] == work_command.procedure|int %}
+                                工单{{ work_command.id }}的工序是{{ procedure[1] }}<br/>
+                                {% continue %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                    <select size="1" name="procedure_id" id="procedure_id">
+                        <option value="" selected="selected"
+                                disabled="disabled">保持现有工序
+                        </option>
+                    </select>
+                </div>
+                {% for work_command in  work_command_list %}
+                    <input type="hidden" name="id" value="{{ work_command.id }}"/>
+                {% endfor %}
+                <input type="hidden" name="purl" value="{{ purl }}"/>
+                <button class="ym-button ym-save">确定</button>
+                <a class="ym-button ym-delete" href="{{ purl }}">返回</a>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}

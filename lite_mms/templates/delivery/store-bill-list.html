@@ -1,0 +1,172 @@
+{% extends "layout.html" %}
+{% block custom_external %}
+    <script type="text/javascript">
+        $(function () {
+            $(".fancybox").fancybox();
+            $("#accordion").accordion({ collapsible:true, active:false, heightStyle:"content" });
+            {% if message %}
+                $("#ym-message-dialog").show();
+                $("#ym-message-dialog p").removeClass();
+                {% if message == "True" %}
+                    $("#ym-message-dialog p").addClass("box success");
+                    $("#ym-message-dialog p").html(
+                            "保存成功<br/>请继续添加，或者点击" +
+                                    '<a href="{{ url_for('delivery.session_detail',id=id) }}">返回</a>');
+                {% else %}
+                    $("#ym-message-dialog p").addClass("box error");
+                    $("#ym-message-dialog p").text("保存失败");
+                {% endif %}
+            {% else %}
+                $("#ym-message-dialog").hide();
+            {% endif %}
+            $("#customer-input").keyup(function () {
+                $("#accordion").accordion("option", "active", false);
+                var value = $("#customer-input").val();
+                $("h3").each(function () {
+                    if ($(this).text().indexOf(value) != -1) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                })
+            });
+            $("input:checkbox[name='check_all']").click(function () {
+                val = 'table' + $(this).val().match(/\d+/);
+                $("#" + val + " input:checkbox[name='store_bill_id']").attr("checked",
+                        this.checked);
+            });
+            $("input:checkbox[name='store_bill_id']").click(function () {
+                if (this.checked == false) {
+                    $(this).parents('table').find("input:checkbox[name='check_all']").removeAttr("checked");
+                }
+            })
+            $("#select").click(function () {
+                if ($("input:checkbox[name='store_bill_id']:checked").val() == undefined) {
+                    alert("请选择仓单");
+                    return false;
+                } else {
+                    return true;
+                }
+            })
+            $("img").height("120px");
+        })
+    </script>
+    <script src="{{ url_for("delivery.static", filename="js/new-consignment-dialog.js") }}"></script>
+    <style type="text/css">
+        a:hover,a:focus {
+            background-color: transparent;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+
+    <div class="ym-wrapper">
+        <div class="ym-wbox">
+            <div class="ym-fbox-text center" id="ym-message-dialog"
+                 role="alert">
+                <p>{{ message }}</p>
+            </div>
+            {% if not customer_list %}
+                <div class="ym-fbox-text">
+                    <p>当前无可发货的仓单</p>
+                    <a class="ym-button ym-delete"
+                       href="{{ url_for('delivery.session_list') }}">返回
+                    </a>
+                </div>
+            {% else %}
+                <div class="ym-fbox-text">
+                    <label for="customer-input">客户</label>
+                    <input type="text" id="customer-input" placeholder="不限客户">
+                </div>
+
+                <form class="ym-form linearize-form ym-columnar"
+                      action="{{ url_for('delivery.store_bill_add') }}"
+                      method="POST">
+                    <div id="accordion">
+                        {% for customer in customer_list %}
+                            <h3>{{ customer.name }}</h3>
+                            <div>
+                                <table class="bordertable"
+                                       id="table{{ customer.id }}">
+                                    <thead>
+                                    <tr>
+                                        <th><input type="checkbox"
+                                                   name="check_all"
+                                                   value="check_box{{ customer.id }}"/>
+                                        </th>
+                                        <th>仓单号</th>
+                                        <th>对应的订单编号</th>
+                                        <th>对应的收货单号</th>
+                                        <th>存放点</th>
+                                        <th>产品名称</th>
+                                        <th>大约净重(KG)</th>
+                                        <th>数量</th>
+                                        <th>图片</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for store_bill in customer.bill_list %}
+                                        <tr {% if not store_bill.printed %}
+                                            class="warning" title="未打印">
+                                            <td></td>
+                                        {% else %}
+                                            >
+                                            <td>
+                                                <div class="ym-fbox-check">
+                                                    <input type="checkbox"
+                                                           value="{{ store_bill.id }}"
+                                                           name="store_bill_id"/>
+                                                </div>
+                                            </td>
+                                        {% endif %}
+                                        <td>{{ store_bill.id }}</td>
+                                        <td>{{ store_bill.sub_order.order.customer_order_number }}</td>
+                                        <td>
+                                            {{ store_bill.sub_order.order.goods_receipt.receipt_id }}</td>
+                                        <td>{{ store_bill.harbor.name if store_bill.harbor or "" }}</td>
+                                        <td>{{ store_bill.product_name }}</td>
+                                        <td>{{ store_bill.weight }}</td>
+                                        <td>
+                                            {{ store_bill.quantity }}(
+                                            {{ store_bill.unit }})
+                                        </td>
+                                        <td>{% if store_bill.pic_path %}
+                                            <a href="{{ store_bill.pic_url }}"
+                                               class="fancybox" rel="group"
+                                               title="{{ store_bill.product_name }}">
+                                                <img src="{{ store_bill.pic_url }}"
+                                                     class="bordered"
+                                                     alt="{{ store_bill.product_name }}"/>
+                                            </a>{% endif %}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% endfor %}
+
+                    </div>
+                    {% if id %}
+                        <input type="hidden" value="{{ id }}"
+                               name="delivery_session_id"/>
+                        <button class="ym-button ym-save" id="select">添加
+                        </button>
+                        <a class="ym-button ym-delete"
+                           href="{{ url_for('delivery.session_detail', id=id) }}">返回
+                        </a>
+                    {% else %}
+                        <button class="ym-button ym-save" id="select">
+                            生成发货会话
+                        </button>
+                        <a class="ym-button ym-delete"
+                           href="{{ url_for('delivery.session_list') }}">返回
+                        </a>
+                    {% endif %}
+
+
+                </form>
+                </div>
+            {% endif %}
+    </div>
+{% endblock %}

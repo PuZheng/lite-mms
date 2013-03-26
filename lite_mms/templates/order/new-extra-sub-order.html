@@ -1,0 +1,135 @@
+{% extends "layout.html" %}
+{% block custom_external %}
+    <script type="text/javascript">
+        $(function () {
+            var products = {{ products|safe }};
+            var selected_product_type = $("#product_type").val();
+            $.each(products[selected_product_type], function (idx, entry) {
+                $("#product").append('<option value="' + entry.id + '">' + entry.name + '</option>');
+            });
+            $("#product_type").change(function (ui) {
+                var selected_product_type = $("#product_type").val();
+                $("#product").empty();
+                $.each(products[selected_product_type], function (idx, entry) {
+                    $('#product').append('<option value="' + entry.id + '">' + entry.name + '</option>');
+                });
+                });
+
+            function calc_unit_weight() {
+
+                var weight = $("input[name='weight']").val();
+                var quantity = $("input[name='quantity']").val();
+                if (weight.length && quantity.length) {
+                    return weight / quantity;
+                } else {
+                    return null;
+                }
+            }
+
+            $("input[name='weight']").focusout(function () {
+                    var unit_weight = calc_unit_weight();
+                    var message = "({{ _("单位重量: ") }}";
+                    if (unit_weight != null) {
+                        message += unit_weight + " 公斤)";
+                        $("#unit_weight").text(message);
+                        $("#unit_weight").show();
+                    } else {
+                        $("#unit_weight").hide();
+                    }
+                    });
+            $("input[name='quantity']").focusout(function () {
+                    var unit_weight = calc_unit_weight();
+                    var message = "({{ _("单位重量: ") }}";
+                    if (unit_weight != null) {
+                        message += unit_weight + " 公斤)";
+                        $("#unit_weight").text(message);
+                        $("#unit_weight").show();
+                    } else {
+                        $("#unit_weight").hide();
+                    }
+                    });
+            $("input[name='due_time']").attr("min",new Date().toJSON().substring(0,10));
+        });
+    </script>
+{% endblock %}
+{% block body %}
+    <div class="ym-wrapper">
+        <div class="ym-wbox">
+            <div class="highlight">
+                {{ _("本订单收货重量为") }}: {{ order.goods_receipt.product_list|sum(attribute="weight") }}公斤, 
+                {{ _("已创建子订单合计重量为")}}: {{ order.sub_order_list|sum(attribute="weight") }}公斤
+            </div>
+            <form class="ym-form linearize-form"
+                  action="{{ url_for('order.new_sub_order') }}"
+                  method="POST">
+                <div class="ym-fbox-select">
+                    <label>产品类型</label>
+                    <select id="product_type" name="product_type" required="required">
+                        {% for t in product_types %}
+                            <option value="{{ t.id }}">{{ t.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="ym-fbox-text">
+                    <label>产品名称</label>
+                    <select name="product" id="product" required="required">
+                    </select>
+                </div>
+                <div class="ym-fbox-text">
+                    <label>规格</label>
+                    <input type="text" size="64" name="spec" id="spec" />
+                </div>
+                <div class="ym-fbox-text">
+                    <label>型号</label>
+                    <input type="text" size="64" name="type" id="type" />
+                </div>
+                <div class="ym-fbox-text">
+                    <label>技术要求</label> <input name="tech_req" size="10"
+                                               type="text" />
+                </div>
+                <div class="ym-fbox-text">
+                    <label>净重(KG)</label> <input name="weight" size="10"
+                                                 type="text" required="required"/>
+                </div>
+                <div class="ym-fbox-text">
+                    <label>数量</label> <input name="quantity" size="10"
+                                             type="number" min="1"
+                                             required="required"/>
+                </div>
+                <div class="ym-fbox-text">
+                    <label>数量单位
+                        <small><em><span id="unit_weight" class="highlight"></span></em></small>
+                    </label> 
+                    <input name="unit" size="10" type="text" required="required"/>
+                </div>
+                <div class="ym-fbox-text">
+                    <label>交货日期</label>
+                    <input name="due_time" size="10" type="date" required="required"/>
+                </div>
+                <div class="ym-fbox-select">
+                    <label>卸货点</label>
+                    <select name="harbor" required="required">
+                    {% for harbor in harbor_list %}
+                      <option value="{{ harbor.name }}">{{ harbor.name }}</option>
+                    {% endfor %}
+                    </select>
+                </div>
+                <div class="ym-fbox-check">
+                    <input name="urgent" id="urgent-input"
+                           type="checkbox"/><label
+                        for="urgent-input">加急</label>
+                </div>
+                <div class="ym-fbox-check">
+                    <input name="returned" id="returned-input"
+                           type="checkbox"/><label
+                        for="returned-input">退货</label>
+                </div>
+                <input type="hidden" name="order_id" value="{{ order.id }}">
+                <button class="ym-button ym-save">保存</button>
+                <a class="ym-button ym-delete"
+                   href="{{ url_for('order.order') }}?id={{ order.id }}">返回</a>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}

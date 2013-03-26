@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
-from flask import request, render_template
+from flask import request, render_template, redirect
 from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.column_spec import InputColumnSpec, ColumnSpec, PlaceHolderColumnSpec, ListColumnSpec
 from wtforms import Form, IntegerField, validators, ValidationError
@@ -12,7 +12,7 @@ from lite_mms.basemain import app, data_browser, nav_bar
 from lite_mms.permissions import CargoClerkPermission,AdminPermission
 from lite_mms import apis
 from lite_mms.apis import wraps
-from lite_mms.models import UnloadSession, Vehicle, GoodsReceipt, Customer
+from lite_mms.models import UnloadSession, Vehicle, GoodsReceipt, Customer, UnloadTask, Product
 from lite_mms.constants import cargo as cargo_const
 from lite_mms.utilities import dictview, decorators
 from lite_mms.constants import cargo as cargo_const
@@ -40,7 +40,7 @@ class UnloadSessionModelView(ModelView):
     __list_columns__ = ["id", "vehicle", "create_time", "finish_time", "with_person", "status", "goods_receipt_list"]
 
     __column_labels__ = {"id": u"编号", "vehicle": u"车辆", "create_time": u"创建时间", "finish_time": u"结束时间", 
-                         "with_person": u"驾驶室", "status": u"状态", "goods_receipt_list": u"收货单"}
+                         "with_person": u"驾驶室", "status": u"状态", "goods_receipt_list": u"收货单", "gross_weight": u"净重"}
 
     def goods_receipt_list_formatter(v, obj):
         ret = u'应建'
@@ -100,10 +100,9 @@ class UnloadSessionModelView(ModelView):
         from lite_mms import apis
         return apis.UnloadSessionWrapper(model)
 
-
     def get_customized_actions(self, model=None):
         from lite_mms.portal.cargo2.actions import MyDeleteAction, CloseAction, OpenAction
-        if model == None:
+        if model == None: # for list
             return [MyDeleteAction(u"删除", CargoClerkPermission), CloseAction(u"关闭"), OpenAction(u"打开")]
         else:
             if model.status in [cargo_const.STATUS_CLOSED, cargo_const.STATUS_DISMISSED]:
@@ -169,9 +168,9 @@ class VehicleModelView(ModelView):
 
 vehicle_model_view = VehicleModelView(Vehicle, u"车辆")
 
-@cargo2_page.route("/unload-task/<int:id_>", methods=["GET", "POST"])
+@cargo2_page.route("/weigh-unload-task/<int:id_>", methods=["GET", "POST"])
 @decorators.templated("/cargo2/unload-task.haml")
-def unload_task(id_):
+def weigh_unload_task(id_):
     task = apis.cargo.get_unload_task(id_)
     if not task:
         abort(404)
@@ -190,12 +189,24 @@ def unload_task(id_):
                 abort(403)
             task.update(weight=weight, product_id=form.product.data)
             from flask.ext.login import current_user
-            fsm.fsm.reset(task.unload_session)
+            fsm.fsm.reset_obj(task.unload_session)
             fsm.fsm.next(cargo_const.ACT_WEIGH, current_user.username)
-            if task.is_last:
-                fsm.fsm.next(cargo_const.ACT_CLOSE, current_user.username)
             return redirect(unload_session_model_view.url_for_object(model=task.unload_session.model))
         else:
             return render_template("validation-error.html", errors=form.errors,
                                    back_url=unload_session_model_view.url_for_object(model=task.unload_session.model),
                                    nav_bar=nav_bar), 403
+
+class UnloadTaskModelView(ModelView):
+
+    can_edit = True 
+
+    __form_columns__ = ["harbor", "customer", "weight", InputColumnSpec("product", group_by=Product.product_type, label=u"产品"), "is_last"]
+    __column_labels__ = {
+        "harbor": u"装卸点", 
+        "customer": u"客户",
+        "weight": u"重量(公斤)",
+        "is_last": u"是否全部卸货",
+    }
+
+unload_task_model_view = UnloadTaskModelView(UnloadTask, u"卸货任务")

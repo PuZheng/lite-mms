@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
-from flask import redirect, send_from_directory, url_for, abort
+from flask import redirect, send_from_directory, url_for, abort, render_template, request
 from flask.ext.login import current_user, login_required
-from lite_mms.basemain import app
+from lite_mms.basemain import app, nav_bar
 from lite_mms.utilities import decorators
 
 @app.route("/")
@@ -13,6 +13,10 @@ def index():
     if not next_url:
         abort(404)
     return redirect(next_url)
+
+@app.route("/error")
+def error():
+    return render_template("error.html", msg=request.args["msg"], back_url=request.args["back_url"], nav_bar=nav_bar)
 
 @app.route("/index")
 @decorators.templated("index.html")

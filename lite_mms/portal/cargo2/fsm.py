@@ -13,10 +13,12 @@ class UnloadSessionFSM(StateMachine):
             self.set_current_state(state_weighing)
         elif obj.status == cargo_const.STATUS_CLOSED:
             self.set_current_state(state_closed)
+        self.obj = obj
 
 fsm = UnloadSessionFSM()
 
 class StateLoading(RuleSpecState):
+    status = cargo_const.STATUS_LOADING
     
     @committed
     def side_effect(self):
@@ -28,18 +30,25 @@ state_loading = StateLoading(fsm, {
     cargo_const.ACT_CLOSE: (cargo_const.STATUS_CLOSED, edit_us)
 })
 
-class StateWeighing(RuleSpecState):
+class StateWeighing(State):
+    status = cargo_const.STATUS_WEIGHING
 
     @committed
     def side_effect(self):
         self.obj.status = cargo_const.STATUS_WEIGHING 
         return self.obj.model
 
-state_weighing = StateWeighing(fsm, {
-    cargo_const.ACT_WEIGH: (cargo_const.STATUS_LOADING, edit_us),
-})
+    def next(self, action):
+        edit_us.test()
+        if action == cargo_const.ACT_WEIGH:
+            if any(task.is_last for task in self.obj.task_list):
+                return state_closed
+            return state_loading
+
+state_weighing = StateWeighing(fsm)
 
 class StateClosed(RuleSpecState):
+    status = cargo_const.STATUS_CLOSED
 
     @committed
     def side_effect(self):
@@ -49,3 +58,4 @@ class StateClosed(RuleSpecState):
 state_closed = StateClosed(fsm, {
     cargo_const.ACT_OPEN: (cargo_const.STATUS_LOADING, edit_us)
 })
+

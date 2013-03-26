@@ -3,7 +3,7 @@ import json
 from flask import request, render_template
 from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.column_spec import InputColumnSpec, ColumnSpec, PlaceHolderColumnSpec, ListColumnSpec
-from flask.ext.wtf import Form, IntegerField, validators, ValidationError
+from wtforms import Form, IntegerField, validators, ValidationError
 from sqlalchemy.orm.exc import NoResultFound
 from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.column_spec import InputColumnSpec, ColumnSpec
@@ -169,7 +169,7 @@ class VehicleModelView(ModelView):
 
 vehicle_model_view = VehicleModelView(Vehicle, u"车辆")
 
-@cargo2_page.route("/unload-task/<int:id_>")
+@cargo2_page.route("/unload-task/<int:id_>", methods=["GET", "POST"])
 @decorators.templated("/cargo2/unload-task.haml")
 def unload_task(id_):
     task = apis.cargo.get_unload_task(id_)
@@ -183,7 +183,8 @@ def unload_task(id_):
         class _ValidationForm(Form):
             weight = IntegerField('weight', [validators.required()])
             product = IntegerField('product')
-        if form.validate_on_submit():
+        form = _ValidationForm(request.form)
+        if form.validate():
             weight = task.last_weight - form.weight.data
             if weight < 0:
                 abort(403)

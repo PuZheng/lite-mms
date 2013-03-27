@@ -18,23 +18,23 @@ import sqlalchemy as sa
 def upgrade():
     op.create_table("TB_LOG",
                     sa.Column("id", sa.Integer, primary_key=True),
-                    sa.Column("name", sa.String(256)),
-                    sa.Column("level", sa.String(256)),
-                    sa.Column("module", sa.String(256)),
-                    sa.Column("func_name", sa.String(256)),
+                    sa.Column("actor_id", sa.Integer, sa.ForeignKey("TB_USER.id")),
+                    sa.Column("obj_cls", sa.String(64), nullable=False),
+                    sa.Column("obj_pk", sa.String(64), nullable=False),
+                    sa.Column("obj", sa.String(64), nullable=False),
+                    sa.Column("action", sa.String(64), nullable=False),
+                    sa.Column("create_time", sa.DateTime, default=datetime.now),
+                    sa.Column("name", sa.String(64)),
+                    sa.Column("level", sa.String(64)),
+                    sa.Column("module", sa.String(64)),
+                    sa.Column("func_name", sa.String(64)),
                     sa.Column("line_no", sa.Integer),
                     sa.Column("thread", sa.Integer),
-                    sa.Column("thread_name", sa.String(256)),
+                    sa.Column("thread_name", sa.String(64)),
                     sa.Column("process", sa.Integer),
-                    sa.Column("message", sa.String(256)),
-                    sa.Column("args", sa.String(256)),
-                    sa.Column("actor_id", sa.Integer,
-                              sa.ForeignKey("TB_USER.id")),
-                    sa.Column("obj", sa.String(256)),
-                    sa.Column("action", sa.String(256)),
-                    sa.Column("extra", sa.String(256)),
-                    sa.Column("create_time", sa.DateTime,
-                              default=datetime.now()))
+                    sa.Column("message", sa.String(64)),
+                    sa.Column("args", sa.String(64)),
+                    sa.Column("extra", sa.String(64)))
 
 
 def downgrade():

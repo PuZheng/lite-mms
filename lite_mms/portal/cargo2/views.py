@@ -112,14 +112,33 @@ class UnloadSessionModelView(ModelView):
 
     # ================= FORM PART ============================
     __create_columns__ = ["vehicle", InputColumnSpec("with_person", label=u"驾驶室是否有人"), "gross_weight"]
+    def format_log(logs, obj):
+        for log in logs:
+            if log.obj_cls == "UnloadSession":
+                model = u"卸货会话"
+            elif log.obj_cls == "UnloadTask":
+                model = u"卸货任务"
+            else:
+                continue
+            if log.action == u"create":
+                yield u"[%s]: 用户%s创建了本卸货会话" % (log.create_time.strftime("%y年%m月%d日 %H点%M分").decode("utf-8"), log.actor.username)
+            else: # {u"关闭", u"打开"}:
+                if log.action ==  u"update":
+                    log.action = u"编辑"
+                s = u"[%s]: 用户%s对<i>%s</i>(%s)执行了[%s]操作" % (log.create_time.strftime("%y年%m月%d日 %H点%M分").decode("utf-8"), log.actor.username, model, log.obj, log.action)
+                if log.message:
+                    s += " - " + log.message
+                yield s
+
     __form_columns__ = ["vehicle", 
-                        ColumnSpec("with_person", label=u"驾驶室是否有人", formatter=lambda v, obj: '<strong>' + (u'有人' if v else u'无人') + '</strong>', 
-                                   css_class="input-small uneditable-input"), 
+                        InputColumnSpec("with_person", label=u"驾驶室是否有人"),
+                        #InputColumnSpec("with_person", label=u"驾驶室是否有人", formatter=lambda v, obj: '<strong>' + (u'有人' if v else u'无人') + '</strong>', 
+                                   #css_class="input-small uneditable-input"), 
                         ColumnSpec("status", label=u"状态", formatter=lambda v, obj: '<strong>' + g_status_desc[v] + '</strong>', 
                                    css_class="input-small uneditable-input"), 
                         InputColumnSpec("create_time", label=u"创建时间", read_only=True),
                         PlaceHolderColumnSpec(col_name="task_list", label=u"卸货任务", template_fname="cargo2/unload-task-list-snippet.haml"), 
-                        ListColumnSpec(col_name="log_list", label=u"日志"),
+                        ListColumnSpec(col_name="log_list", label=u"日志", formatter=format_log),
                         ]
 
 unload_session_model_view = UnloadSessionModelView(UnloadSession, u"卸货会话")
@@ -190,7 +209,7 @@ def weigh_unload_task(id_):
             task.update(weight=weight, product_id=form.product.data)
             from flask.ext.login import current_user
             fsm.fsm.reset_obj(task.unload_session)
-            fsm.fsm.next(cargo_const.ACT_WEIGH, current_user.username)
+            fsm.fsm.next(cargo_const.ACT_WEIGH, current_user)
             return redirect(unload_session_model_view.url_for_object(model=task.unload_session.model))
         else:
             return render_template("validation-error.html", errors=form.errors,

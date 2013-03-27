@@ -3,6 +3,7 @@ from lite_sm import StateMachine, State, RuleSpecState, InvalidAction
 from lite_mms.constants import cargo as cargo_const
 from lite_mms.permissions.roles import CargoClerkPermission
 from lite_mms.utilities.decorators import committed
+from lite_mms.basemain import timeline_logger
 
 class UnloadSessionFSM(StateMachine):
 
@@ -15,15 +16,23 @@ class UnloadSessionFSM(StateMachine):
             self.set_current_state(state_closed)
         self.obj = obj
 
-fsm = UnloadSessionFSM()
+    def do_log(self, action, actor):
+        #msg = u"用户(%s)对卸货会话%s执行了%s操作，卸货会话的状态从(%s)转变为(%s)" % (actor.username, self.obj, cargo_const.desc_action(action), self.last_state, self.current_state)
+        msg = ""
+        self.logger.info(msg, extra={"obj": self.obj.model, "actor": actor, "action": cargo_const.desc_action(action), "obj_pk": self.obj.id})
+
+fsm = UnloadSessionFSM(logger=timeline_logger)
 
 class StateLoading(RuleSpecState):
     status = cargo_const.STATUS_LOADING
+
+    def __unicode__(self):
+        return u"正在卸载"
     
     @committed
     def side_effect(self):
         self.obj.status = cargo_const.STATUS_LOADING
-        self.obj.finished_time = None
+        self.obj.finish_time = None
         return self.obj.model
 
 state_loading = StateLoading(fsm, {
@@ -33,6 +42,9 @@ state_loading = StateLoading(fsm, {
 
 class StateWeighing(State):
     status = cargo_const.STATUS_WEIGHING
+
+    def __unicode__(self):
+        return u"等待称重"
 
     @committed
     def side_effect(self):
@@ -52,6 +64,9 @@ state_weighing = StateWeighing(fsm)
 
 class StateClosed(RuleSpecState):
     status = cargo_const.STATUS_CLOSED
+
+    def __unicode__(self):
+        return u"关闭"
 
     @committed
     def side_effect(self):

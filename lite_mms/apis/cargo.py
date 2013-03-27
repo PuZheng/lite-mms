@@ -66,7 +66,11 @@ class UnloadSessionWrapper(ModelWrapper):
 
     @property
     def log_list(self):
-        return []
+        from lite_mms.models import Log
+        ret = Log.query.filter(Log.obj_pk==self.id).filter(Log.obj_cls==self.model.__class__.__name__).all()
+        for task in self.task_list:
+            ret.extend(task.log_list)
+        return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time))
 
     @property
     def with_person_des(self):
@@ -99,6 +103,11 @@ class UnloadTaskWrapper(ModelWrapper):
             return url_for("serv_pic", filename=self.pic_path)
         else:
             return ""
+
+    @property
+    def log_list(self):
+        from lite_mms.models import Log
+        return Log.query.filter(Log.obj_pk==self.id).filter(Log.obj_cls==self.model.__class__.__name__).all()
 
     def update(self, **kwargs):
         """

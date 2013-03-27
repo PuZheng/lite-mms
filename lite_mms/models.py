@@ -790,21 +790,26 @@ class Log(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     actor_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
     actor = db.relationship("User")
-    obj_cls = db.Column(db.String(256), nullable=False)
-    obj_pk = db.Column(db.String(256), nullable=False)
-    action = db.Column(db.String(256), nullable=False)
+    obj_cls = db.Column(db.String(64), nullable=False)
+    obj_pk = db.Column(db.String(64), nullable=False)
+    obj = db.Column(db.String(64), nullable=False)
+    action = db.Column(db.String(64), nullable=False)
     create_time = db.Column(db.DateTime, default=datetime.now)
 
+
     # SUPPLEMENT PART
-    name = db.Column(db.String(256))
-    level = db.Column(db.String(256))
-    module = db.Column(db.String(256))
-    func_name = db.Column(db.String(256))
+    name = db.Column(db.String(64))
+    level = db.Column(db.String(64))
+    module = db.Column(db.String(64))
+    func_name = db.Column(db.String(64))
     line_no = db.Column(db.Integer)
     thread = db.Column(db.Integer)
-    thread_name = db.Column(db.String(256))
+    thread_name = db.Column(db.String(64))
     process = db.Column(db.Integer)
-    message = db.Column(db.String(256))
-    args = db.Column(db.String(256))
-    extra = db.Column(db.String(256))
+    message = db.Column(db.String(64))
+    args = db.Column(db.String(64))
+    extra = db.Column(db.String(64))
 
+
+    def __unicode__(self):
+        return u"[%s]: 用户%s对%s(%s)执行了(%s)操作" % (self.create_time.strftime("%Y-%m-%d %H:%M:%S"), self.actor.username, self.obj_cls, self.obj, self.action)

@@ -20,7 +20,8 @@ from flask.ext.principal import Principal
 
 principal = Principal(app)
 
-if not app.config["DEBUG"]:
+if 1:
+#if not app.config["DEBUG"]:
     import logging
     import logging.handlers
 
@@ -34,7 +35,8 @@ if not app.config["DEBUG"]:
     app.logger.addHandler(file_handler)
 
     from lite_mms.log.handler import DBHandler
-    app.logger.addHandler(DBHandler())
+    timeline_logger = logging.getLogger("timeline")
+    timeline_logger.addHandler(DBHandler())
 # create upload files
 
 if not os.path.exists(app.config["UPLOAD_FOLDER"]):
@@ -47,7 +49,7 @@ nav_bar = FlaskNavBar(app)
 from flask.ext.databrowser import DataBrowser
 from lite_mms.database import db
 from lite_mms import constants
-data_browser = DataBrowser(app, db, page_size=constants.ITEMS_PER_PAGE)
+data_browser = DataBrowser(app, db, page_size=constants.ITEMS_PER_PAGE, logger=timeline_logger)
 
 # ============== REGISTER BLUEPRINT ========================
 serve_web = app.config["SERVE_TYPE"] in ["both", "web"]

@@ -25,7 +25,7 @@ class CloseAction(BaseAction):
         from lite_mms.portal.cargo2.fsm import fsm
         from flask.ext.login import current_user
         fsm.reset_obj(obj)
-        fsm.next(cargo_const.ACT_CLOSE, current_user.username)
+        fsm.next(cargo_const.ACT_CLOSE, current_user)
 
     def get_forbidden_msg_formats(self):
         return {-2: u"发货会话%s已经被关闭", -3: u"发货会话%s有卸货任务没有称重，请确保所有的卸货任务都已经称重！"}
@@ -41,7 +41,7 @@ class OpenAction(BaseAction):
         from lite_mms.portal.cargo2.fsm import fsm
         from flask.ext.login import current_user
         fsm.reset_obj(obj)
-        fsm.next(cargo_const.ACT_OPEN, current_user.username)
+        fsm.next(cargo_const.ACT_OPEN, current_user)
 
     def get_forbidden_msg_formats(self):
         return {-2: u"只有已经关闭的会话才能被打开"}

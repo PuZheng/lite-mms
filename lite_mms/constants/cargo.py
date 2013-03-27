@@ -10,3 +10,16 @@ ACT_WEIGH = 2
 ACT_CLOSE = 3
 ACT_OPEN = 4
 ACT_DISMISS = 5
+
+
+def desc_action(action):
+    if action == ACT_LOAD:
+        return u"装货"
+    elif action == ACT_WEIGH:
+        return u"称重"
+    elif action == ACT_CLOSE:
+        return u"关闭"
+    elif action == ACT_OPEN:
+        return u"打开"
+    return "未知"
+

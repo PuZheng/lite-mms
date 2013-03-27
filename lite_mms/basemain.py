@@ -86,6 +86,10 @@ if serve_web:
     app.register_blueprint(import_data_page, url_prefix="/import_data")
     from lite_mms.portal.search import search_page
     app.register_blueprint(search_page, url_prefix="/search")
+
+    from lite_mms.portal.timeline import time_line_page
+    app.register_blueprint(time_line_page, url_prefix="/timeline")
+
     import lite_mms.portal.admin
 if serve_ws:
     from lite_mms.portal.auth_ws import auth_ws
@@ -107,7 +111,7 @@ from lite_mms.permissions.roles import (CargoClerkPermission,
 from lite_mms.permissions.order import view_order, schedule_order
 from lite_mms.permissions.work_command import view_work_command
 nav_bar.register(cargo_page, name=u"卸货管理", permissions=[CargoClerkPermission])
-nav_bar.register(cargo2_page, default_url="/cargo2/unload-session2-list?status__only_unclosed=on", name=u"卸货管理(beta)", permissions=[CargoClerkPermission])
+nav_bar.register(cargo2_page, default_url="/cargo2/unload-session-list", name=u"卸货管理(beta)", permissions=[CargoClerkPermission])
 nav_bar.register(order_page, default_url='/order/order-list', name=u"订单管理",
                  permissions=[view_order])
 nav_bar.register(order2_page, default_url='/order2/order-list?order_by=id&desc=1', name=u"订单管理(beta)",
@@ -131,6 +135,8 @@ nav_bar.register(store_bill_page, name=u"仓单管理",
                  permissions=[QualityInspectorPermission])
 nav_bar.register(deduction_page, name=u"扣重管理", default_url="/deduction/",
                  permissions=[QualityInspectorPermission])
+
+nav_bar.register(time_line_page, name=u"时间线", default_url="/timeline/")
 
 nav_bar.register(search_page, name=u"搜索", default_url="/search/search")
 

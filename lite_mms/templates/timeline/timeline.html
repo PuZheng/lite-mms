@@ -1,0 +1,102 @@
+{% extends "layout.html" %}
+{% block __data_browser__custom_external_block %}
+    <script type="text/javascript">
+        {{ super() }}
+        $(function () {
+            $("select").select2();
+            {% if request.args.get("user_id") %}
+                $("#user").val({{ request.args.get("user_id") }}).trigger("change");
+            {% endif %}
+            {% if request.args.getlist("create_time") %}
+                var create_time_list = {{ request.args.getlist("create_time")|tojson|safe }}
+                        $("[name=create_time]").each(function (idx, val) {
+                            $(this).val(create_time_list[idx]);
+                        });
+            {% endif %}
+            $('[name=create_time]').datepicker();
+            $("#reset-button").click(function () {
+                $("select").select2("val", "");
+            });
+        });
+    </script>
+{% endblock %}
+{% block body %}
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div class="span10">
+                {% if log_list %}
+                    {% for grouper, list in log_list|groupby("create_date")|reverse %}
+                        <pre class="prettyprint"><strong>{{ grouper }}:</strong></pre>
+                        {% for log in list %}
+                            <blockquote>
+                                {% if log.obj %}
+                                    {% for k, v in log.url_map  %}
+                                        <a href="{{ v }}">{{ k }}</a>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="{{ "text-error" }}">{{ log.level }}</span>
+                                {% endif %}
+                                来自<span
+                                    class="muted">{{ log.actor or "" }}</span>
+                                <br>
+                                <small>{{ log.message }}</small>
+                            </blockquote>
+                        {% endfor %}
+                    {% endfor %}
+                {% else %}
+                    <p class="text-error">{{ _("没有符合条件的结果") }}</p>
+                {% endif %}
+            </div>
+
+            <div class="alert-info alert span2">
+                <h4>过滤条件</h4>
+                <hr>
+                <form>
+                    <fieldset class="pagination-centered">
+                        <div class="control-group">
+                            <label class="control-label">
+                                操作人
+                                <i>&nbsp;是&nbsp;&nbsp;</i></label>
+
+                            <div class="controls">
+                                <select name="user_id" id="user"
+                                        class="input-medium">
+                                    <option value="0">--所有--</option>
+                                    {% for user in user_list %}
+                                        <option value="{{ user.id }}">{{ user.username }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">
+                                操作时间
+                                <i>&nbsp;位于&nbsp;&nbsp;</i></label>
+
+                            <div class="controls">
+                                <input type="date" name="create_time"
+                                       id="create_time1" class="input-medium">
+                            </div>
+                            <label class="control-label">
+                                与
+                            </label>
+
+                            <div class="controls">
+                                <input type="date" name="create_time"
+                                       id="create_time2" class="input-medium">
+                            </div>
+                        </div>
+                    </fieldset>
+                    <hr>
+                    <div class="control-group pagination-centered">
+                        <div class="controls">
+                            <input class="btn btn-primary" type="submit"
+                                   value="刷新结果">
+                            <input class="btn btn-danger" type="reset"
+                                   value="重置" id="reset-button"></div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -76,11 +76,11 @@ class User(db.Model):
                              backref="users")
     tag = db.Column(db.String(32), nullable=True)
 
-    def __init__(self, username, password, groups, tag=""):
-        self.username = username
-        self.password = password
-        self.groups.extend(groups)
-        self.tag = tag
+    #def __init__(self, username, password, groups, tag=""):
+        #self.username = username
+        #self.password = password
+        #self.groups.extend(groups)
+        #self.tag = tag
 
     def __unicode__(self):
         return self.username

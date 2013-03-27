@@ -59,10 +59,12 @@ def unload_task():
                                               harbor=form.harbour.data,
                                               customer_id=form.customer_id.data,
                                               creator_id=form.actor_id.data,
-                                              pic_path=pic_path)
+                                              pic_path=pic_path, is_last=form.is_finished.data)
         if form.is_finished.data:
-            apis.cargo.get_unload_session(form.session_id.data).update(
-                finish_time=datetime.now())
+            from lite_mms.portal.cargo2.fsm import fsm
+            from lite_mms.constants import cargo as cargo_const
+            fsm.reset_obj(new_task.unload_session)
+            fsm.next(cargo_const.ACT_LOAD, new_task.creator.username)
     except ValueError, e:
         return unicode(e), 403
     return json.dumps(new_task.id)

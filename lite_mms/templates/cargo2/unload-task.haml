@@ -30,7 +30,7 @@
       %strong << {{ task.customer.name }}
       的卸货任务
     
-    %form class="form-horizontal" method="POST" action="{{ url_for('cargo2.unload_task', id_=task.id) }}"
+    %form class="form-horizontal" method="POST" action="{{ url_for('cargo2.weigh_unload_task', id_=task.id) }}"
       %fieldset
         .control-group
           .control-label
@@ -61,6 +61,16 @@
                有人
              -else
                无人
+
+        .control-group
+          .control-label
+            %label -> %strong << 是否本会话最后一次任务
+          .controls
+            .input-medium.uneditable-input -> %strong 
+             -if task.is_last
+               是
+             -else
+               否
         
         .control-group
           .control-label

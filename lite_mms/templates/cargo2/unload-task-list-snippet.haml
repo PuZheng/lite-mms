@@ -1,20 +1,30 @@
 %table class="table table-bordered table-condensed"
   %thead
     %tr 
+      %th
       %th << 编号
       %th << 装卸点
       %th << 客户
       %th << 装卸工
+      %th << 全部卸货
       %th << 产品
       %th << 图片
-      %th << 重量
+      %th << 重量(公斤)
   %tbody
     -for row in field_value
       %tr
-        %td << {{row.id}}
+        %td 
+          -if not row.weight 
+            %a.del-ut href="#" data-pk={{ row.id }} -> %i.icon-remove
+        %td 
+          -if row.weight
+            %a href={{ url_for("cargo2.unload_task", id_=row.id, url=request.url) }} << {{ row.id }}
+          -else
+            =row.id
         %td << {{row.harbor}}
         %td << {{row.customer}}
         %td << {{row.creator}}
+        %th << {% if row.is_last %}是{% else %}否{% endif %}
         %td << {{row.product}}
         %td 
           -if row.pic_path
@@ -24,4 +34,17 @@
           -if row.weight
             {{ row.weight }} 
           -else
-            %a href="{{ url_for('cargo2.unload_task', id_=row.id) }}" class="btn" << 称重
+            %a.btn.btn-primary href="{{ url_for('cargo2.weigh_unload_task', id_=row.id) }}" << 称重
+
+%script type="text/javascript"
+  $(function () {
+    $("a.del-ut").click(function () {
+        if (confirm("您确认要删除卸货任务" + $(this).attr("data-pk") + "?")) {
+          $.post("/cargo2/ajax/unload-task/" + $(this).attr("data-pk"), {"action": "delete"}, 
+          function () {
+              window.location.reload(false);
+          });
+        }
+    });
+  });
+  

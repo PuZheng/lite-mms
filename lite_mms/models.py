@@ -143,7 +143,7 @@ class UnloadTask(db.Model):
     is_last = db.Column(db.Boolean, default=False)
 
     def __init__(self, unload_session, harbor, customer, creator,
-                 product, pic_path, create_time=None, weight=0):
+                 product, pic_path, create_time=None, weight=0, is_last=False):
         self.unload_session = unload_session
         self.harbor = harbor
         self.customer = customer
@@ -152,9 +152,10 @@ class UnloadTask(db.Model):
         self.product = product
         self.create_time = create_time or datetime.now()
         self.weight = weight
+        self.is_last = is_last
 
     def __unicode__(self):
-        return self.id
+        return unicode(self.id)
 
     def __repr__(self):
         return "<UnloadTask %d>" % self.id
@@ -774,10 +775,12 @@ class Vehicle(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     plate = db.Column(db.String(64), nullable=False, unique=True)
+
     def __unicode__(self):
         return self.plate
+
     def __repr__(self):
-        return "<Vehicle %s>" % self.name
+        return "<Vehicle %s>" % self.plate
 
 class Log(db.Model):
 

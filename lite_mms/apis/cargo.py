@@ -251,7 +251,7 @@ def new_goods_receipt(customer_id, unload_session_id):
     return GoodsReceiptWrapper(model)
 
 def new_unload_task(session_id, harbor, customer_id, creator_id,
-                    pic_path):
+                    pic_path, is_last=False):
     """
     持久化创建一个unload task
     :return: 若创建成功，返回创建的unload task
@@ -293,7 +293,7 @@ def new_unload_task(session_id, harbor, customer_id, creator_id,
         customer=customer,
         creator=creator,
         pic_path=pic_path,
-        product=product))
+        product=product, is_last=is_last))
 
     return UnloadTaskWrapper(ut)
 

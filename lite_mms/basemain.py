@@ -111,7 +111,7 @@ from lite_mms.permissions.roles import (CargoClerkPermission,
 from lite_mms.permissions.order import view_order, schedule_order
 from lite_mms.permissions.work_command import view_work_command
 nav_bar.register(cargo_page, name=u"卸货管理", permissions=[CargoClerkPermission])
-nav_bar.register(cargo2_page, default_url="/cargo2/unload-session-list", name=u"卸货管理(beta)", permissions=[CargoClerkPermission])
+nav_bar.register(cargo2_page, default_url="/cargo2/unload-session-list?status__only_unclosed=on", name=u"卸货管理(beta)", permissions=[CargoClerkPermission])
 nav_bar.register(order_page, default_url='/order/order-list', name=u"订单管理",
                  permissions=[view_order])
 nav_bar.register(order2_page, default_url='/order2/order-list?order_by=id&desc=1', name=u"订单管理(beta)",
@@ -204,14 +204,12 @@ if not app.config["DEBUG"]:
 @app.errorhandler(PermissionDenied)
 @app.errorhandler(401)
 def permission_denied(error):
-    #print '该操作(' + request.url + ')需要的访问权限为:' + str(error.args[0].needs)
 
     #如果用户已登录则显示无权限页面
-
+    from flask import redirect, url_for
     if not current_user.is_anonymous():
-        return render_template("result.html", error_content=u"请联系管理员获得访问权限!",
-                               back_url=request.args.get("back_url", "/"),
-                               nav_bar=nav_bar)
+        return redirect(url_for("error", msg=u'该操作需要的权限是: "'+error.args[0].brief+u'", 请联系管理员获得访问权限!',
+                               back_url=request.url))
         #如果用户还未登录则转向到登录面
     return render_template("auth/login.haml",
                            error=gettext(u"请登录"), next_url=request.url)

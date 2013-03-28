@@ -3,7 +3,7 @@
 SYNOPSIS
     python build_db.py [options]
 BRIEF
-    本脚本用来初始化lite-mms, 包括预设的用户组，帐号，权限，产品类型，产品等等, 
+    本脚本用来初始化lite-mms, 包括预设的权限，用户组，帐号，权限，产品类型，产品等等, 
     TODO: 目前这个脚本的初始化, 完全是基于金禾域的组织架构
 OPTIONS
     -h 
@@ -36,53 +36,43 @@ def build_db():
     init_db()
     session = db.session
 
-    for perm in permissions.keys():
-        session.add(models.Permission(name=perm))
-    session.commit()
+    # 初始化权限
+    for k, v in permissions.items():
+        do_commit(models.Permission(name=k, desc=v["brief"]))
 
     with app.test_request_context():
         app.preprocess_request()
         # 初始化用户组，目前内置的用户组包括, 这些用户组本来就带有基于角色的权限
         #   - 收发员
-        cargo_clerk = models.Group(u"收发员", url_for("cargo.index"))
-        cargo_clerk.id = groups.CARGO_CLERK
+        cargo_clerk = models.Group(id=groups.CARGO_CLERK, name=u"收发员", default_url=url_for("cargo.index"))
         cargo_clerk.permissions = models.Permission.query.filter(
             models.Permission.name.like("%view_order%")).all()
         cargo_clerk = do_commit(cargo_clerk)
         #   - 调度员
-        scheduler = models.Group(u"调度员", url_for("schedule.index"))
-        scheduler.id = groups.SCHEDULER
+        scheduler = models.Group(id=groups.SCHEDULER, name=u"调度员", default_url=url_for("schedule.index"))
         scheduler.permissions = models.Permission.query.filter(
             models.Permission.name.like(
                 "%schedule_order%")).all() + models.Permission.query.filter(
             models.Permission.name.like("work_command%")).all()
         scheduler = do_commit(scheduler)
         #   - 车间主任
-        department_leader = models.Group(u"车间主任", url_for("manufacture.QI_work_command_list"))
-        department_leader.id = groups.DEPARTMENT_LEADER
+        department_leader = models.Group(id=groups.DEPARTMENT_LEADER, name=u"车间主任", default_url=url_for("manufacture.QI_work_command_list"))
         department_leader = do_commit(department_leader)
         #   - 班组长
-        team_leader = models.Group(u"班组长")
-        team_leader.id = groups.TEAM_LEADER
-        team_leader = do_commit(team_leader)
+        team_leader = do_commit(models.Group(id=groups.TEAM_LEADER, name=u"班组长"))
         #   - 质检员
-        quality_inspector = models.Group(u"质检员", url_for("store_bill.index"))
-        quality_inspector.id = groups.QUALITY_INSPECTOR
+        quality_inspector = models.Group(id=groups.QUALITY_INSPECTOR, name=u"质检员", default_url=url_for("store_bill.index"))
         quality_inspector.permissions = models.Permission.query.filter(
             models.Permission.name.like("%view_work_command")).all()
         quality_inspector = do_commit(quality_inspector)
         #   - 装卸工
-        loader = models.Group(u"装卸工")
-        loader.id = groups.LOADER
-        loader = do_commit(loader)
+        loader = do_commit(models.Group(id=groups.LOADER, name=u"装卸工"))
         #   - 财会人员
-        accountant = models.Group(u"财会人员", url_for("delivery.consignment_list"))
+        accountant = models.Group(id=groups.ACCOUNTANT, name=u"财会人员", default_url=url_for("delivery.consignment_list"))
         accountant.permissions = [models.Permission.query.filter(models.Permission.name.like("%export_consignment%")).one()]
-        accountant.id = groups.ACCOUNTANT
         accountant = do_commit(accountant)
         #   - 管理员
-        administrator = models.Group(u"管理员", url_for("admin2.index"))
-        administrator.id = groups.ADMINISTRATOR
+        administrator = models.Group(id=groups.ADMINISTRATOR, name=u"管理员", default_url=url_for("admin2.index"))
         administrator.permissions = models.Permission.query.all()
         administrator = do_commit(administrator)
 

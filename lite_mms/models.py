@@ -38,9 +38,10 @@ procedure_and_department_table = db.Table("TB_PROCEDURE_AND_DEPARTMENT",
 class Permission(db.Model):
     __tablename__ = "TB_PERMISSION"
     name = db.Column(db.String(64), primary_key=True)
+    desc = db.Column(db.String(64), default="")
 
     def __unicode__(self):
-        return self.name
+        return self.name + '(' + self.desc + ')'
 
     def __repr__(self):
         return "<Permission: %s>" % self.name.encode("utf-8")
@@ -53,12 +54,6 @@ class Group(db.Model):
     permissions = db.relationship("Permission",
                                   secondary=permission_and_group_table)
     default_url = db.Column(db.String(256))
-
-    def __init__(self, name, default_url="", group_id=None):
-        self.name = name
-        self.default_url = default_url
-        if group_id is not None:
-            self.group_id = group_id
 
     def __unicode__(self):
         return self.name

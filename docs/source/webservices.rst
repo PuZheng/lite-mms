@@ -269,7 +269,9 @@ response
                "id": <int>, # 工单ID
                "isUrgent": 1|0, # 是否加急，1加急。
                "lastMod": <int>, # last modified time, seconds since epoch
-               "orderID": <int>, # 工单ID
+               "orderID": <int>, # 订单ID
+               "orderNum": <str>, # 订单号
+               "orderCreateTime": <int>, # 订单创建时间，seconds since epoch
                "orderType": <int>, # 工单类型
                "orgWeight": <int>, # 工序前重量 , 需要说明的是，若工单类型为瑞格或者紧固件，那么这个值只有参考意义。               
                "orgWeight": <int>, # 工序前重量 

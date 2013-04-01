@@ -36,8 +36,8 @@ class StateLoading(RuleSpecState):
         return self.obj.model
 
 state_loading = StateLoading(fsm, {
-    cargo_const.ACT_LOAD: (cargo_const.STATUS_WEIGHING, CargoClerkPermission),
-    cargo_const.ACT_CLOSE: (cargo_const.STATUS_CLOSED, CargoClerkPermission)
+    cargo_const.ACT_LOAD: (cargo_const.STATUS_WEIGHING, None),
+    cargo_const.ACT_CLOSE: (cargo_const.STATUS_CLOSED, None)
 })
 
 class StateWeighing(State):

@@ -20,23 +20,21 @@ from flask.ext.principal import Principal
 
 principal = Principal(app)
 
-if 1:
-#if not app.config["DEBUG"]:
-    import logging
-    import logging.handlers
+import logging
+import logging.handlers
 
-    logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 
-    file_handler = logging.handlers.TimedRotatingFileHandler(
-        app.config["LOG_FILE"], 'D', 1, 10, "utf-8")
-    file_handler.setFormatter(
-        logging.Formatter('%(asctime)s - %(levelname)s: %(message)s'))
-    file_handler.suffix = "%Y%m%d.log"
-    app.logger.addHandler(file_handler)
+file_handler = logging.handlers.TimedRotatingFileHandler(
+    app.config["LOG_FILE"], 'D', 1, 10, "utf-8")
+file_handler.setFormatter(
+    logging.Formatter('%(asctime)s - %(levelname)s: %(message)s'))
+file_handler.suffix = "%Y%m%d.log"
+app.logger.addHandler(file_handler)
 
-    from lite_mms.log.handler import DBHandler
-    timeline_logger = logging.getLogger("timeline")
-    timeline_logger.addHandler(DBHandler())
+from lite_mms.log.handler import DBHandler
+timeline_logger = logging.getLogger("timeline")
+timeline_logger.addHandler(DBHandler())
 # create upload files
 
 if not os.path.exists(app.config["UPLOAD_FOLDER"]):
@@ -141,7 +139,7 @@ nav_bar.register(store_bill_page, name=u"仓单管理",
 nav_bar.register(deduction_page, name=u"扣重管理", default_url="/deduction/",
                  permissions=[QualityInspectorPermission])
 
-nav_bar.register(time_line_page, name=u"时间线", default_url="/timeline/")
+#nav_bar.register(time_line_page, name=u"时间线", default_url="/timeline/")
 nav_bar.register(search_page, name=u"搜索", default_url="/search/search")
 nav_bar.register(admin2_page, name=u"管理中心", default_url="/admin2/user-list", permissions=[AdminPermission])
 

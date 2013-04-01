@@ -1,6 +1,5 @@
 {% extends "layout.html" %}
 {% block custom_external %}
-  <script src="{{ url_for("static", filename="js/combobox.js") }}"></script>
   <script type="text/javascript">
     $(function () {
       var plate_list ={{ working_plate_list|safe }};

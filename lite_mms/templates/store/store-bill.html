@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 {% block body %}
   <div class="container">
+    <legend>仓单详情</legend>
     <form class="form-horizontal" action="{{ url_for('store_bill.store_bill', id_=store_bill.id) }}" method="POST">
       <div class="control-group">
         <label class="control-label">
@@ -113,8 +114,10 @@
       <div class="control-group">
         <div class="controls">
           <input type="hidden" name="url" value="{{ request.args.get("url") }}">
-          <button class="btn btn-primary btn-large">保存</button>
-          <a class="btn btn-large btn-success" href="{{ url_for("store_bill.store_bill_preview", id_=store_bill.id, url=request.url) }}">打印预览</a>
+          {% if permissions.roles.QualityInspectorPermission.can() %}
+            <button class="btn btn-primary btn-large">保存</button>
+            <a class="btn btn-large btn-success" href="{{ url_for("store_bill.store_bill_preview", id_=store_bill.id, url=request.url) }}">打印预览</a>
+          {% endif %}
           <a class="btn btn-large" href="{{ request.args.get("url") }}">返回</a>
         </div>
       </div>

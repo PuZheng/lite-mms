@@ -83,6 +83,8 @@ if serve_web:
     app.register_blueprint(op_page, url_prefix="/op")
     from lite_mms.portal.store import store_bill_page
     app.register_blueprint(store_bill_page, url_prefix="/store")
+    from lite_mms.portal.admin2 import admin2_page
+    app.register_blueprint(admin2_page, url_prefix="/admin2")
     
     from lite_mms.portal.import_data import import_data_page
     app.register_blueprint(import_data_page, url_prefix="/import_data")
@@ -109,11 +111,12 @@ if serve_ws:
 from lite_mms.permissions.roles import (CargoClerkPermission,
                                         AccountantPermission,
                                         QualityInspectorPermission,
-                                        DepartmentLeaderPermission)
+                                        DepartmentLeaderPermission,
+                                       AdminPermission)
 from lite_mms.permissions.order import view_order, schedule_order
 from lite_mms.permissions.work_command import view_work_command
 nav_bar.register(cargo_page, name=u"卸货管理", permissions=[CargoClerkPermission])
-nav_bar.register(cargo2_page, default_url="/cargo2/unload-session-list?status__only_unclosed=on", name=u"卸货管理(beta)", permissions=[CargoClerkPermission])
+#nav_bar.register(cargo2_page, default_url="/cargo2/unload-session-list?status__only_unclosed=on", name=u"卸货管理(beta)", permissions=[CargoClerkPermission])
 nav_bar.register(order_page, default_url='/order/order-list', name=u"订单管理",
                  permissions=[view_order])
 nav_bar.register(order2_page, default_url='/order2/order-list?order_by=id&desc=1', name=u"订单管理(beta)",
@@ -139,8 +142,8 @@ nav_bar.register(deduction_page, name=u"扣重管理", default_url="/deduction/"
                  permissions=[QualityInspectorPermission])
 
 nav_bar.register(time_line_page, name=u"时间线", default_url="/timeline/")
-
 nav_bar.register(search_page, name=u"搜索", default_url="/search/search")
+nav_bar.register(admin2_page, name=u"管理中心", default_url="/admin2/user-list", permissions=[AdminPermission])
 
 #install jinja utilities
 from lite_mms.utilities import url_for_other_page, datetimeformat

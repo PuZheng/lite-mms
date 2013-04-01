@@ -66,16 +66,10 @@ class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(32), nullable=False, unique=True)
-    password = db.Column(db.String(128), nullable=False)
+    password = db.Column(db.String(128), nullable=False, doc=u"这里保存的是密码明文的MD5值")
     groups = db.relationship("Group", secondary=user_and_group_table,
                              backref="users")
     tag = db.Column(db.String(32), nullable=True)
-
-    #def __init__(self, username, password, groups, tag=""):
-        #self.username = username
-        #self.password = password
-        #self.groups.extend(groups)
-        #self.tag = tag
 
     def __unicode__(self):
         return self.username
@@ -176,13 +170,10 @@ class Customer(db.Model):
 
 class Harbor(db.Model):
     __tablename__ = "TB_HABOR"
+
     name = db.Column(db.String(32), nullable=False, primary_key=True)
     department_id = db.Column(db.Integer, db.ForeignKey("TB_DEPARTMENT.id"))
-    department = db.relationship("Department", backref="harbor_list")
-
-    def __init__(self, name, department):
-        self.name = name
-        self.department = department
+    department = db.relationship("Department", backref="harbor_list", doc=u"装卸点卸载的待加工件将默认分配给此车间")
 
     def __unicode__(self):
         return self.name
@@ -205,7 +196,6 @@ class ProductType(db.Model):
 
     def __repr__(self):
         return "<ProductType: %d>" % self.id
-
 
 class Product(db.Model):
     __tablename__ = "TB_PRODUCT"
@@ -236,37 +226,26 @@ class Department(db.Model):
     leader_list = db.relationship("User", secondary=department_and_user_table,
                                   backref="department_list")
 
-    def __init__(self, name, leaders=None):
-        self.name = name
-        self.leader_list = leaders or []
-
     def __unicode__(self):
         return self.name
 
     def __repr__(self):
         return "<Department %d>" % self.id
 
-
 class Team(db.Model):
     __tablename__ = "TB_TEAM"
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(32), nullable=False, unique=True)
-    department_id = db.Column(db.Integer, db.ForeignKey('TB_DEPARTMENT.id'))
+    department_id = db.Column(db.Integer, db.ForeignKey('TB_DEPARTMENT.id'), nullable=False)
     leader_id = db.Column(db.Integer, db.ForeignKey('TB_USER.id'))
     leader = db.relationship("User", backref=db.backref("team", uselist=False))
-
-    def __init__(self, name, department, leader):
-        self.name = name
-        self.department = department
-        self.leader = leader
 
     def __unicode__(self):
         return self.name
 
     def __repr__(self):
         return "<Team %s>" % self.id
-
 
 class GoodsReceipt(db.Model):
     __tablename__ = "TB_GOODS_RECEIPT"
@@ -319,13 +298,14 @@ class Order(db.Model):
     refined = db.Column(db.Boolean, default=False)
 
     def __init__(self, goods_receipt, creator,
-                 create_time=None, finish_time=None, dispatched=False):
+                 create_time=None, finish_time=None, dispatched=False, refined=False):
         self.goods_receipt = goods_receipt
         self.create_time = create_time or datetime.now()
         self.finish_time = finish_time
         self.customer_order_number = goods_receipt.receipt_id
         self.dispatched = dispatched
         self.creator = creator
+        self.refined = refined
 
     def __unicode__(self):
         return self.customer_order_number
@@ -378,7 +358,7 @@ class SubOrder(db.Model):
                  quantity, unit, order_type=STANDARD_ORDER_TYPE,
                  create_time=None, finish_time=None, urgent=False,
                  returned=False, pic_path="", tech_req="", due_time=None,
-                 spec="", type="", unload_task=None):
+                 spec="", type="", unload_task=None, remaining_quantity=0):
         self.product = product
         self.spec = spec
         self.type = type
@@ -396,6 +376,7 @@ class SubOrder(db.Model):
         self.due_time = due_time
         self.order_type = order_type
         self.unload_task = unload_task
+        self.remaining_quantity = remaining_quantity
 
     def __unicode__(self):
         return self.id
@@ -412,7 +393,8 @@ class WorkCommand(db.Model):
                                  backref="work_comman_list")
     department_id = db.Column(db.Integer, db.ForeignKey("TB_DEPARTMENT.id"),
                               nullable=True)
-    last_mod = db.Column(db.DateTime)
+    last_mod = db.Column(db.DateTime, doc=u"上次对工单修改的时间")
+    completed_time = db.Column(db.DateTime, doc=u"生产完毕的时间")
     org_cnt = db.Column(db.Integer)
     org_weight = db.Column(db.Integer)
     urgent = db.Column(db.Boolean)
@@ -493,7 +475,6 @@ class WorkCommand(db.Model):
     def __repr__(self):
         return "<WorkCommand %d>" % self.id
 
-
 class QIReport(db.Model):
     __tablename__ = "TB_QI_REPORT"
 
@@ -527,7 +508,6 @@ class QIReport(db.Model):
 
     def __repr__(self):
         return "<QIReport %d>" % self.id
-
 
 class DeliverySession(db.Model):
     __tablename__ = "TB_DELIVERY_SESSION"
@@ -693,11 +673,7 @@ class Procedure(db.Model):
     name = db.Column(db.String(32), unique=True)
     department_list = db.relationship("Department",
                                       secondary=procedure_and_department_table,
-                                      backref="procedure_list")
-
-    def __init__(self, name, department_list):
-        self.name = name
-        self.department_list = department_list
+                                      backref="procedure_list", doc=u"只有这里罗列的车间允许执行此工序")
 
     def __unicode__(self):
         return self.name

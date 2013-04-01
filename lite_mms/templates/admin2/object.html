@@ -1,0 +1,6 @@
+{% extends "__data_browser__/form.haml" %}
+
+{% block body %}
+  {{ sub_nav_bar.as_ul("active") | safe }}
+  {{ super() }}
+{% endblock %}

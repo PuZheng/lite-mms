@@ -1,0 +1,5 @@
+<ul>
+  {% for row in field_value %}
+  <li><a href="{{ url_for("admin2.group_list", url=request.url) }}">{{ row.name}}</a></li>
+  {% endfor %}
+</ul>

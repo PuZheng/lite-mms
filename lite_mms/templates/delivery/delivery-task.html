@@ -1,4 +1,13 @@
 {% extends "layout.html" %}
+{% block custom_external %}
+  <link rel="stylesheet" href="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.css") }}" type="text/css" media="screen">
+  <script type="text/javascript" src="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.pack.js") }}"></script>
+  <script type="text/javascript">
+    $(function () {
+      $(".fancybox").fancybox();
+    });
+  </script>
+{% endblock %}
 {% block body %}
   <div class="container">
     <div class="alert alert-info">
@@ -45,15 +54,20 @@
         <label class="control-label">
           <strong>此次装货的图片</strong>
         </label>
-        <ul class="thumbnails">
-          {% for pic_url in task.pic_url_list %}
-            <li class="span2">
-              <a href="{{ pic_url }}" class="fancybox thumbnail" rel="group" title="{{ task.product.name }}">
-                <img src="{{ pic_url }}" class="bordered" alt="{{ task.product.name }}"/>
-              </a>
-            </li>
-          {% endfor %}
-        </ul>
+
+        <div class="controls">
+          <ul class="thumbnails">
+            {% for pic_url in task.pic_url_list %}
+              {% if pic_url %}
+                <li class="span2">
+                  <a href="{{ pic_url }}" class="fancybox thumbnail" rel="group" title="{{ task.product.name }}">
+                    <img src="{{ pic_url }}" class="bordered" alt="{{ task.product.name }}"/>
+                  </a>
+                </li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+        </div>
       </div>
       <div class="control-group">
         <div class="controls">

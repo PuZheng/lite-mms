@@ -1,7 +1,10 @@
 {% extends "layout.html" %}
 {% block custom_external %}
+  <link rel="stylesheet" href="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.css") }}" type="text/css" media="screen">
+  <script type="text/javascript" src="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.pack.js") }}"></script>
   <script type="text/javascript">
     $(function () {
+      $(".fancybox").fancybox();
       $("#finish-button").click(function () {
         if (confirm("确认结束会话吗？")) {
           $("#delivery-form input[name=method]").val("finish");

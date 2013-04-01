@@ -83,10 +83,10 @@
       <div class="control-group">
         <div class="controls">
           <a class="btn btn-large btn-success" href="{{ url_for('cargo.goods_receipt_preview', id_=receipt.id, url=request.url) }}">
-              预览
+              <i class="icon-print icon-white"></i>&nbsp;预览
           </a>
           <a href="{{ request.args.get("url") or url_for('cargo.unload_session',id_=receipt.unload_session.id) }}" class="btn btn-large">
-              返回
+              <i class="icon-backward"></i>&nbsp;返回
           </a>
         </div>
       </div>

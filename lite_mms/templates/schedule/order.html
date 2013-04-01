@@ -149,7 +149,7 @@
             <td>
               {% if sub_order.remaining_quantity|int > 0 and order.refined and order.dispatched %}
                 <a class="btn btn-primary" name="{{ sub_order.id }}" href="{{ url_for('schedule.work_command',sub_order_id=sub_order.id,url=request.url) }}">
-                  {{ "质检检货" if sub_order.returned else "预排产" }}
+                  <i class="icon-wrench icon-white"></i>&nbsp;{{ "质检检货" if sub_order.returned else "预排产" }}
                 </a>
               {% elif not order.refined or not order.dispatched %}
                 <em>未下发</em>
@@ -204,7 +204,7 @@
         <button class="btn btn-primary btn-large" id="schedule-button" type="button">
           排产
         </button>
-        <input type="hidden" name="url" value="{{ request.args.get("url") }}">
+        <input type="hidden" name="url" value="{{ request.url }}">
       </form>
       <div class="control-group">
         <div class="controls">

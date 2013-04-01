@@ -89,7 +89,8 @@
             </td>
           <tr>
             <th>订单编号</th>
-            <td colspan="2"><p class="center">{{ store_bill.sub_order.order.customer_order_number }}</p>
+            <td colspan="2">
+              <p class="center">{{ store_bill.sub_order.order.customer_order_number }}</p>
             </td>
           </tr>
           <tr>
@@ -101,8 +102,12 @@
         </table>
       </div>
       <div class="text-center">
-        <button class="btn btn-primary btn-large" id="print">{{ _("打印") }}</button>
-        <a href="{{ request.args.get("url") or url_for("store_bill.store_bill",id_=store_bill.id) }}" class="btn btn-large">{{ _("返回") }}</a>
+        <button class="btn btn-primary btn-large" id="print">
+          <i class="icon-print icon-white"></i>&nbsp;{{ _("打印") }}
+        </button>
+        <a href="{{ request.args.get("url") or url_for("store_bill.store_bill",id_=store_bill.id) }}" class="btn btn-large">
+          <i class="icon-backward"></i>&nbsp;{{ _("返回") }}
+        </a>
       </div>
     </div>
   </div>

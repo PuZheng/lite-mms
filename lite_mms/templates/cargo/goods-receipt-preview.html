@@ -86,10 +86,10 @@
       </div>
       <div class="text-center">
         <button class="btn btn-primary btn-large" id="print">
-          {{ _("打印") }}
+          <i class="icon-print icon-white"></i>&nbsp;{{ _("打印") }}
         </button>
         <a href="{{ request.args.get("url") or url_for('cargo.goods_receipt',id_=receipt.id) }}" class="btn btn-large">
-          {{ _("返回") }}
+          <i class="icon-backward"></i>&nbsp;{{ _("返回") }}
         </a>
       </div>
     </div>

@@ -123,11 +123,11 @@
             <button class="btn btn-primary btn-large">{{ "已支付" if permissions.AccountantPermission.can() else "保存" }}</button>
           {% endif %}
           <a href="{{ url_for("delivery.consignment_preview", id_=consignment.id, url=request.url) }}"
-             class="btn btn-success btn-large">打印预览</a>
-          <input type="hidden" name="url"
-                 value="{{ request.args.get("url") }}">
-          <a href="{{ request.args.get("url") or url_for("delivery.session_list") }}"
-             class="btn btn-large">返回</a></div>
+             class="btn btn-success btn-large"><i class="icon-print icon-white"></i>&nbsp;预览</a>
+          <input type="hidden" name="url" value="{{ request.args.get("url") }}">
+          <a href="{{ request.args.get("url") or url_for("delivery.session_list") }}" class="btn btn-large">
+              <i class="icon-backward"></i>&nbsp;返回</a>
+        </div>
       </div>
     </form>
   </div>

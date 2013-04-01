@@ -2,21 +2,8 @@
 {% block custom_external %}
   <script type="text/javascript">
     $(function () {
-      $("#department_id").val({{ default_department_id }});
-      var l = {{ default_department_dict|safe }};
       $("#department_id").change(function () {
-        var current_depart = $('#department_id option:selected').html();
-        var hint = "";
-        $.map(l, function (value, index) {
-          if (value.name != current_depart) {
-            hint += "工单号" + index + "的默认车间为\"" + value.name + "\"\n";
-          }
-        });
-        if (hint != "") {
-          alert(hint);
-          hint = "";
-        }
-        update_procedure()
+        update_procedure();
       });
       var departments = {{ department_list|tojson|safe }};
 
@@ -31,7 +18,7 @@
             }
           }
         }
-        $("select").select2({
+        $("#procedure_id").select2({
           width: "element",
           placeholder: "请选择",
           matcher: function (term, text) {
@@ -47,6 +34,7 @@
 {% endblock %}
 {% block body %}
   <div class="container">
+    <legend>排产</legend>
     <form class="form-horizontal" action="{{ url_for('manufacture.schedule') }}" method="POST">
       <div class="control-group">
         <label class="control-label"><strong>已选择的工单号</strong> </label>
@@ -74,9 +62,18 @@
           <select size="1" name="department_id" id="department_id"
                   required='required'>
             {% for department in department_list %}
-              <option value="{{ department.id }}">{{ department.name }}</option>
+              <option value="{{ department.id }}"
+                  {% if default_department_id and department.id == default_department_id %}
+                      selected="selected"
+                  {% endif %} >{{ department.name }}</option>
             {% endfor %}
           </select>
+          <span class="help-inline">
+              {% for grouper, list in work_command_list|groupby("default_department") %}
+                工单<em>{{ list|join(",", attribute="id") }}</em>的默认车间是
+                <em>{{ grouper }}</em>&nbsp;
+              {% endfor %}
+          </span>
         </div>
       </div>
       <div class="control-group">
@@ -98,13 +95,14 @@
 
         <div class="controls">
           <select size="1" name="procedure_id" id="procedure_id">
-            <option selected="selected" disabled="disabled">
-                保持现有工序
+            <option selected="selected" disabled="disabled" value="">
+              保持现有工序
             </option>
           </select>
            <span class="help-inline">
                {% for grouper, list in work_command_list|groupby("procedure") %}
-                 工单{{ list|join("," ,attribute="id") }}的工序是{{ grouper }}&nbsp;
+                 工单<em>{{ list|join("," ,attribute="id") }}</em>的工序是
+                 <em>{{ grouper }}</em>&nbsp;
                {% endfor %}
            </span>
         </div>
@@ -116,8 +114,12 @@
 
       <div class="control-group">
         <div class="controls">
-          <button class="btn btn-large btn-primary">确定</button>
-          <a class="btn btn-large" href="{{ request.args.get("url") or url_for("manufacture.work_command_list") }}">返回</a>
+          <button class="btn btn-large btn-primary">
+            <i class="icon-ok icon-white"></i>&nbsp;保存
+          </button>
+          <a class="btn btn-large" href="{{ request.args.get("url") or url_for("manufacture.work_command_list") }}">
+            <i class="icon-backward"></i>&nbsp;返回
+          </a>
         </div>
       </div>
     </form>

@@ -86,8 +86,12 @@
       <input type="hidden" name="url" value="{{ request.args.get("url") }}">
       <div class="control-group">
         <div class="controls">
-          <button class="btn btn-large btn-primary">添加</button>
-          <a class="btn btn-large" href="{{ request.args.get("url") or url_for("schedule.order", id_=sub_order.order.id) }}">返回</a>
+          <button class="btn btn-large btn-primary">
+              <i class="icon-ok icon-white"></i>&nbsp;保存
+          </button>
+          <a class="btn btn-large" href="{{ request.args.get("url") or url_for("schedule.order", id_=sub_order.order.id) }}">
+              <i class="icon-backward"></i>&nbsp;返回
+          </a>
         </div>
       </div>
     </form>

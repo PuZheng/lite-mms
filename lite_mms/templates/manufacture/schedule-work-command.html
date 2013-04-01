@@ -5,16 +5,9 @@
       $("#procedure").val({{ work_command.procedure.id }});
       {% if work_command.status == 2 %}
         $("button").click(function () {
-          location.href = "{{ purl }}"
+          location.href = "{{ request.args.get("url") }}"
         });
       {% endif %}
-      $("#department_id").val({{ default_department_id }});
-      var default_depart = $('#department_id option:selected').html();
-      $("#department_id").change(function () {
-        if ($("#department_id").val() != {{ default_department_id }}) {
-          alert("产品的默认车间为" + default_depart);
-        }
-      });
       var departments = {{ department_list|tojson|safe }};
 
       function update_procedure() {
@@ -28,13 +21,13 @@
             }
           }
         }
-          $("select").select2({
-              width: "element",
-              placeholder: "请选择",
-              matcher: function (term, text) {
-                  return pinyin.getCamelChars(text).toUpperCase().indexOf(term.toUpperCase()) >= 0;
-              }
-          });
+        $("select").select2({
+          width: "element",
+          placeholder: "请选择",
+          matcher: function (term, text) {
+            return pinyin.getCamelChars(text).toUpperCase().indexOf(term.toUpperCase()) >= 0;
+          }
+        });
       }
 
       update_procedure();
@@ -44,6 +37,7 @@
 {% endblock %}
 {% block body %}
   <div class="container">
+    <legend>排产</legend>
     <form class="form-horizontal" action="{{ url_for('manufacture.schedule') }}" method="POST">
       <div class="">
         <label class="control-label"><strong>数量(单位:{{ work_command.unit }})</strong></label>
@@ -58,9 +52,13 @@
         <div class="controls">
           <select name="department_id" id="department_id" required='required'>
             {% for department in department_list %}
-              <option value="{{ department.id }}">{{ department.name }}</option>
+              <option value="{{ department.id }}"
+                  {% if department.id == work_command.default_department.id %}
+                      selected="selected"
+                  {% endif %} >{{ department.name }}</option>
             {% endfor %}
           </select>
+          <span class="help-inline">工单<em>{{ work_command.id }}</em>的默认车间是<em>{{ work_command.default_department.name }}</em></span>
         </div>
       </div>
       <div class="control-group">
@@ -93,8 +91,12 @@
 
       <div class="control-group">
         <div class="controls">
-          <button class="btn btn-primary btn-large">确定</button>
-          <a class="btn btn-large" href="{{ request.args.get("url") or url_for("manufacture.work_command_list") }}">返回</a>
+          <button class="btn btn-primary btn-large">
+            <i class="icon-ok icon-white"></i>&nbsp;保存
+          </button>
+          <a class="btn btn-large" href="{{ request.args.get("url") or url_for("manufacture.work_command_list") }}">
+            <i class="icon-backward"></i>&nbsp;返回
+          </a>
         </div>
       </div>
     </form>

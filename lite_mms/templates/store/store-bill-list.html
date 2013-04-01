@@ -8,8 +8,8 @@
       $("#print_button").click(function () {
         if ($("input[name='store_bill_id']:checked").val() != undefined) {
           window.location = "store-bill" + "/" + $("input[name='store_bill_id']:checked").val();
-        }else{
-            alert("请选择仓单");
+        } else {
+          alert("请选择仓单");
         }
       });
       $("select[name='time_span']").val("{{ time_span }}");
@@ -106,7 +106,9 @@
     </table>
     {% from "pagination.html" import render_pagination %}
     {{ render_pagination(pagination) }}
-    <button class="btn btn-primary btn-large" id="print_button">打印</button>
+    <button class="btn btn-primary btn-large" id="print_button">
+      <i class="icon-print icon-white"></i>&nbsp;打印
+    </button>
   </div>
 
 {% endblock %}

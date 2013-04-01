@@ -103,9 +103,13 @@
       <div class="control-group">
         <div class="controls">
           {% if not current.consignment.MSSQL_ID and permissions.CargoClerkPermission.can() %}
-            <button class="ym-button ym-save">保存</button>
+            <button class="btn btn-large btn-primary">
+                <i class="icon-ok icon-white"></i>&nbsp;保存
+            </button>
           {% endif %}
-          <a href="{{ request.args.get("url") or url_for("delivery.consignment", id_=current.consignment.id) }}" class="btn btn-large" type="button">返回</a>
+          <a href="{{ request.args.get("url") or url_for("delivery.consignment", id_=current.consignment.id) }}" class="btn btn-large">
+              <i class="icon-backward"></i>&nbsp;返回
+          </a>
         </div>
       </div>
     </form>

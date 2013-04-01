@@ -19,6 +19,7 @@
       <strong>{{ task.customer.name }}</strong>
       的装货任务
     </div>
+    <legend>发货任务详情</legend>
     <form class="form-horizontal" method="POST" action="{{ url_for('delivery.delivery_task', id_=task.id) }}">
 
       <div class="control-group">
@@ -72,8 +73,10 @@
       <div class="control-group">
         <div class="controls">
           <input type="hidden" name="url" value="{{ request.args.get("url") }}">
-          <input type="submit" name="submit" class="btn btn-primary btn-large" value="提交"/>
-          <a class="btn btn-large" href="{{ request.args.get("url") or url_for("delivery.delivery_session", id_=task.delivery_session.id) }}">返回</a>
+          <button class="btn btn-primary btn-large"><i class="icon-ok icon-white"></i>&nbsp;保存</button>
+          <a class="btn btn-large" href="{{ request.args.get("url") or url_for("delivery.delivery_session", id_=task.delivery_session.id) }}">
+              <i class="icon-backward"></i>&nbsp;返回
+          </a>
         </div>
       </div>
     </form>

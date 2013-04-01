@@ -115,11 +115,21 @@
         <div class="controls">
           <input type="hidden" name="url" value="{{ request.args.get("url") }}">
           {% if permissions.roles.QualityInspectorPermission.can() %}
-            <button class="btn btn-primary btn-large">保存</button>
-            <a class="btn btn-large btn-success" href="{{ url_for("store_bill.store_bill_preview", id_=store_bill.id, url=request.url) }}">打印预览</a>
-            <a class="btn btn-large" href="{{ request.args.get("url") or url_for("store_bill.store_bill_list") }}">返回</a>
+            <button class="btn btn-primary btn-large">
+              <i class="icon-ok icon-white"></i>&nbsp;保存
+            </button>
+            <a class="btn btn-large btn-success" href="{{ url_for("store_bill.store_bill_preview", id_=store_bill.id, url=request.url) }}">
+              <i class="icon-print icon-white"></i>&nbsp;预览
+            </a>
+            <a class="btn btn-large" href="{{ request.args.get("url") or url_for("store_bill.store_bill_list") }}">
+              <i class="icon-backward"></i>&nbsp;返回
+            </a>
+          {% else %}
+            <a class="btn btn-large" href="{{ request.args.get("url") or "/" }}">
+              <i class="icon-backward"></i>&nbsp;返回
+            </a>
           {% endif %}
-          <a class="btn btn-large" href="{{ request.args.get("url") or "/" }}">返回</a>
+
         </div>
       </div>
     </form>

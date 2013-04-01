@@ -45,9 +45,9 @@
 {% block body %}
   <div class="container">
     <form class="form-inline" action="{{ url_for('manufacture.work_command_list') }}" id="work_command_list_form">
-      {% if request.args.get("order_id")%}
-          <input type="hidden" name="order_id" value="{{ request.args.get("order_id") }}">
-          <input type="hidden" name="url" value="{{ request.args.get("url") }}">
+      {% if request.args.get("order_id") %}
+        <input type="hidden" name="order_id" value="{{ request.args.get("order_id") }}">
+        <input type="hidden" name="url" value="{{ request.args.get("url") }}">
       {% endif %}
       <div class="span2">
         <label for="status" class="padding">状态</label>
@@ -104,7 +104,9 @@
               <input type="checkbox" value="{{ work_command.id }}"
                      name="work_command_id"/>
             </td>
-            <td><a href="{{ url_for("manufacture.work_command", id_=work_command.id, url=request.url) }}">{{ work_command.id }}</a></td>
+            <td>
+              <a href="{{ url_for("manufacture.work_command", id_=work_command.id, url=request.url) }}">{{ work_command.id }}</a>
+            </td>
             <td>{{ work_command.sub_order_id }}</td>
             <td>{{ work_command.sub_order.order.customer_order_number }}</td>
             <td>{{ work_command.sub_order.product.name }}</td>
@@ -142,19 +144,21 @@
 
       <div class="control-group">
         <div class="controls">
-          {% if permissions.work_command.schedule_work_command.can()%}{% if schedule %}
-            <button class="btn btn-large btn-primary" id="schedule-button" type="button">
-              排产
-            </button>
+          {% if permissions.work_command.schedule_work_command.can() %}
+            {% if schedule %}
+              <button class="btn btn-large btn-primary" id="schedule-button" type="button">
+                <i class="icon-wrench icon-white"></i>&nbsp;排产
+              </button>
+            {% endif %}
+            {% if retrieve %}
+              <button class="btn btn-large btn-warning" id="retrieve-button" type="button">
+                <i class="icon-repeat icon-white"></i>&nbsp;回收
+              </button>
+            {% endif %}
           {% endif %}
-          {% if retrieve %}
-            <button class="btn btn-large btn-warning" id="retrieve-button" type="button">
-              回收
-            </button>
-          {% endif %}{% endif %}
           {% if request.args.get("order_id") %}
             <a class="btn btn-large" href="{{ request.args.get("url") or "/" }}">
-            返回
+              返回
             </a>
           {% endif %}
         </div>

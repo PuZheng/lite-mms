@@ -15,16 +15,18 @@
         <div class="control-group">
           <label for="content-input" class="control-label">
             <strong>
-              {% if permissions.roles.CargoClerkPermission.can() %}
-                只支持搜索卸货会话(发货会话)的车牌号码或客户名称,以及订单的订单编号
-              {% elif permissions.roles.SchedulerPermission.can() %}
-                只支持搜索订单的订单编号或者工单号
-              {% endif %}
+                请输入关键字
             </strong>
           </label>
 
           <div class="controls">
             <input id="content-input" type="search" placeholder="搜索..." name="content"/>
+             <span class="help-inline">{% if permissions.roles.CargoClerkPermission.can() %}
+               只支持搜索卸货会话（发货会话）的车牌号码或客户名称，以及订单的订单编号
+             {% elif permissions.roles.SchedulerPermission.can() %}
+               只支持搜索订单的订单编号或者工单号
+             {% endif %}
+             </span>
           </div>
         </div>
         <div class="control-group">
@@ -155,7 +157,7 @@
                 -产品：
                 <em>{{ wc.sub_order.product.name }}</em>
                 -车间：
-                <em>{{ wc.department.name or "未分配"}}</em>
+                <em>{{ wc.department.name or "未分配" }}</em>
                 -班组：
                 <em>{{ wc.team.name or "未分配" }}</em>
                 -状态:

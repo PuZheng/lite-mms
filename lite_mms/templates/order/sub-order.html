@@ -68,6 +68,7 @@
   </script>{% endblock %}
 {% block body %}
   <div class="container">
+    <legend>子订单详情</legend>
     <form class="form-horizontal" action="{{ url_for('order.sub_order', id_=sub_order.id) }}" method="POST">
 
       <div class="control-group">
@@ -187,11 +188,11 @@
           <input type="hidden" name="url" value="{{ request.args.get("url") }}">
           {% if not sub_order.work_command_list and not sub_order.order.refined %}
             <button class="btn btn-large btn-primary">
-              <i class="icon-ok icon-white"></i> 保存并返回
+              <i class="icon-ok icon-white"></i>&nbsp;保存
             </button>
           {% endif %}
           <a class="btn btn-large" href="{{ request.args.get("url") or url_for('order.order', id_=sub_order.order.id) }}">
-            <i class="icon-backward"></i> 返回
+            <i class="icon-backward"></i>&nbsp;返回
           </a>
         </div>
       </div>

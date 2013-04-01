@@ -13,7 +13,7 @@
                             $(this).val(create_time_list[idx]);
                         });
             {% endif %}
-            $('[name=create_time]').datepicker();
+            $('[name=create_time]').datetimepicker({language: "zh-CN"});
             $("#reset-button").click(function () {
                 $("select").select2("val", "");
             });

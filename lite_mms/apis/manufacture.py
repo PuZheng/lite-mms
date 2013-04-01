@@ -67,6 +67,13 @@ class WorkCommandWrapper(ModelWrapper):
     def unit(self):
         return self.sub_order.unit
 
+    @property
+    def default_department(self):
+        for d in get_department_list():
+            if self.harbor in d.harbor_list:
+                return d
+        return None
+
     @classmethod
     def new_work_command(cls, sub_order_id, org_weight, org_cnt, procedure_id,
                          urgent, tech_req="", pic_path=""):

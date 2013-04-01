@@ -15,7 +15,6 @@ from lite_mms.apis import wraps
 from lite_mms.models import UnloadSession, Plate, GoodsReceipt, Customer, UnloadTask, Product
 from lite_mms.constants import cargo as cargo_const
 from lite_mms.utilities import dictview, decorators
-from lite_mms.constants import cargo as cargo_const
 from lite_mms.portal.cargo2 import cargo2_page, fsm
 
 @cargo2_page.route("/goods-receipt", methods=["POST", "GET"])
@@ -37,9 +36,9 @@ class UnloadSessionModelView(ModelView):
     as_radio_group = True
     can_batchly_edit = False
 
-    __list_columns__ = ["id", "vehicle", "create_time", "finish_time", "with_person", "status", "goods_receipt_list"]
+    __list_columns__ = ["id", "plate", "create_time", "finish_time", "with_person", "status", "goods_receipt_list"]
 
-    __column_labels__ = {"id": u"编号", "vehicle": u"车辆", "create_time": u"创建时间", "finish_time": u"结束时间", 
+    __column_labels__ = {"id": u"编号", "plate": u"车辆", "create_time": u"创建时间", "finish_time": u"结束时间", 
                          "with_person": u"驾驶室", "status": u"状态", "goods_receipt_list": u"收货单", "gross_weight": u"净重"}
 
     def goods_receipt_list_formatter(v, obj):
@@ -77,7 +76,7 @@ class UnloadSessionModelView(ModelView):
 
     __default_order__ = ("id", "desc")
 
-    __sortable_columns__ = ["id", "vehicle", "create_time", "finish_time"]
+    __sortable_columns__ = ["id", "plate", "create_time", "finish_time"]
 
     from flask.ext.databrowser import filters                             
     from datetime import datetime, timedelta                              
@@ -98,7 +97,7 @@ class UnloadSessionModelView(ModelView):
 
     def preprocess(self, model):
         from lite_mms import apis
-        return apis.UnloadSessionWrapper(model)
+        return apis.cargo.UnloadSessionWrapper(model)
 
     def get_customized_actions(self, model=None):
         from lite_mms.portal.cargo2.actions import MyDeleteAction, CloseAction, OpenAction
@@ -111,7 +110,7 @@ class UnloadSessionModelView(ModelView):
                 return [MyDeleteAction(u"删除", CargoClerkPermission), CloseAction(u"关闭")]
 
     # ================= FORM PART ============================
-    __create_columns__ = ["vehicle", InputColumnSpec("with_person", label=u"驾驶室是否有人"), "gross_weight"]
+    __create_columns__ = ["plate", InputColumnSpec("with_person", label=u"驾驶室是否有人"), "gross_weight"]
     def format_log(logs, obj):
         for log in logs:
             if log.obj_cls == "UnloadSession":
@@ -130,7 +129,7 @@ class UnloadSessionModelView(ModelView):
                     s += " - " + log.message
                 yield s
 
-    __form_columns__ = ["vehicle", 
+    __form_columns__ = ["plate", 
                         InputColumnSpec("with_person", label=u"驾驶室是否有人"),
                         #InputColumnSpec("with_person", label=u"驾驶室是否有人", formatter=lambda v, obj: '<strong>' + (u'有人' if v else u'无人') + '</strong>', 
                                    #css_class="input-small uneditable-input"), 
@@ -179,13 +178,13 @@ class GoodsReceiptView(ModelView):
 
 goods_receipt_model_view = GoodsReceiptView(GoodsReceipt, u"收货单")
 
-class VehicleModelView(ModelView):
+class plateModelView(ModelView):
     
     can_edit = False
     
     __create_columns__ = ["plate"]
 
-vehicle_model_view = VehicleModelView(Plate, u"车辆")
+plate_model_view = plateModelView(Plate, u"车辆")
 
 @cargo2_page.route("/weigh-unload-task/<int:id_>", methods=["GET", "POST"])
 @decorators.templated("/cargo2/unload-task.haml")

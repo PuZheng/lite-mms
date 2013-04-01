@@ -87,53 +87,37 @@ def schedule():
                                         department.procedure_list])
 
         work_command_id_list = request.args.getlist("work_command_id")
-        url = request.args.get(
-            'url', url_for('manufacture.work_command_list'))
         department_list = apis.manufacture.get_department_list()
         from lite_mms.basemain import nav_bar
 
         if 1 == len(work_command_id_list):
             work_command = apis.manufacture.get_work_command(
                 work_command_id_list[0])
-            # TODO if work_command is not the first work command, then
-            # harbor may not be the sub_order's harbor
-            default_department_id = apis.harbor.get_harbor_model(
-                work_command.harbor.name).department.id
-            return render_template("/manufacture/schedule-work-command.html",
+            return render_template("manufacture/schedule-work-command.html",
                                    **{'titlename': u'排产',
                                       'department_list': [_wrapper(d) for d in
                                                           department_list],
                                       'work_command': work_command,
-                                      'url': url,
-                                      'default_department_id':
-                                          default_department_id,
                                       'nav_bar': nav_bar
                                    })
         else:
             work_command_list = [apis.manufacture.get_work_command(id)
                                  for id in work_command_id_list]
             default_department_id = None
-            department_dict = {}
-            department_set = set()
-            # TODO 这个太复杂了，显然这里需要替换为WorkCommand数据库对象
-            for work_command in work_command_list:
-                for d in department_list:
-                    # TODO if work_command is not the first, then its harbor
-                    # may not be the same with sub order's
-                    if work_command.harbor in d.harbor_list:
-                        department_set.add(d.id)
-                        department_dict.setdefault(work_command.id,
-                                                   dict(id=d.id, name=d.name))
+
+
+            from lite_mms.utilities.functions import deduplicate
+
+            department_set = list(
+                deduplicate([wc.department for wc in work_command_list],
+                            lambda x: x.name))
             if len(department_set) == 1: # 所有的工单都来自于同一个车间
-                default_department_id = department_set.pop()
+                default_department_id = department_set.pop().id
 
             param_dic = {'titlename': u'批量排产',
                          'department_list': [_wrapper(d) for d in
                                              department_list],
-                         'url': url,
                          'work_command_list': work_command_list,
-                         'default_department_dict': json.dumps(
-                             department_dict),
                          'default_department_id': default_department_id,
                          'nav_bar': nav_bar
             }

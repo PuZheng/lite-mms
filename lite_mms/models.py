@@ -35,6 +35,7 @@ procedure_and_department_table = db.Table("TB_PROCEDURE_AND_DEPARTMENT",
                                                     db.ForeignKey(
                                                         "TB_DEPARTMENT.id")))
 
+
 class Permission(db.Model):
     __tablename__ = "TB_PERMISSION"
     name = db.Column(db.String(64), primary_key=True)
@@ -45,6 +46,7 @@ class Permission(db.Model):
 
     def __repr__(self):
         return "<Permission: %s>" % self.name.encode("utf-8")
+
 
 class Group(db.Model):
     __tablename__ = "TB_GROUP"
@@ -60,6 +62,7 @@ class Group(db.Model):
 
     def __repr__(self):
         return "<Group: %d>" % self.id
+
 
 class User(db.Model):
     __tablename__ = "TB_USER"
@@ -77,32 +80,23 @@ class User(db.Model):
     def __repr__(self):
         return "<User %d>" % self.id
 
+
 class UnloadSession(db.Model):
     __tablename__ = "TB_UNLOAD_SESSION"
 
     id = db.Column(db.Integer, primary_key=True)
-    plate = db.Column(db.String(32), db.ForeignKey('TB_VEHICLE.plate'))
-    vehicle = db.relationship("Vehicle")
+    plate = db.Column(db.String(32), db.ForeignKey('TB_PLATE.name'))
     gross_weight = db.Column(db.Integer, nullable=False)
     with_person = db.Column(db.Boolean, default=False)
-    status = db.Column(db.Integer, default=cargo_const.STATUS_LOADING, nullable=False)
+    status = db.Column(db.Integer, default=cargo_const.STATUS_LOADING,
+                       nullable=False)
     create_time = db.Column(db.DateTime, default=datetime.now)
     finish_time = db.Column(db.DateTime)
-    #task_list = db.relationship(
-        #"UnloadTask", backref="unload_session",
-        #cascade="all, delete-orphan")
     goods_receipt_list = db.relationship(
         "GoodsReceipt", backref="unload_session",
         cascade="all, delete-orphan"
     )
 
-    #def __init__(self, plate, gross_weight, with_person=False, create_time=None,
-                 #finish_time=None):
-        #self.with_person = with_person
-        #self.plate = plate
-        #self.gross_weight = gross_weight
-        #self.create_time = create_time or datetime.now()
-        #self.finish_time = finish_time
 
     def __unicode__(self):
         return self.plate
@@ -110,13 +104,12 @@ class UnloadSession(db.Model):
     def __repr__(self):
         return "<UnloadSession %d>" % self.id
 
+
 class UnloadTask(db.Model):
     __tablename__ = "TB_UNLOAD_TASK"
 
     id = db.Column(db.Integer, primary_key=True)
-    session_id = db.Column(db.Integer,
-                           db.ForeignKey('TB_UNLOAD_SESSION.id')
-    )
+    session_id = db.Column(db.Integer, db.ForeignKey('TB_UNLOAD_SESSION.id'))
     unload_session = db.relationship("UnloadSession", backref="task_list")
     harbor_name = db.Column(db.String(32), db.ForeignKey('TB_HABOR.name'))
     harbor = db.relationship("Harbor")
@@ -130,6 +123,9 @@ class UnloadTask(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey("TB_PRODUCT.id"))
     product = db.relationship("Product")
     is_last = db.Column(db.Boolean, default=False)
+    goods_receipt_id = db.Column(db.Integer,
+                                 db.ForeignKey("TB_GOODS_RECEIPT.id"))
+    goods_receipt = db.relationship("GoodsReceipt", backref="unload_task_list")
 
     def __init__(self, unload_session, harbor, customer, creator,
                  product, pic_path, create_time=None, weight=0, is_last=False):
@@ -148,6 +144,7 @@ class UnloadTask(db.Model):
 
     def __repr__(self):
         return "<UnloadTask %d>" % self.id
+
 
 class Customer(db.Model):
     __tablename__ = "TB_CUSTOMER"
@@ -168,6 +165,7 @@ class Customer(db.Model):
     def __repr__(self):
         return "<Customer %s>" % self.id
 
+
 class Harbor(db.Model):
     __tablename__ = "TB_HABOR"
 
@@ -180,6 +178,7 @@ class Harbor(db.Model):
 
     def __repr__(self):
         return "<Harbor %s>" % self.name.encode("utf-8")
+
 
 class ProductType(db.Model):
     __tablename__ = "TB_PRODUCT_TYPE"
@@ -216,6 +215,7 @@ class Product(db.Model):
 
     def __repr__(self):
         return "<Product %d>" % self.id
+
 
 class Department(db.Model):
     __tablename__ = "TB_DEPARTMENT"
@@ -269,7 +269,7 @@ class GoodsReceipt(db.Model):
         self.receipt_id = self.id_generator()
 
     def id_generator(self):
-        return self.create_time.strftime('%Y%m%d%H%M%S') +\
+        return self.create_time.strftime('%Y%m%d%H%M%S') + \
                str((self.unload_session.id + self.customer.id) % 100)[0]
 
     def __unicode__(self):
@@ -278,8 +278,8 @@ class GoodsReceipt(db.Model):
     def __repr__(self):
         return "<GoodsReceipt %d>" % self.id
 
-class Order(db.Model):
 
+class Order(db.Model):
     __modelname__ = u"订单"
     __tablename__ = "TB_ORDER"
 
@@ -312,6 +312,7 @@ class Order(db.Model):
 
     def __repr__(self):
         return "<Order %s>" % self.id
+
 
 class SubOrder(db.Model):
     __tablename__ = "TB_SUB_ORDER"
@@ -346,7 +347,6 @@ class SubOrder(db.Model):
     )
 
 
-
     @property
     def unit_weight(self):
         try:
@@ -379,10 +379,11 @@ class SubOrder(db.Model):
         self.remaining_quantity = remaining_quantity
 
     def __unicode__(self):
-        return self.id
+        return unicode(self.id)
 
     def __repr__(self):
         return "<SubOrder %d>" % self.id
+
 
 class WorkCommand(db.Model):
     __tablename__ = "TB_WORK_COMMAND"
@@ -418,7 +419,8 @@ class WorkCommand(db.Model):
     tech_req = db.Column(db.String(32))
     qir_list = db.relationship("QIReport", backref="work_command",
                                cascade="all, delete-orphan",
-                              primaryjoin="WorkCommand.id==QIReport.work_command_id")
+                               primaryjoin="WorkCommand.id==QIReport"
+                                           ".work_command_id")
     pic_path = db.Column(db.String(256))
     handle_type = db.Column(db.Integer)
 
@@ -468,9 +470,9 @@ class WorkCommand(db.Model):
         """
         self.status = new_status
         self.last_mod = datetime.now()
-    
+
     def __unicode__(self):
-        return self.id
+        return unicode(self.id)
 
     def __repr__(self):
         return "<WorkCommand %d>" % self.id
@@ -482,9 +484,11 @@ class QIReport(db.Model):
     work_command_id = db.Column(db.Integer,
                                 db.ForeignKey("TB_WORK_COMMAND.id"))
     generated_work_command_id = db.Column(db.Integer,
-                                         db.ForeignKey("TB_WORK_COMMAND.id"))
-    generated_work_command = db.relationship("WorkCommand", backref=db.backref("parent_qir", uselist=False),
-            primaryjoin="WorkCommand.id==QIReport.generated_work_command_id")
+                                          db.ForeignKey("TB_WORK_COMMAND.id"))
+    generated_work_command = db.relationship("WorkCommand",
+                                             backref=db.backref("parent_qir",
+                                                                uselist=False),
+                                             primaryjoin="WorkCommand.id==QIReport.generated_work_command_id")
     quantity = db.Column(db.Integer)
     weight = db.Column(db.Integer)
     result = db.Column(db.Integer)
@@ -504,7 +508,7 @@ class QIReport(db.Model):
         self.pic_path = pic_path
 
     def __unicode__(self):
-        return self.id
+        return unicode(self.id)
 
     def __repr__(self):
         return "<QIReport %d>" % self.id
@@ -513,15 +517,15 @@ class DeliverySession(db.Model):
     __tablename__ = "TB_DELIVERY_SESSION"
 
     id = db.Column(db.Integer, primary_key=True)
-    plate = db.Column(db.String(32))
+    plate = db.Column(db.String(32), db.ForeignKey("TB_PLATE.name"))
     tare = db.Column(db.Integer)
     create_time = db.Column(db.DateTime, default=datetime.now)
     finish_time = db.Column(db.DateTime)
     with_person = db.Column(db.Boolean, default=False)
     delivery_task_list = db.relationship("DeliveryTask",
-                                backref=db.backref("delivery_session",
-                                                   uselist=False),
-                                cascade="all, delete-orphan")
+                                         backref=db.backref("delivery_session",
+                                                            uselist=False),
+                                         cascade="all, delete-orphan")
 
     def __init__(self, plate, tare, with_person=False, create_time=None,
                  finish_time=None):
@@ -536,6 +540,7 @@ class DeliverySession(db.Model):
 
     def __repr__(self):
         return "<DeliverySession %d>" % self.id
+
 
 class StoreBill(db.Model):
     __tablename__ = "TB_STORE_BILL"
@@ -579,17 +584,18 @@ class StoreBill(db.Model):
         self.qir = qir
         self.weight = qir.weight
         self.quantity = qir.quantity
-        self.customer_id = qir.work_command.sub_order.order.goods_receipt\
-        .customer_id
+        self.customer_id = qir.work_command.sub_order.order.goods_receipt \
+            .customer_id
         self.create_time = create_time or datetime.now()
         self.sub_order = qir.work_command.sub_order
 
 
     def __unicode__(self):
-        return self.id
+        return unicode(self.id)
 
     def __repr__(self):
         return "<StoreBill %d>" % self.id
+
 
 class DeliveryTask(db.Model):
     __tablename__ = "TB_DELIVERY_TASK"
@@ -625,10 +631,11 @@ class DeliveryTask(db.Model):
             return ""
 
     def __unicode__(self):
-        return self.id
+        return unicode(self.id)
 
     def __repr__(self):
         return "<DeliveryTask %d>" % self.id
+
 
 class Consignment(db.Model):
     __tablename__ = "TB_CONSIGNMENT"
@@ -658,14 +665,15 @@ class Consignment(db.Model):
         self.consignment_id = self.id_generator()
 
     def id_generator(self):
-        return self.create_time.strftime('%Y%m%d%H%M%S') +\
+        return self.create_time.strftime('%Y%m%d%H%M%S') + \
                str((self.delivery_session.id + self.customer.id) % 100)[0]
 
     def __unicode__(self):
-        return self.id
+        return unicode(self.id)
 
     def __repr__(self):
         return "<Consignment %d>" % self.id
+
 
 class Procedure(db.Model):
     __tablename__ = "TB_PROCEDURE"
@@ -681,6 +689,7 @@ class Procedure(db.Model):
     def __repr__(self):
         return "<Procedure %d>" % self.id
 
+
 class Deduction(db.Model):
     __tablename__ = "TB_DEDUCTION"
 
@@ -689,14 +698,17 @@ class Deduction(db.Model):
     work_command_id = db.Column(db.Integer,
                                 db.ForeignKey("TB_WORK_COMMAND.id"))
     work_command = db.relationship("WorkCommand", backref="deduction_list")
-    team_id = db.Column(db.Integer, db.ForeignKey("TB_TEAM.id"), nullable=False)
+    team_id = db.Column(db.Integer, db.ForeignKey("TB_TEAM.id"),
+                        nullable=False)
     team = db.relationship("Team", backref="deduction_list")
-    actor_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"), nullable=False)
+    actor_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"),
+                         nullable=False)
     actor = db.relationship(User)
-    create_time = db.Column(db.DateTime,default=datetime.now)
+    create_time = db.Column(db.DateTime, default=datetime.now)
     remark = db.Column(db.String(256))
 
-    def __init__(self, weight=None, actor=None, team=None, work_command=None, create_time=None, remark=None):
+    def __init__(self, weight=None, actor=None, team=None, work_command=None,
+                 create_time=None, remark=None):
         self.weight = weight
         self.work_command = work_command
         self.actor = actor
@@ -705,21 +717,25 @@ class Deduction(db.Model):
         self.remark = remark
 
     def __unicode__(self):
-        return self.id
+        return unicode(self.id)
 
     def __repr__(self):
         return "<Deduction %d>" % self.id
 
-class ConsignmentProduct(db.Model):
 
+class ConsignmentProduct(db.Model):
     __tablename__ = "TB_CONSIGNMENT_PRODUCT"
 
     id = db.Column(db.Integer, primary_key=True)
-    consignment_id = db.Column(db.Integer, db.ForeignKey("TB_CONSIGNMENT.id"), nullable=False)
+    consignment_id = db.Column(db.Integer, db.ForeignKey("TB_CONSIGNMENT.id"),
+                               nullable=False)
     consignment = db.relationship("Consignment", backref="product_list")
-    product_id = db.Column(db.Integer, db.ForeignKey("TB_PRODUCT.id"), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey("TB_PRODUCT.id"),
+                           nullable=False)
     product = db.relationship("Product")
-    delivery_task_id = db.Column(db.Integer, db.ForeignKey("TB_DELIVERY_TASK.id"), nullable=False)
+    delivery_task_id = db.Column(db.Integer,
+                                 db.ForeignKey("TB_DELIVERY_TASK.id"),
+                                 nullable=False)
     delivery_task = db.relationship("DeliveryTask")
     weight = db.Column(db.Integer)
     quantity = db.Column(db.Integer)
@@ -727,7 +743,8 @@ class ConsignmentProduct(db.Model):
     spec = db.Column(db.String(64))
     type = db.Column(db.String(64))
     returned_weight = db.Column(db.Integer)
-    team_id = db.Column(db.Integer,db.ForeignKey("TB_TEAM.id"), nullable=False)
+    team_id = db.Column(db.Integer, db.ForeignKey("TB_TEAM.id"),
+                        nullable=False)
     team = db.relationship("Team")
 
     def __init__(self, product, delivery_task, consignment):
@@ -736,35 +753,38 @@ class ConsignmentProduct(db.Model):
         self.consignment = consignment
 
     def __unicode__(self):
-        return self.id
+        return unicode(self.id)
 
     def __repr__(self):
         return "<DeliveryProduct %d>" % self.id
 
-class Vehicle(db.Model):
-    __tablename__ = "TB_VEHICLE"
+
+class Plate(db.Model):
+    __tablename__ = "TB_PLATE"
 
     id = db.Column(db.Integer, primary_key=True)
-    plate = db.Column(db.String(64), nullable=False, unique=True)
+    name = db.Column(db.String(64), nullable=False, unique=True)
+
+    def __init__(self, name):
+        self.name = name
 
     def __unicode__(self):
-        return self.plate
+        return self.name
 
     def __repr__(self):
-        return "<Vehicle %s>" % self.plate
+        return "<Plate %s>" % self.name
+
 
 class Log(db.Model):
-
     __tablename__ = "TB_LOG"
 
     # MAIN PART
     id = db.Column(db.Integer, primary_key=True)
     actor_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
     actor = db.relationship("User")
-    obj_cls = db.Column(db.String(64), nullable=False)
-    obj_pk = db.Column(db.String(64), nullable=False)
-    obj = db.Column(db.String(64), nullable=False)
-    action = db.Column(db.String(64), nullable=False)
+    obj_cls = db.Column(db.String(64))
+    obj_pk = db.Column(db.String(64))
+    action = db.Column(db.String(64))
     create_time = db.Column(db.DateTime, default=datetime.now)
 
 
@@ -783,4 +803,6 @@ class Log(db.Model):
 
 
     def __unicode__(self):
-        return u"[%s]: 用户%s对%s(%s)执行了(%s)操作" % (self.create_time.strftime("%Y-%m-%d %H:%M:%S"), self.actor.username, self.obj_cls, self.obj, self.action)
+        return u"[%s]: 用户%s对%s(%s)执行了(%s)操作" % (
+        self.create_time.strftime("%Y-%m-%d %H:%M:%S"), self.actor.username,
+        self.obj_cls, self.obj, self.action)

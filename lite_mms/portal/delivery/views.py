@@ -280,9 +280,12 @@ def consignment_list():
                 customer=customer)
 
 @delivery_page.route("/product/<int:id_>")
-@CargoClerkPermission.require()
 @decorators.templated("delivery/consignment-product.html")
 def consignment_product(id_):
+    from flask.ext.principal import Permission
+
+    Permission.union(CargoClerkPermission, AccountantPermission).test()
+
     import lite_mms.apis as apis
 
     current_product = apis.delivery.ConsignmentProductWrapper.get_product(id_)

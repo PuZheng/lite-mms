@@ -24,6 +24,8 @@ sub_nav_bar.register(lambda: harbor_model_view.url_for_list(), u"装卸点管理
     enabler=lambda: harbor_model_view.within_domain(request.url, "admin2"))
 sub_nav_bar.register(lambda: procedure_model_view.url_for_list(), u"工序管理", 
     enabler=lambda: procedure_model_view.within_domain(request.url, "admin2"))
+sub_nav_bar.register(lambda: url_for("admin2.broker_index"), u"数据导入", 
+    enabler=lambda: "admin2/broker" in request.url)
 
 @admin2_page.route("/")
 def index():

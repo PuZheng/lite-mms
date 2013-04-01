@@ -123,16 +123,18 @@
               {{ task.spec_type_list|join("<br>")|safe }}
             </th>
             <td>{% if task.consignment %}是{% else %}否{% endif %} </td>
-            <td>{% for pic_url in task.pic_url_list %}
-              {% if pic_url %}
-                <li class="span2">
-                  <a href="{{ pic_url }}" class="fancybox thumbnail" rel="group" title="{{ task.product.name }}">
-                    <img src="{{ pic_url }}" class="bordered" alt="{{ task.product.name }}"/>
-                  </a>
-                </li>
-
-              {% endif %}
-            {% endfor %}
+            <td>
+              <ul class="thumbnails">
+                {% for pic_url in task.pic_url_list %}
+                  {% if pic_url %}
+                    <li class="span2">
+                      <a href="{{ pic_url }}" class="fancybox thumbnail" rel="group" title="{{ task.product.name }}">
+                        <img src="{{ pic_url }}" class="bordered" alt="{{ task.product.name }}"/>
+                      </a>
+                    </li>
+                  {% endif %}
+                {% endfor %}
+              </ul>
             </td>
           </tr>
         {% endfor %}
@@ -168,13 +170,14 @@
                 <td>{{ store_bill.customer.name }}</td>
                 <td>{{ store_bill.weight }}</td>
                 <td>{% if store_bill.pic_url %}
-                  <a href="{{ store_bill.pic_url }}"
-                     class="fancybox" rel="group"
-                     title="{{ store_bill.product_name }}">
-                    <img src="{{ store_bill.pic_url }}"
-                         class="bordered"
-                         alt="{{ store_bill.product_name }}"/>
-                  </a>{% endif %}</td>
+                  <ul class="thumbnails">
+                    <li class="span2">
+                      <a href="{{ store_bill.pic_url }}" class="fancybox thumbnail" rel="group" title="{{ store_bill.product.name }}">
+                        <img src="{{ store_bill.pic_url }}" class="bordered" alt="{{ store_bill.product.name }}"/>
+                      </a>
+                    </li>
+                  </ul>
+                {% endif %}</td>
               </tr>
             {% endfor %}
             </tbody>

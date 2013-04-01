@@ -1,87 +1,85 @@
 {% extends "layout.html" %}
 {% block custom_external %}
-    <script src="{{ url_for("static", filename="js/combobox.js") }}"></script>
-    <script type="text/javascript">
-        $(function () {
-            var plate_list ={{ working_plate_list|safe }};
-            $("form").submit(function () {
-                for (l in plate_list) {
-                    if ($("#combobox").val() == plate_list[l]) {
-                        alert("该车正在卸货或者装货中，不能重复选择");
-                        return false;
-                    }
-                }
-            });
-        })
-    </script>
-    <style type="text/css">
-        .ui-combobox {
-            position: relative;
-            display: inline-block;
+  <script src="{{ url_for("static", filename="js/combobox.js") }}"></script>
+  <script type="text/javascript">
+    $(function () {
+      var plate_list ={{ working_plate_list|safe }};
+      $("form").submit(function () {
+        for (l in plate_list) {
+          if ($("#plateNumber").val() == plate_list[l]) {
+            alert("该车正在卸货或者装货中，不能重复选择");
+            return false;
+          }
         }
-
-        .ui-combobox-toggle {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            margin-left: 116px;
-            padding: 0;
-            /* adjust styles for IE 6/7 */
-            *height: 1.7em;
-            *top: 0.1em;
-        }
-
-        .ui-combobox-input {
-            margin: 0;
-            padding: 0.3em;
-        }
-        input#tare{
-            width: 156px;
-        }
-    </style>
+      });
+      $("#plateNumber").select2({
+        createSearchChoice: function (term, data) {
+          var patt = /^[\u4E00-\u9FA3][a-zA-Z]\s[\w^_]{5}$/g;
+          if ($(data).filter(function () {
+            return this.text.localeCompare(term) === 0;
+          }).length === 0) {
+            if (patt.test(term)) {
+              term = term.match(/^[\u4E00-\u9FA3][a-zA-Z]/g) + " " + term.split(/^[\u4E00-\u9FA3][a-zA-Z]\s?/g)[1];
+              return {id: term, text: term.toUpperCase()};
+            }
+          }
+        },
+        placeholder: '请选择',
+        data: [
+          {% for item in plateNumbers %}
+            {id: "{{ item }}", text: "{{ item }}"},
+          {% endfor %}
+        ],
+        width: "resolve"
+      });
+    })
+  </script>
 {% endblock %}
 {% block body %}
-    <div class="ym-wrapper">
-        <div class="ym-wbox">
-            <form class="ym-form linearize-form ym-columnar" action=
-                    "{{ url_for('delivery.session_add') }}" method="POST">
-                <div class="ym-fbox-select ui-widget">
-                    <label for="combobox">车辆车牌号<sup class="ym-required"
-                                                    title="请选择车牌号.">*</sup>
-                    </label>
-                    <select name="plateNumber" id="combobox" size="1">
-                        <option value="" selected="selected"
-                                disabled="disabled">请选择
-                        </option>
-                        {% for item in plateNumbers %}
-                            <option value="{{ item }}">{{ item }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="ym-fbox-text">
-                    <label for="tare">车辆皮重(KG)<sup class="ym-required"
-                                                   title="请选择车牌毛重.">*</sup></label>
-                    <input name="tare" id="tare" size="20"
-                           type="number" required="true" min="0">
-                </div>
-                <div class="ym-fbox-check">
-                    <label for="with_person">称重时车上是否有人<sup class="ym-required"
-                                                           title="如果有人请打钩">*</sup></label>
-                    <input type="checkbox" id="with_person" name="with_person"/>
-                </div>
-                <div class="ym-fbox-button">
-                    <button class="ym-button ym-save">提交</button>
-                    <a class="ym-button ym-delete"
-                       href="
-                       {{ url_for('delivery.session_list') }}">返回</a>
-                </div>
-                {% if request.args.get("store_bill_id") %}
-                    {% for id in request.args.getlist("store_bill_id")  %}
-                        <input type="hidden" value="{{ id }}" name="store_bill_id">
-                    {% endfor %}
-                {% endif %}
-            </form>
-        </div>
-    </div>
+  <div class="container">
+    <form class="form-horizontal" action="{{ url_for('delivery.delivery_session') }}" method="POST">
+      <div class="control-group">
+        <label for="plateNumber" class="control-label">
+          <strong>车辆车牌号</strong>
+          <strong class="required">*</strong>
+        </label>
 
+        <div class="controls">
+          <input type="text" name="plateNumber" id="plateNumber" required="required">
+        </div>
+      </div>
+      <div class="control-group">
+        <label for="tare" class="control-label">
+          <strong>车辆皮重(KG)</strong>
+          <strong class="required">*</strong>
+        </label>
+
+        <div class="controls">
+          <input name="tare" id="tare" type="number" required="required" min="0">
+        </div>
+      </div>
+      <div class="control-group">
+        <label for="with_person" class="control-label">
+
+          <strong>称重时车上是否有人</strong>
+          <strong class="required" title="如果有人请打钩">*</strong>
+        </label>
+
+        <div class="controls">
+          <input type="checkbox" id="with_person" name="with_person"/>
+        </div>
+      </div>
+      <div class="control-group">
+        <div class="controls">
+          <button class="btn btn-large btn-primary">提交</button>
+          <a class="btn btn-large" href="{{ request.args.get("url") or url_for('delivery.session_list') }}">返回</a>
+        </div>
+      </div>
+      {% if request.args.get("store_bill_id") %}
+        {% for id in request.args.getlist("store_bill_id") %}
+          <input type="hidden" value="{{ id }}" name="store_bill_id">
+        {% endfor %}
+      {% endif %}
+    </form>
+  </div>
 {% endblock %}

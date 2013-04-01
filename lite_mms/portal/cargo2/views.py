@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
-from flask import request, render_template, redirect
+from flask import request, render_template, redirect, abort
 from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.column_spec import InputColumnSpec, ColumnSpec, PlaceHolderColumnSpec, ListColumnSpec
 from wtforms import Form, IntegerField, validators, ValidationError
@@ -12,7 +12,7 @@ from lite_mms.basemain import app, data_browser, nav_bar
 from lite_mms.permissions import CargoClerkPermission,AdminPermission
 from lite_mms import apis
 from lite_mms.apis import wraps
-from lite_mms.models import UnloadSession, Vehicle, GoodsReceipt, Customer, UnloadTask, Product
+from lite_mms.models import UnloadSession, Plate, GoodsReceipt, Customer, UnloadTask, Product
 from lite_mms.constants import cargo as cargo_const
 from lite_mms.utilities import dictview, decorators
 from lite_mms.constants import cargo as cargo_const
@@ -185,7 +185,7 @@ class VehicleModelView(ModelView):
     
     __create_columns__ = ["plate"]
 
-vehicle_model_view = VehicleModelView(Vehicle, u"车辆")
+vehicle_model_view = VehicleModelView(Plate, u"车辆")
 
 @cargo2_page.route("/weigh-unload-task/<int:id_>", methods=["GET", "POST"])
 @decorators.templated("/cargo2/unload-task.haml")

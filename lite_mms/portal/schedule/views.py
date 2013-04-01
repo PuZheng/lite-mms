@@ -25,11 +25,9 @@ def order_list():
 
     customer_id = request.args.get("customer_id", type=int)
     params = dict(unfinished=True, desc=True)
-    c = None
     if customer_id:
         params.update(customer_id=customer_id)
-        c = customer.get_customer(customer_id)
-        if not c:
+        if not customer.get_customer(customer_id):
             return _(u"ID为%s的客户不存在" % customer_id), 404
 
     orders, total_cnt = order.get_order_list(
@@ -37,53 +35,69 @@ def order_list():
         **params)
     customer_list = order.get_customer_list("unlimited", dispatched=True)
     pagination = Pagination(page, constants.ORDER_PER_PAGE, total_cnt)
-    param_dic = {'titlename': u'订单列表', 'order_list': orders,
-                 'pagination': pagination, 'customer_list': customer_list}
-    if c:
-        param_dic.update(customer=c)
-    return param_dic
+    return {'titlename': u'订单列表', 'order_list': orders,
+            'pagination': pagination, 'customer_list': customer_list}
 
 
-@schedule_page.route('/work-command', methods=['POST'])
+@schedule_page.route('/work-command', methods=['GET', 'POST'])
+@decorators.templated("schedule/work-command.html")
+@decorators.nav_bar_set
 def work_command():
     """
     生成一个新的工单
     """
-    from lite_mms.apis import manufacture
+    if request.method == "GET":
+        from lite_mms import apis
 
-    class PreScheduleForm(Form):
-        id = HiddenField('id', [validators.required()])
-        order_id = HiddenField('order_id', [validators.required()])
-        schedule_weight = IntegerField('schedule_weight',
-                                       [validators.required()])
-        procedure = IntegerField('procedure')
-        tech_req = TextField('tech_req')
-        schedule_count = IntegerField('schedule_count')
-        urgent = BooleanField('urgent')
-
-    form = PreScheduleForm(request.form)
-    if form.validate():
+        sub_order = apis.order.SubOrderWrapper.get_sub_order(
+            request.args.get("sub_order_id", type=int))
+        if not sub_order:
+            abort(404)
         try:
-            inst = manufacture.new_work_command(
-                sub_order_id=form.id.data,
-                org_weight=form.schedule_weight.data,
-                procedure_id=form.procedure.data,
-                org_cnt=form.schedule_count.data,
-                urgent=form.urgent.data,
-                tech_req=form.tech_req.data)
-            if inst:
-                if inst.sub_order.returned:
-                    flash(u"成功创建工单（编号%d），请提醒质检员赶快处理" % inst.id)
-                else:
-                    flash(u"成功创建工单（编号%d）" % inst.id)
-        except ValueError as a:
-            flash(a.message)
-            return redirect(url_for('schedule.order',
-                                    id_=form.order_id.data)), 403
-        return redirect(url_for('schedule.order',
-                                id_=form.order_id.data))
+            dep = apis.harbor.get_harbor_model(sub_order.harbor.name).department
+            return dict(sub_order=sub_order, procedure_list=dep.procedure_list,
+                        department=dep)
+        except AttributeError:
+            abort(404)
     else:
-        abort(404)
+        from lite_mms.apis import manufacture, order
+
+        class PreScheduleForm(Form):
+            sub_order_id = HiddenField('sub_order_id', [validators.required()])
+            schedule_weight = IntegerField('schedule_weight',
+                                           [validators.required()])
+            procedure = IntegerField('procedure')
+            tech_req = TextField('tech_req')
+            schedule_count = IntegerField('schedule_count')
+            urgent = BooleanField('urgent')
+            url = HiddenField("url")
+
+        form = PreScheduleForm(request.form)
+        sub_order = order.get_sub_order(form.sub_order_id.data)
+        if not sub_order:
+            abort(404)
+        if form.validate():
+            try:
+                inst = manufacture.new_work_command(
+                    sub_order_id=sub_order.id,
+                    org_weight=form.schedule_weight.data,
+                    procedure_id=form.procedure.data,
+                    org_cnt=form.schedule_count.data,
+                    urgent=form.urgent.data,
+                    tech_req=form.tech_req.data)
+                if inst:
+                    if inst.sub_order.returned:
+                        flash(u"成功创建工单（编号%d），请提醒质检员赶快处理" % inst.id)
+                    else:
+                        flash(u"成功创建工单（编号%d）" % inst.id)
+            except ValueError as a:
+                flash(a.message, "error")
+                return redirect(form.url.data or url_for('schedule.order', id_=sub_order.order.id))
+            return redirect(form.url.data or url_for('schedule.order',
+                                                     id_=sub_order.order.id))
+        else:
+            flash(form.errors, "error")
+            return redirect(url_for('schedule.order', id_=sub_order.order.id))
 
 
 @schedule_page.route('/order/<int:id_>', methods=['GET'])
@@ -98,7 +112,7 @@ def order(id_):
     return {'titlename': u'订单详情', 'order': inst}
 
 
-@schedule_page.route('/work_command_list', methods=['GET'])
+@schedule_page.route('/work_command_list')
 @decorators.templated('/schedule/work-command-list.html')
 @decorators.nav_bar_set
 def work_command_list():
@@ -121,3 +135,5 @@ def work_command_list():
         for sub_order in order.sub_order_list:
             work_list.extend(sub_order.done_work_command_list)
     return {'work_list': work_list}
+
+

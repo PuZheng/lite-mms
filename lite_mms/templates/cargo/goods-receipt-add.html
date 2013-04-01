@@ -1,37 +1,69 @@
-<div id="new-receipt-dialog" title="{{ _("创建收货单") }}">
-    <form class="ym-form" action="{{ url_for("cargo.goods_receipt") }}"
-          method="POST">
-        <fieldset>
-            <div class="ym-gbox ym-fbox-select">
-                <label for="customer">
-                    <b>请选择公司名称</b><sup class="ym-required"
-                                       title="请选择公司名称.">*</sup>
-                </label>
-                <select name="customer" id="customer" size="1"
-                        required="required">
-                </select>
-            </div>
+<div id="new-receipt-dialog" class="modal hide fade">
+  <div class="modal-header">
+    <a class="close" data-dismiss="modal">&times;</a>
 
-            <div class="ym-gbox ym-fbox-select">
-                <label for="order_type"><b>请选择订单模板</b><sup class="ym-required"
-                                                         title="请选择模板.">*</sup>
-                </label>
-                <select name="order_type" id="order_type" size="1"
-                        required="required">
-                    {% for item in order_types %}
-                        <option value="{{ item.id }}">{{ item.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="ym-fbox-button">
-                <button class="ym-button button-close">
-                    提交
-                </button>
-                <button class="ym-button button-close" type="button">返回
-                </button>
-            </div>
-            <input type="hidden" id="unload_session_id"
-                   name="unload_session_id" value=""/>
-        </fieldset>
-    </form>
+    <h3>{{ _("创建收货单") }}</h3>
+  </div>
+  <form class="modal-form" action="{{ url_for("cargo.goods_receipt") }}" method="POST">
+    <div class="modal-body" id="new-receipt-content">
+      <fieldset>
+        <div class="control-group">
+          <label for="customer" class="control-label">
+            <strong>请选择公司名称</strong>
+            <span class="text-error" title="请选择公司名称.">*</span>
+          </label>
+
+          <div class="controls">
+            <select name="customer" id="customer" required="required">
+            </select>
+          </div>
+        </div>
+
+        <input type="hidden" id="unload_session_id" name="unload_session_id" value=""/>
+        <input type="hidden" value="{{ request.url }}" name="url">
+      </fieldset>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary hide" id="goods-receipt-button">确定
+      </button>
+      <a class="btn" data-dismiss="modal">关闭</a>
+    </div>
+  </form>
 </div>
+<script type="text/javascript">
+  $(function () {
+    var temp = "";
+    $("#new-receipt-dialog").modal({show: false});
+    $("#new-receipt-dialog").on("show", function () {
+      {% if unload_session %}
+        var id = "{{ unload_session.id }}";
+      {% else %}
+        var id = $("input[type='radio']:checked").val();
+      {% endif %}
+
+      if (jQuery.type(id) == "undefined" || id == "") {
+        temp = $("#new-receipt-content").html();
+        $("#new-receipt-content").html('<p class="text-error">' + "当前无记录" + '</p>');
+        $("#goods-receipt-button").addClass("hide");
+        return;
+      }
+      $("#unload_session_id").val(id);
+      $.getJSON("/order/ajax/customer-list?unload_session_id=" + id,
+          function (data) {
+            $("#customer").empty();
+            $.each(data, function (idx, v) {
+              $("#customer").append("<option value=" + v.id + ">" + v.name + "</option>");
+              $("#goods-receipt-button").removeClass("hide");
+              $("#customer").select2({width: "resolve"});
+            });
+          }).error(function (data) {
+            temp = $("#new-receipt-content").html();
+            $("#new-receipt-content").html('<p class="text-error">' + data.responseText + '</p>');
+            $("#goods-receipt-button").addClass("hide");
+          });
+    });
+    $("#new-receipt-dialog").on("hidden", function () {
+      $("#new-receipt-content").html(temp);
+    });
+  });
+</script>

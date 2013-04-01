@@ -1,113 +1,61 @@
 {% extends "layout.html" %}
 {% block custom_external %}
-    <script type="text/javascript">
-        $(function () {
-            setTimeout(function () {
-                $(".flash").fadeOut("slow")
-            }, 3000);
-            $("#is_paid-select").change(function(){
-                $(this).parents ("form").submit();
-            });
-            $("#is_paid-select").val('{{ request.args.get("is_paid") }}');
-            $("#customer_dialog").dialog({
-                autoOpen: false,
-                height: 360,
-                buttons: {
-                    确认: function () {
-                        $(this).dialog("close");
-                        $("input[name='customer_id']").val($("#customer_dialog input[name='customer_id']:checked").val());
-                        $("form.filters").submit();
-                    },
-                    取消: function () {
-                        $(this).dialog("close");
-                    }
-                }
-            });
-            $("#customer_name").focusin(function () {
-                $("#customer_dialog").dialog("open");
-            });
-            $("#customer_dialog input:first").keyup(function () {
-                var needle = $(this).val();
-                if (needle.length == 0) {
-                    $("#customer_dialog tr").show();
-                } else {
-                    $("#customer_dialog tr").each(function (idx, e) {
-                        if (idx == 0) {
-                            return;
-                        }
-                        var haystack = $(e).children("td:last").children("input").val().toLowerCase();
-                        if (haystack.search(needle) == 0) {
-                            $(e).show()
-                        } else {
-                            $(e).hide();
-                        }
-                    });
-                }
-            });
-        })
-    </script>
+  <script type="text/javascript">
+    $(function () {
+      $("#is_paid-select").change(function () {
+        $(this).parents("form").submit();
+      });
+      $("#is_paid-select").val('{{ request.args.get("is_paid") }}');
+      $("#customer").change(function () {
+        $(this).parents("form").submit();
+      });
+    })
+  </script>
 {% endblock %}
 {% block body %}
-    <div class="ym-wrapper">
-        <div class="ym-wbox">
-            <form action="{{ url_for("delivery.consignment_list") }}" class="filters">
-            <span>
-                <label for="is_paid-select">是否支付:</label>
-                <select name="is_paid" id="is_paid-select">
-                    <option value="0">未支付</option>
-                    <option value="1">已支付</option>
-                </select>
-            </span>
-            <input type="hidden" name="customer_id" value="{% if customer %}{{ customer.id }}{% else %}0{% endif %}"/>
-                <span class="customer-name-input">
-                    {{ _("客户名称") }}:
-                    <input type="text" id="customer_name" value="{% if customer %}{{ customer.name }}{% else %}不限客户{% endif %}">
-                </span>
-            </form>
-            <table class="bordertable">
-                <thead>
-                <tr>
-                    <th>发货单号</th>
-                    <th>客户名称</th>
-                    <th>支付方式</th>
-                    <th>是否支付</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for cons in consignment_list %}
-                    <tr>
-                        <td>
-                            <a href="{{ url_for('delivery.consignment', id_=cons.id, url=request.url) }}">{{ cons.id }}</a>
-                        </td>
-                        <td>{{ cons.customer.name }}</td>
-                        <td>{{ "现金支付" if cons.pay_in_cash else "月结" }}</td>
-                        <td>{{ "是" if cons.is_paid else "未支付" }}</td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <div id="customer_dialog" title="选择客户">
-        <form action="#">
-            <input type="text" placeholder="输入客户名称拼音首字母搜索..."/>
-            <table class="narrow">
-                <tbody>
-                <tr>
-                    <td><input type="radio" name="customer_id" value="0"
-                               checked/></td>
-                    <td>不限客户<input type="hidden" value=""></td>
-                </tr>
-                {% for c in customer_list %}
-                    <tr>
-                        <td><input type="radio" name="customer_id"
-                                   value="{{ c.id }}"/></td>
-                        <td>{{ c.name }}<input type="hidden"
-                                               value="{{ c.abbr }}"></td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </form>
-    </div>
+  <div class="container">
+    <form action="{{ url_for("delivery.consignment_list") }}" class="form-inline" id="filters">
+      <div class="span2">
+        <label for="is_paid-select">是否支付:</label>
+        <select name="is_paid" id="is_paid-select" class="input-small">
+          <option value="0">未支付</option>
+          <option value="1">已支付</option>
+        </select>
+      </div>
+      <div>
+        <label for="customer" class="padding">{{ _("客户名称") }}</label>
+        <select name="customer_id" id="customer">
+          <option value="0">所有</option>
+          {% for c in customer_list %}
+            <option value="{{ c.id }}" {% if c.id == request.args.get("customer_id")|int %}selected="selected"{% endif %}>
+              {{ c.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+    <legend>发货单列表</legend>
+    <table class="table table-striped table-bordered table-condensed">
+      <thead>
+      <tr>
+        <th>发货单号</th>
+        <th>客户名称</th>
+        <th>支付方式</th>
+        <th>是否支付</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for cons in consignment_list %}
+        <tr>
+          <td>
+            <a href="{{ url_for('delivery.consignment', id_=cons.id, url=request.url) }}">{{ cons.id }}</a>
+          </td>
+          <td>{{ cons.customer.name }}</td>
+          <td>{{ "现金支付" if cons.pay_in_cash else "月结" }}</td>
+          <td>{{ "是" if cons.is_paid else "未支付" }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
 {% endblock %}

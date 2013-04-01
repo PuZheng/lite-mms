@@ -9,6 +9,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from lite_mms.exceptions import AuthenticateFailure
 from lite_mms.apis import ModelWrapper
 
+
 class UserWrapper(login.UserMixin, ModelWrapper):
     """
     a wrapper of the actual user model
@@ -60,6 +61,13 @@ def get_user(id_):
     except NoResultFound:
         return None
 
+
+def get_user_list():
+    from lite_mms import models
+
+    return [UserWrapper(user) for user in models.User.query.all()]
+
+
 def authenticate(username, password):
     """
     authenticate a user, test if username and password mathing
@@ -75,6 +83,7 @@ def authenticate(username, password):
                 models.User.password == md5(password).hexdigest()).one())
     except NoResultFound:
         raise AuthenticateFailure("无此用户")
+
 
 if __name__ == "__main__":
     pass

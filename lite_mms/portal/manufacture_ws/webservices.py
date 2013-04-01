@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-\import json
-import time
 from datetime import datetime, date, timedelta
 import json
 import os
@@ -28,8 +27,6 @@ def _work_command_to_dict(wc):
                 type=wc.sub_order.type,
                 lastMod=to_timestamp(wc.last_mod),
                 orderID=wc.sub_order.order_id,
-                orderNum=wc.sub_order.order.customer_order_number,
-                orderCreateTime=time.mktime(wc.sub_order.order.create_time.timetuple()),
                 orderType=wc.sub_order.order_type,
                 orgCount=wc.org_cnt,
                 orgWeight=wc.org_weight,

@@ -1,10 +1,11 @@
 #-*- coding:utf-8 -*-
 from flask import request
 from . import time_line_page
-from lite_mms.utilities.decorators import templated
+from lite_mms.utilities.decorators import templated, nav_bar_set
 
 @time_line_page.route("/")
 @templated("timeline/timeline.html")
+@nav_bar_set
 def index():
     from lite_mms import apis
 

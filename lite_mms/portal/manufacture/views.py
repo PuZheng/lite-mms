@@ -87,8 +87,8 @@ def schedule():
                                         department.procedure_list])
 
         work_command_id_list = request.args.getlist("work_command_id")
-        pre_url = request.args.get(
-            'purl', url_for('manufacture.work_command_list'))
+        url = request.args.get(
+            'url', url_for('manufacture.work_command_list'))
         department_list = apis.manufacture.get_department_list()
         from lite_mms.basemain import nav_bar
 
@@ -104,7 +104,7 @@ def schedule():
                                       'department_list': [_wrapper(d) for d in
                                                           department_list],
                                       'work_command': work_command,
-                                      'purl': pre_url,
+                                      'url': url,
                                       'default_department_id':
                                           default_department_id,
                                       'nav_bar': nav_bar
@@ -127,14 +127,10 @@ def schedule():
             if len(department_set) == 1: # 所有的工单都来自于同一个车间
                 default_department_id = department_set.pop()
 
-            total_weight = sum(work_command.org_weight for work_command in [
-                apis.manufacture.get_work_command(id) for id in
-                work_command_id_list])
             param_dic = {'titlename': u'批量排产',
                          'department_list': [_wrapper(d) for d in
                                              department_list],
-                         'purl': pre_url,
-                         'weight': total_weight,
+                         'url': url,
                          'work_command_list': work_command_list,
                          'default_department_dict': json.dumps(
                              department_dict),
@@ -152,7 +148,7 @@ def schedule():
             department = apis.manufacture.get_department(
                 form.department_id.data)
             if not department:
-                abort(403)
+                abort(404)
             work_command_id_list = form.id.raw_data
             for work_command_id in work_command_id_list:
                 work_command = apis.manufacture.get_work_command(
@@ -170,27 +166,19 @@ def schedule():
                                     action=constants.work_command.ACT_DISPATCH,
                                     **d)
                 else:
-                    abort(403)
+                    abort(404)
             flash(u"工单(%s)已经被成功排产至车间(%s)" %
                   (",".join(work_command_id_list), department.name))
-            return redirect(form.purl.data if form.purl.data else url_for(
-                "manufacture.work_command_list"))
+            return redirect(
+                form.url.data or url_for("manufacture.work_command_list"))
         else:
             return render_template("result.html", error_content=form.errors)
 
-# TODO does POST needed?
 @manufacture_page.route('/retrieve', methods=['POST'])
 def retrieve():
     import lite_mms.apis as apis
 
-    work_command_id_list = request.form.getlist('work_command_id',
-                                                type=int)
-    import urllib2
-
-    pre_url = urllib2.unquote(request.form.get('purl',
-                                               url_for(
-                                                   'manufacture'
-                                                   '.work_command_list')))
+    work_command_id_list = request.form.getlist('work_command_id', type=int)
     for id in work_command_id_list:
         try:
             apis.manufacture.WorkCommandWrapper.get_work_command(id).go(
@@ -200,8 +188,9 @@ def retrieve():
             return e.message, 403
         except AttributeError:
             abort(404)
-    flash(u"回收成功")
-    return redirect(pre_url)
+    flash(u"回收工单%s成功" % ",".join(str(id_) for id_ in work_command_id_list))
+    return redirect(
+        request.form.get('url', url_for('manufacture.work_command_list')))
 
 
 @manufacture_page.route('/qir-work-command-list')
@@ -242,7 +231,7 @@ def QI_report_list():
 
 class WorkCommandForm(Form):
     id = HiddenField('id', [validators.required()])
-    purl = HiddenField('purl')
+    url = HiddenField('url')
     procedure_id = IntegerField('procedure_id')
     department_id = IntegerField('department_id', [validators.required()])
     tech_req = TextField('tech_req')

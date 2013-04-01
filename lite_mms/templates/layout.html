@@ -1,77 +1,94 @@
 <!DOCTYPE HTML>
 <html lang="cn">
 <head>
-    <meta charset="UTF-8">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <link rel="stylesheet"
-          href="{{ url_for("static", filename="css/central.css") }}"/>
-    <link type="text/css"
-          href="{{ url_for("static", filename="css/custom-theme/jquery-ui-1.10.1.custom.min.css") }}"
-          rel="stylesheet">
-    <script src="{{ url_for("static", filename="js/jquery-1.8.3.min.js") }}"></script>
-    <script src="{{ url_for("static", filename="js/jquery-ui-1.10.1.custom.min.js") }}"></script>
-    <!-- Add mousewheel plugin (this is optional) -->
-    <script type="text/javascript"
-            src="{{ url_for('static',filename="js/fancybox/lib/jquery.mousewheel-3.0.6.pack.js") }}"></script>
-    <!-- Add fancyBox -->
-    <link rel="stylesheet"
-          href="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.css") }}"
-          type="text/css" media="screen"/>
-    <script type="text/javascript"
-            src="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.pack.js") }}"></script>
-    {% block custom_external %}{% endblock %}
-    <title>{{ titlename }}</title>
+  <meta charset="UTF-8">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename="bootstrap/css/bootstrap.min.css") }}" media="screen">
+  <link rel="stylesheet" href="{{ url_for('static', filename="bootstrap/css/bootstrap-responsive.min.css") }}" media="screen">
+  <link rel="stylesheet" href="{{ url_for('static', filename="select2/select2.css") }}" media="screen">
+  <link rel="stylesheet" href="{{ url_for('static', filename="css/customer.css") }}">
+  <script type="text/javascript" src="{{ url_for("static", filename="js/jquery-1.8.3.min.js") }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename="bootstrap/js/bootstrap.min.js") }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename="select2/select2.min.js") }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename="js/JSPinYin.js") }}"></script>
+  {% block custom_external %}{% endblock %}
+  <title>{{ titlename }}</title>
+  <script type="text/javascript">
+    $(function () {
+      $("select").select2({
+        width: "element",
+        placeholder: "请选择",
+        matcher: function (term, text) {
+          return pinyin.getCamelChars(text).toUpperCase().indexOf(term.toUpperCase()) >= 0;
+        }
+      });
+    })
+  </script>
 </head>
 <body>
-<header>
-    <div class="ym-wrapper">
-        <div class="ym-wbox">
-            <div class="ym-grid">
-                <div class="ym-gl">
-                    <div class="ym-gbox">
-                        <h1><a href="/">LITE-MMS</a></h1>
-                    </div>
-                </div>
-                <div class="ym-gr">
-                    <div class="ym-gbox">
-                        {% if current_user.is_authenticated() %}
-                            {{ _("欢迎") }}
-                            <mark><strong>{{ current_user.username }}</strong>
-                            </mark>, {{ _("您是") }}
-                            <strong>{{ current_user.group_name }}</strong>
-                            <a class="ym-button"
-                               href="{{ url_for('auth.logout') }}">{{ _("退出") }}</a>
-                        {% endif %}
-                    </div>
-                </div>
+
+<header class="navbar navbar-inverse navbar-fixed-top">
+  <div class="navbar-inner">
+    <div class="container">
+      <nav class="nav-collapse">
+        {% if current_user.is_authenticated() and nav_bar %}
+          {{ nav_bar.as_ul("active")|safe }}
+          <form class="navbar-search pull-right form-search"
+                action="{{ url_for('search.search') }}" method="GET">
+            <div class="input-append">
+              <input class="search-query span2" type="text"
+                     placeholder="搜索..." name="content"
+                     {% if keywords %}value="{{ keywords }}"{% endif %}/>
+              <button class="btn btn-inverse">搜索</button>
             </div>
-        </div>
+          </form>
+          <bold class="navbar-text pull-right">
+            {{ _("欢迎") }}
+            <mark><strong>{{ current_user.username }}</strong>
+            </mark>
+            {{ _("您是") }}
+            <strong>{{ current_user.group_name }}</strong>
+            <a href="{{ url_for('auth.logout') }}">{{ _("退出") }}</a>
+          </bold>
+        {% else %}
+          <div class="brand">
+            LITE-MMS
+          </div>
+        {% endif %}
+
+      </nav>
     </div>
+  </div>
 </header>
 
-<nav>
-    <div class="ym-wrapper">
-        <div class="ym-hlist">
-            {% if current_user.is_authenticated() and nav_bar %}
-                {{ nav_bar.as_ul("active nav_link", "nav_link")|safe}}
-                <form class="ym-searchform" action="{{ url_for('search.search') }}" method="GET">
-                    <input class="ym-searchfield" type="search" placeholder="搜索..." name="content" value="{% if keywords %}{{ keywords }}{% endif %}" />
-                    <input class="ym-searchbutton" type="submit" value="搜索"/>
-                </form>
-            {% endif %} 
-        </div>
-    </div>
-</nav>
-
-
+<div class="container">
+  {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+      {% for category, m in messages %}
+        {% if category == 'error' %}
+          <div class="alert alert-error">
+            <button type="button" class="close"
+                    data-dismiss="alert">&times;</button>
+            <strong>错误！</strong>{{ m }}
+          </div>
+        {% else %}
+          <div class="alert alert-success">
+            <button type="button" class="close"
+                    data-dismiss="alert">&times;</button>
+            <strong>成功！</strong>{{ m }}</div>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
 {% block body %}{% endblock %}
 
-<footer>
-    <div class="ym-wrapper">
-        <div class="ym-wbox">
-            copyright@ LITE-MMS
-        </div>
+<footer class="footer">
+  <div class="container">
+    <div class="muted">
+      copyright@ LITE-MMS
     </div>
+  </div>
 </footer>
 </body>
 </html>

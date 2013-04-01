@@ -81,9 +81,7 @@ class OrderModelView(ModelView):
 
     def url_for_object(self, model, **kwargs):
         if model:
-            return url_for("order.order", id=model.id, **kwargs)
-        else:
-            return url_for("order.order", **kwargs)
+            return url_for("order.order", id_=model.id, **kwargs)
 
     # =================== FORM PARTS ===================================
 

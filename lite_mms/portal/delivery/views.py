@@ -39,132 +39,117 @@ def session_list():
 
 
 @delivery_page.route("/delivery-session", methods=["GET", "POST"])
+@delivery_page.route("/delivery-session/<int:id_>", methods=["GET", "POST"])
 @CargoClerkPermission.require()
 @decorators.templated("/delivery/delivery-session.html")
 @decorators.nav_bar_set
-def session_detail():
+def delivery_session(id_=None):
     import lite_mms.apis as apis
 
     if request.method == "GET":
-        session_id = request.args.get('id', type=int)
-        if not session_id:
-            abort(404)
-        delivery_session = apis.delivery.get_delivery_session(
-            session_id=session_id)
-        if delivery_session is None:
-            abort(404)
-        return dict(delivery_session=delivery_session, titlename=u"发货会话详情")
-    else:
-        delivery_session_id = request.form["id"]
-        us = apis.delivery.get_delivery_session(delivery_session_id)
-        if us.reopen():
-            return redirect(url_for('.session_detail', id=delivery_session_id))
+        if id_:
+            delivery_session = apis.delivery.get_delivery_session(id_)
+            if delivery_session is None:
+                abort(404)
+            return dict(delivery_session=delivery_session, titlename=u"发货会话详情")
         else:
-            return render_template("result.html",
-                                   error_content=u"该状态的会话不能重新打开",
-                                   back_url=request.headers.get("referer",
-                                                                "/"))
-
-
-@delivery_page.route("/delivery-session-add", methods=['POST', 'GET'])
-@CargoClerkPermission.require()
-@decorators.templated("/delivery/delivery-session-add.html")
-@decorators.nav_bar_set
-def session_add():
-    import lite_mms.apis as apis
-
-    if request.method == 'POST':
-        form = request.form
-        with_person = form.get("with_person", type=bool) or False
-        ds = apis.delivery.new_delivery_session(form['plateNumber'],
-                                                form['tare'],
-                                                with_person)
-        store_bill_id_list = form.getlist('store_bill_id', type=int)
-        if store_bill_id_list:
-            ds.add_store_bill_list(store_bill_id_list)
-        return redirect(url_for('delivery.session_detail', id=ds.id))
+            working_list = []
+            working_list.extend(apis.plate.get_plate_list("unloading"))
+            working_list.extend(apis.plate.get_plate_list("delivering"))
+            return render_template("delivery/delivery-session-add.html",
+                                   titlename=u"新增发货会话",
+                                   plateNumbers=apis.plate.get_plate_list(),
+                                   working_plate_list=json.dumps(working_list)
+            )
     else:
-        working_list = []
-        working_list.extend(apis.plate.get_plate_list("unloading"))
-        working_list.extend(apis.plate.get_plate_list("delivering"))
-        return dict(titlename=u"新增发货会话",
-                    plateNumbers=apis.plate.get_plate_list(),
-                    working_plate_list=json.dumps(working_list)
-        )
+        if id_:
+            ds = apis.delivery.get_delivery_session(id_)
+            if request.form.get("method") == "reopen":
+                if ds.reopen():
+                    flash(u"重新打开发货会话%d成功" % ds.id)
+                else:
+                    return u"该状态的会话不能重新打开", 403
+            elif request.form.get("method") == "delete":
+                if ds.deleteable:
+                    do_commit(ds, action="delete")
+                    flash(u"删除发货会话%d成功" % ds.id)
+                    return redirect(request.form.get("url") or url_for(
+                        "delivery.session_list"))
+                else:
+                    return u'该发货会话已经装过货，不能删除', 403
+            elif request.form.get("method") == "finish":
+                if ds.finish():
+                    flash(u"关闭发货会话%d成功" % ds.id)
+                else:
+                    return u"该状态的会话不能关闭", 403
+            return redirect(
+                url_for('delivery.delivery_session', id_=ds.id, _method="GET",
+                        url=request.form.get("url")))
+        else:
+            with_person = request.form.get("with_person", type=bool) or False
+            ds = apis.delivery.new_delivery_session(
+                request.form['plateNumber'],
+                request.form['tare'],
+                with_person)
+            store_bill_id_list = request.form.getlist('store_bill_id',
+                                                      type=int)
+            if store_bill_id_list:
+                ds.add_store_bill_list(store_bill_id_list)
+            return redirect(
+                url_for('delivery.delivery_session', id_=ds.id, _method="GET"))
 
 
-@delivery_page.route("/delivery-session-delete", methods=['POST'])
-def session_delete():
-    from lite_mms import apis
-
-    delivery_session = apis.delivery.get_delivery_session(request.form["id"])
-    if delivery_session.deleteable:
-        do_commit(delivery_session, action="delete")
-        return redirect(url_for("delivery.session_list"))
-    else:
-        return u'该发货会话已经装过货，不能删除', 403
-
-
-@delivery_page.route("/store-bill-list", methods=['POST', 'GET'])
+@delivery_page.route("/store-bill-list/", methods=['POST', 'GET'])
+@delivery_page.route("/store-bill-list/<int:delivery_session_id>",
+                     methods=['POST', 'GET'])
 @CargoClerkPermission.require()
 @decorators.templated("/delivery/store-bill-list.html")
 @decorators.nav_bar_set
-def store_bill_add():
+def store_bill_add(delivery_session_id=None):
     import lite_mms.apis as apis
 
     if request.method == 'POST':
-        form = request.form
-        session_id = form.get('delivery_session_id')
-        store_bill_id_list = form.getlist('store_bill_id', type=int)
-        if session_id is None:
-            return redirect(url_for('delivery.session_add',
+        store_bill_id_list = request.form.getlist('store_bill_id', type=int)
+        if delivery_session_id:
+            delivery_session = apis.delivery.get_delivery_session(
+                delivery_session_id)
+            delivery_session.add_store_bill_list(store_bill_id_list)
+            return redirect(
+                request.form.get("url") or url_for('delivery.delivery_session',
+                                                   id_=delivery_session_id))
+        else:
+            return redirect(url_for('delivery.delivery_session',
                                     store_bill_id=store_bill_id_list))
-        delivery_session = apis.delivery.get_delivery_session(session_id)
-        delivery_session.add_store_bill_list(store_bill_id_list)
-        return redirect(url_for('delivery.session_detail', id=session_id))
     else:
-        session_id = request.args.get("id", type=int)
         customers = apis.delivery.get_store_bill_customer_list()
-        d = dict(titlename=u'选择仓单', id=session_id, customer_list=customers)
-        result = request.args.get("result")
-        if result is not None:
-            d['message'] = result
+        d = dict(titlename=u'选择仓单', customer_list=customers)
+        if delivery_session_id:
+            d["delivery_session_id"] = delivery_session_id
         return d
 
 
-@delivery_page.route("/delivery-task")
+@delivery_page.route("/delivery-task/<int:id_>")
 @CargoClerkPermission.require()
 @decorators.templated("/delivery/delivery-task.html")
 @decorators.nav_bar_set
-def task_detail():
+def delivery_task(id_):
     import lite_mms.apis as apis
 
-    task = apis.delivery.get_delivery_task(request.args.get('id', type=int))
+    task = apis.delivery.get_delivery_task(id_)
     if not task:
         abort(404)
-    delivery_session = apis.delivery.get_delivery_session(
-        task.delivery_session_id)
-    return dict(plate=delivery_session.plate, task=task,
-                weight=task.last_weight, titlename=u'装货任务详情')
+    if request.method == "GET":
+        return dict(task=task, titlename=u'装货任务详情')
+    else:
+        current_weight = request.form.get('weight', type=int)
+        weight = current_weight - task.last_weight
+        result = task.update(weight=weight)
+        if not result:
+            abort(500)
+        return redirect(
+            request.form.get("url") or url_for("delivery.delivery_session",
+                                               id_=task.delivery_session_id))
 
-
-@delivery_page.route("/task-update", methods=["POST"])
-@CargoClerkPermission.require()
-@decorators.nav_bar_set
-def task_modify():
-    import lite_mms.apis as apis
-
-    task_id = request.form.get('task_id', type=int)
-    current_weight = request.form.get('weight', type=int)
-    task = apis.delivery.get_delivery_task(task_id)
-    if not task:
-        abort(404)
-    weight = current_weight - task.last_weight
-    result = task.update(weight=weight)
-    if not result:
-        abort(500)
-    return redirect(
-        url_for("delivery.session_detail", id=task.delivery_session_id))
 
 @delivery_page.route("/consignment/", methods=["POST"])
 @delivery_page.route("/consignment/<int:id_>", methods=["GET", "POST"])
@@ -173,6 +158,7 @@ def task_modify():
 def consignment(id_=None):
     import lite_mms.apis as apis
     from flask.ext.principal import Permission
+
     Permission.union(CargoClerkPermission, AccountantPermission).test()
     if request.method == "GET":
         cons = apis.delivery.get_consignment(id_)
@@ -189,7 +175,7 @@ def consignment(id_=None):
                 abort(404)
             params = {}
             if request.form:
-                current_product = apis.delivery.ConsignmentProductWrapper\
+                current_product = apis.delivery.ConsignmentProductWrapper \
                     .get_product(
                     request.form.get("consignment_product_id", type=int))
                 if current_product:
@@ -205,7 +191,8 @@ def consignment(id_=None):
                     form = ProductForm(request.form)
                     current_product.update(**form.data)
                 notes_ = request.form.get("notes")
-                params["pay_in_cash"]= request.form.get("pay_in_cash", type=int)
+                params["pay_in_cash"] = request.form.get("pay_in_cash",
+                                                         type=int)
                 if notes_:
                     params["notes"] = notes_
                     try:
@@ -233,7 +220,8 @@ def consignment(id_=None):
             customer_id = form.customer.data
             pay_in_cash = True if form.pay_mod.data else False
             cons = apis.delivery.new_consignment(
-                customer_id=customer_id, delivery_session_id=delivery_session_id,
+                customer_id=customer_id,
+                delivery_session_id=delivery_session_id,
                 pay_in_cash=pay_in_cash)
 
             return redirect(url_for("delivery.consignment", id_=cons.id,
@@ -245,6 +233,7 @@ def consignment(id_=None):
 @decorators.nav_bar_set
 def consignment_preview(id_):
     from flask.ext.principal import Permission
+
     Permission.union(CargoClerkPermission, AccountantPermission).test()
 
     import lite_mms.apis as apis
@@ -256,19 +245,19 @@ def consignment_preview(id_):
         return dict(plate=cons.plate, consignment=cons, titlename=u'发货单详情')
 
 
-@delivery_page.route("/store-bill", methods=["GET"])
+@delivery_page.route("/store-bill/<int:id_>", methods=["GET"])
 @CargoClerkPermission.require()
-@decorators.templated("/store/store-bill.html")
+@decorators.templated("store/store-bill.html")
 @decorators.nav_bar_set
-def store_bill():
+def store_bill(id_):
     import lite_mms.apis as apis
 
-    id = request.args.get("id", type=int)
-    store_bill = apis.delivery.get_store_bill(id)
+    store_bill = apis.delivery.get_store_bill(id_)
     if store_bill:
-        return dict(titlename=u'仓单详情', store_bill=store_bill)
+        return dict(titlename=u'仓单详情', store_bill=store_bill,
+                    harbors=apis.harbor.get_harbor_list())
     else:
-        return _("没有此仓单%(id)d" % {"id": id}), 404
+        return _("没有此仓单%(id)d" % {"id": id_}), 404
 
 
 @delivery_page.route("/consignment-list")
@@ -286,20 +275,21 @@ def consignment_list():
                                               customer_id=customer_id)
 
     return dict(titlename=u'发货单列表', consignment_list=cons,
-                customer_list=apis.delivery.ConsignmentWrapper.get_customer_list(),
+                customer_list=apis.delivery.ConsignmentWrapper
+                .get_customer_list(),
                 customer=customer)
 
-
-@delivery_page.route("/session-finish", methods=["POST"])
+@delivery_page.route("/product/<int:id_>")
 @CargoClerkPermission.require()
-@decorators.nav_bar_set
-def session_finish():
+@decorators.templated("delivery/consignment-product.html")
+def consignment_product(id_):
     import lite_mms.apis as apis
 
-    id = request.form['id']
-    ds = apis.delivery.get_delivery_session(id)
-    if ds.finish():
-        return redirect(url_for('delivery.session_detail', id=id))
+    current_product = apis.delivery.ConsignmentProductWrapper.get_product(id_)
+    if current_product:
+        return dict(current=current_product,
+                    product_types=apis.product.get_product_types(),
+                    products=json.dumps(apis.product.get_products()),
+                    team_list=apis.manufacture.get_team_list())
     else:
-        return render_template("result.html", error_content=u"该状态的会话不能结束",
-                               back_url=request.headers.get("referer", "/"))
+        return _(u"没有该产品编号:%d" + id_), 404

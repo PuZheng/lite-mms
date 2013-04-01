@@ -4,7 +4,7 @@
         $(function () {
             $('#department').val('{{ department }}');
             $('#department').change(function () {
-                var department = $('#department').children('option:selected').val();
+                var department = $('#department').val();
                 location.href = "{{ url_for('manufacture.QI_work_command_list') }}?department=" + department;
             });
         });

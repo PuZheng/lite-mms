@@ -22,20 +22,9 @@ class Group(object):
     def __eq__(self, other):
         return isinstance(other, Group) and other.id == self.id
 
-    @classmethod
-    def _from_json(cls, json_group):
-        return Group(_id=json_group["id"], name=json_group["name"],
-            permissions=json_group["permissions"])
+def get_group(id_):
+    try:
+        return models.Group.query.filter_by(id=id_).one()
+    except NoResultFound:
+        return None
 
-    @classmethod
-    def get_list(cls):
-        return models.Group.query.all()
-
-    @classmethod
-    def get_group(cls, _id):
-        try:
-            return models.Group.query.filter_by(id=_id).one()
-        except NoResultFound:
-            return None
-
-get_group = Group.get_group

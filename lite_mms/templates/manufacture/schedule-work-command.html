@@ -94,7 +94,7 @@
       <div class="control-group">
         <div class="controls">
           <button class="btn btn-primary btn-large">确定</button>
-          <a class="btn btn-large" href="{{ request.args.get("url") }}">返回</a>
+          <a class="btn btn-large" href="{{ request.args.get("url") or url_for("manufacture.work_command_list") }}">返回</a>
         </div>
       </div>
     </form>

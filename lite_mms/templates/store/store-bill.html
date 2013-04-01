@@ -117,8 +117,9 @@
           {% if permissions.roles.QualityInspectorPermission.can() %}
             <button class="btn btn-primary btn-large">保存</button>
             <a class="btn btn-large btn-success" href="{{ url_for("store_bill.store_bill_preview", id_=store_bill.id, url=request.url) }}">打印预览</a>
+            <a class="btn btn-large" href="{{ request.args.get("url") or url_for("store_bill.store_bill_list") }}">返回</a>
           {% endif %}
-          <a class="btn btn-large" href="{{ request.args.get("url") }}">返回</a>
+          <a class="btn btn-large" href="{{ request.args.get("url") or "/" }}">返回</a>
         </div>
       </div>
     </form>

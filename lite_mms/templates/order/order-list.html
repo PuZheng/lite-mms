@@ -107,8 +107,8 @@
         <form action="{{ url_for('order.order_list') }}" method="GET" class="form-inline">
           <input type="hidden" name="category" value="{{ category }}"/>
 
-          <div class="span3">
-            <label for="time_span" class="padding">{{ _("创建时间范围") }}</label>
+          <div class="span2">
+            <label for="time_span" class="padding">{{ _("创建时间") }}</label>
             <select id="time_span" name="time_span" class="input-small">
               <option value="day">当天</option>
               <option value="week">本周</option>

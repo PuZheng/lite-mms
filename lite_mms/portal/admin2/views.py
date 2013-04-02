@@ -108,8 +108,8 @@ class DepartmentModelView(AdminModelView):
 
     __create_columns__ = __form_columns__ = ["name", 
                                              column_spec.InputColumnSpec("leader_list", 
-                                                                         filter_=lambda q: q.filter(User.groups.any(Group.id==groups_const.DEPARTMENT_LEADER)),
-                                                                        doc=u'只有用户组是"车间主任", 才能作为车间主任'), 
+                                                                         opt_filter=lambda obj: any((group.id == groups_const.DEPARTMENT_LEADER) for group in obj.groups),
+                                                                         doc=u'只有用户组是"车间主任", 才能作为车间主任'), 
                                              "procedure_list"]
 
     __column_labels__ = {"id": u"编号", "name": u"名称", "leader_list": u"车间主任列表", "procedure_list": u"车间允许工序列表"}

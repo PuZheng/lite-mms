@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 """add completed_time to work_command
 
 Revision ID: d9c0f19bdf5

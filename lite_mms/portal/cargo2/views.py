@@ -136,6 +136,7 @@ class UnloadSessionModelView(ModelView):
                         ColumnSpec("status", label=u"状态", formatter=lambda v, obj: '<strong>' + g_status_desc[v] + '</strong>', 
                                    css_class="input-small uneditable-input"), 
                         InputColumnSpec("create_time", label=u"创建时间", read_only=True),
+                        InputColumnSpec("finish_time", label=u"结束时间", read_only=True),
                         PlaceHolderColumnSpec(col_name="task_list", label=u"卸货任务", template_fname="cargo2/unload-task-list-snippet.haml"), 
                         ListColumnSpec(col_name="log_list", label=u"日志", formatter=format_log),
                         ]

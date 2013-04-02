@@ -1,0 +1,12 @@
+{% extends '__data_browser__/layout.haml' %}
+{% block body %}
+  {{ sub_nav_bar.as_ul("active") | safe }}
+<div class="container">
+  <ul>
+    <li><a href="{{ url_for('admin2.import_products') }}">导入产品</a></li>
+    <li><a href="{{ url_for('admin2.import_customers') }}">导入客户</a> </li>
+    <li><a href="{{ url_for('admin2.export_consignments') }}">导出发货单</a></li>
+    <li><a href="{{ url_for('admin2.team_performance') }}">班组绩效</a></li>
+  </ul>
+</div>
+{% endblock %}

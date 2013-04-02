@@ -7,6 +7,7 @@ from lite_mms.constants import groups
 from lite_mms import constants
 from test import BaseTest
 from lite_mms import models
+from pyfeature import Feature, Scenario
 
 class Test(BaseTest):
     def prepare_data(self):
@@ -83,4 +84,12 @@ class Test(BaseTest):
                 print count
                 assert count == 1
                 assert 2000 == ord_list[0].net_weight
+
+
+def test():
+    pass
+
+if __name__ == "__main__":
+    test()
+
 

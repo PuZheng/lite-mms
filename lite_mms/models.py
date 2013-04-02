@@ -39,9 +39,10 @@ procedure_and_department_table = db.Table("TB_PROCEDURE_AND_DEPARTMENT",
 class Permission(db.Model):
     __tablename__ = "TB_PERMISSION"
     name = db.Column(db.String(64), primary_key=True)
+    desc = db.Column(db.String(64), default="")
 
     def __unicode__(self):
-        return self.name
+        return self.name + '(' + self.desc + ')'
 
     def __repr__(self):
         return "<Permission: %s>" % self.name.encode("utf-8")
@@ -56,12 +57,6 @@ class Group(db.Model):
                                   secondary=permission_and_group_table)
     default_url = db.Column(db.String(256))
 
-    def __init__(self, name, default_url="", group_id=None):
-        self.name = name
-        self.default_url = default_url
-        if group_id is not None:
-            self.group_id = group_id
-
     def __unicode__(self):
         return self.name
 
@@ -74,16 +69,16 @@ class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(32), nullable=False, unique=True)
-    password = db.Column(db.String(128), nullable=False)
+    password = db.Column(db.String(128), nullable=False, doc=u"这里保存的是密码明文的MD5值")
     groups = db.relationship("Group", secondary=user_and_group_table,
                              backref="users")
     tag = db.Column(db.String(32), nullable=True)
 
-    def __init__(self, username, password, groups, tag=""):
-        self.username = username
-        self.password = password
-        self.groups.extend(groups)
-        self.tag = tag
+    #def __init__(self, username, password, groups, tag=""):
+        #self.username = username
+        #self.password = password
+        #self.groups.extend(groups)
+        #self.tag = tag
 
     def __unicode__(self):
         return self.username
@@ -181,7 +176,7 @@ class Harbor(db.Model):
     __tablename__ = "TB_HABOR"
     name = db.Column(db.String(32), nullable=False, primary_key=True)
     department_id = db.Column(db.Integer, db.ForeignKey("TB_DEPARTMENT.id"))
-    department = db.relationship("Department", backref="harbor_list")
+    department = db.relationship("Department", backref="harbor_list", doc=u"装卸点卸载的待加工件将默认分配给此车间")
 
     def __init__(self, name, department):
         self.name = name
@@ -257,7 +252,7 @@ class Team(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(32), nullable=False, unique=True)
-    department_id = db.Column(db.Integer, db.ForeignKey('TB_DEPARTMENT.id'))
+    department_id = db.Column(db.Integer, db.ForeignKey('TB_DEPARTMENT.id'), nullable=False)
     leader_id = db.Column(db.Integer, db.ForeignKey('TB_USER.id'))
     leader = db.relationship("User", backref=db.backref("team", uselist=False))
 
@@ -418,7 +413,8 @@ class WorkCommand(db.Model):
                                  backref="work_comman_list")
     department_id = db.Column(db.Integer, db.ForeignKey("TB_DEPARTMENT.id"),
                               nullable=True)
-    last_mod = db.Column(db.DateTime)
+    last_mod = db.Column(db.DateTime, doc=u"上次对工单修改的时间")
+    completed_time = db.Column(db.DateTime, doc=u"生产完毕的时间")
     org_cnt = db.Column(db.Integer)
     org_weight = db.Column(db.Integer)
     urgent = db.Column(db.Boolean)
@@ -706,11 +702,7 @@ class Procedure(db.Model):
     name = db.Column(db.String(32), unique=True)
     department_list = db.relationship("Department",
                                       secondary=procedure_and_department_table,
-                                      backref="procedure_list")
-
-    def __init__(self, name, department_list):
-        self.name = name
-        self.department_list = department_list
+                                      backref="procedure_list", doc=u"只有这里罗列的车间允许执行此工序")
 
     def __unicode__(self):
         return self.name

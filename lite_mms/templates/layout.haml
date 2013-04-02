@@ -17,7 +17,7 @@
     %link href="{{ url_for('__data_browser__.static', filename='css/bootstrap/css/bootstrap-responsive.css') }}" rel="stylesheet" media="screen"
 
     %link href="{{ url_for('__data_browser__.static', filename='css/admin.css') }}" rel="stylesheet"
-    %link href="{{ url_for('__data_browser__.static', filename='css/datepicker.css') }}" rel="stylesheet"
+    %link href="{{ url_for('__data_browser__.static', filename='css/bootstrap-datetimepicker.min.css') }}" rel="stylesheet"
     %link href="{{ url_for('__data_browser__.static', filename='select2/select2.css') }}" rel="stylesheet"
     %script src="{{ url_for('__data_browser__.static', filename='select2/select2.js') }}"
     %script src="{{ url_for('__data_browser__.static', filename='css/bootstrap/js/bootstrap.min.js')}}"
@@ -68,7 +68,7 @@
       #push
 
     %footer -> %div.container -> %p#credit.muted << copyright@ LITE-MMS
-
-    %script src="{{ url_for('__data_browser__.static', filename='js/bootstrap-datepicker.js') }}"
+    %script src="{{ url_for('__data_browser__.static', filename='js/bootstrap-datetimepicker.min.js') }}"
+    %script src="{{ url_for('static', filename='js/bootstrap-datetimepicker.zh-CN.js') }}"
     %script src="{{ url_for('__data_browser__.static', filename='js/form.js') }}"
     -block tail

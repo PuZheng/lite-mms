@@ -13,19 +13,19 @@ from nav_bar import NavBar
 import pdb
 sub_nav_bar = NavBar()
 sub_nav_bar.register(lambda: user_model_view.url_for_list(), u"用户管理", 
-    enabler=lambda: user_model_view.within_domain(request.url, "admin2"))
+    enabler=lambda: user_model_view.within_domain(request.url, "admin2"), group=u"对象管理")
 sub_nav_bar.register(lambda: group_model_view.url_for_list(), u"用户组管理", 
-    enabler=lambda: group_model_view.within_domain(request.url, "admin2"))
+    enabler=lambda: group_model_view.within_domain(request.url, "admin2"), group=u"对象管理")
 sub_nav_bar.register(lambda: department_model_view.url_for_list(), u"车间管理", 
-    enabler=lambda: department_model_view.within_domain(request.url, "admin2"))
+    enabler=lambda: department_model_view.within_domain(request.url, "admin2"), group=u"对象管理")
 sub_nav_bar.register(lambda: team_model_view.url_for_list(), u"班组管理", 
-    enabler=lambda: team_model_view.within_domain(request.url, "admin2"))
+    enabler=lambda: team_model_view.within_domain(request.url, "admin2"), group=u"对象管理")
 sub_nav_bar.register(lambda: harbor_model_view.url_for_list(), u"装卸点管理", 
-    enabler=lambda: harbor_model_view.within_domain(request.url, "admin2"))
+    enabler=lambda: harbor_model_view.within_domain(request.url, "admin2"), group=u"对象管理")
 sub_nav_bar.register(lambda: procedure_model_view.url_for_list(), u"工序管理", 
-    enabler=lambda: procedure_model_view.within_domain(request.url, "admin2"))
+    enabler=lambda: procedure_model_view.within_domain(request.url, "admin2"), group=u"对象管理")
 sub_nav_bar.register(lambda: url_for("admin2.broker_index"), u"数据导入", 
-    enabler=lambda: "admin2/broker" in request.url)
+    enabler=lambda: "admin2/broker" in request.url, group=u"其它管理")
 
 @admin2_page.route("/")
 def index():

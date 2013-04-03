@@ -135,11 +135,11 @@ class TeamModelView(AdminModelView):
 
 team_model_view = TeamModelView(Team, u"班组")
 
-
 class HarborModelView(AdminModelView):
     __list_columns__ = ["name", "department"]
     __column_labels__ = {"name": u"名称", "department": u"默认车间"}
     __create_columns__ = __form_columns__ = ["name", "department"]
+    __customized_actions__ = [DeleteAction(u"删除", AdminPermission)]
     
 harbor_model_view = HarborModelView(Harbor, u"装卸点")
 
@@ -147,6 +147,7 @@ harbor_model_view = HarborModelView(Harbor, u"装卸点")
 class ProcedureModelView(AdminModelView):
     __column_labels__ = {"name": u"名称", "department_list": u"可以执行此工序的车间"}
     __create_columns__ = __form_columns__ = ["name", "department_list"]
+    __customized_actions__ = [DeleteAction(u"删除", AdminPermission)]
 
 procedure_model_view = ProcedureModelView(Procedure, u"工序")
 

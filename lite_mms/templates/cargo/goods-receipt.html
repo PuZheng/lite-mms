@@ -1,8 +1,29 @@
 {% extends "layout.html" %}
+{% block custom_external %}
+  <script type="text/javascript">
+    $(function () {
+      $('.dropdown-toggle').dropdown();
+      $(".dropdown-menu a").click(function () {
+        $("input[name=type]").val($(this).attr("id"));
+        $(this).parents("form").submit();
+      });
+      $("#delete-button").click(function () {
+        $("input[name=method]").val("delete");
+        $("input[name=url]").val("{{ request.args.get("url") }}");
+      });
+    });
+  </script>
+{% endblock %}
 {% block body %}
   <div class="container">
-    <div class="form-horizontal">
-      <legend>收货单详情</legend>
+    <form action="{{ url_for("cargo.goods_receipt",id_=receipt.id) }}" method="POST" class="form-horizontal">
+      <legend>收货单详情{% if not receipt.order %}
+        <input type="hidden" name="method" value="">
+        <button class="btn btn-danger" id="delete-button">
+          <i class="icon-remove icon-white"></i>&nbsp;删除收货单
+        </button>
+      {% endif %} </legend>
+
       <div class="control-group">
         <label class="control-label">
           <strong>收货单号</strong>
@@ -46,50 +67,69 @@
           {% if receipt.printed %}
             <p class="padding text-info">已打印</p>
           {% else %}
-              <a class="btn btn-primary" href="{{ url_for('cargo.goods_receipt_preview', id_=receipt.id, url=request.url) }}">
-                  <i class="icon-print icon-white"></i> 未打印
-              </a>
+            <a class="btn btn-primary" href="{{ url_for('cargo.goods_receipt_preview', id_=receipt.id, url=request.url) }}">
+              <i class="icon-print icon-white"></i> 未打印
+            </a>
           {% endif %}
 
         </div>
       </div>
-    </div>
-    <legend>产品列表</legend>
-    <table class="table table-striped table-bordered table-condensed">
-      <thead>
-      <tr>
-        <th>卸货任务ID</th>
-        <th>产品类型</th>
-        <th>产品名称</th>
-        <th>净重(KG)</th>
-      </tr>
-      </thead>
-      <tbody>
-      {% for task in receipt.unload_task_list %}
+      <legend>产品列表</legend>
+      <table class="table table-striped table-bordered table-condensed">
+        <thead>
         <tr>
-          <td>
-            <a href="{{ url_for('cargo.unload_task',id_=task.id, url=request.url) }}" title="点击修改该产品">
-              <i class="icon-edit"></i> {{ task.id }}
-            </a>
-          </td>
-          <td>{{ task.product.product_type.name }}</td>
-          <td>{{ task.product.name }}</td>
-          <td>{{ task.weight }}</td>
+          <th>卸货任务ID</th>
+          <th>产品类型</th>
+          <th>产品名称</th>
+          <th>净重(KG)</th>
         </tr>
-      {% endfor %}
-      </tbody>
-    </table>
-    <div class="form-horizontal">
+        </thead>
+        <tbody>
+        {% for task in receipt.unload_task_list %}
+          <tr>
+            <td>
+              <a href="{{ url_for('cargo.unload_task',id_=task.id, url=request.url) }}" title="点击修改该产品">
+                <i class="icon-edit"></i> {{ task.id }}
+              </a>
+            </td>
+            <td>{{ task.product.product_type.name }}</td>
+            <td>{{ task.product.name }}</td>
+            <td>{{ task.weight }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+
       <div class="control-group">
         <div class="controls">
+          {% if not receipt.order %}
+            <input type="hidden" name="url" value="{{ request.url }}">
+            <input type="hidden" name="type" value="">
+            <div class="btn-group">
+              <a class="dropdown-toggle btn btn-large btn-primary" data-toggle="dropdown" href="#">生成订单<b class="caret"></b></a>
+              <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                <li role="presentation">
+                  <a href="#" tabindex="-1" role="menuitem" id="stander">计重</a>
+                </li>
+                <li role="presentation">
+                  <a href="#" tabindex="-1" role="menuitem" id="extra">计件</a>
+                </li>
+              </ul>
+            </div>
+          {% else %}
+            <a class="btn btn-large btn-primary" href="{{ url_for("order.order",id_=receipt.order.id, url=request.url) }}">
+              <i class="icon-eye-open icon-white"></i>&nbsp;查看订单
+            </a>
+          {% endif %}
+
           <a class="btn btn-large btn-success" href="{{ url_for('cargo.goods_receipt_preview', id_=receipt.id, url=request.url) }}">
-              <i class="icon-print icon-white"></i>&nbsp;预览
+            <i class="icon-print icon-white"></i>&nbsp;预览
           </a>
           <a href="{{ request.args.get("url") or url_for('cargo.unload_session',id_=receipt.unload_session.id) }}" class="btn btn-large">
-              <i class="icon-backward"></i>&nbsp;返回
+            <i class="icon-backward"></i>&nbsp;返回
           </a>
         </div>
       </div>
-    </div>
+    </form>
   </div>
 {% endblock %}

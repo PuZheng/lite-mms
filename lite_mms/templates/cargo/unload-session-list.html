@@ -14,6 +14,8 @@
         <th>{{ _("创建时间") }}</th>
         <th>{{ _("结束时间") }}</th>
         <th>{{ _("状态") }}</th>
+        <th>{{ _("收货单") }}</th>
+        <th>{{ _("未生成收货单数") }}</th>
       </tr>
       </thead>
       <tbody>
@@ -29,7 +31,26 @@
           <td>{{ session.plate }}</td>
           <td>{{ session.create_time }}</td>
           <td>{{ session.finish_time|default("----", true) }}</td>
-          <td>{{ session.status }}</td>
+          <td>{{ session.status_desc }}</td>
+          <td>
+            <ul>
+              {% for goods_receipt in session.goods_receipt_list %}
+                <li>
+                  <a href="{{ url_for("cargo.goods_receipt",id_=goods_receipt.id, url=request.url) }}">{{ goods_receipt.receipt_id }}({{ goods_receipt.customer.name }})</a>
+                </li>
+              {% endfor %}
+            </ul>
+          </td>
+          {% set count = session.customer_list|length - session.goods_receipt_list|length %}
+          <td>
+            {% if session.status == 3 %}
+              {% if count %}
+                <span class="text-error">{{ count }}</span>
+              {% else %}
+                {{ count }}
+              {% endif %}
+            {% endif %}
+          </td>
         </tr>
       {% endfor %}
       </tbody>

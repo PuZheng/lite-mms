@@ -32,7 +32,9 @@
     <form action="{{ url_for('cargo.unload_session', id_=unload_session.id) }}"
           method="POST" class="form-horizontal" id="unload-session-form">
       <input type="hidden" name="method" id="method">
-      <input type="hidden" name="url" value="{{ request.args.get('url') }}">
+      {% if request.args.get("url") %}
+        <input type="hidden" name="url" value="{{ request.args.get('url') }}">
+      {% endif %}
       <legend>
         收货会话详情
         {% if unload_session.deleteable %}
@@ -91,7 +93,7 @@
       </div>
 
       <legend>收货任务列表
-        <button class="btn btn-info" onclick="window.location.reload(true)">
+        <button class="btn btn-info" onclick="window.location.reload()">
           <i class="icon-refresh icon-white"></i>&nbsp;刷新
         </button>
       </legend>
@@ -120,7 +122,8 @@
               <td>{{ task.customer.name }}</td>
               <td>
                 {% if task.weight != 0 %}
-                  <a href="{{ url_for('cargo.unload_task', id_=task.id, url=request.url) }}"><i class="icon-edit"></i> {{ task.weight }}</a>
+                  <a href="{{ url_for('cargo.unload_task', id_=task.id, url=request.url) }}"><i class="icon-edit"></i> {{ task.weight }}
+                  </a>
                 {% else %}
                   <a href="{{ url_for('cargo.unload_task', id_=task.id, url=request.url) }}"
                      class="btn btn-primary"><i class="icon-wrench icon-white"></i>
@@ -147,24 +150,22 @@
           {% endfor %}
           </tbody>
         </table>
-        <div class="btn-group">
-          <button class="btn btn-info btn-large" data-toggle="modal" data-target="#new-receipt-dialog"
-                  id="new-receipt"><i
-              class="icon-edit icon-white"></i>&nbsp;{{ _("创建收货单") }}</button>
-        </div>
-        <div class="btn-group">
-          <button class="btn btn-info btn-large" id="view-receipts" data-toggle="modal"
-                  data-target="#view-receipts-dialog">
-            <i class="icon-eye-open icon-white"></i>&nbsp;{{ _("查看收货单") }}
-          </button>
-        </div>
-        <div class="btn-group">
-          <a class="btn btn-large" href="{{ request.args.get("url") or url_for('cargo.unload_session_list') }}">
-            <i class="icon-backward"></i>&nbsp;返回
-          </a>
+        <div class="control-group">
+          <div class="controls">
+            <button class="btn btn-info btn-large" data-toggle="modal" data-target="#new-receipt-dialog" id="new-receipt">
+                <i class="icon-edit icon-white"></i>&nbsp;{{ _("创建收货单") }}
+            </button>
+            <button class="btn btn-info btn-large" id="view-receipts" data-toggle="modal" data-target="#view-receipts-dialog">
+              <i class="icon-eye-open icon-white"></i>&nbsp;{{ _("查看收货单") }}
+            </button>
+            <a class="btn btn-large" href="{{ request.args.get("url") or url_for('cargo.unload_session_list') }}">
+              <i class="icon-backward"></i>&nbsp;返回
+            </a>
+          </div>
         </div>
       </div>
-    </form>
+  </div>
+  </form>
   </div>
   {% include "cargo/goods-receipt-add.html" %}
   {% include "cargo/view-receipts-dialog.html" %}

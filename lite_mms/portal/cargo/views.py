@@ -6,13 +6,13 @@ from datetime import datetime
 import json
 from flask import request, abort, url_for, render_template, flash
 from flask.ext.babel import _
+from flask.ext.login import current_user
 from werkzeug.utils import redirect
 from wtforms import Form, IntegerField, validators, HiddenField
-from lite_mms.portal.cargo import cargo_page
+from lite_mms.portal.cargo import cargo_page, fsm
 from lite_mms.utilities import decorators, Pagination, do_commit
 from lite_mms import constants
 from lite_mms.basemain import nav_bar
-
 
 @cargo_page.route('/')
 def index():
@@ -67,13 +67,15 @@ def unload_session(id_=None):
                 abort(404)
             if request.form.get("method") == "reopen":
                 if unload_session.closed:
-                    unload_session.update(finish_time=None)
+                    fsm.fsm.reset_obj(unload_session)
+                    fsm.fsm.next(constants.cargo.ACT_OPEN, current_user)
                     flash(u"重新打开卸货会话%d成功！" % unload_session.id)
                 else:
                     return _(u"该会话不能重新打开"), 403
             elif request.form.get("method") == "finish":
                 if unload_session.closeable:
-                    unload_session.update(finish_time=datetime.now())
+                    fsm.fsm.reset_obj(unload_session)
+                    fsm.fsm.next(constants.cargo.ACT_CLOSE, current_user)
                     flash(u"结束卸货会话%d成功！" % unload_session.id)
                 else:
                     return _(u"该会话不能结束"), 403
@@ -110,45 +112,84 @@ def unload_task(id_):
         return dict(task=task, product_types=apis.product.get_product_types(),
                     products=json.dumps(apis.product.get_products()))
     else: # POST
-        class _ValidationForm(Form):
-            weight = IntegerField('weight', [validators.required()])
-            product = IntegerField('product')
-            url = HiddenField("url")
-
-        form = _ValidationForm(request.form)
-        if form.validate():
+        if id_:
             task = apis.cargo.get_unload_task(id_)
             if not task:
                 abort(404)
-            session = apis.cargo.get_unload_session(session_id=task.session_id)
-            if not session:
-                abort(404)
+            if request.form.get("method") == "delete":
+                do_commit(task, "delete")
+                fsm.fsm.reset_obj(task.unload_session)
+                fsm.fsm.next(constants.cargo.ACT_WEIGHT, current_user)
+                flash(u"删除卸货任务%d成功" % task.id)
+                return redirect(
+                    request.form.get("url") or url_for("cargo.unload_session",
+                                                       id_=task.session_id,
+                                                       _method="GET"))
+            else:
+                class _ValidationForm(Form):
+                    weight = IntegerField('weight', [validators.required()])
+                    product = IntegerField('product')
+                    url = HiddenField("url")
 
-            weight = task.last_weight - form.weight.data
-            if weight < 0:
-                abort(500)
-            task.update(weight=weight, product_id=form.product.data)
-            url = form.url.data or url_for("cargo.unload_session",
-                                           id_=task.session_id, _method="GET")
-            return redirect(url)
-        else:
-            abort(403)
+                form = _ValidationForm(request.form)
+                if form.validate():
+                    session = apis.cargo.get_unload_session(session_id=task.session_id)
+                    if not session:
+                        abort(404)
+
+                    weight = task.last_weight - form.weight.data
+                    if weight < 0:
+                        abort(500)
+                    if not task.weight:
+                        fsm.fsm.reset_obj(task.unload_session)
+                        fsm.fsm.next(constants.cargo.ACT_WEIGHT, current_user)
+                    task.update(weight=weight, product_id=form.product.data)
+                    url = form.url.data or url_for("cargo.unload_session",
+                                                   id_=task.session_id, _method="GET")
+                    return redirect(url)
+                else:
+                    abort(403)
 
 
 @cargo_page.route("/goods-receipt/", methods=["GET", "POST"])
-@cargo_page.route("/goods-receipt/<int:id_>")
+@cargo_page.route("/goods-receipt/<int:id_>", methods=["GET", "POST"])
 @decorators.templated("cargo/goods-receipt.html")
 @decorators.nav_bar_set
 def goods_receipt(id_=None):
     from lite_mms import apis
-
-    if request.method == "GET":
+    if id_:
         receipt = apis.cargo.get_goods_receipt(id_)
         if not receipt:
             abort(404)
-        return dict(receipt=receipt, titlename=u"收货单详情",
-                    product_types=apis.product.get_product_types(),
-                    products=json.dumps(apis.product.get_products()))
+        if request.method == "GET":
+            return dict(receipt=receipt, titlename=u"收货单详情",
+                        product_types=apis.product.get_product_types(),
+                        products=json.dumps(apis.product.get_products()))
+        else:
+            if request.form.get("method") == "delete":
+                if receipt.order:
+                    abort(403)
+                else:
+                    do_commit(receipt, "delete")
+                    flash(u"删除收货单%s成功" % receipt.receipt_id)
+                return redirect(
+                    request.form.get("url") or url_for("cargo.unload_session",
+                                                       id_=receipt.unload_session.id))
+            else:
+                if request.form.get("type") == "extra":
+                    order_type = constants.EXTRA_ORDER_TYPE
+                    type_ = constants.EXTRA_ORDER_TYPE_NAME
+                else:
+                    order_type = constants.STANDARD_ORDER_TYPE
+                    type_ = constants.STANDARD_ORDER_TYPE_NAME
+
+                order = apis.order.new_order(receipt.id,
+                                             order_type,
+                                             current_user.id)
+
+                flash(u"创建%s类型的订单成功"% type_)
+                return redirect(url_for("order.order", id_=order.id,
+                                        url=request.form.get("url")))
     else:
         class _ValidationForm(Form):
             customer = IntegerField('customer', [validators.required()])

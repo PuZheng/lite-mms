@@ -4,7 +4,6 @@ import logging
 from lite_mms.models import Log
 from lite_mms.utilities import do_commit
 
-
 class DBHandler(logging.Handler):
     """
     Handler for logging message to the database table "log"
@@ -14,7 +13,11 @@ class DBHandler(logging.Handler):
         log = Log()
         obj = getattr(record, "obj", None)
         if obj:
-            log.obj_cls = obj.__class__.__name__
+            if isinstance(obj, ModelWrapper):
+                log.obj_cls = obj.model.__class__.__name__
+            else:
+                log.obj_cls = obj.__class__.__name__
+            log.obj = unicode(obj)
         obj_pk = getattr(record, "obj_pk", None)
         if obj_pk:
             log.obj_pk = obj_pk

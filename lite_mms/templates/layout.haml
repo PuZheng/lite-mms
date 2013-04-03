@@ -21,6 +21,7 @@
     %link href="{{ url_for('__data_browser__.static', filename='select2/select2.css') }}" rel="stylesheet"
     %script src="{{ url_for('__data_browser__.static', filename='select2/select2.js') }}"
     %script src="{{ url_for('__data_browser__.static', filename='css/bootstrap/js/bootstrap.min.js')}}"
+    -block __data_browser__builtin_head_block
     -block __data_browser__custom_external_block
     -block __data_browser__customized_head_block
 
@@ -44,7 +45,7 @@
               %strong << {{ current_user.group_name }}
               %a class="ym-button" href="{{ url_for('auth.logout') }}" << {{ _("退出") }}
 
-    #wrap
+    #wrap.container-fluid
       -block page_body
         %div
           #flash

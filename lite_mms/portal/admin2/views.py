@@ -108,8 +108,8 @@ class DepartmentModelView(AdminModelView):
 
     __create_columns__ = __form_columns__ = ["name", 
                                              column_spec.InputColumnSpec("leader_list", 
-                                                                         filter_=lambda q: q.filter(User.groups.any(Group.id==groups_const.DEPARTMENT_LEADER)),
-                                                                        doc=u'只有用户组是"车间主任", 才能作为车间主任'), 
+                                                                         opt_filter=lambda obj: any((group.id == groups_const.DEPARTMENT_LEADER) for group in obj.groups),
+                                                                         doc=u'只有用户组是"车间主任", 才能作为车间主任'), 
                                              "procedure_list"]
 
     __column_labels__ = {"id": u"编号", "name": u"名称", "leader_list": u"车间主任列表", "procedure_list": u"车间允许工序列表"}
@@ -135,11 +135,11 @@ class TeamModelView(AdminModelView):
 
 team_model_view = TeamModelView(Team, u"班组")
 
-
 class HarborModelView(AdminModelView):
     __list_columns__ = ["name", "department"]
     __column_labels__ = {"name": u"名称", "department": u"默认车间"}
     __create_columns__ = __form_columns__ = ["name", "department"]
+    __customized_actions__ = [DeleteAction(u"删除", AdminPermission)]
     
 harbor_model_view = HarborModelView(Harbor, u"装卸点")
 
@@ -147,6 +147,7 @@ harbor_model_view = HarborModelView(Harbor, u"装卸点")
 class ProcedureModelView(AdminModelView):
     __column_labels__ = {"name": u"名称", "department_list": u"可以执行此工序的车间"}
     __create_columns__ = __form_columns__ = ["name", "department_list"]
+    __customized_actions__ = [DeleteAction(u"删除", AdminPermission)]
 
 procedure_model_view = ProcedureModelView(Procedure, u"工序")
 

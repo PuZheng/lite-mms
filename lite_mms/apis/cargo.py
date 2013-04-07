@@ -1,7 +1,7 @@
 # -*- coding:UTF-8 -*-
 import sys
 from flask import url_for
-from lite_mms.utilities import _
+from flask.ext.babel import _
 from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import cached_property
@@ -9,6 +9,13 @@ from lite_mms import models, constants
 from lite_mms.apis import ModelWrapper
 from lite_mms.utilities import do_commit
 
+
+g_status_desc = {
+    constants.cargo.STATUS_LOADING: u"正在卸货",
+    constants.cargo.STATUS_WEIGHING: u"等待称重",
+    constants.cargo.STATUS_CLOSED: u"关闭",
+    constants.cargo.STATUS_DISMISSED: u"取消",
+    }
 
 class UnloadSessionWrapper(ModelWrapper):
     @property
@@ -32,6 +39,23 @@ class UnloadSessionWrapper(ModelWrapper):
         return bool(
             self.finish_time and all(t.weight for t in self.task_list))
 
+    # @property
+    # def status(self):
+    #     if self.finish_time:
+    #         if len(self.customer_list) > len(self.goods_receipt_list):
+    #             return u"待生成收货单"
+    #         else:
+    #             return u"已完成"
+    #     else:
+    #         if self.task_list and not all(t.weight for t in self.task_list):
+    #             return u"待称重"
+    #         else:
+    #             return u"待卸货"
+
+    @property
+    def status_desc(self):
+        return g_status_desc.get(self.status) or u"未知"
+
     @cached_property
     def customer_list(self):
         return list(set([task.customer for task in self.task_list]))
@@ -51,7 +75,7 @@ class UnloadSessionWrapper(ModelWrapper):
     def log_list(self):
         from lite_mms.models import Log
 
-        ret = Log.query.filter(Log.obj_pk == self.id).filter(
+        ret = Log.query.filter(Log.obj_pk == str(self.id)).filter(
             Log.obj_cls == self.model.__class__.__name__).all()
         for task in self.task_list:
             ret.extend(task.log_list)
@@ -94,7 +118,7 @@ class UnloadTaskWrapper(ModelWrapper):
     def log_list(self):
         from lite_mms.models import Log
 
-        return Log.query.filter(Log.obj_pk == self.id).filter(
+        return Log.query.filter(Log.obj_pk == str(self.id)).filter(
             Log.obj_cls == self.model.__class__.__name__).all()
 
     def update(self, **kwargs):
@@ -131,12 +155,10 @@ class GoodsReceiptWrapper(ModelWrapper):
             self.id, self.customer.name)
 
     @cached_property
-    def product_list(self):
-        return [dict(task_id=t.id, id=t.product.id, name=t.product.name,
-                     type_id=t.product.product_type_id, weight=t.weight,
-                     type_name=t.product.product_type.name) for t in
-                self.unload_session.task_list if
-                t.customer_id == self.customer_id]
+    def unload_task_list(self):
+        for task in self.unload_session.task_list:
+            if task.customer.id == self.customer.id:
+                yield task
 
     def update(self, **kwargs):
         for k, v in kwargs.items():

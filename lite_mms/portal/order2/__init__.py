@@ -104,7 +104,7 @@ class OrderModelView(ModelView):
             #col_specs=["id", "sub_order.id", "product", "org_weight", "org_cnt", "processed_weight", 
             #"processed_cnt", "department", "team", "qi", "status"])] 
 
-from lite_mms.basemain import app, data_browser, nav_bar
+from lite_mms.basemain import app, data_browser, nav_bar as main_nav_bar
 from lite_mms.database import db
 from lite_mms.models import Order, GoodsReceipt, Customer
 from lite_mms import constants
@@ -143,7 +143,7 @@ def get_customer_abbr_map(model_view):
 
 extra_params = {
     "list_view": {
-        "nav_bar": nav_bar,
+        "nav_bar": main_nav_bar,
         "sub_nav_bar": sub_nav_bar,
         "hint_message": hint_message,
         "titlename": u"订单管理",
@@ -157,7 +157,7 @@ class GoodsReceiptModelView(ModelView):
 
 extra_params = {
     "form_view": {
-        "nav_bar": nav_bar,
+        "nav_bar": main_nav_bar,
         "titlename": u"收货单详情"
     }
 }

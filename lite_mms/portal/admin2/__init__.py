@@ -1,4 +1,6 @@
 # -*- coding: UTF-8 -*-
+import socket
+import errno
 
 from flask import Blueprint, request, url_for, render_template, redirect
 from lite_mms.basemain import data_browser, nav_bar
@@ -57,3 +59,10 @@ for mn, mv in [(u"用户", user_model_view),
                (u"装卸点", harbor_model_view), 
                (u"工序", procedure_model_view)]:
     _do_register(mn, mv)
+
+@admin2_page.errorhandler(socket.error)
+def connection_refused(e):
+    if e.errno == errno.ECONNREFUSED:
+        return render_template("error.html", msg=u"无法连接", titlename=u"无法连接")
+    else:
+        return render_template("error.html", msg=e, titlename=u"连接失败")

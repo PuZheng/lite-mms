@@ -1,243 +1,214 @@
 {% extends "layout.html" %}
 {% block custom_external %}
-    <script type="text/javascript">
-        $(function () {
-            $("#delivery_session_id").val("{{ delivery_session.id }}");
-            $("img").height("120px");
-            $(".fancybox").fancybox();
-            $('#view-consignment-dialog').dialog({
-                autoOpen:false
-            });
-            $('#view-consignment').click(function () {
-                // pop a list of generated goods receipts
-                var session_id = $("#delivery_session_id").val();
-                var dialog = $("#view-consignment-dialog");
-                $("#view-consignment-dialog").children('ul').children('li').remove();
-                $.getJSON("/delivery/ajax/consignment-list?delivery_session_id=" + session_id,
-                        function (data) {
-                            dialog.children("ul").empty();
-                            $.each(data, function (idx, v) {
-                                dialog.children("ul").append(
-                                        '<li><a href="{{ url_for('delivery.consignment') }}' + v.id + '?url=' + encodeURIComponent(location.href)+'">' + v.consignment_id + '(' + v
-                                                .customer + ')' + '</a></li>');
-                            });
-                            $('#view-consignment-dialog').dialog("open");
-                        }).error(function (data) {
-                            alert(data.responseText);
-                        }
-                );
-            });
-            $("#finish-button").click(function () {
-                if (confirm("确认结束会话吗？")) {
-                    $("#finish-form").submit();
-                }
-            });
-            $("#reopen-button").click(function () {
-                if (confirm("确认重新打开会话吗？")) {
-                    $("#reopen-form").submit();
-                }
-            });
-            $("#delete-button").click(function () {
-                if (confirm("确认删除会话吗？")) {
-                    $("#delete-form").submit();
-                }
-            });
-            setTimeout(function () {
-                $(".flash").fadeOut("slow")
-            }, 3000);
-            {% if delivery_session.need_store_bill %}
-               if(confirm("是否增加仓单？")){
-                    window.location.href = "{{ url_for('delivery.store_bill_add',id=delivery_session.id) }}";
-               }
-            {% endif %}
-        });
-    </script>
-    <script src="{{ url_for("static", filename="js/new-consignment-dialog.js") }}"></script>
-    <style type="text/css">
-        a:hover,a:focus {
-            background-color: transparent;
+  <link rel="stylesheet" href="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.css") }}" type="text/css" media="screen">
+  <script type="text/javascript" src="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.pack.js") }}"></script>
+  <script type="text/javascript">
+    $(function () {
+      $(".fancybox").fancybox();
+      $("#finish-button").click(function () {
+        if (confirm("确认结束会话吗？")) {
+          $("#delivery-form input[name=method]").val("finish");
+          $("#delivery-form").submit();
         }
-    </style>
+      });
+      $("#reopen-button").click(function () {
+        if (confirm("确认重新打开会话吗？")) {
+          $("#delivery-form input[name=method]").val("reopen");
+          $("#delivery-form").submit();
+        }
+      });
+      $("#delete-button").click(function () {
+        if (confirm("确认删除会话吗？")) {
+          $("#delivery-form input[name=method]").val("delete");
+          $("#delivery-form").submit();
+        }
+      });
+      {% if delivery_session.need_store_bill %}
+        if (confirm("是否增加仓单？")) {
+          window.location.href = "{{ url_for('delivery.store_bill_add', delivery_session_id=delivery_session.id, url=request.url) }}";
+        }
+      {% endif %}
+    });
+  </script>
 {% endblock %}
 
 {% block body %}
-    <div class="ym-wrapper">
-        <div class="ym-wbox">
-            {% with messages = get_flashed_messages(with_categories=True) %}
-                {% if messages %}
-                    {% for category, m in messages %}
-                        {% if category == 'error' %}
-                            <div class="error box flash">{{ m }}</div>
-                        {% elif category == 'success' %}
-                            <div class="success box flash">{{ m }}</div>
-                        {% else %}
-                            <div class="success box flash">{{ m }}</div>
-                        {% endif %}
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-            <div class="ym-form linearize-form ym-columnar">
-                <div class="ym-fbox-text">
-                    <label><b>车辆车牌号</b></label>
-                    {{ delivery_session.plate }}
-                </div>
-                <div class="ym-fbox-text">
-                    <label><b>车辆皮重(KG)</b></label>
-                    {{ delivery_session.tare }}
-                </div>
-                <div class="ym-fbox-text">
-                    <label><b>上次称重时车上是否有人</b></label>
-                    {{ delivery_session.with_person_des }}
-                </div>
-                {% if  delivery_session.finish_time %}
-                    <div class="ym-fbox-text">
-                        <label><b>会话完成时间</b></label>
-                        {{ delivery_session.finish_time }}
-                    </div>
-                    <div class="ym-fbox-text">
-                        <form action="{{ url_for('delivery.session_detail') }}" method="POST" id="reopen-form">
-                            <button class="ym-button ym-edit" type="button" id="reopen-button">
-                                重新打开会话
-                            </button>
-                            <input type="hidden" name="id" value="{{ delivery_session.id }}">
-                        </form>
-                    </div>
-                {% endif %}
-                {% if delivery_session.can_finish %}
-                    <div class="ym-fbox-text">
-                        <form action="{{ url_for('delivery.session_finish') }}" method="POST" id="finish-form">
-                            <button class="ym-button ym-save" type="button" id="finish-button">
-                                结束当前会话
-                            </button>
-                            <input type="hidden" name="id" value="{{ delivery_session.id }}"/>
-                        </form>
-                    </div>
-                {% endif %}
+  <div class="container">
+    <form class="form-horizontal" action="{{ url_for("delivery.delivery_session", id_=delivery_session.id) }}" method="POST" id="delivery-form">
+      <input type="hidden" name="method" value="">
+      <input type="hidden" name="url" value="{{ request.args.get("url") }}">
+      <legend>发货会话详情
+        {% if delivery_session.deleteable %}
+          <button class="btn btn-danger" type="button" id="delete-button" title="删除发货会话">
+            <i class="icon-remove icon-white"></i>&nbsp;删除会话
+          </button>
+        {% endif %}
+      </legend>
+      <div class="control-group">
+        <label class="control-label"><strong>车辆车牌号</strong></label>
 
-                {% if delivery_session.deleteable %}
-                    <div class="ym-fbox-text">
-                        <form action="{{ url_for('delivery.session_delete') }}" method="POST" id="delete-form">
-                            <button class="ym-button ym-delete" type="button" id="delete-button"
-                                    title="删除发货会话">
-                                删除会话
-                            </button>
-                            <input type="hidden" value="{{ delivery_session.id }}" name="id"/>
-                        </form>
-                    </div>
-                {% endif %}
-
-                <div class="ym-fbox-button">
-                    <h6>发货任务列表</h6>
-                    <button class="ym-button" type="button"
-                            onclick="window.location.reload(true)">刷新
-                    </button>
-
-                    <table class="bordertable">
-                        <thead>
-                        <tr>
-                            <th>任务ID</th>
-                            <th>产品名称</th>
-                            <th>对应的仓单</th>
-                            <th>重量(KG)</th>
-                            <th>规格-型号</th>
-                            <th>是否已生成发货单</th>
-                            <th>图片</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for task in delivery_session.delivery_task_list %}
-                            <tr>
-                                <td>{{ task.id }}</td>
-                                <td>{{ task.product.name }}</td>
-                                <td>[{% for sb in task.store_bill_list %}
-                                    <a href="{{ url_for('delivery.store_bill',id=sb.id) }}">{{ sb.id }}</a>
-                                    {% if not loop.last %},
-                                    {% endif %}
-                                {% endfor %}]
-                                </td>
-                                <td>
-                                    {% if task.weight %}
-                                        {{ task.weight }}
-                                    {% else %}
-                                        <a href="{{ url_for('delivery.task_detail') }}?id={{ task.id }}"
-                                           class="ym-button">称重</a>
-                                    {% endif %}</td>
-                                <th>
-                                    {{ task.spec_type_list|join("<br>")|safe }}
-                                </th>
-                                <td>{% if task.consignment %}是{% else %}否{% endif %} </td>
-                                <td>{% for pic_url in task.pic_url_list %}
-                                    {% if pic_url %}
-                                        <a href="{{ pic_url }}"
-                                           class="fancybox" rel="group"
-                                           title="{{ task.product.name }}">
-                                            <img src="{{ pic_url }}"
-                                                 class="bordered"
-                                                 alt="{{ task.product.name }}"/>
-                                        </a>
-                                    {% endif %}
-                                {% endfor %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                    <p><em>总发货重量：</em>{{ delivery_session.delivery_task_list|sum("weight") }}(KG)</p>
-                    <button class="ym-button ym-edit"
-                            id="new-consignment">
-                        {{ _("创建发货单") }}</button>
-                    <button class="ym-button ym-next"
-                            id="view-consignment" type="button">
-                        {{ _("查看发货单") }}</button>
-                    <a class="ym-button ym-delete"
-                       href="{{ request.args.get("backref") or url_for('delivery.session_list') }}">返回</a>
-                </div>
-                {% if not delivery_session.finish_time %}
-                    <div class="ym-fbox-button">
-                        <a class="ym-button ym-add"
-                           href="{{ url_for('delivery.store_bill_add',id=delivery_session.id) }}">
-                            增加仓单
-                        </a>
-
-                        <table class="bordertable">
-                            <thead>
-                            <tr>
-                                <th>仓单号</th>
-                                <th>存放点</th>
-                                <th>产品名称</th>
-                                <th>公司名称</th>
-                                <th>大约净重(KG)</th>
-                                <th>产品图片</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for store_bill in delivery_session.store_bill_list %}
-                                <tr>
-                                    <td>{{ store_bill.id }}</td>
-                                    <td>{{ store_bill.harbor.name }}</td>
-                                    <td>{{ store_bill.product_name }}</td>
-                                    <td>{{ store_bill.customer.name }}</td>
-                                    <td>{{ store_bill.weight }}</td>
-                                    <td>{% if store_bill.pic_url %}
-                                        <a href="{{ store_bill.pic_url }}"
-                                           class="fancybox" rel="group"
-                                           title="{{ store_bill.product_name }}">
-                                            <img src="{{ store_bill.pic_url }}"
-                                                 class="bordered"
-                                                 alt="{{ store_bill.product_name }}"/>
-                                        </a>{% endif %}</td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% endif %}
-            </div>
+        <div class="controls">
+          <p class="padding">{{ delivery_session.plate }}</p>
         </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label"><strong>车辆皮重(KG)</strong></label>
+
+        <div class="controls">
+          <p class="padding">{{ delivery_session.tare }}</p>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label"><strong>上次称重时车上有人</strong></label>
+
+        <div class="controls">
+          <p class="padding">{{ delivery_session.with_person_des }}</p>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label"><strong>会话完成时间</strong></label>
+
+        <div class="controls">
+          {% if delivery_session.finish_time %}
+            <span class="padding">{{ delivery_session.finish_time }}</span>
+            <button class="btn btn-warning" type="button" id="reopen-button">
+              <i class="icon-repeat icon-white"></i>&nbsp;重新打开会话
+            </button>
+          {% elif delivery_session.can_finish %}
+            <button class="btn btn-warning" type="button" id="finish-button">
+              <i class="icon-ok icon-white"></i>&nbsp;结束会话
+            </button>
+          {% endif %}
+        </div>
+      </div>
+
+      <legend>发货任务列表
+        <button class="btn btn-info" type="button" onclick="window.location.reload(true)">
+          <i class="icon-refresh icon-white"></i>&nbsp;刷新
+        </button>
+      </legend>
+
+
+      <table class="table table-striped table-bordered table-condensed">
+        <thead>
+        <tr>
+          <th>任务ID</th>
+          <th>产品名称</th>
+          <th>对应的仓单</th>
+          <th>重量(KG)</th>
+          <th>规格-型号</th>
+          <th>是否已生成发货单</th>
+          <th>图片</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for task in delivery_session.delivery_task_list %}
+          <tr>
+            <td>{{ task.id }}</td>
+            <td>{{ task.product.name }}</td>
+            <td>[{% for sb in task.store_bill_list %}
+              <a href="{{ url_for('delivery.store_bill', id_=sb.id, url=request.url) }}">{{ sb.id }}</a>
+              {% if not loop.last %},
+              {% endif %}
+            {% endfor %}]
+            </td>
+            <td>
+              {% if task.weight %}
+                <a href="{{ url_for('delivery.delivery_task', id_=task.id, url=request.url) }}">
+                <i class="icon-edit"></i>&nbsp;{{ task.weight }}
+              {% else %}
+                <a href="{{ url_for('delivery.delivery_task', id_=task.id, url=request.url) }}" class="btn">
+                {{ "称重" }}
+              {% endif %}
+              </a>
+            </td>
+            <th>
+              {{ task.spec_type_list|join("<br>")|safe }}
+            </th>
+            <td>{% if task.consignment %}是{% else %}否{% endif %} </td>
+            <td>
+              <ul class="thumbnails">
+                {% for pic_url in task.pic_url_list %}
+                  {% if pic_url %}
+                    <li class="span2">
+                      <a href="{{ pic_url }}" class="fancybox thumbnail" rel="group" title="{{ task.product.name }}">
+                        <img src="{{ pic_url }}" class="bordered" alt="{{ task.product.name }}"/>
+                      </a>
+                    </li>
+                  {% endif %}
+                {% endfor %}
+              </ul>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      <p class="text-success">
+        <em>总发货重量：</em>{{ delivery_session.delivery_task_list|sum("weight") }}(KG)
+      </p>
+
+      {% if not delivery_session.finish_time %}
+        <div class="ym-fbox-button">
+          <legend>已选择仓单列表
+            <a class="btn btn-primary" href="{{ url_for('delivery.store_bill_add', delivery_session_id=delivery_session.id, url=request.url) }}"><i class="icon-plus icon-wight"></i>&nbsp;增加仓单</a>
+          </legend>
+
+          <table class="table table-striped table-bordered table-condensed">
+            <thead>
+            <tr>
+              <th>仓单号</th>
+              <th>存放点</th>
+              <th>产品名称</th>
+              <th>公司名称</th>
+              <th>大约净重(KG)</th>
+              <th>产品图片</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for store_bill in delivery_session.store_bill_list %}
+              <tr>
+                <td>{{ store_bill.id }}</td>
+                <td>{{ store_bill.harbor.name }}</td>
+                <td>{{ store_bill.product_name }}</td>
+                <td>{{ store_bill.customer.name }}</td>
+                <td>{{ store_bill.weight }}</td>
+                <td>{% if store_bill.pic_url %}
+                  <ul class="thumbnails">
+                    <li class="span2">
+                      <a href="{{ store_bill.pic_url }}" class="fancybox thumbnail" rel="group" title="{{ store_bill.product.name }}">
+                        <img src="{{ store_bill.pic_url }}" class="bordered" alt="{{ store_bill.product.name }}"/>
+                      </a>
+                    </li>
+                  </ul>
+                {% endif %}</td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+    </form>
+    <div class="btn-toolbar">
+
+      <div class="btn-group">
+        <button class="btn btn-info btn-large" id="new-consignment" data-toggle="modal" data-target="#new-consignment-dialog">
+          <i class="icon-white icon-edit"></i>&nbsp;{{ _("创建发货单") }}
+        </button>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-info btn-large" id="view-consignment" data-toggle="modal" data-target="#view-consignments-dialog">
+          <i class="icon-eye-open icon-white"></i>&nbsp;{{ _("查看发货单") }}
+        </button>
+      </div>
+      <div class="btn-group">
+        <a class="btn btn-large" href="{{ request.args.get("url") or url_for('delivery.session_list') }}">
+          <i class="icon-backward"></i>&nbsp;返回
+        </a>
+      </div>
     </div>
 
     {% include "delivery/consignment-add.html" %}
-    <div id="view-consignment-dialog" title="{{ _("查看发货单") }}">
-        <ul></ul>
-    </div>
+    {% include "delivery/view-consignments-dialog.html" %}
+  </div>
+
 {% endblock %}

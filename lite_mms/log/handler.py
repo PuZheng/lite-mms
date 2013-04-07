@@ -14,11 +14,16 @@ class DBHandler(logging.Handler):
         log = Log()
         obj = getattr(record, "obj", None)
         if obj:
-            if isinstance(obj, ModelWrapper):
-                log.obj_cls = obj.model.__class__.__name__
-            else:
-                log.obj_cls = obj.__class__.__name__
             log.obj = unicode(obj)
+        obj_cls = getattr(record, "obj_cls", None)
+        if obj_cls:
+            log.obj_cls = obj_cls
+        else:
+            if obj:
+                if isinstance(obj, ModelWrapper):
+                    log.obj_cls = obj.model.__class__.__name__
+                else:
+                    log.obj_cls = obj.__class__.__name__
         obj_pk = getattr(record, "obj_pk", None)
         if obj_pk:
             log.obj_pk = obj_pk

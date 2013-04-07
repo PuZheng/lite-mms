@@ -1,5 +1,15 @@
 {% extends "__data_browser__/list.haml" %}
 {% block __data_browser__custom_external_block %}
+  <style type="text/css">
+    blockquote a {
+      color: #333333;
+    }
+    blockquote a:hover {
+      color: #333333;
+      background-color: #EEEEDD; 
+      text-decoration: None;
+    }
+  </style>
   <script type="text/javascript">
     $(function () {
       {% if request.args.get("user_id") %}
@@ -21,24 +31,41 @@
 <div class="span10">
   {% if __data__ %}
     {% for grouper, list in __data__|groupby("create_date")|reverse %}
-      <pre class="prettyprint"><strong>{{ grouper }}:</strong></pre>
+      <div class="well well-small"><strong>{{ grouper }}: 
+        {% if grouper == today %}
+          今天
+        {% elif grouper == yesterday %}
+          昨天
+        {% endif %}
+      </strong></div>
       {% for log in list %}
         <blockquote>
-          {% if log.obj_cls %}
-            {% for k, v in log.url_map %}
-              <a href="{{ v }}">{{ k }}</a>
-            {% endfor %}
-          {% else %}
-            <span class="{{ "text-error" }}">{{ log.level }}</span>
+          {% for k, v in log.url_map %}
+          {% if v %}
+          <a href="{{ v }}" >
           {% endif %}
-          来自<span class="muted">{{ log.actor or "" }}</span>
-          <br>
-          <small>{{ log.message }}</small>
+            <span class="muted">
+              {{ log.create_time.strftime("%H:%M") }}
+            </span>
+            {% if log.obj_cls %}
+              {{ log.obj_cls }}
+              <strong>{{log.obj}}</strong>
+            {% endif %}
+           被操作员<strong>{{ log.actor or "" }}</strong>执行了<strong>{{ log.action }}</strong>操作 - <i class="initialism muted">{{ log.message }}</i>
+          {% if v %}
+            </a>
+          {% endif %}
+         {% endfor %}
         </blockquote>
       {% endfor %}
     {% endfor %}
   {% else %}
-    <p class="text-error">{{ _("没有符合条件的结果") }}</p>
+    <p class="alert alert-error">{{ _("* 没有符合条件的结果") }}</p>
   {% endif %}
 </div>
+{% endblock %}
+
+{% block body %}
+  {{ sub_nav_bar.as_ul("active")|safe }}
+  {{ super() }}
 {% endblock %}

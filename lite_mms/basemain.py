@@ -11,9 +11,7 @@ if os.environ.has_key("LITE_MMS_HOME"):
     app.config.from_pyfile(
         os.path.join(os.environ["LITE_MMS_HOME"], "config.py"), silent=True)
 app.config.from_pyfile(os.path.join(os.getcwd(), "config.py"), silent=True)
-
 from flask.ext.login import LoginManager, current_user
-
 login_manager = LoginManager()
 login_manager.init_app(app)
 from flask.ext.principal import Principal
@@ -139,7 +137,7 @@ nav_bar.register(store_bill_page, name=u"仓单管理",
 nav_bar.register(deduction_page, name=u"扣重管理", default_url="/deduction/",
                  permissions=[QualityInspectorPermission])
 
-nav_bar.register(time_line_page, name=u"时间线", default_url="/timeline/")
+nav_bar.register(time_line_page, name=u"时间线", default_url="/timeline/log-list")
 nav_bar.register(search_page, name=u"搜索", default_url="/search/search")
 nav_bar.register(admin2_page, name=u"管理中心", default_url="/admin2/user-list", permissions=[AdminPermission])
 
@@ -211,8 +209,8 @@ def permission_denied(error):
     #如果用户已登录则显示无权限页面
     from flask import redirect, url_for
     if not current_user.is_anonymous():
-        return redirect(url_for("error", msg=u'该操作需要的权限是: "'+error.args[0].brief+u'", 请联系管理员获得访问权限!',
-                               back_url=request.url))
+        return redirect(url_for("error", msg=u'请联系管理员获得访问权限!',
+                                back_url=request.args.get("url")))
         #如果用户还未登录则转向到登录面
     return render_template("auth/login.haml",
                            error=gettext(u"请登录"), next_url=request.url)

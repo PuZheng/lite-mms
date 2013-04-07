@@ -64,7 +64,7 @@ def unload_task():
             from lite_mms.portal.cargo2.fsm import fsm
             from lite_mms.constants import cargo as cargo_const
             fsm.reset_obj(new_task.unload_session)
-            fsm.next(cargo_const.ACT_LOAD, new_task.creator)
+            fsm.next(cargo_const.ACT_CLOSE, new_task.creator)
     except ValueError, e:
         return unicode(e), 403
     return json.dumps(new_task.id)

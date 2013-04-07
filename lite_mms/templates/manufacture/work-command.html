@@ -1,60 +1,86 @@
 {% extends "layout.html" %}
 {% block body %}
-<div class="ym-wrapper">
-    <div class="ym-wbox">
-        <table>
-            <tbody>
-                <tr>
-                    <th>编号:</th>
-                    <td>{{ work_command.id }}</td>
-                </tr>
-                <tr>
-                    <th>创建日期:</th>
-                    <td>{{ work_command.create_time }}</td>
-                </tr>
-                <tr>
-                    <th>产品:</th>
-                    <td>{{ work_command.sub_order.product.name }}</td>
-                </tr>
-                <tr>
-                    <th>客户:</th>
-                    <td>{{ work_command.sub_order.order.goods_receipt.customer.name }}</td>
-                </tr>
-                <tr>
-                    <th>车间:</th>
-                    <td>{{ work_command.department.name }}</td>
-                </tr>
-                <tr>
-                    <th>班组:</th>
-                    <td>{{ work_command.team.name }}</td>
-                </tr>
-                <tr>
-                    <th>工序前重量:</th>
-                    <td>{{ work_command.org_weight }}(公斤)</td>
-                </tr>
-                <tr>
-                    <th>工序前数量:</th>
-                    <td>{{ work_command.org_cnt }}({{ work_command.sub_order.unit }})</td>
-                </tr>
-                <tr>
-                    <th>工序后重量:</th>
-                    <td>{{ work_command.processed_weight }}(公斤)</td>
-                </tr>
-                <tr>
-                    <th>工序后数量:</th>
-                    <td>{{ work_command.processed_cnt }}({{ work_command.sub_order.unit }})</td>
-                </tr>
-                <tr>
-                    <th>工序:</th>
-                    <td>{{ work_command.procedure.name }}</td>
-                </tr>
-            </tbody>
-        </table>
-        {% if backref %}
-        <a href="{{ backref }}" class="ym-button">返回上一级</a>
-        {% else %}
-        <a href="/" class="ym-button">返回上一级</a>
-        {% endif %}
-    </div>
-</div>
+  <div class="container">
+  <legend>工单详情</legend>
+    <form class="form-horizontal">
+      <div class="control-group">
+        <label class="control-label"><strong>编号</strong></label>
+
+        <div class="controls"><p class="padding">{{ work_command.id }}</p>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label"><strong>创建日期</strong></label>
+
+        <div class="controls">
+          <p class="padding">{{ work_command.create_time }}</p></div>
+      </div>
+      <div class="control-group">
+        <label class="control-label"><strong>产品</strong></label>
+
+        <div class="controls">
+          <p class="padding">{{ work_command.sub_order.product.name }}</p>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label"><strong>客户</strong></label>
+
+        <div class="controls">
+          <p class="padding">{{ work_command.sub_order.order.goods_receipt.customer.name }}</p>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label"><strong>车间</strong></label>
+
+        <div class="controls">
+          <p class="padding">{{ work_command.department.name }}</p></div>
+      </div>
+      <div class="control-group">
+        <label class="control-label"><strong>班组</strong></label>
+
+        <div class="controls">
+          <p class="padding">{{ work_command.team.name }}</p></div>
+      </div>
+      <div class="control-group">
+        <label class="control-label"><strong>工序前重量</strong></label>
+
+        <div class="controls"><p class="padding">{{ work_command.org_weight }}(公斤)</p>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label"><strong>工序前数量</strong></label>
+
+        <div class="controls">
+          <p class="padding">{{ work_command.org_cnt }}({{ work_command.sub_order.unit }})</p>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label"><strong>工序后重量</strong></label>
+
+        <div class="controls">
+          <p class="padding">{{ work_command.processed_weight }}(公斤)</p></div>
+      </div>
+      <div class="control-group">
+        <label class="control-label"><strong>工序后数量</strong></label>
+
+        <div class="controls">
+          <p class="padding">{{ work_command.processed_cnt }}({{ work_command.sub_order.unit }})</p>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label"><strong>工序</strong></label>
+
+        <div class="controls">
+          <p class="padding">{{ work_command.procedure.name }}</p></div>
+      </div>
+      <div class="control-group">
+        <div class="controls">
+            <a href="{{ request.args.get("url") or "/" }}" class="btn btn-large">
+                <i class="icon-backward"></i>&nbsp;返回
+            </a>
+        </div>
+      </div>
+    </form>
+
+  </div>
 {% endblock %}

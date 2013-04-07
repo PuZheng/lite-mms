@@ -2,9 +2,9 @@
 import sys
 from datetime import datetime
 
-from brownie.datastructures import MultiDict
+from werkzeug.datastructures import MultiDict
 from flask import url_for
-from flaskext.babel import _
+from flask.ext.babel import _
 from sqlalchemy.orm.exc import NoResultFound
 from wtforms import (Form, IntegerField, ValidationError, TextField,
                      BooleanField, validators)
@@ -66,6 +66,13 @@ class WorkCommandWrapper(ModelWrapper):
     @property
     def unit(self):
         return self.sub_order.unit
+
+    @property
+    def default_department(self):
+        for d in get_department_list():
+            if self.harbor in d.harbor_list:
+                return d
+        return None
 
     @classmethod
     def new_work_command(cls, sub_order_id, org_weight, org_cnt, procedure_id,
@@ -576,9 +583,8 @@ class StateQualityInspecting(WorkCommandState):
 
                 old_wc.org_cnt -= new_wc.org_cnt #:实际工作的黑件数
                 old_wc.org_weight -= new_wc.org_weight
+
                 do_commit([new_wc, old_wc])
-            self.work_command.completed_time = datetime.now()
-            do_commit(self.work_command)
         elif self.last_status == constants.work_command.STATUS_FINISHED:
             old_wc = self.work_command
             from lite_mms.apis.quality_inspection import QIReportWrapper

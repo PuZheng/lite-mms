@@ -1,239 +1,135 @@
-<!DOCTYPE HTML>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <link rel="stylesheet"
-          href="{{ url_for("static", filename="css/central.css") }}">
-    <link type="text/css"
-          href="{{ url_for("static", filename="css/custom-theme/jquery-ui-1.10.1.custom.min.css") }}"
-          rel="stylesheet">
-    <style type="text/css">
-        .ym-wrapper {
-            max-width: 50em;
-        }
+{% extends "layout.html" %}
+{% block custom_external %}
+  <script type="text/javascript">
+    $(function () {
+      $('.dropdown-toggle').dropdown();
+      $(".dropdown-menu a").click(function () {
+        $("input[name=type]").val($(this).attr("id"));
+        $(this).parents("form").submit();
+      });
+      $("#delete-button").click(function () {
+        $("input[name=method]").val("delete");
+        $("input[name=url]").val("{{ request.args.get("url") }}");
+      });
+    });
+  </script>
+{% endblock %}
+{% block body %}
+  <div class="container">
+    <form action="{{ url_for("cargo.goods_receipt",id_=receipt.id) }}" method="POST" class="form-horizontal">
+      <legend>收货单详情{% if not receipt.order %}
+        <input type="hidden" name="method" value="">
+        <button class="btn btn-danger" id="delete-button">
+          <i class="icon-remove icon-white"></i>&nbsp;删除收货单
+        </button>
+      {% endif %} </legend>
 
-        input[type="text"] {
-            border: 0 none white;
-            background: transparent;
-        }
-    </style>
-    <script src="{{ url_for("static", filename="js/jquery-1.8.3.min.js") }}"></script>
-    <script src="{{ url_for("static", filename="js/jquery-ui-1.10.1.custom.min.js") }}"></script>
-    <script src="{{ url_for("static", filename="js/jquery-printarea.js") }}"
-            type="text/javascript"></script>
-    <script type="text/javascript">
-        $(function () {
-            var current_product_dom;
-            $('#product_name_list').dialog({
-                modal:true,
-                autoOpen:false,
-                closeOnEscape:true,
-                stack:true,
-                buttons:{
-                    "确定":function () {
-                        current_product_dom.val($("#product").find("option:selected").text());
-                        current_product_dom.attr("name", $("#product").val());
-                        $.post("/cargo/ajax/goods-receipt", {"task_id":current_product_dom.attr("id"), "product_id":current_product_dom.attr("name")},function () {
-                            $('#product_name_list').dialog("close");
-                            window.location.reload(false);
-                        }).error(function (data) {
-                                    alert(data.responseText);
-                                });
-                    },
-                    "返回":function () {
-                        $(this).dialog("close");
-                    }
-                }
-            });
-            $("#weight-div").dialog({
-                modal:true,
-                autoOpen:false,
-                closeOnEscape:true,
-                stack:true,
-                buttons:{
-                    "确定":function () {
-                        $.post("/cargo/ajax/goods-receipt", {"task_id":$("#task-id-input").val(), "weight":$("#weight-input").val()},function () {
-                            $("#weight-div").dialog("close");
-                            window.location.reload(false);
-                        }).error(function (data) {
-                                    alert(data.responseText);
-                                });
-                    },
-                    "返回":function () {
-                        $(this).dialog("close");
-                    }
-                }
-            });
+      <div class="control-group">
+        <label class="control-label">
+          <strong>收货单号</strong>
+        </label>
 
-            $("input[type=text]").click(function () {
-                var products = {{ products|safe }};
-
-                function get_current(products, current_id) {
-                    var current_type;
-                    $.each(products, function (inx, entry) {
-                        $.each(products[inx], function (i, entry) {
-                            if (entry.id == current_id) {
-                                current_type = inx;
-                            }
-                        });
-                    });
-                    return current_type;
-                }
-
-                var product_id = $(this).attr("name");
-
-                var current_type = get_current(products, product_id);
-                $("#product_type").val(current_type);
-                $("#product").empty();
-                $.each(products[current_type], function (idx, entry) {
-                    $("#product").append('<option value="' + entry.id + '">' + entry.name + '</option>');
-                });
-
-                $("#product").val(product_id)
-                $("#product_type").change(function (ui) {
-                    var selected_product_type = $("#product_type").val();
-                    $("#product").empty();
-                    $.each(products[selected_product_type], function (idx, entry) {
-                        $("#product").append("<option value=" + entry.id + ">" + entry.name + "</option>");
-                    });
-                    $("#product").val(product_id);
-                });
-                $('#product_name_list').dialog("open");
-                current_product_dom = $(this);
-            });
-            {% if receipt.printed or receipt.order.dispatched %}
-                $("td input").each(function () {
-                    $(this).replaceWith("<p>" + $(this).val() + "</p>");
-                });
-            {% endif %}
-            function f() {
-                $("input").each(function () {
-                    $(this).replaceWith("<p>" + $(this).val() + "</p>");
-                });
-                $("#printArea").printArea();
-            }
-
-            $("#print").click(function () {
-                {% if not receipt.printed %}
-                    $.post("/cargo/ajax/goods-receipt", {id:{{ receipt.id }}}).success(function (data) {
-                        f();
-                    }).error(function (data) {
-                                alert(data.responseText);
-                            });
-                {% else %}
-                    f();
-                {% endif %}
-            });
-            $("input[type=number]").click(
-                    function () {
-                        if ($(this).attr("name") == "weight") {
-                            return
-                        }
-                        $("#weight-input").val($(this).val());
-                        $("#task-id-input").val($(this).attr("name"));
-                        $('#weight-div').dialog("open");
-                    }
-            );
-        });
-    </script>
-</head>
-<body>
-<div class="ym-wrapper">
-    <div class="ym-wbox">
-        <div class="ym-form linearize-form ym-columnar" id="printArea">
-            <h5 class="float-right">NO. {{ receipt.id }}</h5>
-            <table class="bordertable">
-                <tbody>
-                <tr>
-                    <th colspan="4"><h4 class="center">金禾域加工收货单</h4></th>
-                </tr>
-                <tr>
-                    <th>收货单号</th>
-                    <th colspan="3">
-                        <p class="center">{{ receipt.receipt_id }}</p>
-                    </th>
-                </tr>
-                <tr>
-                    <th>公司名称</th>
-                    <th colspan="3">
-                        <p class="center">{{ receipt.customer.name }}</p>
-                    </th>
-                </tr>
-                <tr>
-                    <th>车辆车牌号</th>
-                    <th colspan="3"><p
-                            class="center">{{ receipt.unload_session.plate }}</p>
-                    </th>
-                </tr>
-                <tr>
-                    <th>日期</th>
-                    <th colspan="3">
-                        <p class="center">{{ receipt.create_time }}</p>
-                    </th>
-                </tr>
-                <tr>
-                    <th>产品类型</th>
-                    <th>产品名称</th>
-                    <th>净重(KG)</th>
-                    <th>交货日期</th>
-                </tr>
-                {% for product in receipt.product_list %}
-                    <tr>
-                        <td>
-                            {{ product.type_name }}
-                        </td>
-                        <td>
-                            <input type="text" id="{{ product.task_id }}" value="{{ product.name }}" name="{{ product.id }}">
-                        </td>
-                        <td>
-                            <input type="number" name="{{ product.task_id }}" id="" value="{{ product.weight }}" readonly="readonly">
-                        </td>
-                        <td>{{ product.due }}</td>
-                    </tr>
-                {% endfor %}
-                <tr>
-                    <td colspan="2">客户签名:</td>
-                    <td colspan="2">
-                        总重量(KG):{{ receipt.product_list|sum(attribute='weight') }}
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+        <div class="controls">
+          <p class="padding">{{ receipt.receipt_id }}</p>
         </div>
-        <div class="ym-fbox-button center">
-            <button class="ym-button" id="print">{{ _("打印") }}</button>
-            <a class="ym-button"
-               href="{{ url_for("order.order",id=receipt.order.id) }}"
-                    >{% if receipt.order.dispatched %} {{ _("查看订单") }}
-            {% else %} {{ _("完善订单") }}
-            {% endif %} </a>
-            <a href="{{ request.args.get("purl") or "/" }}"
-               class="ym-button">{{ _("返回") }}</a>
+      </div>
+      <div class="control-group">
+        <label class="control-label">
+          <strong>公司名称</strong>
+        </label>
+
+        <div class="controls">
+          <p class="padding">{{ receipt.customer.name }}</p>
         </div>
-        <div id="product_name_list" title="请选择产品名称">
-            <div class="ym-fbox-select">
-                <label for="product_type"><b>产品类型：</b></label>
-                <select id="product_type" name="product_type">
-                    {% for pt in product_types %}
-                        <option value="{{ pt.id }}">{{ pt.name }}</option>
-                    {% endfor %}
-                </select>
+      </div>
+      <div class="control-group">
+        <label class="control-label">
+          <strong>车辆车牌号</strong>
+        </label>
+
+        <div class="controls">
+          <p class="padding">{{ receipt.unload_session.plate }}</p>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">
+          <strong>日期</strong>
+        </label>
+
+        <div class="controls">
+          <p class="padding">{{ receipt.create_time.date() }}</p>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label"><strong>打印状态</strong></label>
+
+        <div class="controls">
+          {% if receipt.printed %}
+            <p class="padding text-info">已打印</p>
+          {% else %}
+            <a class="btn btn-primary" href="{{ url_for('cargo.goods_receipt_preview', id_=receipt.id, url=request.url) }}">
+              <i class="icon-print icon-white"></i> 未打印
+            </a>
+          {% endif %}
+
+        </div>
+      </div>
+      <legend>产品列表</legend>
+      <table class="table table-striped table-bordered table-condensed">
+        <thead>
+        <tr>
+          <th>卸货任务ID</th>
+          <th>产品类型</th>
+          <th>产品名称</th>
+          <th>净重(KG)</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for task in receipt.unload_task_list %}
+          <tr>
+            <td>
+              <a href="{{ url_for('cargo.unload_task',id_=task.id, url=request.url) }}" title="点击修改该产品">
+                <i class="icon-edit"></i> {{ task.id }}
+              </a>
+            </td>
+            <td>{{ task.product.product_type.name }}</td>
+            <td>{{ task.product.name }}</td>
+            <td>{{ task.weight }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="control-group">
+        <div class="controls">
+          {% if not receipt.order %}
+            <input type="hidden" name="url" value="{{ request.url }}">
+            <input type="hidden" name="type" value="">
+            <div class="btn-group">
+              <a class="dropdown-toggle btn btn-large btn-primary" data-toggle="dropdown" href="#">生成订单<b class="caret"></b></a>
+              <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                <li role="presentation">
+                  <a href="#" tabindex="-1" role="menuitem" id="stander">计重</a>
+                </li>
+                <li role="presentation">
+                  <a href="#" tabindex="-1" role="menuitem" id="extra">计件</a>
+                </li>
+              </ul>
             </div>
-            <div class="ym-fbox-select">
-                <label for="product"><b>产品名称：</b></label>
-                <select name="product" id="product">
-                </select>
-            </div>
-        </div>
-        <div id="weight-div" title="请输入产品重量">
-            <div class="ym-fbox-text">
-                <label for="weight-input"><b>产品重量（KG）：</b></label>
-                <input type="number" name="weight" id="weight-input">
-                <input type="hidden" name="task_id" id="task-id-input">
-            </div>
-        </div>
-    </div>
-</div>
-</body>
-</html>
+          {% else %}
+            <a class="btn btn-large btn-primary" href="{{ url_for("order.order",id_=receipt.order.id, url=request.url) }}">
+              <i class="icon-eye-open icon-white"></i>&nbsp;查看订单
+            </a>
+          {% endif %}
 
+          <a class="btn btn-large btn-success" href="{{ url_for('cargo.goods_receipt_preview', id_=receipt.id, url=request.url) }}">
+            <i class="icon-print icon-white"></i>&nbsp;预览
+          </a>
+          <a href="{{ request.args.get("url") or url_for('cargo.unload_session',id_=receipt.unload_session.id) }}" class="btn btn-large">
+            <i class="icon-backward"></i>&nbsp;返回
+          </a>
+        </div>
+      </div>
+    </form>
+  </div>
+{% endblock %}

@@ -5,7 +5,7 @@ from wtforms import Form, TextField, IntegerField
 from lite_mms.portal.cargo import cargo_page
 from lite_mms.utilities.decorators import ajax_call
 import json
-from lite_mms.utilities import _
+from flask.ext.babel import _
 
 @cargo_page.route("/ajax/receipts-list", methods=["GET"])
 @ajax_call

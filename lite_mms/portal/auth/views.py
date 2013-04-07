@@ -13,7 +13,7 @@ from lite_mms.exceptions import AuthenticateFailure
 def login():
     if request.method == "GET":
         if current_user.is_anonymous():
-            return render_template("auth/login.haml",titlename=u'登录')
+            return render_template("auth/login.html",titlename=u'登录')
         return redirect("/")
     else:
         class LoginForm(Form):
@@ -29,17 +29,17 @@ def login():
                 import lite_mms.apis as apis
                 user = apis.auth.authenticate(username, password)
             except AuthenticateFailure:
-                return render_template("auth/login.haml",
+                return render_template("auth/login.html",
                                        error=_(u"用户名或者密码错误"))
             if not login_user(user):
-                return render_template("auth/login.haml",
+                return render_template("auth/login.html",
                                        error=_(u"登陆失败"))
 
             identity_changed.send(current_app._get_current_object(),
                                   identity=Identity(user.id))
             return redirect(form.next_url.data or "/")
         else:
-            return render_template("auth/login.haml",
+            return render_template("auth/login.html",
                              error=_(u"请输入用户名及密码"))
 
 @auth.route("/logout")

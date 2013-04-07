@@ -11,7 +11,7 @@ cargo2_page = Blueprint("cargo2", __name__, static_folder="static",
                        template_folder="templates")
 
 from lite_mms.portal.cargo2.views import (goods_receipt_model_view, 
-                                          unload_session_model_view, vehicle_model_view, 
+                                          unload_session_model_view, plate_model_view,
                                           unload_task_model_view)
 
 from lite_mms.portal.cargo2 import ajax
@@ -37,7 +37,7 @@ extra_params = {
     }
 }
 
-data_browser.register_model_view(vehicle_model_view, cargo2_page, extra_params=extra_params)
+data_browser.register_model_view(plate_model_view, cargo2_page, extra_params=extra_params)
 data_browser.register_model_view(goods_receipt_model_view, cargo2_page, extra_params=extra_params)
 data_browser.register_model_view(unload_task_model_view, cargo2_page, extra_params=extra_params)
 

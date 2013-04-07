@@ -1,173 +1,172 @@
 {% extends "layout.html" %}
 {% block custom_external %}
-    <script type="text/javascript">
-        $(function () {
-            $("#unload_session_id").val("{{ unload_session.id }}");
-            $("img").height("120px");
-            $(".fancybox").fancybox();
-            $('#view-receipts-dialog').dialog({
-                autoOpen:false
-            });
-            $('#view-receipts').click(function () {
-                // pop a list of generated goods receipts
-                var session_id = $("#unload_session_id").val();
-                var dialog = $("#view-receipts-dialog");
-                $("#view-receipts-dialog").children('ul').children('li').remove();
-                $.getJSON("/cargo/ajax/receipts-list?unload_session_id=" + session_id,
-                        function (data) {
-                            dialog.children("ul").empty()
-                            $.each(data, function (idx, v) {
-                                dialog.children("ul").append(
-                                        '<li><a href="/cargo/goods-receipt?id=' + v.id + '&purl=' + encodeURIComponent(location.href) + '">' + v.receipt_id + '(' + v.customer + ')' + '</a></li>');
-                            });
-                            $('#view-receipts-dialog').dialog("open");
-                        }).error(function (data) {
-                            alert(data.responseText);
-                        });
-            });
-            $("#finish_button").click(function () {
-                if (confirm("确认结束会话吗？")) {
-                    $("#finish_form").submit();
-                }
-            });
-            $("#reopen-button").click(function () {
-                if (confirm("确认重新打开会话吗？")) {
-                    $("#reopen-form").submit();
-                }
-            });
-            $("#delete-button").click(function () {
-                if (confirm("确认删除会话吗？")) {
-                    $("#delete-form").submit();
-                }
-            });
-        });
-    </script>
-    <script src="{{ url_for("static", filename="js/new-receipt-dialog.js") }}"></script>
-    <style type="text/css">
-        a:hover,a:focus {
-            background-color: transparent;
+  <link rel="stylesheet" href="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.css") }}" type="text/css" media="screen">
+  <script type="text/javascript" src="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.pack.js") }}"></script>
+  <script type="text/javascript">
+    $(function () {
+      $(".fancybox").fancybox();
+      $("#finish_button").click(function () {
+        if (confirm("确认结束会话吗？")) {
+          $("#method").val("finish");
+          $("#unload-session-form").submit();
         }
-    </style>
+      });
+      $("#reopen-button").click(function () {
+        if (confirm("确认重新打开会话吗？")) {
+          $("#method").val("reopen");
+          $("#unload-session-form").submit();
+        }
+      });
+      $("#delete-button").click(function () {
+        if (confirm("确认删除会话吗？")) {
+          $("#method").val("delete");
+          $("#unload-session-form").submit();
+        }
+      });
+    });
+  </script>
 {% endblock %}
 
 {% block body %}
-    <div class="ym-wrapper">
-        <div class="ym-wbox">
-            <div class="ym-form linearize-form ym-columnar">
-                <div class="ym-fbox-text">
-                    <label><b>车辆车牌号</b></label>
-                    {{ unload_session.plate }}
-                </div>
-                <div class="ym-fbox-text">
-                    <label><b>车辆毛重(KG)</b></label>
-                    {{ unload_session.gross_weight }}
-                </div>
-                <div class="ym-fbox-text">
-                    <label><b>上次称重时车上是否有人</b></label>
-                    {{ unload_session.with_person_des }}
-                </div>
-                {% if unload_session.closed %}
-                    <div class="ym-fbox-text">
-                        <label><b>会话完成时间</b></label>
-                        {{ unload_session.finish_time }}
-                    </div>
-                    <div class="ym-fbox-text">
-                        <form action="{{ url_for('cargo.session_reopen') }}" method="POST" id="reopen-form">
-                            <button class="ym-button ym-edit" type="button" id="reopen-button" title="重新打开会话后，装卸工又可以添加卸货任务">
-                                重新打开会话
-                            </button>
-                            <input type="hidden" name="id" value="{{ unload_session.id }}">
-                        </form>
-                    </div>
-                {% endif %}
-                {% if unload_session.closeable %}
-                    <div class="ym-fbox-text">
-                        <form action="{{ url_for('cargo.session_finish') }}" method="POST" id="finish_form">
-                            <button class="ym-button ym-save" type="button" id="finish_button"
-                                title="结束会话后，装卸工不能够再添加写货任务">
-                                结束会话
-                            </button>
-                            <input type="hidden" value="{{ unload_session.id }}" name="id"/>
-                        </form>
-                    </div>
-                {% endif %}
+  <div class="container">
+    <form action="{{ url_for('cargo.unload_session', id_=unload_session.id) }}"
+          method="POST" class="form-horizontal" id="unload-session-form">
+      <input type="hidden" name="method" id="method">
+      {% if request.args.get("url") %}
+        <input type="hidden" name="url" value="{{ request.args.get('url') }}">
+      {% endif %}
+      <legend>
+        收货会话详情
+        {% if unload_session.deleteable %}
+          <button class="btn btn-danger" type="button" id="delete-button" title="删除卸货会话，不能还原">
+            <i class="icon-remove icon-white"></i>&nbsp;删除会话
+          </button>
+        {% endif %}
+      </legend>
+      <div class="control-group">
+        <label class="control-label"><strong>ID</strong></label>
 
-                {% if unload_session.deleteable %}
-                    <div class="ym-fbox-text">
-                        <form action="{{ url_for('cargo.session_delete') }}" method="POST" id="delete-form">
-                            <button class="ym-button ym-delete" type="button" id="delete-button"
-                                    title="删除卸货会话">
-                                删除会话
-                            </button>
-                            <input type="hidden" value="{{ unload_session.id }}" name="id"/>
-                        </form>
-                    </div>
-                {% endif %}
-
-                <h6>收货任务列表</h6>
-
-                <div class="ym-fbox-button">
-                    <button class="ym-button"
-                            onclick="window.location.reload(true)">刷新
-                    </button>
-
-                    <table class="bordertable">
-                        <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>卸货点</th>
-                            <th>产品名称</th>
-                            <th>客户名称</th>
-                            <th>净重(KG)</th>
-                            <th>是否已生成收货单</th>
-                            <th>图片</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for task in unload_session.task_list %}
-                            <tr>
-                                <td>{{ task.id }}</td>
-                                <td>{{ task.harbor.name }}</td>
-                                <td>{{ task.product.name }}</td>
-                                <td>{{ task.customer.name }}</td>
-                                <td>
-                                    {% if task.weight != 0 %}
-                                        {{ task.weight }}
-                                    {% else %}
-                                        <a href="{{ url_for('cargo.unload_task') }}?id={{ task.id }}"
-                                           class="ym-button">称重</a>
-                                    {% endif %}
-                                </td>
-                                <td>{% if task.goods_receipt %}
-                                    是
-                                    {% else %}
-                                    否
-                                {% endif %}</td>
-                                <td>{% if task.pic_path %}
-                                    <a href="{{ task.pic_url }}"
-                                       class="fancybox" rel="group"
-                                       title="{{ task.product.name }}">
-                                        <img src="{{ task.pic_url }}" class="bordered"
-                                             alt="{{ task.product.name }}"/>
-                                    </a>{% endif %}</td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                    <button class="ym-button ym-edit"
-                            id="new-receipt">{{ _("创建收货单") }}</button>
-                    <button class="ym-button ym-next"
-                            id="view-receipts" type="button">
-                        {{ _("查看收货单") }}</button>
-                    <a class="ym-button ym-delete"
-                       href="{{ request.args.get("backref") or url_for('cargo.unload_session_list') }}">返回</a>
-                </div>
-            </div>
+        <div class="controls">
+          <p class="padding">{{ unload_session.id }}</p>
         </div>
-    </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label"><strong>车辆车牌号</strong></label>
 
-    {% include "cargo/goods-receipt-add.html" %}
-    <div id="view-receipts-dialog" title="{{ _("查看收货单") }}">
-        <ul></ul>
-    </div>
+        <div class="controls">
+          <p class="padding">{{ unload_session.plate }}</p>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label"><strong>车辆毛重(KG)</strong></label>
+
+        <div class="controls">
+          <p class="padding">{{ unload_session.gross_weight }}</p>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label"><strong>上次称重时车上有人</strong></label>
+
+        <div class="controls">
+          <p class="padding">{{ unload_session.with_person_des }}</p>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label"><strong>会话完成时间</strong></label>
+
+        <div class="controls">
+          {% if unload_session.closed %}
+            <span class="padding">{{ unload_session.finish_time }}</span>
+            <button class="btn btn-warning" type="button" id="reopen-button"
+                    title="重新打开会话后，装卸工又可以添加卸货任务">
+              <i class="icon-repeat icon-white"></i>&nbsp;重新打开会话
+            </button>
+          {% endif %}
+          {% if unload_session.closeable %}
+            <button class="btn btn-warning " type="button"
+                    id="finish_button"
+                    title="结束会话后，装卸工不能够再添加写货任务">
+              <i class="icon-ok icon-white"></i> 结束会话
+            </button>
+          {% endif %}
+        </div>
+      </div>
+
+      <legend>收货任务列表
+        <button class="btn btn-info" onclick="window.location.reload()">
+          <i class="icon-refresh icon-white"></i>&nbsp;刷新
+        </button>
+      </legend>
+
+      <div class="control-group">
+
+
+        <table class="table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>卸货点</th>
+            <th>产品名称</th>
+            <th>客户名称</th>
+            <th>净重(KG)</th>
+            <th>是否已生成收货单</th>
+            <th>图片</th>
+          </tr>
+          </thead>
+          <tbody>
+          {% for task in unload_session.task_list %}
+            <tr>
+              <td>{{ task.id }}</td>
+              <td>{{ task.harbor.name }}</td>
+              <td>{{ task.product.name }}</td>
+              <td>{{ task.customer.name }}</td>
+              <td>
+                {% if task.weight != 0 %}
+                  <a href="{{ url_for('cargo.unload_task', id_=task.id, url=request.url) }}"><i class="icon-edit"></i> {{ task.weight }}
+                  </a>
+                {% else %}
+                  <a href="{{ url_for('cargo.unload_task', id_=task.id, url=request.url) }}"
+                     class="btn btn-primary"><i class="icon-wrench icon-white"></i>
+                    称重</a>
+                {% endif %}
+              </td>
+              <td>{% if task.goods_receipt %}
+                是
+              {% else %}
+                否
+              {% endif %}</td>
+              <td>
+                {% if task.pic_path %}
+                  <ul class="thumbnails">
+                    <li class="span2">
+                      <a href="{{ task.pic_url }}" class="fancybox thumbnail" rel="group" title="{{ task.product.name }}">
+                        <img src="{{ task.pic_url }}" class="bordered" alt="{{ task.product.name }}"/>
+                      </a>
+                    </li>
+                  </ul>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        <div class="control-group">
+          <div class="controls">
+            <button class="btn btn-info btn-large" data-toggle="modal" data-target="#new-receipt-dialog" id="new-receipt">
+                <i class="icon-edit icon-white"></i>&nbsp;{{ _("创建收货单") }}
+            </button>
+            <button class="btn btn-info btn-large" id="view-receipts" data-toggle="modal" data-target="#view-receipts-dialog">
+              <i class="icon-eye-open icon-white"></i>&nbsp;{{ _("查看收货单") }}
+            </button>
+            <a class="btn btn-large" href="{{ request.args.get("url") or url_for('cargo.unload_session_list') }}">
+              <i class="icon-backward"></i>&nbsp;返回
+            </a>
+          </div>
+        </div>
+      </div>
+  </div>
+  </form>
+  </div>
+  {% include "cargo/goods-receipt-add.html" %}
+  {% include "cargo/view-receipts-dialog.html" %}
 {% endblock %}

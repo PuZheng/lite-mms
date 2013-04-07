@@ -455,6 +455,10 @@ class StoreBillWrapper(ModelWrapper):
         if kwargs.get("delivery_session_id"):
             store_bill.delivery_session_id = kwargs.get("delivery_session_id")
             store_bill.delivery_task_id = kwargs.get("delivery_task_id")
+        if kwargs.get("weight"):
+            store_bill.weight = kwargs["weight"]
+        if kwargs.get("quantity"):
+            store_bill.quantity = kwargs["quantity"]
         do_commit(store_bill.model)
 
         return StoreBillWrapper(do_commit(store_bill))

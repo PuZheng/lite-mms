@@ -17,5 +17,4 @@ def get_plate_list(status=None):
         return plate_q.join(model, model.plate == models.Plate.name).filter(
             model.finish_time == None)
 
-    return [p.name for p in
-            _get_condition(models.Plate.query, status).all()]
+    return [p.name for p in _get_condition(models.Plate.query, status).all()]

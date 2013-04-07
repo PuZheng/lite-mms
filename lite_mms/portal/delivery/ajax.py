@@ -81,22 +81,3 @@ def customer_list():
             return _(u"已经对所有的客户生成了发货单"), 403
 
     return json.dumps([{"id": c.id, "name": c.name} for c in customers])
-
-@delivery_page.route("/ajax/consignment-product")
-@ajax_call
-def product():
-    product_id = request.args.get("id", type=int)
-    import lite_mms.apis as apis
-
-    current_product = apis.delivery.ConsignmentProductWrapper.get_product(
-        product_id)
-    if current_product:
-        url = request.args.get("url")
-        return render_template("delivery/consignment-product.html",
-                               current=current_product,
-                               product_types=apis.product.get_product_types(),
-                               products=json.dumps(apis.product.get_products()),
-                               team_list=apis.manufacture.get_team_list(),
-                               url=url)
-    else:
-        return _(u"没有该产品编号:%d" + product_id), 404

@@ -1,6 +1,5 @@
 # -*- coding:UTF-8 -*-
 import sys
-from lite_sm import State, StateMachine
 from flask import url_for
 from lite_mms.utilities import _
 from sqlalchemy import or_
@@ -33,22 +32,6 @@ class UnloadSessionWrapper(ModelWrapper):
         return bool(
             self.finish_time and all(t.weight for t in self.task_list))
 
-    #@property
-    #def status(self):
-        #if self.finish_time:
-            #if len(self.customer_list) > len(self.goods_receipt_list):
-                #return u"待生成收货单"
-            #elif any(not goods_receipt.order.refined for goods_receipt in
-                     #self.goods_receipt_list):
-                #return u"还有订单未完善"
-            #else:
-                #return u"已完成"
-        #else:
-            #if self.task_list and not all(t.weight for t in self.task_list):
-                #return u"待称重"
-            #else:
-                #return u"待卸货"
-
     @cached_property
     def customer_list(self):
         return list(set([task.customer for task in self.task_list]))
@@ -56,7 +39,7 @@ class UnloadSessionWrapper(ModelWrapper):
     @property
     def closeable(self):
         return not self.finish_time and all(ut.weight for ut in self.task_list)
-    
+
     @property
     def closed(self):
         """
@@ -67,7 +50,9 @@ class UnloadSessionWrapper(ModelWrapper):
     @property
     def log_list(self):
         from lite_mms.models import Log
-        ret = Log.query.filter(Log.obj_pk==self.id).filter(Log.obj_cls==self.model.__class__.__name__).all()
+
+        ret = Log.query.filter(Log.obj_pk == self.id).filter(
+            Log.obj_cls == self.model.__class__.__name__).all()
         for task in self.task_list:
             ret.extend(task.log_list)
         return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time))
@@ -78,8 +63,8 @@ class UnloadSessionWrapper(ModelWrapper):
 
     def __repr__(self):
         s_create_time = self.create_time.strftime("%Y-%m-%d[%H:%M:%S]")
-        s_finish_time = self.finish_time.strftime("%Y-%m-%d[%H:%M:%S]")\
-        if self.finish_time else "-"
+        s_finish_time = self.finish_time.strftime("%Y-%m-%d[%H:%M:%S]") \
+            if self.finish_time else "-"
         return "<UnloadSession (%d) (%r) (%d) (%s) (%s)>" % (self.id,
                                                              self.plate,
                                                              self.gross_weight,
@@ -96,6 +81,7 @@ class UnloadSessionWrapper(ModelWrapper):
         self.model.finish_time = finish_time
         do_commit(self.model)
 
+
 class UnloadTaskWrapper(ModelWrapper):
     @property
     def pic_url(self):
@@ -107,7 +93,9 @@ class UnloadTaskWrapper(ModelWrapper):
     @property
     def log_list(self):
         from lite_mms.models import Log
-        return Log.query.filter(Log.obj_pk==self.id).filter(Log.obj_cls==self.model.__class__.__name__).all()
+
+        return Log.query.filter(Log.obj_pk == self.id).filter(
+            Log.obj_cls == self.model.__class__.__name__).all()
 
     def update(self, **kwargs):
         """
@@ -137,16 +125,10 @@ class UnloadTaskWrapper(ModelWrapper):
         return isinstance(other, UnloadTaskWrapper) and other.id == self.id
 
 
-    @property
-    def goods_receipt(self):
-        for receipt in self.unload_session.goods_receipt_list:
-            if receipt.customer_id == self.customer_id:
-                return receipt
-        return None
-
 class GoodsReceiptWrapper(ModelWrapper):
     def __repr__(self):
-        return u"<GoodsReceptWrapper %d customer-%s>" % (self.id, self.customer.name)
+        return u"<GoodsReceiptWrapper %d customer-%s>" % (
+            self.id, self.customer.name)
 
     @cached_property
     def product_list(self):
@@ -162,7 +144,9 @@ class GoodsReceiptWrapper(ModelWrapper):
                 setattr(self.model, k, v)
         do_commit(self.model)
 
-def get_unload_session_list(idx=0, cnt=sys.maxint, unfinished_only=False, keywords=None):
+
+def get_unload_session_list(idx=0, cnt=sys.maxint, unfinished_only=False,
+                            keywords=None):
     """
     get all the unloading sessions in certain range, ordered by create_time
     descentally
@@ -189,6 +173,7 @@ def get_unload_session_list(idx=0, cnt=sys.maxint, unfinished_only=False, keywor
     return [UnloadSessionWrapper(us) for us in
             query.all()], total_cnt
 
+
 def get_unload_session(session_id):
     """
     get unload session from database of given id
@@ -204,6 +189,7 @@ def get_unload_session(session_id):
     except NoResultFound:
         return None
 
+
 def new_unload_session(plate, gross_weight, with_person=False):
     """
     create an unload session
@@ -217,7 +203,9 @@ def new_unload_session(plate, gross_weight, with_person=False):
         do_commit(models.Plate(name=plate))
 
     return UnloadSessionWrapper(do_commit(
-        models.UnloadSession(plate=plate, gross_weight=gross_weight, with_person=with_person)))
+        models.UnloadSession(plate=plate, gross_weight=gross_weight,
+                             with_person=with_person)))
+
 
 def get_goods_receipts_list(unload_session_id):
     """
@@ -227,7 +215,10 @@ def get_goods_receipts_list(unload_session_id):
     if not unload_session_id:
         return []
     return [GoodsReceiptWrapper(gr) for gr in
-            models.GoodsReceipt.query.filter(models.GoodsReceipt.unload_session_id==unload_session_id).all()]
+            models.GoodsReceipt.query.filter(
+                models.GoodsReceipt.unload_session_id == unload_session_id)
+            .all()]
+
 
 def get_goods_receipt(id_):
     """
@@ -238,9 +229,10 @@ def get_goods_receipt(id_):
         return None
     try:
         return GoodsReceiptWrapper(models.GoodsReceipt.query.filter(
-            models.GoodsReceipt.id==id_).one())
+            models.GoodsReceipt.id == id_).one())
     except NoResultFound:
         return None
+
 
 def new_goods_receipt(customer_id, unload_session_id):
     """
@@ -249,6 +241,7 @@ def new_goods_receipt(customer_id, unload_session_id):
     :raise: ValueError - 若参数发生错误
     """
     import lite_mms.apis as apis
+
     customer = apis.customer.get_customer(customer_id)
     if not customer:
         raise ValueError(u"没有该客户(%d)" % int(customer_id))
@@ -256,8 +249,13 @@ def new_goods_receipt(customer_id, unload_session_id):
     if not unload_session:
         raise ValueError(u"没有该卸货会话(%d)" % int(unload_session_id))
     model = do_commit(models.GoodsReceipt(customer=customer.model,
-                                 unload_session=unload_session.model))
+                                          unload_session=unload_session.model))
+    for ut in unload_session.task_list:
+        if ut.customer.id == customer_id:
+            ut.goods_receipt = model
+    do_commit(unload_session)
     return GoodsReceiptWrapper(model)
+
 
 def new_unload_task(session_id, harbor, customer_id, creator_id,
                     pic_path, is_last=False):
@@ -270,7 +268,7 @@ def new_unload_task(session_id, harbor, customer_id, creator_id,
     """
 
     try:
-        harbor = models.Harbor.query.filter(models.Harbor.name==harbor).one()
+        harbor = models.Harbor.query.filter(models.Harbor.name == harbor).one()
     except NoResultFound:
         raise ValueError(u"没有该装卸点" + harbor)
 
@@ -280,11 +278,13 @@ def new_unload_task(session_id, harbor, customer_id, creator_id,
         raise ValueError(_(u"没有该用户(%d)" % int(creator_id)))
 
     try:
-        customer = models.Customer.query.filter(models.Customer.id == customer_id).one()
+        customer = models.Customer.query.filter(
+            models.Customer.id == customer_id).one()
     except NoResultFound:
         raise ValueError(_(u"没有该客户(%d)" % int(customer_id)))
 
     import lite_mms.apis as apis
+
     product = apis.product.get_product(name=constants.DEFAULT_PRODUCT_NAME)
     if not product:
         raise ValueError(_(u"没有该产品" + constants.DEFAULT_PRODUCT_NAME))
@@ -306,6 +306,7 @@ def new_unload_task(session_id, harbor, customer_id, creator_id,
 
     return UnloadTaskWrapper(ut)
 
+
 def get_unload_task(task_id):
     """
     get unload task by id from database
@@ -315,9 +316,10 @@ def get_unload_task(task_id):
         return None
     try:
         return UnloadTaskWrapper(models.UnloadTask.query.filter(
-            models.UnloadTask.id==task_id).one())
+            models.UnloadTask.id == task_id).one())
     except NoResultFound:
         return None
+
 
 if __name__ == "__main__":
     pass

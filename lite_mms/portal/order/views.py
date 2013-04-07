@@ -25,7 +25,6 @@ def order_list():
     if request.method == "GET":
         page = request.args.get("page", 1, type=int)
         category = request.args.get("category", default="undispatched")
-        message = request.args.get("category", default="")
         time_span = request.args.get("time_span", "unlimited").lower()
         customer_id = request.args.get("customer_id", 0, type=int)
 
@@ -50,7 +49,7 @@ def order_list():
             deliverable_only = True
         else:
             desc = True
-        orders, total_cnt = apis.OrderWrapper.get_list(
+        orders, total_cnt = apis.order.OrderWrapper.get_list(
             (page - 1) * constants.ORDER_PER_PAGE,
             constants.ORDER_PER_PAGE,
             after=apis.order.get_should_after_date(time_span),
@@ -63,19 +62,12 @@ def order_list():
         # 获取在时间段内，有订单的客户
         customer_list = apis.order.get_customer_list(time_span)
 
-        try:
-            customer = apis.customer.get_customer(customer_id)
-        except PropertyError:
-            customer = None
-        except NoResultFound:
-            return _(u"客户ID为%s的客户不存在" % customer_id), 404
         pagination = Pagination(page, constants.ORDER_PER_PAGE, total_cnt)
         return {'titlename': u'订单列表',
-                'order_list': [apis.OrderWrapper(order) for order in
-                               orders],
-                'pagination': pagination, 'customer': customer,
+                'order_list': orders,
+                'pagination': pagination,
                 "customer_list": customer_list, "category": category,
-                'time_span': time_span, 'message': message}
+                'time_span': time_span}
     else: # POST
         order_id_list = request.form.getlist('order_id')
         act = request.form.get("act")
@@ -124,53 +116,63 @@ def order_list():
                                 message=message))
 
 
-@order_page.route("/order")
+@order_page.route("/order/<int:id_>", methods=("GET", "POST"))
 @decorators.templated("/order/order.html")
 @decorators.nav_bar_set
-def order():
+def order(id_):
     from lite_mms import apis
-    inst = apis.order.get_order(request.args.get('id', type=int))
-    purl = request.args.get("purl")
+
+    inst = apis.order.get_order(id_)
     if not inst:
         abort(404)
-    return {'titlename': u'订单详情', 'order': inst, 'purl': purl}
-    # pylint: disable=W0142
-    # pylint: disable=W0142
-
-@order_page.route("/mark_refined", methods=["POST"])
-def mark_refine():
-    from lite_mms import apis
-    order = apis.order.get_order(request.form["id"])
-    if order:
-        order.update(refined=True)
-        return redirect(url_for("order.order", id=order.id))
+    if request.method == "GET":
+        url = request.args.get("url")
+        return {'titlename': u'订单详情', 'order': inst, 'url': url}
     else:
+        method = request.form.get("method", "save")
+        if "save" == method:
+            inst.update(customer_order_number=request.form["customer_order_number"])
+        else:
+            inst.update(refined=True)
+        url = request.form.get("url")
+        return redirect(url_for("order.order", id_=id_, _method="GET", url=url))
+
+@order_page.route("/sub-order/<int:id_>", methods=["GET","POST"])
+@decorators.templated("order/sub-order.html")
+@decorators.nav_bar_set
+def sub_order(id_):
+    from lite_mms import apis
+
+    inst = apis.order.SubOrderWrapper.get_sub_order(id_)
+    if not inst:
         abort(404)
+    if request.method == "GET":
 
-@order_page.route("/sub-order", methods=["POST"])
-def sub_order():
-    from lite_mms import apis
-    #sub_order的get由ajax实现
-    frm = SubOrderForm(request.form)
-    if frm.validate():
-        inst = apis.order.SubOrderWrapper.get_sub_order(
-            frm.id.data)
-        if not inst:
-            abort(404)
+        from lite_mms.constants import DEFAULT_PRODUCT_NAME
 
-        inst.update(product_id=frm.product.data, tech_req=frm.tech_req.data,
-                    spec=frm.spec.data, type=frm.type.data,
-                    due_time=str(frm.due_time.data), urgent=frm.urgent.data,
-                    weight=frm.weight.data, harbor_name=frm.harbor.data,
-                    returned=frm.returned.data, unit=frm.unit.data,
-                    quantity=frm.weight.data if inst.order_type == constants
-                    .STANDARD_ORDER_TYPE else frm.quantity.data)
-        flash(u"修改成功！")
-        return  redirect(
-            url_for('order.order', id=inst.order_id,
-                    purl=frm.purl.data))
+        param_dict = {'titlename': u'子订单详情', 'sub_order': inst,
+                      'DEFAULT_PRODUCT_NAME': DEFAULT_PRODUCT_NAME}
+        param_dict.update(product_types=apis.product.get_product_types())
+        param_dict.update(products=json.dumps(apis.product.get_products()))
+        param_dict.update(harbor_list=apis.harbor.get_harbor_list())
+        return param_dict
     else:
-        return str(frm.errors), 403
+        #sub_order的get由ajax实现
+        frm = SubOrderForm(request.form)
+        if frm.validate():
+            inst.update(product_id=frm.product.data, tech_req=frm.tech_req.data,
+                        spec=frm.spec.data, type=frm.type.data,
+                        due_time=str(frm.due_time.data), urgent=frm.urgent.data,
+                        weight=frm.weight.data, harbor_name=frm.harbor.data,
+                        returned=frm.returned.data, unit=frm.unit.data,
+                        quantity=frm.weight.data if inst.order_type == constants
+                        .STANDARD_ORDER_TYPE else frm.quantity.data)
+            flash(u"修改成功！")
+            return redirect(
+                frm.url.data or url_for('order.order', id_=inst.order_id,
+                                        url=frm.url.data))
+        else:
+            return str(frm.errors), 403
 
 
 @order_page.route("/new-sub-order", methods=["GET", "POST"])
@@ -192,7 +194,10 @@ def new_sub_order():
                                    error_content=u"已下发的订单不能新增子订单",
                                    back_url=url_for("order.order",
                                                     id=order.id))
+        from lite_mms.constants import DEFAULT_PRODUCT_NAME
+
         return dict(titlename=u'新建子订单', order=order,
+                    DEFAULT_PRODUCT_NAME=DEFAULT_PRODUCT_NAME,
                     product_types=apis.product.get_product_types(),
                     products=json.dumps(apis.product.get_products()),
                     harbor_list=apis.harbor.get_harbor_list(),
@@ -224,7 +229,7 @@ def new_sub_order():
         from lite_mms import apis
 
         try:
-            apis.order.SubOrderWrapper.new_sub_order(order_id=order_id,
+            sb = apis.order.SubOrderWrapper.new_sub_order(order_id=order_id,
                                                      product_id=form.product.data,
                                                      spec=form.spec.data,
                                                      type=form.type.data,
@@ -238,13 +243,10 @@ def new_sub_order():
                                                      quantity=form.quantity.data)
             flash(u"新建成功！")
         except ValueError, e:
-            flash(unicode(e))
-
-        return redirect(url_for('order.order', id=order_id))
-
+            flash(unicode(e), "error")
+        return redirect(url_for('order.order', id_=order_id))
 
 class SubOrderForm(Form):
-    id = IntegerField('id', [validators.required()])
     product = IntegerField('product', [validators.required()])
     spec = TextField('spec')
     type = TextField('type')
@@ -256,4 +258,4 @@ class SubOrderForm(Form):
     quantity = IntegerField('quantity')
     weight = IntegerField('weight', [validators.required()])
     harbor = TextField('harbor', [validators.required()])
-    purl = HiddenField("purl")
+    url = HiddenField("purl")

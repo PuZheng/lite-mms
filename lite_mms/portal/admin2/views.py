@@ -108,6 +108,7 @@ class DepartmentModelView(AdminModelView):
 
     __create_columns__ = __form_columns__ = ["name", 
                                              column_spec.InputColumnSpec("leader_list", 
+                                                                         label=u"车间主任列表", 
                                                                          opt_filter=lambda obj: any((group.id == groups_const.DEPARTMENT_LEADER) for group in obj.groups),
                                                                          doc=u'只有用户组是"车间主任", 才能作为车间主任'), 
                                              "procedure_list"]
@@ -115,6 +116,9 @@ class DepartmentModelView(AdminModelView):
     __column_labels__ = {"id": u"编号", "name": u"名称", "leader_list": u"车间主任列表", "procedure_list": u"车间允许工序列表"}
 
     __customized_actions__ = [DeleteAction(u"删除", AdminPermission)]
+
+    def populate_obj(self, form):
+        return Department(name=form.name.data, leaders=form.leader_list.data)
 
 department_model_view = DepartmentModelView(Department, u"车间")
 
@@ -132,6 +136,9 @@ class TeamModelView(AdminModelView):
     __column_labels__ = {"id": u"编号", "name": u"名称", "leader": u"班组长", "department": u"所属车间"}
 
     __customized_actions__ = [DeleteAction(u"删除", AdminPermission)]
+
+    def populate_obj(self, form):
+        return Team(name=form.name.data, department=form.department.data, leader=form.leader.data)
 
 team_model_view = TeamModelView(Team, u"班组")
 

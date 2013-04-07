@@ -48,7 +48,6 @@ class UserWrapper(login.UserMixin, ModelWrapper):
     def __repr__(self):
         return "<UserWrapper %s> " % self.username
 
-
 def get_user(id_):
     if not id_:
         return None

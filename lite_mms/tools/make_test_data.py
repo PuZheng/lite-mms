@@ -83,8 +83,8 @@ class InitializeTestDB(Command):
         a = do_commit(User(username='a', password=md5('a').hexdigest(), groups=[accountant]))
 
         # 创建车间和班组
-        department1 = do_commit(Department(name=u"车间1", leader_list=[d1_dl, super_dl])) 
-        department2 = do_commit(Department(name=u"车间2", leader_list=[d2_dl, super_dl])) 
+        department1 = do_commit(Department(name=u"车间1", leaders=[d1_dl, super_dl])) 
+        department2 = do_commit(Department(name=u"车间2", leaders=[d2_dl, super_dl])) 
         team1 = do_commit(Team(name=u"班组101", department=department1, leader=t101_tl))
         team2 = do_commit(Team(name=u"班组201", department=department2, leader=t201_tl))
 
@@ -97,8 +97,8 @@ class InitializeTestDB(Command):
         harbor2 = do_commit(Harbor(name=u"装卸点2", department=department2))
         
         # 初始化车辆
-        vehicle1 = do_commit(Vehicle(plate=u"浙A 00001"))
-        vehicle2 = do_commit(Vehicle(plate=u"浙A 00002"))
+        vehicle1 = do_commit(Plate(name=u"浙A 00001"))
+        vehicle2 = do_commit(Plate(name=u"浙A 00002"))
 
         # 初始化客户
         customer1 = do_commit(Customer(u"宁波机床场", "nbjcc"))
@@ -108,7 +108,7 @@ class InitializeTestDB(Command):
 
         # 收货环节
         #     - 车上有人, 有两个任务, 分别来自不同的客户, 并且都已经称重
-        unload_session1 = do_commit(UnloadSession(vehicle=vehicle1, gross_weight=10000, with_person=True,
+        unload_session1 = do_commit(UnloadSession(plate_=vehicle1, gross_weight=10000, with_person=True,
                                                   finish_time=datetime.now(), status=cargo_const.STATUS_CLOSED))
         default_product = Product.query.get(DEFAULT_PRODUCT_NAME)
         unload_task1 = do_commit(UnloadTask(unload_session1, harbor1, customer1, l, default_product, "0.png",
@@ -116,7 +116,7 @@ class InitializeTestDB(Command):
         unload_task2 = do_commit(UnloadTask(unload_session1, harbor2, customer2, l, product2, "1.png", weight=3000))
         #     - 车上无人， 有三个任务，来自两个客户, 有一个尚未称重
         unload_session2 = do_commit(
-            UnloadSession(vehicle=vehicle2, gross_weight=10000, with_person=False,
+            UnloadSession(plate_=vehicle2, gross_weight=10000, with_person=False,
                           finish_time=datetime.now(), status=cargo_const.STATUS_WEIGHING))
         unload_task3 = do_commit(
             UnloadTask(unload_session2, harbor1, customer2, l, product2, "2.png",
@@ -128,7 +128,7 @@ class InitializeTestDB(Command):
             UnloadTask(unload_session2, harbor2, customer3, l, product4, "4.png"))
         #     - 车上无人，正在等待装货
         unload_session3 = do_commit(
-            UnloadSession(vehicle=vehicle2, gross_weight=10000, with_person=False,
+            UnloadSession(plate_=vehicle2, gross_weight=10000, with_person=False,
                           status=cargo_const.STATUS_LOADING))
 
         # 生成收货会话, 注意这里故意不为某些客户生成收货单

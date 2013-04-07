@@ -10,7 +10,6 @@ from lite_mms.portal.admin2.views import (user_model_view, group_model_view,
                                           department_model_view, team_model_view, 
                                          harbor_model_view, procedure_model_view)
 from nav_bar import NavBar
-import pdb
 sub_nav_bar = NavBar()
 sub_nav_bar.register(lambda: user_model_view.url_for_list(), u"用户管理", 
     enabler=lambda: user_model_view.within_domain(request.url, "admin2"), group=u"对象管理")

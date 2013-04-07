@@ -32,7 +32,7 @@ def upgrade():
                     sa.Column("thread", sa.Integer),
                     sa.Column("thread_name", sa.String(64)),
                     sa.Column("process", sa.Integer),
-                    sa.Column("message", sa.String(64)),
+                    sa.Column("message", sa.String(256)),
                     sa.Column("args", sa.String(64)),
                     sa.Column("extra", sa.String(64)))
 

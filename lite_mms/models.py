@@ -38,6 +38,7 @@ procedure_and_department_table = db.Table("TB_PROCEDURE_AND_DEPARTMENT",
 
 class Permission(db.Model):
     __tablename__ = "TB_PERMISSION"
+    __modelname__ = u"权限"
     name = db.Column(db.String(64), primary_key=True)
     desc = db.Column(db.String(64), default="")
 
@@ -50,6 +51,7 @@ class Permission(db.Model):
 
 class Group(db.Model):
     __tablename__ = "TB_GROUP"
+    __modelname__ = u"用户组"
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(32), nullable=False, unique=True)
@@ -66,6 +68,7 @@ class Group(db.Model):
 
 class User(db.Model):
     __tablename__ = "TB_USER"
+    __modelname__ = u"用户"
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(32), nullable=False, unique=True)
@@ -88,10 +91,12 @@ class User(db.Model):
 
 
 class UnloadSession(db.Model):
+    __modelname__ = u"卸货会话"
     __tablename__ = "TB_UNLOAD_SESSION"
 
     id = db.Column(db.Integer, primary_key=True)
     plate = db.Column(db.String(32), db.ForeignKey('TB_PLATE.name'))
+    plate_ = db.relationship("Plate")
     gross_weight = db.Column(db.Integer, nullable=False)
     with_person = db.Column(db.Boolean, default=False)
     status = db.Column(db.Integer, default=cargo_const.STATUS_LOADING,
@@ -110,8 +115,8 @@ class UnloadSession(db.Model):
     def __repr__(self):
         return "<UnloadSession %d>" % self.id
 
-
 class UnloadTask(db.Model):
+    __modelname__ = u"卸货任务"
     __tablename__ = "TB_UNLOAD_TASK"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -153,6 +158,7 @@ class UnloadTask(db.Model):
 
 
 class Customer(db.Model):
+    __modelname__ = u"客户"
     __tablename__ = "TB_CUSTOMER"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -173,6 +179,7 @@ class Customer(db.Model):
 
 
 class Harbor(db.Model):
+    __modelname__ = u"装卸点"
     __tablename__ = "TB_HABOR"
     name = db.Column(db.String(32), nullable=False, primary_key=True)
     department_id = db.Column(db.Integer, db.ForeignKey("TB_DEPARTMENT.id"))
@@ -190,6 +197,7 @@ class Harbor(db.Model):
 
 
 class ProductType(db.Model):
+    __modelname__ = u"产品类型"
     __tablename__ = "TB_PRODUCT_TYPE"
     id = db.Column(db.Integer, primary_key=True)
     MSSQL_ID = db.Column(db.Integer, default=0, nullable=True)
@@ -207,6 +215,7 @@ class ProductType(db.Model):
 
 
 class Product(db.Model):
+    __modelname__ = u"产品"
     __tablename__ = "TB_PRODUCT"
     id = db.Column(db.Integer, primary_key=True)
     MSSQL_ID = db.Column(db.Integer, default=0, nullable=True)
@@ -228,6 +237,7 @@ class Product(db.Model):
 
 
 class Department(db.Model):
+    __modelname__ = u"车间"
     __tablename__ = "TB_DEPARTMENT"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -248,6 +258,7 @@ class Department(db.Model):
 
 
 class Team(db.Model):
+    __modelname__ = u"班组"
     __tablename__ = "TB_TEAM"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -267,8 +278,8 @@ class Team(db.Model):
     def __repr__(self):
         return "<Team %s>" % self.id
 
-
 class GoodsReceipt(db.Model):
+    __modelname__ = u"收货单"
     __tablename__ = "TB_GOODS_RECEIPT"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -319,13 +330,14 @@ class Order(db.Model):
     refined = db.Column(db.Boolean, default=False)
 
     def __init__(self, goods_receipt, creator,
-                 create_time=None, finish_time=None, dispatched=False):
+                 create_time=None, finish_time=None, dispatched=False, refined=False):
         self.goods_receipt = goods_receipt
         self.create_time = create_time or datetime.now()
         self.finish_time = finish_time
         self.customer_order_number = goods_receipt.receipt_id
         self.dispatched = dispatched
         self.creator = creator
+        self.refined = refined
 
     def __unicode__(self):
         return self.customer_order_number
@@ -335,6 +347,7 @@ class Order(db.Model):
 
 
 class SubOrder(db.Model):
+    __modelname__ = u"子订单"
     __tablename__ = "TB_SUB_ORDER"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -378,7 +391,7 @@ class SubOrder(db.Model):
                  quantity, unit, order_type=STANDARD_ORDER_TYPE,
                  create_time=None, finish_time=None, urgent=False,
                  returned=False, pic_path="", tech_req="", due_time=None,
-                 spec="", type="", unload_task=None):
+                 spec="", type="", unload_task=None, remaining_quantity=0):
         self.product = product
         self.spec = spec
         self.type = type
@@ -396,6 +409,7 @@ class SubOrder(db.Model):
         self.due_time = due_time
         self.order_type = order_type
         self.unload_task = unload_task
+        self.remaining_quantity = remaining_quantity
 
     def __unicode__(self):
         return unicode(self.id)
@@ -405,6 +419,7 @@ class SubOrder(db.Model):
 
 
 class WorkCommand(db.Model):
+    __modelname__ = u"工单"
     __tablename__ = "TB_WORK_COMMAND"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -498,6 +513,7 @@ class WorkCommand(db.Model):
 
 
 class QIReport(db.Model):
+    __modelname__ = u"质检报告"
     __tablename__ = "TB_QI_REPORT"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -535,6 +551,7 @@ class QIReport(db.Model):
 
 
 class DeliverySession(db.Model):
+    __modelname__ = u"发货会话"
     __tablename__ = "TB_DELIVERY_SESSION"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -564,6 +581,7 @@ class DeliverySession(db.Model):
 
 
 class StoreBill(db.Model):
+    __modelname__ = u"仓单"
     __tablename__ = "TB_STORE_BILL"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -619,6 +637,7 @@ class StoreBill(db.Model):
 
 
 class DeliveryTask(db.Model):
+    __modelname__ = u"发货任务"
     __tablename__ = "TB_DELIVERY_TASK"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -659,6 +678,7 @@ class DeliveryTask(db.Model):
 
 
 class Consignment(db.Model):
+    __modelname__ = u"发货单"
     __tablename__ = "TB_CONSIGNMENT"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -697,6 +717,7 @@ class Consignment(db.Model):
 
 
 class Procedure(db.Model):
+    __modelname__ = u"工序"
     __tablename__ = "TB_PROCEDURE"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(32), unique=True)
@@ -712,6 +733,7 @@ class Procedure(db.Model):
 
 
 class Deduction(db.Model):
+    __modelname__ = u"扣重记录"
     __tablename__ = "TB_DEDUCTION"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -745,6 +767,7 @@ class Deduction(db.Model):
 
 
 class ConsignmentProduct(db.Model):
+    __modelname__ = u"发货单产品"
     __tablename__ = "TB_CONSIGNMENT_PRODUCT"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -781,6 +804,7 @@ class ConsignmentProduct(db.Model):
 
 
 class Plate(db.Model):
+    __modelname__ = u"车辆"
     __tablename__ = "TB_PLATE"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -795,8 +819,8 @@ class Plate(db.Model):
     def __repr__(self):
         return "<Plate %s>" % self.name
 
-
 class Log(db.Model):
+    __modelname__ = u"操作记录"
     __tablename__ = "TB_LOG"
 
     # MAIN PART
@@ -805,6 +829,7 @@ class Log(db.Model):
     actor = db.relationship("User")
     obj_cls = db.Column(db.String(64))
     obj_pk = db.Column(db.String(64))
+    obj = db.Column(db.String(64))
     action = db.Column(db.String(64))
     create_time = db.Column(db.DateTime, default=datetime.now)
 
@@ -818,7 +843,7 @@ class Log(db.Model):
     thread = db.Column(db.Integer)
     thread_name = db.Column(db.String(64))
     process = db.Column(db.Integer)
-    message = db.Column(db.String(64))
+    message = db.Column(db.String(256))
     args = db.Column(db.String(64))
     extra = db.Column(db.String(64))
 
@@ -827,3 +852,5 @@ class Log(db.Model):
         return u"[%s]: 用户%s对%s(%s)执行了(%s)操作" % (
         self.create_time.strftime("%Y-%m-%d %H:%M:%S"), self.actor.username,
         self.obj_cls, self.obj, self.action)
+
+

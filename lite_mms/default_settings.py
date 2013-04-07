@@ -21,8 +21,8 @@ BROKER_IP = "192.168.0.161"
 BROKER_PORT = 9090
 BROKER_TIMEOUT = 2 #单位秒
 SQLALCHEMY_ECHO=True
-LOCALE = "en_US"
-
+LOCALE = "zh_CN"
+BABEL_DEFAULT_LOCALE = "zh_CN"
 # the option could be "web", "webservice" or "both"(which stands for both as
 # web and webservice)
 SERVE_TYPE = "both"

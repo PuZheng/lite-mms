@@ -7,14 +7,24 @@
   <link rel="stylesheet" href="{{ url_for('static', filename="bootstrap/css/bootstrap-responsive.min.css") }}" media="screen">
   <link rel="stylesheet" href="{{ url_for('static', filename="select2/select2.css") }}" media="screen">
   <link rel="stylesheet" href="{{ url_for('static', filename="css/customer.css") }}">
+  <link href="{{ url_for('__data_browser__.static', filename='css/datepicker.css') }}" rel="stylesheet">
   <script type="text/javascript" src="{{ url_for("static", filename="js/jquery-1.8.3.min.js") }}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename="bootstrap/js/bootstrap.min.js") }}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename="select2/select2.min.js") }}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename="js/JSPinYin.js") }}"></script>
+  <script src="{{ url_for('__data_browser__.static', filename='js/bootstrap-datepicker.js') }}"></script>
+  <script src="{{ url_for('__data_browser__.static', filename='js/bootstrap-datepicker-zh_CN.js') }}"></script>
+  <script src="{{ url_for('__data_browser__.static', filename='js/form.js') }}"></script>
+  {% block __data_browser__builtin_head_block %}{% endblock %}
+  {% block __data_browser__custom_external_block %}{% endblock %}
+  {% block __data_browser__customized_head_block %}{% endblock %}
   {% block custom_external %}{% endblock %}
-  <title>{{ titlename }}</title>
+  <title>{{ titlename }} - 金禾域生产管理系统 </title>
   <script type="text/javascript">
     $(function () {
+      setTimeout(function () {
+          $(".flash").fadeOut("slow")
+      }, 3000);
       $("select").select2({
         width: "element",
         placeholder: "请选择",
@@ -60,9 +70,10 @@
   </div>
 </header>
 
-<div class="container">
+<div class="container-fluid">
   {% with messages = get_flashed_messages(with_categories=True) %}
     {% if messages %}
+      <div class="flash">
       {% for category, m in messages %}
         {% if category == 'error' %}
           <div class="alert alert-error">
@@ -78,6 +89,7 @@
           </div>
         {% endif %}
       {% endfor %}
+      </div>
     {% endif %}
   {% endwith %}
 </div>

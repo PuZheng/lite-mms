@@ -5,6 +5,7 @@ from lite_mms.models import Log
 from lite_mms.utilities import do_commit
 from lite_mms.apis import ModelWrapper
 
+
 class DBHandler(logging.Handler):
     """
     Handler for logging message to the database table "log"

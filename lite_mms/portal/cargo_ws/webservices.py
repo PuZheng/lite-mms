@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 from datetime import datetime
 import json
 import os.path
@@ -55,27 +56,22 @@ def unload_task():
     import lite_mms.apis as apis
 
     try:
-        new_task = apis.cargo.new_unload_task(session_id=form.session_id.data,
-                                              harbor=form.harbour.data,
-                                              customer_id=form.customer_id.data,
-                                              creator_id=form.actor_id.data,
-                                              pic_path=pic_path, is_last=form.is_finished.data)
-        if form.is_finished.data:
-            from lite_mms.portal.cargo2.fsm import fsm
-            from lite_mms.constants import cargo as cargo_const
-            fsm.reset_obj(new_task.unload_session)
-            fsm.next(cargo_const.ACT_CLOSE, new_task.creator)
+        unload_session = apis.cargo.get_unload_session(form.session_id.data)
+        creator = apis.auth.get_user(form.actor_id.data)
+        from lite_mms.portal.cargo.fsm import fsm
+        from lite_mms.constants import cargo as cargo_const
+        if unload_session:
+            fsm.reset_obj(unload_session)
+            fsm.next(cargo_const.ACT_LOAD, creator)
+            new_task = apis.cargo.new_unload_task(session_id=unload_session.id,
+                                                  harbor=form.harbour.data,
+                                                  customer_id=form.customer_id.data,
+                                                  creator_id=creator.id,
+                                                  pic_path=pic_path,
+                                                  is_last=form.is_finished.data)
+            return json.dumps(new_task.id)
+        else:
+            return u"无此卸货会话%d" % form.session_id.data
     except ValueError, e:
         return unicode(e), 403
-    return json.dumps(new_task.id)
 
-if __name__ == "__main__":
-    try:
-        # pylint: disable=F0401,W0611
-        import lite_mms.instance.portal.cargo.webservices_main
-        # pylint: enable=F0401,W0611
-    except ImportError:
-        print "can't import webservices_main"
-        import traceback
-
-        traceback.print_exc()

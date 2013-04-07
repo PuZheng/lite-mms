@@ -843,7 +843,7 @@ class Log(db.Model):
     thread = db.Column(db.Integer)
     thread_name = db.Column(db.String(64))
     process = db.Column(db.Integer)
-    message = db.Column(db.String(64))
+    message = db.Column(db.String(256))
     args = db.Column(db.String(64))
     extra = db.Column(db.String(64))
 

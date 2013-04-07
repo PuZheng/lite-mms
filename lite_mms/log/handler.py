@@ -30,7 +30,7 @@ class DBHandler(logging.Handler):
         log.actor = getattr(record, "actor", None)
         log.action = getattr(record, "action", "")
         log.create_time = datetime.now()
-        log.message = record.msg
+        log.message = record.msg[:Log.message.property.columns[0].type.length]
         #log.name = record.name
         #log.level = record.levelname
         #log.module = record.module

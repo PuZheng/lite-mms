@@ -69,8 +69,8 @@ if serve_web:
     app.register_blueprint(order_page, url_prefix="/order")
     from lite_mms.portal.order2 import order2_page
     app.register_blueprint(order2_page, url_prefix="/order2")
-    from lite_mms.portal.cargo2 import cargo2_page
-    app.register_blueprint(cargo2_page, url_prefix="/cargo2")
+    # from lite_mms.portal.cargo2 import cargo2_page
+    # app.register_blueprint(cargo2_page, url_prefix="/cargo2")
     from lite_mms.portal.schedule import schedule_page
     app.register_blueprint(schedule_page, url_prefix="/schedule")
     from lite_mms.portal.schedule.schedule2 import schedule_page2
@@ -112,7 +112,7 @@ from lite_mms.permissions.roles import (CargoClerkPermission,
 from lite_mms.permissions.order import view_order, schedule_order
 from lite_mms.permissions.work_command import view_work_command
 nav_bar.register(cargo_page, name=u"卸货管理", permissions=[CargoClerkPermission])
-nav_bar.register(cargo2_page, default_url="/cargo2/unload-session-list?status__only_unclosed=on", name=u"卸货管理(beta)", permissions=[CargoClerkPermission])
+#nav_bar.register(cargo2_page, default_url="/cargo2/unload-session-list?status__only_unclosed=on", name=u"卸货管理(beta)", permissions=[CargoClerkPermission])
 nav_bar.register(order_page, default_url='/order/order-list', name=u"订单管理",
                  permissions=[view_order])
 nav_bar.register(order2_page, default_url='/order2/order-list?order_by=id&desc=1', name=u"订单管理(beta)",

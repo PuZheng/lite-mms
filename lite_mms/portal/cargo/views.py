@@ -117,8 +117,9 @@ def unload_task(id_):
             if not task:
                 abort(404)
             if request.form.get("method") == "delete":
+                us = task.unload_session
                 do_commit(task, "delete")
-                fsm.fsm.reset_obj(task.unload_session)
+                fsm.fsm.reset_obj(us)
                 fsm.fsm.next(constants.cargo.ACT_WEIGHT, current_user)
                 flash(u"删除卸货任务%d成功" % task.id)
                 return redirect(

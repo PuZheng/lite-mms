@@ -175,22 +175,6 @@ def consignment(id_=None):
                 abort(404)
             params = {}
             if request.form:
-                product_id = request.form.get("consignment_product_id", type=int)
-                if product_id:
-                    class ProductForm(Form):
-                        team_id = IntegerField("team_id")
-                        product_id = IntegerField("product_id")
-                        weight = IntegerField("weight")
-                        returned_weight = IntegerField("returned_weight")
-                        spec = TextField("spec")
-                        type = TextField("type")
-                        unit = TextField("unit")
-
-                    form = ProductForm(request.form)
-                    current_product = apis.delivery\
-                        .ConsignmentProductWrapper.get_product(
-                        product_id)
-                    current_product.update(**form.data)
                 notes_ = request.form.get("notes")
                 params["pay_in_cash"] = request.form.get("pay_in_cash",
                                                          type=int)
@@ -280,7 +264,7 @@ def consignment_list():
                 .get_customer_list(),
                 customer=customer)
 
-@delivery_page.route("/product/<int:id_>")
+@delivery_page.route("/product/<int:id_>", methods=["POST", "GET"])
 @decorators.templated("delivery/consignment-product.html")
 def consignment_product(id_):
     from flask.ext.principal import Permission
@@ -291,9 +275,25 @@ def consignment_product(id_):
 
     current_product = apis.delivery.ConsignmentProductWrapper.get_product(id_)
     if current_product:
-        return dict(current=current_product,
-                    product_types=apis.product.get_product_types(),
-                    products=json.dumps(apis.product.get_products()),
-                    team_list=apis.manufacture.get_team_list())
+        if request.method == "GET":
+            return dict(current=current_product,
+                        product_types=apis.product.get_product_types(),
+                        products=json.dumps(apis.product.get_products()),
+                        team_list=apis.manufacture.get_team_list())
+        else:
+            class ProductForm(Form):
+                team_id = IntegerField("team_id")
+                product_id = IntegerField("product_id")
+                weight = IntegerField("weight")
+                returned_weight = IntegerField("returned_weight")
+                spec = TextField("spec")
+                type = TextField("type")
+                unit = TextField("unit")
+
+            form = ProductForm(request.form)
+            current_product.update(**form.data)
+            return redirect(
+                request.form.get("url") or url_for("delivery.consignment",
+                                                   id_=current_product.consignment.id))
     else:
         return _(u"没有该产品编号:%d" + id_), 404

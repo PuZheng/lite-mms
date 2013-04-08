@@ -63,7 +63,9 @@
           });
     });
     $("#new-receipt-dialog").on("hidden", function () {
-      $("#new-receipt-content").html(temp);
+      if (temp != "") {
+        $("#new-receipt-content").html(temp);
+      }
     });
   });
 </script>

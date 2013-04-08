@@ -175,10 +175,8 @@ def consignment(id_=None):
                 abort(404)
             params = {}
             if request.form:
-                current_product = apis.delivery.ConsignmentProductWrapper \
-                    .get_product(
-                    request.form.get("consignment_product_id", type=int))
-                if current_product:
+                product_id = request.form.get("consignment_product_id", type=int)
+                if product_id:
                     class ProductForm(Form):
                         team_id = IntegerField("team_id")
                         product_id = IntegerField("product_id")
@@ -189,6 +187,9 @@ def consignment(id_=None):
                         unit = TextField("unit")
 
                     form = ProductForm(request.form)
+                    current_product = apis.delivery\
+                        .ConsignmentProductWrapper.get_product(
+                        product_id)
                     current_product.update(**form.data)
                 notes_ = request.form.get("notes")
                 params["pay_in_cash"] = request.form.get("pay_in_cash",

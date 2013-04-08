@@ -76,7 +76,9 @@
           });
     });
     $("#new-consignment-dialog").on("hidden", function () {
-      $("#new-consignment-content").html(temp);
+      if (temp != "") {
+        $("#new-consignment-content").html(temp);
+      }
     });
   });
 </script>

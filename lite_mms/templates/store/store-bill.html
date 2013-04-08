@@ -113,7 +113,7 @@
       </div>
       <div class="control-group">
         <div class="controls">
-          <input type="hidden" name="url" value="{{ request.args.get("url") }}">
+          <input type="hidden" name="url" value="{{ request.args.get("url") or url_for("store_bill.store_bill_list")}}">
           {% if permissions.roles.QualityInspectorPermission.can() %}
             <button class="btn btn-primary btn-large">
               <i class="icon-ok icon-white"></i>&nbsp;保存

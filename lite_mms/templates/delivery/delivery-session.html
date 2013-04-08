@@ -36,7 +36,7 @@
   <div class="container">
     <form class="form-horizontal" action="{{ url_for("delivery.delivery_session", id_=delivery_session.id) }}" method="POST" id="delivery-form">
       <input type="hidden" name="method" value="">
-      <input type="hidden" name="url" value="{{ request.args.get("url") }}">
+      <input type="hidden" name="url" value="{{ request.args.get("url") or url_for('delivery.session_list') }}">
       <legend>发货会话详情
         {% if delivery_session.deleteable %}
           <button class="btn btn-danger" type="button" id="delete-button" title="删除发货会话">
@@ -187,26 +187,28 @@
           </table>
         </div>
       {% endif %}
+
+      <div class="control-group">
+
+        <div class="controls">
+          <div class="btn-group">
+            <button class="btn btn-info btn-large" id="new-consignment" data-toggle="modal" data-target="#new-consignment-dialog">
+              <i class="icon-white icon-edit"></i>&nbsp;{{ _("创建发货单") }}
+            </button>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-info btn-large" id="view-consignment" data-toggle="modal" data-target="#view-consignments-dialog">
+              <i class="icon-eye-open icon-white"></i>&nbsp;{{ _("查看发货单") }}
+            </button>
+          </div>
+          <div class="btn-group">
+            <a class="btn btn-large" href="{{ request.args.get("url") or url_for('delivery.session_list') }}">
+              <i class="icon-backward"></i>&nbsp;返回
+            </a>
+          </div>
+        </div>
+      </div>
     </form>
-    <div class="btn-toolbar">
-
-      <div class="btn-group">
-        <button class="btn btn-info btn-large" id="new-consignment" data-toggle="modal" data-target="#new-consignment-dialog">
-          <i class="icon-white icon-edit"></i>&nbsp;{{ _("创建发货单") }}
-        </button>
-      </div>
-      <div class="btn-group">
-        <button class="btn btn-info btn-large" id="view-consignment" data-toggle="modal" data-target="#view-consignments-dialog">
-          <i class="icon-eye-open icon-white"></i>&nbsp;{{ _("查看发货单") }}
-        </button>
-      </div>
-      <div class="btn-group">
-        <a class="btn btn-large" href="{{ request.args.get("url") or url_for('delivery.session_list') }}">
-          <i class="icon-backward"></i>&nbsp;返回
-        </a>
-      </div>
-    </div>
-
     {% include "delivery/consignment-add.html" %}
     {% include "delivery/view-consignments-dialog.html" %}
   </div>

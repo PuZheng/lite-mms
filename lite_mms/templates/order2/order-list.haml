@@ -4,7 +4,8 @@
     -if hint_message
         .alert.alert-info
             * {{ hint_message }}
-
+-block __customized_css__
+  <link type="text/css" href="{{ url_for("static", filename="css/jquery-ui-1.10.1.custom.min.css") }}" rel="stylesheet" />
 
 -block __data_browser__custom_external_block
   {{ super() }}
@@ -112,6 +113,7 @@
             }
         });
     });
+  <script src="{{ url_for("static", filename="js/jquery-ui-1.10.1.custom.min.js") }}" />
 
 -block body
     {{ sub_nav_bar.as_ul("active") }}

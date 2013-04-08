@@ -286,7 +286,6 @@ work command")
         # we disable E1101, since it's a bug of pylint
         return str(form.errors), 403 # pylint: disable=E1101        
 
-
 def _handle_delete():
     from lite_mms.apis import quality_inspection
 
@@ -299,7 +298,6 @@ def _handle_delete():
                                                    actor_id=actor_id)
     except ValueError, e:
         return unicode(e), 403
-
 
 @manufacture_ws.route("/delete-quality-inspection-report",
                       methods=["POST"])

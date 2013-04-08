@@ -3,6 +3,7 @@
 @author: Yangminghua
 @version: $
 """
+from flask.templating import render_template
 from wtforms import Form, IntegerField, validators, HiddenField, TextField,\
     BooleanField
 from flask import request, redirect, url_for, abort, flash
@@ -91,13 +92,16 @@ def work_command():
                     else:
                         flash(u"成功创建工单（编号%d）" % inst.id)
             except ValueError as a:
-                flash(a.message, "error")
-                return redirect(form.url.data or url_for('schedule.order', id_=sub_order.order.id))
+                return render_template("error.html", msg=a.message,
+                                       back_url=form.url.data or url_for(
+                                           'schedule.order',
+                                           id_=sub_order.order.id)), 403
             return redirect(form.url.data or url_for('schedule.order',
                                                      id_=sub_order.order.id))
         else:
-            flash(form.errors, "error")
-            return redirect(url_for('schedule.order', id_=sub_order.order.id))
+            return render_template("error.html", msg=form.errors,
+                                   back_url=url_for('schedule.order',
+                                                    id_=sub_order.order.id)), 403
 
 
 @schedule_page.route('/order/<int:id_>', methods=['GET'])

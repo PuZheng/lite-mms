@@ -83,8 +83,8 @@ class InitializeTestDB(Command):
         a = do_commit(User(username='a', password=md5('a').hexdigest(), groups=[accountant]))
 
         # 创建车间和班组
-        department1 = do_commit(Department(name=u"车间1", leaders=[d1_dl, super_dl])) 
-        department2 = do_commit(Department(name=u"车间2", leaders=[d2_dl, super_dl])) 
+        department1 = do_commit(Department(name=u"车间1", leader_list=[d1_dl, super_dl])) 
+        department2 = do_commit(Department(name=u"车间2", leader_list=[d2_dl, super_dl])) 
         team1 = do_commit(Team(name=u"班组101", department=department1, leader=t101_tl))
         team2 = do_commit(Team(name=u"班组201", department=department2, leader=t201_tl))
 
@@ -200,109 +200,109 @@ class InitializeTestDB(Command):
         return
 
 
-        qir1 = do_commit(QIReport(work_command10, 1000, 1000,
-                                  quality_inspection.FINISHED, qi.id))
-        qir2 = do_commit(
-            QIReport(work_command10, 300, 300, quality_inspection.REPAIR,
-                     qi.id))
-        qir3 = do_commit(
-            QIReport(work_command10, 200, 200, quality_inspection.REPLATE,
-                     qi.id))
-        qir4 = do_commit(QIReport(work_command9, 1000, 1000,
-                                  quality_inspection.FINISHED, qi.id))
-
-        qir5 = do_commit(
-            QIReport(work_command12, 600, 600, quality_inspection.FINISHED,
-                     qi.id))
-        qir6 = do_commit(
-            QIReport(work_command12, 200, 200, quality_inspection.REPAIR,
-                     qi.id))
-        qir7 = do_commit(
-            QIReport(work_command12, 200, 200, quality_inspection.REPLATE,
-                     qi.id))
-        do_commit(Deduction(400, qi, team1, work_command12))
-
-        qir8 = do_commit(
-            QIReport(work_command13, 850, 850, quality_inspection.FINISHED,
-                     qi.id))
-
-        do_commit(
-            WorkCommand(sub_order=work_command12.sub_order,
-                        org_weight=qir6.weight,
-                        status=wc_const.STATUS_DISPATCHING,
-                        tech_req=work_command12.tech_req,
-                        org_cnt=qir6.quantity,
-                        procedure=work_command12.procedure,
-                        previous_procedure=work_command12
-                        .previous_procedure,
-                        pic_path=qir6.pic_path,
-                        handle_type=wc_const.HT_REPAIRE))
-
-        do_commit(
-            WorkCommand(sub_order=work_command12.sub_order,
-                        org_weight=qir7.weight,
-                        status=wc_const.STATUS_DISPATCHING,
-                        tech_req=work_command12.tech_req,
-                        org_cnt=qir7.quantity,
-                        procedure=work_command12.procedure,
-                        previous_procedure=work_command12
-                        .previous_procedure,
-                        pic_path=qir7.pic_path,
-                        handle_type=wc_const.HT_REPLATE))
-        do_commit(
-            WorkCommand(sub_order=work_command10.sub_order,
-                        org_weight=qir2.weight,
-                        status=wc_const.STATUS_DISPATCHING,
-                        tech_req=work_command10.tech_req,
-                        org_cnt=qir2.quantity,
-                        procedure=work_command10.procedure,
-                        previous_procedure=work_command10.previous_procedure,
-                        pic_path=qir2.pic_path,
-                        handle_type=wc_const.HT_REPLATE))
-        do_commit(
-            WorkCommand(sub_order=work_command10.sub_order,
-                        org_weight=qir3.weight,
-                        status=wc_const.STATUS_DISPATCHING,
-                        tech_req=work_command10.tech_req,
-                        org_cnt=qir3.quantity,
-                        procedure=work_command10.procedure,
-                        previous_procedure=work_command10.previous_procedure,
-                        pic_path=qir3.pic_path,
-                        handle_type=wc_const.HT_REPLATE))
-
-        store_bill1 = StoreBill(qir1)
-        store_bill2 = StoreBill(qir4)
-        store_bill4 = StoreBill(qir8)
-        store_bill5 = StoreBill(qir8)
-        store_bill3 = do_commit(StoreBill(qir5))
-        store_bill1.printed = True
-        store_bill1.harbor = hr1
-        store_bill2.printed = True
-        store_bill2.harbor = hr2
-        store_bill4.printed = True
-        store_bill4.harbor = hr1
-
-        do_commit([store_bill1, store_bill2, store_bill4, store_bill5])
-
-        team_list = Team.query.all()
-        wc_list = [work_command11, work_command8, work_command7]
-        for i in range(1, 51):
-            do_commit(Deduction(randint(1, 100), qi,
-                                team_list[i % len(team_list)],
-                                wc_list[i % len(wc_list)],
-                                remark=u"第{:d}条deduction".format(i)))
-
-        delivery_session = do_commit(DeliverySession(plate1.plate, 2300))
-        delivery_task = do_commit(DeliveryTask(delivery_session, 1))
-        store_bill4.harbor = store_bill5.harbor = hr1
-        store_bill5.delivery_task = delivery_task
-        store_bill5.delivery_session = delivery_session
-        store_bill5.quantity = store_bill5.weight = 100
-        store_bill4.quantity = store_bill4.weight = 750
-        delivery_task.weight = store_bill5.weight
-        delivery_task.finish_time = datetime.now()
-        do_commit(Consignment(order3.goods_receipt.customer, delivery_session, True))
-        do_commit(store_bill4)
+        # qir1 = do_commit(QIReport(work_command10, 1000, 1000,
+        #                           quality_inspection.FINISHED, qi.id))
+        # qir2 = do_commit(
+        #     QIReport(work_command10, 300, 300, quality_inspection.REPAIR,
+        #              qi.id))
+        # qir3 = do_commit(
+        #     QIReport(work_command10, 200, 200, quality_inspection.REPLATE,
+        #              qi.id))
+        # qir4 = do_commit(QIReport(work_command9, 1000, 1000,
+        #                           quality_inspection.FINISHED, qi.id))
+        #
+        # qir5 = do_commit(
+        #     QIReport(work_command12, 600, 600, quality_inspection.FINISHED,
+        #              qi.id))
+        # qir6 = do_commit(
+        #     QIReport(work_command12, 200, 200, quality_inspection.REPAIR,
+        #              qi.id))
+        # qir7 = do_commit(
+        #     QIReport(work_command12, 200, 200, quality_inspection.REPLATE,
+        #              qi.id))
+        # do_commit(Deduction(400, qi, team1, work_command12))
+        #
+        # qir8 = do_commit(
+        #     QIReport(work_command13, 850, 850, quality_inspection.FINISHED,
+        #              qi.id))
+        #
+        # do_commit(
+        #     WorkCommand(sub_order=work_command12.sub_order,
+        #                 org_weight=qir6.weight,
+        #                 status=wc_const.STATUS_DISPATCHING,
+        #                 tech_req=work_command12.tech_req,
+        #                 org_cnt=qir6.quantity,
+        #                 procedure=work_command12.procedure,
+        #                 previous_procedure=work_command12
+        #                 .previous_procedure,
+        #                 pic_path=qir6.pic_path,
+        #                 handle_type=wc_const.HT_REPAIRE))
+        #
+        # do_commit(
+        #     WorkCommand(sub_order=work_command12.sub_order,
+        #                 org_weight=qir7.weight,
+        #                 status=wc_const.STATUS_DISPATCHING,
+        #                 tech_req=work_command12.tech_req,
+        #                 org_cnt=qir7.quantity,
+        #                 procedure=work_command12.procedure,
+        #                 previous_procedure=work_command12
+        #                 .previous_procedure,
+        #                 pic_path=qir7.pic_path,
+        #                 handle_type=wc_const.HT_REPLATE))
+        # do_commit(
+        #     WorkCommand(sub_order=work_command10.sub_order,
+        #                 org_weight=qir2.weight,
+        #                 status=wc_const.STATUS_DISPATCHING,
+        #                 tech_req=work_command10.tech_req,
+        #                 org_cnt=qir2.quantity,
+        #                 procedure=work_command10.procedure,
+        #                 previous_procedure=work_command10.previous_procedure,
+        #                 pic_path=qir2.pic_path,
+        #                 handle_type=wc_const.HT_REPLATE))
+        # do_commit(
+        #     WorkCommand(sub_order=work_command10.sub_order,
+        #                 org_weight=qir3.weight,
+        #                 status=wc_const.STATUS_DISPATCHING,
+        #                 tech_req=work_command10.tech_req,
+        #                 org_cnt=qir3.quantity,
+        #                 procedure=work_command10.procedure,
+        #                 previous_procedure=work_command10.previous_procedure,
+        #                 pic_path=qir3.pic_path,
+        #                 handle_type=wc_const.HT_REPLATE))
+        #
+        # store_bill1 = StoreBill(qir1)
+        # store_bill2 = StoreBill(qir4)
+        # store_bill4 = StoreBill(qir8)
+        # store_bill5 = StoreBill(qir8)
+        # store_bill3 = do_commit(StoreBill(qir5))
+        # store_bill1.printed = True
+        # store_bill1.harbor = hr1
+        # store_bill2.printed = True
+        # store_bill2.harbor = hr2
+        # store_bill4.printed = True
+        # store_bill4.harbor = hr1
+        #
+        # do_commit([store_bill1, store_bill2, store_bill4, store_bill5])
+        #
+        # team_list = Team.query.all()
+        # wc_list = [work_command11, work_command8, work_command7]
+        # for i in range(1, 51):
+        #     do_commit(Deduction(randint(1, 100), qi,
+        #                         team_list[i % len(team_list)],
+        #                         wc_list[i % len(wc_list)],
+        #                         remark=u"第{:d}条deduction".format(i)))
+        #
+        # delivery_session = do_commit(DeliverySession(plate1.plate, 2300))
+        # delivery_task = do_commit(DeliveryTask(delivery_session, 1))
+        # store_bill4.harbor = store_bill5.harbor = hr1
+        # store_bill5.delivery_task = delivery_task
+        # store_bill5.delivery_session = delivery_session
+        # store_bill5.quantity = store_bill5.weight = 100
+        # store_bill4.quantity = store_bill4.weight = 750
+        # delivery_task.weight = store_bill5.weight
+        # delivery_task.finish_time = datetime.now()
+        # do_commit(Consignment(order3.goods_receipt.customer, delivery_session, True))
+        # do_commit(store_bill4)
 
         print "=====finish======"
 
@@ -310,8 +310,8 @@ class InitializeTestDB(Command):
 
 
 if __name__ == "__main__":
-    import karnickel
-    karnickel.install_hook()
+    #import karnickel
+    # karnickel.install_hook()
     from distutils.dist import Distribution
 
     InitializeTestDB(Distribution()).run()

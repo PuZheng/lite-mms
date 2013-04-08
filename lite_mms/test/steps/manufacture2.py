@@ -22,7 +22,7 @@ def _(step):
 
     for perm in permissions.keys():
         do_commit(models.Permission(name=perm))
-    g = models.Group("schedule")
+    g = models.Group(name="schedule")
     g.id = SCHEDULER
     g.permissions = models.Permission.query.filter(
         models.Permission.name.like(
@@ -36,7 +36,8 @@ def _(step):
 def _(step, username, password, group):
     from hashlib import md5
 
-    return models.User(username, md5(password).hexdigest(), [group])
+    return models.User(username=username, password=md5(password).hexdigest(),
+                       groups=[group])
 
 
 @step(u"车间1")
@@ -57,7 +58,7 @@ def _(step, department):
 @committed
 def _(step, type_, extra, department, weight, quantity=0):
     harbor = do_commit(
-        models.Harbor(u"仓库1" + random(), department))
+        models.Harbor(name=u"仓库1" + random(), department=department))
     product_type = do_commit(
         models.ProductType(u"测试用" + random()))
     product = models.Product(u"测试用" + random(),
@@ -86,7 +87,8 @@ def _(step, type_, extra, department, weight, quantity=0):
         unit = u"件"
         order_type = EXTRA_ORDER_TYPE
     return models.SubOrder(product, weight, harbor, order, quantity,
-                           unit, order_type, returned=returned)
+                           unit, order_type, returned=returned,
+                           remaining_quantity=quantity)
 
 
 @step(u"调度员从子订单中预排产(.*)")
@@ -98,7 +100,7 @@ def _(step, status, sub_order, weight, username, password, quantity=0):
             assert 302 == rv.status_code
             data = {"schedule_weight": weight,
                     "tech_req": u"超脱",
-                    "id": sub_order.id,
+                    "sub_order_id": sub_order.id,
                     "order_id": sub_order.order.id}
             if not sub_order.returned:
                 data["procedure"] = 1

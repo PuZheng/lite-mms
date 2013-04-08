@@ -128,7 +128,7 @@ def store_bill_add(delivery_session_id=None):
         return d
 
 
-@delivery_page.route("/delivery-task/<int:id_>")
+@delivery_page.route("/delivery-task/<int:id_>", methods=['GET', 'POST'])
 @CargoClerkPermission.require()
 @decorators.templated("/delivery/delivery-task.html")
 @decorators.nav_bar_set

@@ -585,6 +585,9 @@ class StateQualityInspecting(WorkCommandState):
                 old_wc.org_weight -= new_wc.org_weight
 
                 do_commit([new_wc, old_wc])
+
+            self.work_command.completed_time = datetime.now()
+            do_commit(self.work_command) 
         elif self.last_status == constants.work_command.STATUS_FINISHED:
             old_wc = self.work_command
             from lite_mms.apis.quality_inspection import QIReportWrapper

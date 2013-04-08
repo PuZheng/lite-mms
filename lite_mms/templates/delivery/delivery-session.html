@@ -36,7 +36,7 @@
   <div class="container">
     <form class="form-horizontal" action="{{ url_for("delivery.delivery_session", id_=delivery_session.id) }}" method="POST" id="delivery-form">
       <input type="hidden" name="method" value="">
-      <input type="hidden" name="url" value="{{ request.args.get("url") }}">
+      <input type="hidden" name="url" value="{{ request.args.get("url") or url_for('delivery.session_list') }}">
       <legend>发货会话详情
         {% if delivery_session.deleteable %}
           <button class="btn btn-danger" type="button" id="delete-button" title="删除发货会话">

@@ -47,7 +47,7 @@
     <form class="form-inline" action="{{ url_for('manufacture.work_command_list') }}" id="work_command_list_form">
       {% if request.args.get("order_id") %}
         <input type="hidden" name="order_id" value="{{ request.args.get("order_id") }}">
-        <input type="hidden" name="url" value="{{ request.args.get("url") }}">
+        <input type="hidden" name="url" value="{{ request.args.get("url") or "/" }}">
       {% endif %}
       <div class="span2">
         <label for="status" class="padding">状态</label>

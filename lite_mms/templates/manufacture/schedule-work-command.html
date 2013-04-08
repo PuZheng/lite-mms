@@ -3,7 +3,7 @@
   <script type="text/javascript">
     $(function () {
       $("#procedure").val({{ work_command.procedure.id }});
-      {% if work_command.status == 2 %}
+      {% if work_command.status == 2 and request.args.get("url")%}
         $("button").click(function () {
           location.href = "{{ request.args.get("url") }}"
         });
@@ -87,7 +87,7 @@
         </div>
       </div>
       <input type="hidden" name="id" value="{{ work_command.id }}"/>
-      <input type="hidden" name="url" value="{{ request.args.get("url") }}"/>
+      <input type="hidden" name="url" value="{{ request.args.get("url") or url_for("manufacture.work_command_list") }}"/>
 
       <div class="control-group">
         <div class="controls">

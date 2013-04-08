@@ -9,7 +9,9 @@
       });
       $("#delete-button").click(function () {
         $("input[name=method]").val("delete");
-        $("input[name=url]").val("{{ request.args.get("url") }}");
+        {% if request.args.get("url") %}
+            $("input[name=url]").val("{{ request.args.get("url") }}");
+        {% endif %}
       });
     });
   </script>

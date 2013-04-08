@@ -124,7 +124,7 @@
           {% endif %}
           <a href="{{ url_for("delivery.consignment_preview", id_=consignment.id, url=request.url) }}"
              class="btn btn-success btn-large"><i class="icon-print icon-white"></i>&nbsp;预览</a>
-          <input type="hidden" name="url" value="{{ request.args.get("url") }}">
+          <input type="hidden" name="url" value="{{ request.args.get("url") or url_for("delivery.session_list") }}">
           <a href="{{ request.args.get("url") or url_for("delivery.session_list") }}" class="btn btn-large">
               <i class="icon-backward"></i>&nbsp;返回</a>
         </div>

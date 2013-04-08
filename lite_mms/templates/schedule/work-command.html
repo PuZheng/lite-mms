@@ -83,7 +83,7 @@
         </div>
       </div>
       <input type="hidden" name="sub_order_id" value="{{ sub_order.id }}"/>
-      <input type="hidden" name="url" value="{{ request.args.get("url") }}">
+      <input type="hidden" name="url" value="{{ request.args.get("url") or url_for("schedule.order", id_=sub_order.order.id) }}">
       <div class="control-group">
         <div class="controls">
           <button class="btn btn-large btn-primary">

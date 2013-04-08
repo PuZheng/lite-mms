@@ -77,12 +77,6 @@ class User(db.Model):
                              backref="users")
     tag = db.Column(db.String(32), nullable=True)
 
-    #def __init__(self, username, password, groups, tag=""):
-        #self.username = username
-        #self.password = password
-        #self.groups.extend(groups)
-        #self.tag = tag
-
     def __unicode__(self):
         return self.username
 
@@ -107,7 +101,6 @@ class UnloadSession(db.Model):
         "GoodsReceipt", backref="unload_session",
         cascade="all, delete-orphan"
     )
-
 
     def __unicode__(self):
         return self.plate
@@ -134,9 +127,6 @@ class UnloadTask(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey("TB_PRODUCT.id"))
     product = db.relationship("Product")
     is_last = db.Column(db.Boolean, default=False)
-    goods_receipt_id = db.Column(db.Integer,
-                                 db.ForeignKey("TB_GOODS_RECEIPT.id"))
-    goods_receipt = db.relationship("GoodsReceipt", backref="unload_task_list")
 
     def __init__(self, unload_session, harbor, customer, creator,
                  product, pic_path, create_time=None, weight=0, is_last=False):
@@ -185,9 +175,6 @@ class Harbor(db.Model):
     department_id = db.Column(db.Integer, db.ForeignKey("TB_DEPARTMENT.id"))
     department = db.relationship("Department", backref="harbor_list", doc=u"装卸点卸载的待加工件将默认分配给此车间")
 
-    def __init__(self, name, department):
-        self.name = name
-        self.department = department
 
     def __unicode__(self):
         return self.name
@@ -246,9 +233,6 @@ class Department(db.Model):
     leader_list = db.relationship("User", secondary=department_and_user_table,
                                   backref="department_list")
 
-    def __init__(self, name, leaders=None):
-        self.name = name
-        self.leader_list = leaders or []
 
     def __unicode__(self):
         return self.name
@@ -267,10 +251,6 @@ class Team(db.Model):
     leader_id = db.Column(db.Integer, db.ForeignKey('TB_USER.id'))
     leader = db.relationship("User", backref=db.backref("team", uselist=False))
 
-    def __init__(self, name, department, leader):
-        self.name = name
-        self.department = department
-        self.leader = leader
 
     def __unicode__(self):
         return self.name

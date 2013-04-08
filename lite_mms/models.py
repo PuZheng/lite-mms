@@ -807,7 +807,6 @@ class Plate(db.Model):
     __modelname__ = u"车辆"
     __tablename__ = "TB_PLATE"
 
-    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False, unique=True)
 
     def __init__(self, name):

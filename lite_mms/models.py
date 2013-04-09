@@ -371,7 +371,7 @@ class SubOrder(db.Model):
                  quantity, unit, order_type=STANDARD_ORDER_TYPE,
                  create_time=None, finish_time=None, urgent=False,
                  returned=False, pic_path="", tech_req="", due_time=None,
-                 spec="", type="", unload_task=None, remaining_quantity=0):
+                 spec="", type="", unload_task=None):
         self.product = product
         self.spec = spec
         self.type = type
@@ -389,7 +389,6 @@ class SubOrder(db.Model):
         self.due_time = due_time
         self.order_type = order_type
         self.unload_task = unload_task
-        self.remaining_quantity = remaining_quantity
 
     def __unicode__(self):
         return unicode(self.id)

@@ -239,8 +239,7 @@ def new_sub_order():
                                                      harbor_name=form.harbor.data,
                                                      returned=form.returned.data,
                                                      unit=form.unit.data,
-                                                     quantity=form.quantity.data, 
-                                                     remaining_quantity=form.quantity.data)
+                                                     quantity=form.quantity.data)
             flash(u"新建成功！")
         except ValueError, e:
             flash(unicode(e), "error")

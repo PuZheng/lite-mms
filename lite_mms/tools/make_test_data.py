@@ -147,7 +147,7 @@ class InitializeTestDB(Command):
         #     - 生成计重类型的子订单, 还有50公斤没有分配出去
         sub_order1 = do_commit(
             SubOrder(product1, 300, harbor1, order1, 300, "KG",
-                     due_time=datetime.today(), unload_task=unload_task1, returned=True, remaining_quantity=50))
+                     due_time=datetime.today(), unload_task=unload_task1, returned=True))
         sub_order2 = do_commit(
             SubOrder(product2, 1000, harbor2, order1, 1000, "KG",
                      due_time=datetime.today(), unload_task=unload_task1, returned=True))

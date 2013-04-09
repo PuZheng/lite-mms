@@ -280,7 +280,8 @@ class SubOrderWrapper(ModelWrapper):
                              unit=kwargs["unit"],
                              due_time=kwargs["due_time"],
                              order_type=constants.EXTRA_ORDER_TYPE,
-                             weight=kwargs["weight"])
+                             weight=kwargs["weight"], 
+                             remaining_quantity=kwargs["quantity"])
 
         return SubOrderWrapper(do_commit(sb))
 

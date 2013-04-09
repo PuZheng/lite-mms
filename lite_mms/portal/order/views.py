@@ -225,9 +225,8 @@ def new_sub_order():
             return render_template("result.html",
                                    error_content=u"错误的交货日期",
                                    back_url=url_for("order.order",
-                                                    id=order_id))
+                                                    id_=order_id))
         from lite_mms import apis
-
         try:
             sb = apis.order.SubOrderWrapper.new_sub_order(order_id=order_id,
                                                      product_id=form.product.data,
@@ -240,7 +239,8 @@ def new_sub_order():
                                                      harbor_name=form.harbor.data,
                                                      returned=form.returned.data,
                                                      unit=form.unit.data,
-                                                     quantity=form.quantity.data)
+                                                     quantity=form.quantity.data, 
+                                                     remaining_quantity=form.quantity.data)
             flash(u"新建成功！")
         except ValueError, e:
             flash(unicode(e), "error")

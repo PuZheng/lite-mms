@@ -26,24 +26,25 @@ class TestOrder(BaseTest):
         session.add_all([product1, product2, product3, self.product])
         session.commit()
 
-        schedule_group = Group("schedule_group")
+        schedule_group = Group(name="schedule_group")
         schedule_group.id = groups.SCHEDULER
-        cargo_group = Group("cargo")
+        cargo_group = Group(name="cargo")
         cargo_group.id = groups.CARGO_CLERK
-        department_leader_group = Group("department_leader_group")
+        department_leader_group = Group(name="department_leader_group")
         department_leader_group.id = groups.DEPARTMENT_LEADER
-        team_leader_group = Group("team_leader_group")
+        team_leader_group = Group(name="team_leader_group")
         team_leader_group.id = groups.TEAM_LEADER
-        qi_group = Group("qi")
+        qi_group = Group(name="qi")
         qi_group.id = groups.QUALITY_INSPECTOR
         session.add_all(
             [schedule_group, department_leader_group, team_leader_group,
              qi_group, cargo_group])
-        self.department = Department("department_foo")
+        self.department = Department(name="department_foo")
         session.add(self.department)
         session.commit()
 
-        self.procedure = Procedure("procedure", [self.department])
+        self.procedure = Procedure(name="procedure",
+                                   department_list=[self.department])
         self.db.session.add(self.procedure)
         self.db.session.commit()
         self.cargo = User(username="cc", password=md5("cc").hexdigest(),
@@ -61,7 +62,8 @@ class TestOrder(BaseTest):
         session.add_all([self.scheduler, self.department_leader, self.qi])
         session.commit()
 
-        self.team = Team("team_foo", self.department, self.team_leader)
+        self.team = Team(name="team_foo", department=self.department,
+                         leader=self.team_leader)
         session.add(self.team)
         session.commit()
 
@@ -74,7 +76,7 @@ class TestOrder(BaseTest):
         session.add(self.us1)
         session.commit()
 
-        harbor = Harbor(u"卸货点1", self.department)
+        harbor = Harbor(name=u"卸货点1", department=self.department)
         session.add(harbor)
         session.commit()
         self.unload_task1 = UnloadTask(self.us1, harbor, self.customer1, None,

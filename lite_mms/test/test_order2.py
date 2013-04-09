@@ -97,20 +97,24 @@ class TestOrder(BaseTest):
                             data=dict(username="cc", password="cc"))
                 assert rv.status_code == 302
 
-                rv = c.post("/cargo/goods-receipt",
+                rv = c.post(url_for("cargo.goods_receipt"),
                             data=dict(customer=self.customer1.id,
-                                      unload_session_id=self.us1.id,
-                                      order_type=STANDARD_ORDER_TYPE))
+                                      unload_session_id=self.us1.id))
                 assert 302 == rv.status_code
-                rv = c.post("/cargo/goods-receipt",
+                rv = c.post(url_for("cargo.goods_receipt"),
                             data=dict(customer=self.customer2.id,
-                                      unload_session_id=self.us1.id,
-                                      order_type=STANDARD_ORDER_TYPE))
+                                      unload_session_id=self.us1.id))
                 assert 302 == rv.status_code
                 _list = cargo.get_goods_receipts_list(self.us1.id)
                 assert 2 == len(_list)
                 self.goods_receipt1 = _list[0]
                 self.goods_receipt2 = _list[1]
+                rv = c.post(
+                    url_for("cargo.goods_receipt", id_=self.goods_receipt1.id))
+                assert 302 == rv.status_code
+                rv = c.post(
+                    url_for("cargo.goods_receipt", id_=self.goods_receipt2.id))
+                assert 302 == rv.status_code
                 ord_list, count = order.get_order_list()
                 assert count == 2
                 order1, order2 = ord_list
@@ -178,7 +182,7 @@ class TestOrder(BaseTest):
                 order_list, count = order.get_order_list()
                 order_to_check = order_list[0]
                 assert order_to_check.id == order1.id
-                assert order_to_check.manufacturing_weight == 3000
+                assert order_to_check.to_work_weight == 3000
                 assert order_to_check.remaining_weight == order_to_check\
                 .remaining_quantity == 3000 - 3000
 
@@ -213,7 +217,7 @@ class TestOrder(BaseTest):
                 order_to_check = order_list[0]
                 assert order_to_check.id == order_to_check.id
                 assert order_to_check.to_deliver_weight == 1000
-                assert order_to_check.manufacturing_weight == 2000
+                assert order_to_check.to_work_weight == 2000
 
                 wc2.go(actor_id=self.scheduler.id,
                        action=constants.work_command.ACT_DISPATCH,

@@ -169,7 +169,7 @@ def retrieve():
                 actor_id=current_user.id,
                 action=constants.work_command.ACT_RETRIEVAL)
         except ValueError as e:
-            return e.message, 403
+            return unicode(e), 403
         except AttributeError:
             abort(404)
     flash(u"回收工单%s成功" % ",".join(str(id_) for id_ in work_command_id_list))

@@ -833,3 +833,12 @@ class Log(db.Model):
         self.obj_cls, self.obj, self.action)
 
 
+class TODO(db.Model):
+    __tablename__ = "TB_TODO"
+
+    id = db.Column(db.Integer, primary_key=True)
+    obj_cls = db.Column(db.String(64))
+    create_time = db.Column(db.DateTime, default=datetime.now)
+    actor_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
+    actor = db.relationship("User")
+    action = db.Column(db.String(64))

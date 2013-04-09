@@ -209,7 +209,7 @@ def weigh_unload_task(id_):
             task.update(weight=weight, product_id=form.product.data)
             from flask.ext.login import current_user
             fsm.fsm.reset_obj(task.unload_session)
-            fsm.fsm.next(cargo_const.ACT_WEIGH, current_user)
+            fsm.fsm.next(cargo_const.ACT_WEIGHT, current_user)
             return redirect(unload_session_model_view.url_for_object(model=task.unload_session.model))
         else:
             return render_template("validation-error.html", errors=form.errors,

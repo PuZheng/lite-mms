@@ -20,29 +20,29 @@ from lite_mms.utilities import do_commit
 class Test(BaseTest):
     def prepare_data(self):
         perm = do_commit(models.Permission(name="work_command.schedule_work_command"))
-        dl_group = Group("department leader")
+        dl_group = Group(name="department leader")
         dl_group.id = constants.groups.DEPARTMENT_LEADER
-        tl_group = Group("team_leader")
+        tl_group = Group(name="team_leader")
         tl_group.id = constants.groups.TEAM_LEADER
-        scheduler_group = Group("scheduler")
+        scheduler_group = Group(name="scheduler")
         scheduler_group.id = constants.groups.SCHEDULER
         scheduler_group.permissions = [perm]
         self.db.session.add_all([dl_group, scheduler_group, tl_group])
         self.db.session.commit()
-        scheduler = User("s", md5("s").hexdigest(), [scheduler_group])
-        self.dl = User("dl", "dl", [dl_group])
-        self.tl = User("tl", "tl", [tl_group])
+        scheduler = User(username="s", password=md5("s").hexdigest(), groups=[scheduler_group])
+        self.dl = User(username="dl", password="dl", groups=[dl_group])
+        self.tl = User(username="tl", password="tl", groups=[tl_group])
         self.db.session.add_all([scheduler, self.dl, self.tl])
         self.db.session.commit()
 
-        department = Department("foo", [self.dl])
+        department = Department(name="foo", leader_list=[self.dl])
         self.db.session.add(department)
         self.db.session.commit()
 
-        hr = Harbor("habor", department)
-        c = Customer("foo", "foo")
-        us = UnloadSession("foo", 2000)
-        self.team = Team("foo", department, self.tl)
+        hr = Harbor(name="habor", department=department)
+        c = Customer(name="foo", abbr="foo")
+        us = UnloadSession(plate="foo", gross_weight=2000)
+        self.team = Team(name="foo", department=department, leader=self.tl)
         self.db.session.add_all([hr, c, us, self.team])
         self.db.session.commit()
 
@@ -59,9 +59,9 @@ class Test(BaseTest):
         self.db.session.add_all([gr, o, pt, product, so1, so2])
         self.db.session.commit()
 
-        d1 = Department("num1")
-        d2 = Department("num2")
-        procedure = Procedure("foo", [d1, d2])
+        d1 = Department(name="num1")
+        d2 = Department(name="num2")
+        procedure = Procedure(name="foo", department_list=[d1, d2])
         self.wc1 = WorkCommand(so1, 1000, procedure)
         self.wc2 = WorkCommand(so2, 1000, procedure, org_cnt=10)
         self.db.session.add_all([self.wc1, self.wc2])

@@ -4,7 +4,7 @@
 """
 from datetime import datetime, date, timedelta
 import sys
-from flask import url_for
+from flask import url_for, request
 from lite_mms.utilities import _
 from sqlalchemy import and_, or_
 from sqlalchemy.orm.exc import NoResultFound
@@ -244,6 +244,17 @@ class OrderWrapper(ModelWrapper):
         return self.net_weight > (self.remaining_weight + self.to_work_weight + 
         self.manufacturing_weight + self.qi_weight + 
         self.to_deliver_weight + self.delivered_weight)
+
+    @property
+    def url(self):
+        from lite_mms.permissions.order import schedule_order, view_order
+        if view_order.can():
+            return url_for("order.order", id_=self.id, url=request.url)
+        elif schedule_order.can():
+            return url_for("schedule.order", id_=self.id, url=request.url)
+        else:
+            return ""
+
 
 
 class SubOrderWrapper(ModelWrapper):

@@ -3,7 +3,7 @@ import sys
 from datetime import datetime
 
 from werkzeug.datastructures import MultiDict
-from flask import url_for
+from flask import url_for, request
 from flask.ext.babel import _
 from sqlalchemy.orm.exc import NoResultFound
 from wtforms import (Form, IntegerField, ValidationError, TextField,
@@ -287,6 +287,28 @@ class WorkCommandWrapper(ModelWrapper):
     @property
     def deduction(self):
         return sum(deduction.weight for deduction in self.deduction_list)
+
+
+    @property
+    def action_list(self):
+        if self.status == constants.work_command.STATUS_DISPATCHING:
+            return [{"name": u"排产", "method": "GET",
+                     "url": url_for("manufacture.schedule"),
+                     "extra": {"work_command_id": self.id}}]
+        elif self.status == constants.work_command.STATUS_ASSIGNING:
+            return [{"name": u"回收", "method": "POST",
+                     "url": url_for("manufacture.retrieve"),
+                     "extra": {"work_command_id": self.id}}]
+
+    @property
+    def url(self):
+        from lite_mms.permissions.work_command import view_work_command
+
+        if view_work_command.can():
+            return url_for("manufacture.work_command", id_=self.id,
+                           url=request.url)
+        else:
+            return ""
 
 
 class DepartmentWrapper(ModelWrapper):

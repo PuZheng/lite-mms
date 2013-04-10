@@ -1,0 +1,70 @@
+{% extends "__data_browser__/list.haml" %}
+{% block __data_browser__customized_head_block %}
+  <style type="text/css">
+    li form {
+      margin: 0;
+      display: inline;
+    }
+  </style>
+  <script type="text/javascript">
+    $(function () {
+      $("ul.dropdown-menu li a").click(function () {
+        $(this).parents("li").children("form").submit();
+      });
+    });
+  </script>
+{% endblock %}
+{% block lists %}
+  {% if __data__ %}
+    <ul>
+      {% for obj in __data__ %}
+        <li>
+          {{ obj.create_time }}
+          {% if obj.url %}
+            <a href="{{ obj.url }}">{{ obj.obj_cls }}{{ obj.obj_pk }}</a>
+          {% else %}
+            {{ obj.obj_cls }}{{ obj.obj_pk }}
+          {% endif %}
+          {% if obj.action_list %}
+            {% if obj.action_list|length > 1 %}
+              <div class="btn-group">
+                <a class="btn dropdown-toggle btn-primary" href="#" data-toggle="dropdown">
+                  {{ _("Action") }}<span class="caret"></span>
+                </a>
+
+                <ul class="dropdown-menu">
+                  {% for action in obj.action_list %}
+                    <li>
+                      <a href="#{{ action.name }}" name="{{ action.name }}">{{ action.name }}</a>
+
+                      <form action="{{ action.url or obj.url }}" method="{{ action.method if action.method else "POST" }}">
+                        <input type="hidden" name="action" value="{{ action.name }}">
+                        <input type="hidden" name="url" value="{{ request.url }}">
+                        {% if action.extra %}
+                          {% for k,v in action.extra.items() %}
+                            <input type="hidden" name="{{ k }}" value="{{ v }}">
+                          {% endfor %}
+                        {% endif %}
+                      </form>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% else %}
+              {% set action = obj.action_list[0] %}
+              <form action="{{ action.url or obj.url }}" method="{{ action.method if action.method else "POST" }}">
+                <input type="hidden" name="url" value="{{ request.url }}">
+                <input type="submit" value="{{ action.name }}" name="action" class="btn btn-primary">
+                {% if action.extra %}
+                  {% for k,v in action.extra.items() %}
+                    <input type="hidden" name="{{ k }}" value="{{ v }}">
+                  {% endfor %}
+                {% endif %}
+              </form>
+            {% endif %}
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endblock %}

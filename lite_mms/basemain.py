@@ -90,6 +90,9 @@ if serve_web:
     from lite_mms.portal.timeline import time_line_page
     app.register_blueprint(time_line_page, url_prefix="/timeline")
 
+    from lite_mms.portal.todo import to_do_page
+    app.register_blueprint(to_do_page, url_prefix="/todo")
+
     import lite_mms.portal.admin
 if serve_ws:
     from lite_mms.portal.auth_ws import auth_ws
@@ -140,6 +143,7 @@ nav_bar.register(deduction_page, name=u"扣重管理", default_url="/deduction/"
 nav_bar.register(time_line_page, name=u"时间线", default_url="/timeline/log-list")
 nav_bar.register(search_page, name=u"搜索", default_url="/search/search")
 nav_bar.register(admin2_page, name=u"管理中心", default_url="/admin2/user-list", permissions=[AdminPermission])
+nav_bar.register(to_do_page, name=u"待办事项", default_url="/todo/o-list")
 
 #install jinja utilities
 from lite_mms.utilities import url_for_other_page, datetimeformat

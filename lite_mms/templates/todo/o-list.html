@@ -11,60 +11,79 @@
       $("ul.dropdown-menu li a").click(function () {
         $(this).parents("li").children("form").submit();
       });
+      $('#accordion1').collapse({
+        toggle: false
+      }).on('show',function (e) {
+            $(e.target).parent().find(".icon-chevron-down").removeClass("icon-chevron-down").addClass("icon-chevron-up");
+          }).on('hide', function (e) {
+            $(e.target).parent().find(".icon-chevron-up").removeClass("icon-chevron-up").addClass("icon-chevron-down");
+          });
     });
   </script>
 {% endblock %}
 {% block lists %}
   {% if __data__ %}
-    <ul>
-      {% for obj in __data__ %}
-        <li>
-          {{ obj.create_time }}
-          {% if obj.url %}
-            <a href="{{ obj.url }}">{{ obj.obj_cls }}{{ obj.obj_pk }}</a>
-          {% else %}
-            {{ obj.obj_cls }}{{ obj.obj_pk }}
-          {% endif %}
-          {% if obj.action_list %}
-            {% if obj.action_list|length > 1 %}
-              <div class="btn-group">
-                <a class="btn dropdown-toggle btn-primary" href="#" data-toggle="dropdown">
-                  {{ _("Action") }}<span class="caret"></span>
-                </a>
+    <div class="accordion container" id="accordion1">
+      {% for grouper, list in __data__|groupby("create_date") %}
+        <div class="accordion-group">
+          <div class="accordion-heading">
+            <a class="accordion-toggle" href="#{{ grouper }}" data-toggle="collapse" data-parent="#accordion1">
+              <i class="icon-chevron-down"></i>&nbsp;{{ grouper }}
+            </a>
+          </div>
+          <div class="accordion-body collapse" id="{{ grouper }}">
+            <div class="accordion-inner">
+              {% for obj in list %}
+                <li>
+                  {% if obj.url %}
+                    <a href="{{ obj.url }}">
+                      {{ obj.obj_cls }}{{ obj.obj_pk }}</a>
+                  {% else %}
+                    {{ obj.obj_cls }}{{ obj.obj_pk }}
+                  {% endif %}
+                  {% if obj.action_list %}
+                    {% if obj.action_list|length > 1 %}
+                      <div class="btn-group">
+                        <a class="btn dropdown-toggle btn-primary" href="#" data-toggle="dropdown">
+                          {{ _("Action") }}<span class="caret"></span>
+                        </a>
 
-                <ul class="dropdown-menu">
-                  {% for action in obj.action_list %}
-                    <li>
-                      <a href="#{{ action.name }}" name="{{ action.name }}">{{ action.name }}</a>
+                        <ul class="dropdown-menu">
+                          {% for action in obj.action_list %}
+                            <li>
+                              <a href="#{{ action.name }}" name="{{ action.name }}">{{ action.name }}</a>
 
+                              <form action="{{ action.url or obj.url }}" method="{{ action.method if action.method else "POST" }}">
+                                <input type="hidden" name="action" value="{{ action.name }}">
+                                <input type="hidden" name="url" value="{{ request.url }}">
+                                {% if action.extra %}
+                                  {% for k,v in action.extra.items() %}
+                                    <input type="hidden" name="{{ k }}" value="{{ v }}">
+                                  {% endfor %}
+                                {% endif %}
+                              </form>
+                            </li>
+                          {% endfor %}
+                        </ul>
+                      </div>
+                    {% else %}
+                      {% set action = obj.action_list[0] %}
                       <form action="{{ action.url or obj.url }}" method="{{ action.method if action.method else "POST" }}">
-                        <input type="hidden" name="action" value="{{ action.name }}">
                         <input type="hidden" name="url" value="{{ request.url }}">
+                        <input type="submit" value="{{ action.name }}" name="action" class="btn btn-primary">
                         {% if action.extra %}
                           {% for k,v in action.extra.items() %}
                             <input type="hidden" name="{{ k }}" value="{{ v }}">
                           {% endfor %}
                         {% endif %}
                       </form>
-                    </li>
-                  {% endfor %}
-                </ul>
-              </div>
-            {% else %}
-              {% set action = obj.action_list[0] %}
-              <form action="{{ action.url or obj.url }}" method="{{ action.method if action.method else "POST" }}">
-                <input type="hidden" name="url" value="{{ request.url }}">
-                <input type="submit" value="{{ action.name }}" name="action" class="btn btn-primary">
-                {% if action.extra %}
-                  {% for k,v in action.extra.items() %}
-                    <input type="hidden" name="{{ k }}" value="{{ v }}">
-                  {% endfor %}
-                {% endif %}
-              </form>
-            {% endif %}
-          {% endif %}
-        </li>
+                    {% endif %}
+                  {% endif %}
+                </li>{% endfor %}
+            </div>
+          </div>
+        </div>
       {% endfor %}
-    </ul>
+    </div>
   {% endif %}
 {% endblock %}

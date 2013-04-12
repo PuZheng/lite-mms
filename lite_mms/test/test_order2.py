@@ -26,24 +26,25 @@ class TestOrder(BaseTest):
         session.add_all([product1, product2, product3, self.product])
         session.commit()
 
-        schedule_group = Group("schedule_group")
+        schedule_group = Group(name="schedule_group")
         schedule_group.id = groups.SCHEDULER
-        cargo_group = Group("cargo")
+        cargo_group = Group(name="cargo")
         cargo_group.id = groups.CARGO_CLERK
-        department_leader_group = Group("department_leader_group")
+        department_leader_group = Group(name="department_leader_group")
         department_leader_group.id = groups.DEPARTMENT_LEADER
-        team_leader_group = Group("team_leader_group")
+        team_leader_group = Group(name="team_leader_group")
         team_leader_group.id = groups.TEAM_LEADER
-        qi_group = Group("qi")
+        qi_group = Group(name="qi")
         qi_group.id = groups.QUALITY_INSPECTOR
         session.add_all(
             [schedule_group, department_leader_group, team_leader_group,
              qi_group, cargo_group])
-        self.department = Department("department_foo")
+        self.department = Department(name="department_foo")
         session.add(self.department)
         session.commit()
 
-        self.procedure = Procedure("procedure", [self.department])
+        self.procedure = Procedure(name="procedure",
+                                   department_list=[self.department])
         self.db.session.add(self.procedure)
         self.db.session.commit()
         self.cargo = User(username="cc", password=md5("cc").hexdigest(),
@@ -61,7 +62,8 @@ class TestOrder(BaseTest):
         session.add_all([self.scheduler, self.department_leader, self.qi])
         session.commit()
 
-        self.team = Team("team_foo", self.department, self.team_leader)
+        self.team = Team(name="team_foo", department=self.department,
+                         leader=self.team_leader)
         session.add(self.team)
         session.commit()
 
@@ -74,7 +76,7 @@ class TestOrder(BaseTest):
         session.add(self.us1)
         session.commit()
 
-        harbor = Harbor(u"卸货点1", self.department)
+        harbor = Harbor(name=u"卸货点1", department=self.department)
         session.add(harbor)
         session.commit()
         self.unload_task1 = UnloadTask(self.us1, harbor, self.customer1, None,
@@ -95,20 +97,24 @@ class TestOrder(BaseTest):
                             data=dict(username="cc", password="cc"))
                 assert rv.status_code == 302
 
-                rv = c.post("/cargo/goods-receipt",
+                rv = c.post(url_for("cargo.goods_receipt"),
                             data=dict(customer=self.customer1.id,
-                                      unload_session_id=self.us1.id,
-                                      order_type=STANDARD_ORDER_TYPE))
+                                      unload_session_id=self.us1.id))
                 assert 302 == rv.status_code
-                rv = c.post("/cargo/goods-receipt",
+                rv = c.post(url_for("cargo.goods_receipt"),
                             data=dict(customer=self.customer2.id,
-                                      unload_session_id=self.us1.id,
-                                      order_type=STANDARD_ORDER_TYPE))
+                                      unload_session_id=self.us1.id))
                 assert 302 == rv.status_code
                 _list = cargo.get_goods_receipts_list(self.us1.id)
                 assert 2 == len(_list)
                 self.goods_receipt1 = _list[0]
                 self.goods_receipt2 = _list[1]
+                rv = c.post(
+                    url_for("cargo.goods_receipt", id_=self.goods_receipt1.id))
+                assert 302 == rv.status_code
+                rv = c.post(
+                    url_for("cargo.goods_receipt", id_=self.goods_receipt2.id))
+                assert 302 == rv.status_code
                 ord_list, count = order.get_order_list()
                 assert count == 2
                 order1, order2 = ord_list
@@ -176,7 +182,7 @@ class TestOrder(BaseTest):
                 order_list, count = order.get_order_list()
                 order_to_check = order_list[0]
                 assert order_to_check.id == order1.id
-                assert order_to_check.manufacturing_weight == 3000
+                assert order_to_check.to_work_weight == 3000
                 assert order_to_check.remaining_weight == order_to_check\
                 .remaining_quantity == 3000 - 3000
 
@@ -211,7 +217,7 @@ class TestOrder(BaseTest):
                 order_to_check = order_list[0]
                 assert order_to_check.id == order_to_check.id
                 assert order_to_check.to_deliver_weight == 1000
-                assert order_to_check.manufacturing_weight == 2000
+                assert order_to_check.to_work_weight == 2000
 
                 wc2.go(actor_id=self.scheduler.id,
                        action=constants.work_command.ACT_DISPATCH,

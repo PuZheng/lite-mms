@@ -23,15 +23,15 @@ class TestOrder(BaseTest):
         self.db.session.add_all([product1, product2, product3])
         self.db.session.commit()
 
-        cargo_clerk_group = Group("cargo_clerk")
+        cargo_clerk_group = Group(name="cargo_clerk")
         cargo_clerk_group.id = groups.CARGO_CLERK
-        schedule_group = Group("schedule_group")
+        schedule_group = Group(name="schedule_group")
         schedule_group.id = groups.SCHEDULER
-        department_leader_group = Group("department_leader_group")
+        department_leader_group = Group(name="department_leader_group")
         department_leader_group.id = groups.DEPARTMENT_LEADER
-        team_leader_group = Group("team_leader_group")
+        team_leader_group = Group(name="team_leader_group")
         team_leader_group.id = groups.TEAM_LEADER
-        qi_group = Group("qi")
+        qi_group = Group(name="qi")
         qi_group.id = groups.QUALITY_INSPECTOR
         self.db.session.add_all([cargo_clerk_group, schedule_group, department_leader_group, team_leader_group,
                         qi_group])
@@ -49,14 +49,14 @@ class TestOrder(BaseTest):
         self.db.session.add_all([self.scheduler, self.department_leader, self.qi])
         self.db.session.commit()
 
-        self.department = Department("department_foo", [self.department_leader])
+        self.department = Department(name="department_foo",leader_list= [self.department_leader])
         self.db.session.add(self.department)
         self.db.session.commit()
-        self.team = Team("team_foo", self.department, self.team_leader)
+        self.team = Team(name="team_foo", department=self.department, leader=self.team_leader)
         self.db.session.add(self.team)
         self.db.session.commit()
 
-        self.procedure = Procedure("procedure", [self.department])
+        self.procedure = Procedure(name="procedure", department_list=[self.department])
         self.db.session.add(self.procedure)
         self.db.session.commit()
 
@@ -72,7 +72,7 @@ class TestOrder(BaseTest):
         self.db.session.add_all([unload_session1, unload_session2, unload_session3])
         self.db.session.commit()
 
-        harbor = Harbor("foo", self.department)
+        harbor = Harbor(name="foo", department=self.department)
         #unload_task1 = UnloadTask(unload_session1, harbor, customer1, None, 
                                  #product1, pic_path="", weight=300)
         #unload_task2 = UnloadTask(unload_session2, harbor, customer2, None, 
@@ -127,8 +127,8 @@ class TestOrder(BaseTest):
         order1 = ord_list[0]
 
         sub_order = order1.sub_order_list[0]
-        rv = c.post(url_for("order.sub_order"), 
-                    data=dict(id=sub_order.id, product=self.db.session.query(Product).first().id,
+        rv = c.post(url_for("order.sub_order", id_=sub_order.id),
+                    data=dict(product=self.db.session.query(Product).first().id,
                               spec="foo_spec",  type="foo_model",
                               tech_req="foo_tech_req", due_time=str(date.today()), 
                               urgent=True, unit="bucket",
@@ -139,7 +139,7 @@ class TestOrder(BaseTest):
         order_list, count = order.get_order_list(undispatched_only=True) 
         assert count == 3
         assert order1.id in [o.id for o in order_list]
-        rv = c.post(url_for("order.mark_refine"), data=dict(id=order1.id))
+        rv = c.post(url_for("order.order", id_=order1.id), data=dict(method="refine"))
 
         # 只有order1是完善的
         for _order in order_list:
@@ -182,9 +182,11 @@ class TestOrder(BaseTest):
         order1 = ord_list[0]
         rv = c.post(url_for('auth.login'), data=dict(username="s", password="s"))
         rv = c.post(url_for("schedule.work_command"),
-                    data=dict(id=order1.sub_order_list[0].id, order_id=order1.id, schedule_weight=100,
-                              schedule_count=100,
-                              procedure=self.procedure.id, tech_req="not so foo"))
+                    data=dict(sub_order_id=order1.sub_order_list[0].id,
+                              schedule_weight=100, schedule_count=100,
+                              procedure=self.procedure.id,
+                              tech_req="not so foo"))
+        assert 302 == rv.status_code
         wc_list, total_cnt = manufacture.get_work_command_list(status_list=[constants.work_command.STATUS_DISPATCHING])
         assert total_cnt == 1
         assert len(wc_list) == 1
@@ -197,7 +199,8 @@ class TestOrder(BaseTest):
         ord_list, count = order.get_order_list(unfinished=True)
         order1 = ord_list[0]
         print order1.remaining_weight, order1.remaining_quantity
-        assert order1.manufacturing_weight == 100
+        assert order1.to_work_weight == 100
+        assert order1.manufacturing_weight == 0
         assert order1.delivered_weight == 0
         assert order1.to_deliver_weight == 0
         assert order1.remaining_weight == order1.remaining_quantity == 400

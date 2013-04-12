@@ -30,15 +30,16 @@ def test():
             procedure = given(u'创建一个工序抛砂', department)
             when(u'对子订单1进行预排产5000公斤', sub_order1, procedure)
             then(u'子订单1未预排产的重量是5000公斤', sub_order1)
-            and_(u'子订单1生产中的重量是5000公斤', sub_order1)
+            and_(u'子订单1待生产的重量是5000公斤', sub_order1)
+            and_(u'子订单1生产中的重量是0公斤', sub_order1)
             and_(u'生成了新工单, 这个工单的状态是待排产, 重量5000公斤', sub_order1, procedure)
 
             when(u'对子订单2进行预排产3000公斤', sub_order2, procedure)
             then(u'子订单2未预排产的重量是17000公斤', sub_order2)
-            and_(u'子订单2生产中的重量是3000公斤', sub_order2)
+            and_(u'子订单2待生产的重量是3000公斤', sub_order2)
 
             and_(u'订单未预排产重量是22000公斤', order)
-            and_(u'订单的生产中重量是8000公斤', order)
+            and_(u'订单的待生产重量是8000公斤', order)
         
     with Feature("调度流程(计件类型)测试", ['lite_mms.test.steps.schedule']):
         with Scenario("获取订单列表(计件类型)"):
@@ -70,7 +71,7 @@ def test():
             and_(u'子订单2生产中的数量是10件, 重量是5000公斤', sub_order2)
 
             and_(u'订单未预排产重量是23000公斤', order)
-            and_(u'订单的生产中重量是7000公斤', order)
+            and_(u'订单的待生产重量是7000公斤', order)
 
     from pyfeature import clear_hooks
     clear_hooks()

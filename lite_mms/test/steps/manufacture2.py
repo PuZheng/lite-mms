@@ -87,8 +87,7 @@ def _(step, type_, extra, department, weight, quantity=0):
         unit = u"件"
         order_type = EXTRA_ORDER_TYPE
     return models.SubOrder(product, weight, harbor, order, quantity,
-                           unit, order_type, returned=returned,
-                           remaining_quantity=quantity)
+                           unit, order_type, returned=returned)
 
 
 @step(u"调度员从子订单中预排产(.*)")

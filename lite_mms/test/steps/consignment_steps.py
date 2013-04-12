@@ -22,7 +22,7 @@ def _(step, product_type):
 @step(u'创建用户组"调度员"')
 @committed
 def _(step):
-    group = models.Group(u"调度员")
+    group = models.Group(name=u"调度员")
     group.id = constants.groups.CARGO_CLERK
     return group
 
@@ -30,42 +30,42 @@ def _(step):
 @step(u'生成调度员"小明", 密码是xm')
 @committed
 def _(step, group):
-    return models.User(u"小明", md5("xm").hexdigest(), [group])
+    return models.User(username=u"小明", password=md5("xm").hexdigest(), groups=[group])
 
 
 @step(u'生成车间"A"')
 @committed
 def _(step):
-    return models.Department(u"A")
+    return models.Department(name=u"A")
 
 @step(u"生成班组'(.+)'")
 @committed
 def _(step, name, department):
-    return models.Team(name, department, None)
+    return models.Team(name=name, department=department)
 
 
 @step(u'生成装卸点"X"')
 @committed
 def _(step, department):
-    return models.Harbor("habor", department)
+    return models.Harbor(name="habor", department=department)
 
 
 @step(u'生成工序"镀锌"')
 @committed
 def _(step, department):
-    return models.Procedure(u"镀锌", [department])
+    return models.Procedure(name=u"镀锌", department_list=[department])
 
 
 @step(u'生成客户"宁力"')
 @committed
 def _(step):
-    return models.Customer("foo", "foo")
+    return models.Customer(name="foo", abbr="foo")
 
 
 @step(u"生成卸货会话, 重量为10000公斤")
 @committed
 def _(step, customer):
-    return models.UnloadSession(customer.name, 10000)
+    return models.UnloadSession(plate=customer.name, gross_weight=10000)
 
 
 @step(u"生成收货单")
@@ -207,15 +207,14 @@ def _(step, consignment, weight, username, password):
             rv = c.post(url_for("auth.login"),
                         data={"username": username, "password": password})
             assert 302 == rv.status_code
-            rv = c.post(url_for("delivery.consignment", id_=consignment.id),
-                        data={
-                        "consignment_product_id": consignment.product_list[
-                            0].id, "weight": weight,
-                        'product_id': consignment.product_list[0].product.id,
-                        'weight': 9000,
-                        'team_id': consignment.product_list[0].team.id,
-                        'returned_weight': 0, 'type': u'测试', 'spec': u'测试',
-                        'unit': u'桶'})
+            rv = c.post(url_for("delivery.consignment_product",
+                                id_=consignment.product_list[0].id),
+                        data={'product_id': consignment.product_list[
+                                0].product.id,
+                            'weight': weight,
+                            'team_id': consignment.product_list[0].team.id,
+                            'returned_weight': 0, 'type': u'测试', 'spec': u'测试',
+                            'unit': u'桶'})
 
             assert 302 == rv.status_code
 

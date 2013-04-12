@@ -23,20 +23,20 @@ class TestProcess(BaseTest):
             self.db.session.add(Permission(name=perm))
         self.db.session.commit()
 
-        cargo_clerk_group = Group("cargo_clerk")
+        cargo_clerk_group = Group(name="cargo_clerk")
         cargo_clerk_group.id = groups.CARGO_CLERK
-        schedule_group = Group("schedule_group")
+        schedule_group = Group(name="schedule_group")
         schedule_group.id = groups.SCHEDULER
         schedule_group.permissions = Permission.query.filter(
             Permission.name.like(
                 "%schedule_order%")).all() + Permission.query.filter(
             Permission.name.like("work_command%")).all()
 
-        department_leader_group = Group("department_leader_group")
+        department_leader_group = Group(name="department_leader_group")
         department_leader_group.id = groups.DEPARTMENT_LEADER
-        team_leader_group = Group("team_leader_group")
+        team_leader_group = Group(name="team_leader_group")
         team_leader_group.id = groups.TEAM_LEADER
-        qi_group = Group("qi")
+        qi_group = Group(name="qi")
         qi_group.id = groups.QUALITY_INSPECTOR
         self.db.session.add_all([cargo_clerk_group, schedule_group, department_leader_group, team_leader_group,
                          qi_group])
@@ -54,14 +54,15 @@ class TestProcess(BaseTest):
         self.db.session.add_all([self.scheduler, self.department_leader, self.qi])
         self.db.session.commit()
 
-        self.department = Department("department_foo", [self.department_leader])
+        self.department = Department(name="department_foo", leader_list=[self.department_leader])
         self.db.session.add(self.department)
         self.db.session.commit()
-        self.team = Team("team_foo", self.department, self.team_leader)
+        self.team = Team(name="team_foo", department=self.department, leader=self.team_leader)
         self.db.session.add(self.team)
         self.db.session.commit()
 
-        self.procedure = Procedure("procedure", [self.department])
+        self.procedure = Procedure(name="procedure",
+                                   department_list=[self.department])
         self.db.session.add(self.procedure)
         self.db.session.commit()
 
@@ -77,7 +78,7 @@ class TestProcess(BaseTest):
         self.db.session.add_all([unload_session1, unload_session2, unload_session3])
         self.db.session.commit()
 
-        harbor = Harbor("foo", self.department)
+        harbor = Harbor(name="foo", department=self.department)
 
         self.goods_receipt1 = GoodsReceipt(customer1, unload_session1)
         self.goods_receipt2 = GoodsReceipt(customer2, unload_session2)
@@ -108,7 +109,7 @@ class TestProcess(BaseTest):
                 count = len(sub_order_list)
                 for suborder in sub_order_list:
                     rv = c.post(url_for("schedule.work_command"),
-                        data=dict(id=suborder.id, order_id=suborder.order.id, schedule_weight=100,
+                        data=dict(sub_order_id=suborder.id, schedule_weight=100,
                             procedure=self.procedure.id, urgent=False))
                     assert rv.status_code == 302
 

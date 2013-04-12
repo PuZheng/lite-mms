@@ -21,23 +21,26 @@ class TestPermission(BaseTest):
         self.db.session.add(foo_permission)
         self.db.session.commit()
         # create a group with foo_permission
-        foo_group = models.Group("foo_group")
+        foo_group = models.Group(name="foo_group")
         foo_group.id = random.randint(99999, 199999)
         foo_group.permissions.append(foo_permission)
         self.db.session.add(foo_group)
         self.db.session.commit()
         # create a group without foo_permission 
-        non_foo_group = models.Group("non_foo_group")
+        non_foo_group = models.Group(name="non_foo_group")
         non_foo_group.id = random.randint(99999, 199999)
         self.db.session.add(non_foo_group)
         self.db.session.commit()
         # create a user of foo_group
-        self.foo_user = models.User("foo", md5("foo").hexdigest(), [foo_group])
+        self.foo_user = models.User(username="foo",
+                                    password=md5("foo").hexdigest(),
+                                    groups=[foo_group])
         self.db.session.add(self.foo_user)
         self.db.session.commit()
         # create a user 
-        self.non_foo_user = models.User("non_foo", md5("non_foo").hexdigest(),
-                                        [non_foo_group])
+        self.non_foo_user = models.User(username="non_foo",
+                                        password=md5("non_foo").hexdigest(),
+                                        groups=[non_foo_group])
         self.db.session.add(self.non_foo_user)
         self.db.session.commit()
 

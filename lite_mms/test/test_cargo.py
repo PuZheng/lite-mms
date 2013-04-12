@@ -17,7 +17,7 @@ class Test(BaseTest):
         product3 = models.Product(name=constants.DEFAULT_PRODUCT_NAME,
                                   product_type=models.ProductType(
                                       constants.DEFAULT_PRODUCT_TYPE_NAME))
-        cargo_clerk = models.Group("cargo_clerk")
+        cargo_clerk = models.Group(name="cargo_clerk")
         cargo_clerk.id = groups.CARGO_CLERK
         d = models.Department(name=u'车间一')
         self.db.session.add(models.Customer(name=u'超级客户', abbr=u'joiasndf'))
@@ -43,7 +43,7 @@ class Test(BaseTest):
                             data=dict(username="cc", password="cc"))
                 assert 302 == rv.status_code
                 plate = u'测试车辆'
-                rv = c.post(url_for('cargo.session_add'),
+                rv = c.post(url_for('cargo.unload_session'),
                             data={'plateNumber': plate, 'grossWeight': 5000})
                 assert 302 == rv.status_code
                 from lite_mms import apis
@@ -65,19 +65,20 @@ class Test(BaseTest):
                 assert 1 == task.id
                 products = apis.product.get_products()
                 pro = products["1"][0]
-                rv = c.post(url_for('cargo.unload_task'),
-                            data={'task_id': task.id, 'weight': 5500,
-                                  'product': pro["id"]})
+                rv = c.post(url_for('cargo.unload_task', id_=task.id),
+                            data={'weight': 5500, 'product': pro["id"]})
                 assert 500 == rv.status_code
-                rv = c.post(url_for('cargo.unload_task'),
-                            data={'task_id': task.id, 'weight': 3000,
-                                  'product': pro["id"]}, follow_redirects=True)
-                assert 200 == rv.status_code
+                rv = c.post(url_for('cargo.unload_task', id_=task.id),
+                            data={'weight': 3000, 'product': pro["id"]})
+                assert 302 == rv.status_code
                 task = apis.cargo.get_unload_task(task.id)
                 assert 2000 == task.weight
                 rv = c.post(url_for('cargo.goods_receipt'),
                             data={"customer": customer.id, "order_type": 1,
                                   "unload_session_id": task.session_id})
+                goods_receipt = apis.cargo.get_goods_receipts_list(task.session_id)[0]
+                assert 302 == rv.status_code
+                rv = c.post(url_for("cargo.goods_receipt", id_=goods_receipt.id))
                 assert 302 == rv.status_code
                 ord_list, count = apis.order.get_order_list(
                     undispatched_only=True)

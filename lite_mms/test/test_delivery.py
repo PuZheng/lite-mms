@@ -18,6 +18,7 @@ def test():
             group = and_(u'创建用户组"调度员"')
             user = and_(u'生成调度员"小明", 密码是xm', group=group)
             department = and_(u'生成车间"A"')
+            team = and_(u"生成班组'f'", department)
             harbor = and_(u'生成装卸点"X"', department=department)
             procedure = and_(u'生成工序"镀锌"', department=department)
             customer = and_(u'生成客户"宁力"')
@@ -26,9 +27,12 @@ def test():
             order = and_(u"生成订单", goods_receipt=gr, creator=user)
             so = and_(u"生成计重类型的子订单, 重量是10000公斤", harbor=harbor,
                       order=order, product=product, unit="KG")
-            wc1 = and_(u"生成工单1, 重量是5000KG", sub_order=so, procedure=procedure)
-            wc2 = and_(u"生成工单2, 重量是5000KG", sub_order=so, procedure=procedure)
-            wc3 = and_(u"生成工单3, 重量是5000KG", sub_order=so, procedure=procedure)
+            wc1 = and_(u"生成工单1, 重量是5000KG", sub_order=so, procedure=procedure,
+                       team=team)
+            wc2 = and_(u"生成工单2, 重量是5000KG", sub_order=so, procedure=procedure,
+                       team=team)
+            wc3 = and_(u"生成工单3, 重量是5000KG", sub_order=so, procedure=procedure,
+                       team=team)
             qir1 = and_(u"对工单1生成质检单1, 结果是全部质检通过", work_command=wc1)
             qir2 = and_(u"对工单2生成质检单2, 结果是全部质检通过", work_command=wc2)
             qir3 = and_(u"对工单3生成质检单3, 结果是全部质检通过", work_command=wc3)

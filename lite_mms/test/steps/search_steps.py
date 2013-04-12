@@ -148,14 +148,14 @@ def _(step, keywords, user, password):
 def _(step, us, rv):
     d = PyQuery(rv)
     content = u"卸货会话：%s" % us.id
-    assert u"卸货会话(1)" == d("#search-result-0").text()
+    assert u"卸货会话(1)" == d("a[href='#unload_session_list']").text()
     assert content in d("a").text()
 
 
 @step(u"可以搜索订单信息")
 def _(step, order, rv):
     d = PyQuery(rv)
-    assert u"订单(1)" == d("#search-result-1").text()
+    assert u"订单(1)" == d("a[href='#order_list']").text()
     assert order.customer_order_number in d("a").text()
 
 
@@ -164,4 +164,4 @@ def _(step, wc, rv):
     from pyquery import PyQuery
 
     d = PyQuery(rv)
-    assert not d("#search-result-2")
+    assert not d("a[href='#work_command_list']")

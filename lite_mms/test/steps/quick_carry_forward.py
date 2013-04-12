@@ -11,10 +11,10 @@ from lite_mms.constants import groups, work_command as const
 @committed
 def _(step, group_name):
     if group_name == u"收发员":
-        group = Group(u'收发员')
+        group = Group(name=u'收发员')
         group.id = groups.CARGO_CLERK
     elif group_name == u"班组长":
-        group = Group(u'班组长')
+        group = Group(name=u'班组长')
         group.id = groups.TEAM_LEADER
     return group
 
@@ -23,24 +23,24 @@ def _(step, group_name):
 @committed
 def _(step, name, group):
     if name == u"收发员":
-        return User(u'cc', md5('cc').hexdigest(), [group])
+        return User(username=u'cc', password=md5('cc').hexdigest(), groups=[group])
     elif name == u"班组长":
-        return User(u'tl', md5('tl').hexdigest(), [group])
+        return User(username=u'tl', password=md5('tl').hexdigest(), groups=[group])
 
 @step(u"创建一个车间")
 @committed
 def _(step):
-    return Department('cj1')
+    return Department(name='cj1')
 
 @step(u"创建一个班组")
 @committed
 def _(step, department, tl):
-    return Team('tl', department, tl)
+    return Team(name='tl', department=department, leader=tl)
 
 @step(u"创建一个客户")
 @committed
 def _(step):
-    return Customer(u'宁波机械长','nbjxc')
+    return Customer(name=u'宁波机械长', abbr='nbjxc')
 
 @step(u"创建一个车牌号(.+)")
 @committed
@@ -50,7 +50,7 @@ def _(step, plate_num):
 @step(u"创建一个卸货会话")
 @committed
 def _(step, plate):
-    return UnloadSession(plate.name, 12000)
+    return UnloadSession(plate=plate.name, gross_weight=12000)
 
 @step(u"创建一个收获单")
 @committed
@@ -75,7 +75,7 @@ def _(step, product_type):
 @step(u"创建一个卸货点")
 @committed
 def _(step, department):
-    return Harbor(u'装卸点一', department)
+    return Harbor(name=u'装卸点一', department=department)
 
 @step(u"生成一个订单1的子订单，重量为(\d+)")
 @committed
@@ -85,12 +85,13 @@ def _(step, weight, order, product, harbor):
 @step(u"创建一个工序(.+)")
 @committed
 def _(step, name, department):
-    return Procedure(u'镀锌',[department])
+    return Procedure(name=u'镀锌', department_list=[department])
 
 @step(u"生成一个待结束、结转的工单，工序前重量为(\d+)，工序后重量为0")
 @committed
 def _(step, org_wegiht, suborder, team, procedure):
-    return WorkCommand(suborder, org_wegiht, procedure, org_cnt=org_wegiht, status=const.STATUS_ENDING, team=team)
+    return WorkCommand(suborder, org_wegiht, procedure, org_cnt=org_wegiht,
+                       status=const.STATUS_ENDING, team=team)
 
 @step(u'班组长快速结转工单(.+)')
 def _(step, result, work_command, actor):

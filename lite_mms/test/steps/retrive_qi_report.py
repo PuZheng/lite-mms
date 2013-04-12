@@ -15,16 +15,16 @@ from lite_mms.utilities.decorators import committed
 @committed
 def _(step, group_name):
     if group_name == u"质检员":
-        group = Group(u'质检')
+        group = Group(name=u'质检')
         group.id = groups.QUALITY_INSPECTOR
     elif group_name == u"收发员":
-        group = Group(u'收发员')
+        group = Group(name=u'收发员')
         group.id = groups.CARGO_CLERK
     elif group_name == u"班组长":
-        group = Group(u'班组长')
+        group = Group(name=u'班组长')
         group.id = groups.TEAM_LEADER
     elif group_name == u"调度员":
-        group = Group(u'调度员')
+        group = Group(name=u'调度员')
         group.id = groups.SCHEDULER
         group.permissions = [
             Permission(name="work_command.schedule_work_command")]
@@ -34,32 +34,36 @@ def _(step, group_name):
 @step(u"创建一个用户-(.+)")
 @committed
 def _(step, name, group):
+    username = ""
     if name == u"质检员":
-        return User(u'qi', md5('qi').hexdigest(), [group])
+        username = u"qi"
     elif name == u"收发员":
-        return User(u'cc', md5('cc').hexdigest(), [group])
+        username = u'cc'
     elif name == u"班组长":
-        return User(u'tl', md5('tl').hexdigest(), [group])
+        username = u"tl"
     elif name == u"调度员":
-        return User(u's', md5('s').hexdigest(), [group])
+        username = u"s"
+    return User(username=username, password=md5(username).hexdigest(),
+                groups=[group])
+
 
 
 @step(u"创建一个车间")
 @committed
 def _(step):
-    return Department('cj1')
+    return Department(name='cj1')
 
 
 @step(u"创建一个班组")
 @committed
 def _(step, department, tl):
-    return Team('tl', department, tl)
+    return Team(name='tl', department=department, leader=tl)
 
 
 @step(u"创建一个客户")
 @committed
 def _(step):
-    return Customer(u'宁波机械长', 'nbjxc')
+    return Customer(name=u'宁波机械长', abbr='nbjxc')
 
 
 @step(u"创建一个车牌号(.+)")
@@ -71,7 +75,7 @@ def _(step, plate_num):
 @step(u"创建一个卸货会话")
 @committed
 def _(step, plate):
-    return UnloadSession(plate.name, 12000)
+    return UnloadSession(plate=plate.name, gross_weight=12000)
 
 
 @step(u"创建一个收获单")
@@ -101,7 +105,7 @@ def _(step, product_type):
 @step(u"创建一个卸货点")
 @committed
 def _(step, department):
-    return Harbor(u'装卸点一', department)
+    return Harbor(name=u'装卸点一', department=department)
 
 
 @step(u"生成一个订单1的子订单，重量为(\d+)")
@@ -113,7 +117,7 @@ def _(step, weight, order, product, harbor):
 @step(u"创建一个工序(.+)")
 @committed
 def _(step, name, department):
-    return Procedure(u'镀锌', [department])
+    return Procedure(name=u'镀锌', department_list=[department])
 
 
 @step(u"生成一个待质检状态的工单，重量为(\d+)")

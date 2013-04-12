@@ -38,9 +38,9 @@ class LogWrapper(ModelWrapper):
     def url_map(self):
         def _obj_wrap(str_, id_):
             from lite_mms.basemain import app
-
+            from lite_mms.utilities import camel_case
             for endpoint, url in app.url_map._rules_by_endpoint.iteritems():
-                if endpoint.endswith(str_.replace("Wrapper", "").lower()):
+                if endpoint.endswith(camel_case(str_)):
                     args = url[0].arguments
                     if args:
                         return url[0].build({enumerate(args).next()[1]: id_,

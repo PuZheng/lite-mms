@@ -16,24 +16,27 @@ import nose.tools as assert_tools
 @step(u'创建一个车间(.*)')
 @committed
 def _(step, department_name):
-    return models.Department(department_name)
+    return models.Department(name=department_name)
 
 @step(u"创建一个装卸点(.+)")
 @committed
 def _(step, harbor_name, department):
-    return models.Harbor("harbor_name", department)
+    return models.Harbor(name="harbor_name", department=department)
 
 @step(u'创建一个订单, 毛重是(\d+)公斤, 客户是(.+)')
 def _(step, gross_weight, customer_name):
 
     customer = do_commit(models.Customer(customer_name, abbr=customer_name))
-    unload_session = do_commit(models.UnloadSession("foo", gross_weight))
-    cargo_clerk_group = models.Group("cargo_clerk_group")
+    unload_session = do_commit(
+        models.UnloadSession(plate="foo", gross_weight=gross_weight))
+    cargo_clerk_group = models.Group(name="cargo_clerk_group")
     import lite_mms.constants as constants
     cargo_clerk_group.id = constants.groups.CARGO_CLERK
     cargo_clerk_group = do_commit(cargo_clerk_group)
     goods_receipt = do_commit(models.GoodsReceipt(customer, unload_session))
-    creator = do_commit(models.User("cc", md5("cc").hexdigest(), [cargo_clerk_group]))
+    creator = do_commit(
+        models.User(username="cc", password=md5("cc").hexdigest(),
+                    groups=[cargo_clerk_group]))
     return do_commit(models.Order(goods_receipt, creator)), creator
 
 @step(u'创建一个产品类型(.+)')
@@ -59,11 +62,12 @@ def _(step, sub_order):
 @step(u'创建一个调度员')
 @committed
 def _(step):
-    scheduler_group = models.Group("scheduler_group")
+    scheduler_group = models.Group(name="scheduler_group")
     import lite_mms.constants as constants
     scheduler_group.id = constants.groups.SCHEDULER
     do_commit(scheduler_group)
-    return models.User("s", md5("s").hexdigest(), [scheduler_group])
+    return models.User(username="s", password=md5("s").hexdigest(),
+                       groups=[scheduler_group])
 
 @step(u"订单列表为空")
 def _(step): 
@@ -85,8 +89,12 @@ def _(step, order):
             rv = c.post(url_for("auth.login"), 
                         data=dict(username="cc",
                                   password="cc"))
+            rv = c.post(url_for("order.order", id_=order.id),
+                        data={"method": "refine"})
+            assert 302 == rv.status_code
             rv = c.post(url_for("order.order_list"), data=dict(order_id=order.id, act="dispatch")) 
-    
+            assert 302 == rv.status_code
+
 @step(u"可以获取一个(.+)类型的订单, 这个订单有两个子订单")
 def _(step, order_type, order, user):
     order = apis.order.OrderWrapper(order)
@@ -99,23 +107,23 @@ def _(step, order_type, order, user):
             assert_tools.assert_equal(rv.status_code, 200)
             pq = PyQuery(unicode(rv.data, "utf-8"))
             order_fields = [PyQuery(div) for div in pq("#order_info > div")]
-            assert_tools.assert_equal(order_fields[0].children("span").text(), 
-                                      order.customer_order_number)  
-            assert_tools.assert_equal(order_fields[1].children("span").text(),
+            assert_tools.assert_equal(order_fields[0].children("div p").text(),
+                                      order.customer_order_number)
+            assert_tools.assert_equal(order_fields[1].children("div p").text(),
                                      order.customer.name)
-            assert_tools.assert_equal(order_fields[2].children("span").text(), 
+            assert_tools.assert_equal(order_fields[2].children("div p").text(),
                                       str(order.create_time))
-            assert_tools.assert_equal(int(order_fields[3].children("span").text()),
+            assert_tools.assert_equal(int(order_fields[3].children("div p").text()),
                                      order.net_weight)
-            assert_tools.assert_equal(int(order_fields[4].children("span").text()),
+            assert_tools.assert_equal(int(order_fields[4].children("div p").text()),
                                      order.remaining_weight)
-            assert_tools.assert_equal(int(order_fields[5].children("span").text()),
+            assert_tools.assert_equal(int(order_fields[5].children("div p").text()),
                                      order.todo_work_cnt)
-            assert_tools.assert_equal(order_fields[6].children("span").text(),
+            assert_tools.assert_equal(order_fields[6].children("div p").text(),
                                       u"是" if order.urgent else u"否")
             tr_list = [PyQuery(tr) for tr in pq("#sub_order_table > tbody > tr")]
             assert len(tr_list) == 2
-            # 检查子订单 
+            # 检查子订单
             if order_type == u"计重":
                 for tr, sub_order in zip(tr_list, order.sub_order_list):
                     td_list = [PyQuery(td) for td in tr.children("td")]
@@ -140,12 +148,14 @@ def _(step, order_type, order, user):
                     assert int(td_list[4].text()) == sub_order.weight
                     assert int(td_list[5].text()) == sub_order.quantity
                     assert td_list[6].text() == sub_order.unit
-                    assert td_list[7].text() == u"否"
-                    assert int(td_list[8].text()) == 0
-                    assert td_list[9].text() == "%d(%s)" % (sub_order.remaining_quantity, sub_order.unit)
-                    assert td_list[10].text() == sub_order.tech_req
-                    assert td_list[11].text() == sub_order.harbor.name
-                    assert td_list[12].children("a").text().strip() == u"预排产"
+                    assert td_list[7].text() == "-".join(
+                        (sub_order.spec, sub_order.type))
+                    assert td_list[8].text() == u"否"
+                    assert int(td_list[9].text()) == 0
+                    assert td_list[10].text() == "%d(%s)" % (sub_order.remaining_quantity, sub_order.unit)
+                    assert td_list[11].text() == sub_order.tech_req
+                    assert td_list[12].text() == sub_order.harbor.name
+                    assert td_list[13].children("a").text().strip() == u"预排产"
 
 @step(u"订单列表中包含此订单")
 def _(step, order, user):
@@ -174,7 +184,7 @@ def _(step, order, user):
 @step(u'创建一个工序(.+)')
 @committed
 def _(step, procedure_name, department):
-    return models.Procedure(procedure_name, [department])
+    return models.Procedure(name=procedure_name, department_list=[department])
 
 @step(u'对子订单(\d+)进行预排产(\d+)公斤')
 def _(step, sub_order_seq, weight, sub_order, procedure):
@@ -183,18 +193,23 @@ def _(step, sub_order_seq, weight, sub_order, procedure):
             rv = c.post(url_for("auth.login"), 
                         data=dict(username="s", 
                                   password="s"))
-            param_dict = dict(id=sub_order.id,
-                              order_id=sub_order.order.id,
+            param_dict = dict(sub_order_id=sub_order.id,
                               schedule_weight=weight,
                               procedure=procedure.id, 
                               tech_req=u"good good study", 
                               urgent=1)
-            rv = c.post(url_for("schedule.work_command"), data=param_dict, follow_redirects=True)
-            assert rv.status_code == 200
+            rv = c.post(url_for("schedule.work_command"), data=param_dict)
+            assert rv.status_code == 302
 
 @step(u'子订单(\d+)未预排产的重量是(\d+)公斤')
 def _(step, sub_order_seq, weight, sub_order):
     assert apis.order.SubOrderWrapper(sub_order).remaining_weight == int(weight)
+
+@step(u"子订单(\d+)待生产的重量是(\d+)公斤")
+def _(step, sub_order_seq, weight, sub_order):
+    assert sum(work_command.org_weight for work_command
+               in apis.order.SubOrderWrapper(
+                   sub_order).pre_work_command_list) == int(weight)
 
 @step(u"子订单(\d+)生产中的重量是(\d+)公斤")
 def _(step, sub_order_seq, weight, sub_order):
@@ -237,18 +252,11 @@ def _(step, weight, order):
 def _(step, weight, order):
     order = apis.order.OrderWrapper(order)
     assert order.manufacturing_weight == int(weight)
-    # 测试页面order.order_list
-    with app.test_request_context():
-        with app.test_client() as c:
-            rv = c.post(url_for("auth.login"), 
-                        data=dict(username="cc", 
-                                  password="cc"))
-            rv = c.get(url_for("order.order_list", category="all"))
-            pq = PyQuery(rv.data)
-            tr_list = [PyQuery(tr) for tr in pq("#order_list_table > tbody > tr")] 
-            tr = [tr for tr in tr_list if tr("td:first > a").text() == order.customer_order_number][0]
-            td_list = [PyQuery(td) for td in tr("td")]
-            td_list[6].children("a").text() == weight + u"(公斤)"
+
+@step(u'订单的待生产重量是(\d+)公斤')
+def _(step, weight, order):
+    order = apis.order.OrderWrapper(order)
+    assert order.to_work_weight == int(weight)
 
 @step(u'创建一个计件子订单, 重量是(\d+)公斤, 个数是(\d+), 单位是(.+), 产品是(.+)')
 @committed
@@ -267,15 +275,14 @@ def _(step, sub_order_seq, quantity, sub_order, procedure):
             rv = c.post(url_for("auth.login"), 
                         data=dict(username="s", 
                                   password="s"))
-            param_dict = dict(id=sub_order.id,
-                              order_id=sub_order.order.id,
+            param_dict = dict(sub_order_id=sub_order.id,
                               schedule_weight=quantity * int(sub_order.weight / sub_order.quantity),
                               schedule_count=quantity,
                               procedure=procedure.id, 
                               tech_req=u"good good study", 
                               urgent=1)
-            rv = c.post(url_for("schedule.work_command"), data=param_dict, follow_redirects=True)
-            assert rv.status_code == 200
+            rv = c.post(url_for("schedule.work_command"), data=param_dict)
+            assert rv.status_code == 302
 
 @step(u'子订单(\d+)未预排产的数量是(\d+)件, 重量是(\d+)公斤')
 def _(step, sub_order_seq, quantity, weight, sub_order):

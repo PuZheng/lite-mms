@@ -356,103 +356,6 @@ def test():
     from pyfeature import flask_sqlalchemy_setup
     flask_sqlalchemy_setup(app, db, create_step_prefix=u"创建")
 
-    with Feature(u"调度员预排产"):
-        with Scenario(u"准备数据"):
-            pass
-
-        with Scenario(u"最简场景"):
-            when(u"调度员从子订单1中预排产100公斤")
-            then(u"子订单中未分配的重量是900公斤")
-            and_(u"生成了新的工单，其重量是100公斤，所属子订单是1")
-
-        with Scenario(u"排产重量超过子订单重量"):
-            when(u"调度员从子订单1中预排产1000公斤")
-            then(u"返回403错误")
-            and_(u"子订单1的剩余重量仍然是900公斤")
-
-        with Scenario(u"预排产计件类型的子订单"):
-            when(u"调度员从子订单2中预排产5件")
-            then(u"子订单2中未分配的件数是3件，重量是300公斤")
-            and_(u"生成了新的工单，件数是5件，重量是500公斤")
-        
-        with Scenario(u"退货流程"):
-            when(u"调度员从子订单3重预排产200公斤")
-            then(u"调度员的待质检列表中增加了一个200公斤的工单")
-            and_(u"这个工单的子订单是2")
-            
-    with Feature(u"调度员调度"):
-        with Scenario(u"准备数据"):
-            pass
-        
-        with Scenario(u"最简场景"):
-            when(u"调度员将工单1调度给车间1")
-            then_(u"车间主任A可获取的工单列表包括工单1")
-
-
-    with Feature(u"调度员回收工单"):
-        with Scenario(u"准备数据"):
-            pass
-
-        with Scenario(u"调度员回收未分配的工单"):
-            when(u"调度员回收工单1")
-            then_(u"工单1的状态转变为未调度")
-            and_(u"工单1没有出现在车间主任1的工单列表中")
-
-        with Scenario(u"调度员回收已经分配的工单"):
-            when(u"调度员回收工单2")
-            then_(u"工单2的状态转变为锁定")
-            and_(u"工单2不能够再次增加重量")
-            when(u"车间主任确认回收工单2")
-            then_(u"工单2生产完毕的部分成为一个待质检工单，重量是400公斤")
-            and_(u"工单2重新变成待调度，重量是600公斤")
-
-        with Scenario(u"调度员回收已经生产完毕的工单"):
-            when(u"调度员回收工单3")
-            then_(u"返回403错误")
-            and_(u"工单3的状态仍然是待质检")
-        
-    with Feature(u"车间主任分配工单"):
-        with Scenario(u"准备数据"):
-            pass
-
-        with Scenario(u"最简流程"):
-            when(u"车间主任1分配工单1给班组1")
-            then(u"工单1出现在班组1的工单列表中")
-
-        with Scenario(u"车间主任打回工单"):
-            pass
-
-    with Feature(u"班组长生产工单"):
-        with Scenario(u"准备数据"):
-            pass
-
-        with Scenario(u"最简流程"):
-            when(u"班组长增加了工单1的工序后重量100公斤")
-            and_(u"班组长结束工单1")
-            then(u"工单1的状态变为待质检")
-            and_(u"工单1的工序后重量是100公斤")
-
-        with Scenario(u"结束计件类型的工单"):
-            when(u"班组长增加了工单2的工序后件数是2件, 重量是210公斤")
-            and_(u"班组长结束工单2")
-            then(u"工单2的状态变为待质检")
-            and_(u"工单2的工序后件数是2件，重量是210公斤")
-        
-        with Scenario(u"结转计重类型的工单"):
-            when(u"班组长增加了工单3的工序后重量400公斤")
-            and_(u"班组长结束工单3")
-            then(u"工单3的状态变为待分配")
-            and_(u"新生成了一个待质检工单，重量是400公斤")
-
-        with Scenario(u"结转计件类型的工单"):
-            pass
-
-        with Scenario(u"快速结转计重类型的工单"):
-            pass
-         
-    with Feature(u"质检员质检工单"):
-        pass
-
     with Feature(u"质检报告提交以后，生成的仓单是打印过的，并根据生产车间自动关联装卸点", 
         ["lite_mms.test.steps.manufacture"]):
 
@@ -463,16 +366,16 @@ def test():
             product = and_(u"创建Product(螺丝)", product_type=product_type)
             customer = and_(u"创建Customer(宁力)", abbr="nl")
             from lite_mms import constants
-            cargo_clerk_group = and_(u"创建Group(收发员)", group_id=constants.groups.CARGO_CLERK)
+            cargo_clerk_group = and_(u"创建Group(收发员)")
             cargo_clerk = and_(u"创建User, 他是一个收发员", username="cc", password="cc", groups=[cargo_clerk_group])
-            scheduler_group = and_(u"创建Group(调度员)", group_id=constants.groups.SCHEDULER)
+            scheduler_group = and_(u"创建Group(调度员)")
             scheduler = and_(u"创建User, 他是一个调度员", username="s", password="s", groups=[scheduler_group])
-            dl_group = and_(u"创建Group(车间主任)", group_id=constants.groups.DEPARTMENT_LEADER)
+            dl_group = and_(u"创建Group(车间主任)")
             dl = and_(u"创建User, 他是一个车间主任", username="dl", password="dl", groups=[dl_group])
-            tl_group = and_(u"创建Group(班组长)", group_id=constants.groups.TEAM_LEADER)
+            tl_group = and_(u"创建Group(班组长)")
             tl = and_(u"创建User, 他是一个班组长", username=u"tl", password="tl", 
                                 groups=[tl_group])
-            qi_group = and_(u"创建Group(质检员)", group_id=constants.groups.QUALITY_INSPECTOR)
+            qi_group = and_(u"创建Group(质检员)")
             qi = and_(u"创建User, 他是一个质检员", username=u"qi", password="qi",
                                 groups=[qi_group])
             department = and_(u"创建Department(车间一)")

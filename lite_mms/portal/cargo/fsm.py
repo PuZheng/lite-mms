@@ -35,7 +35,7 @@ class StateLoading(RuleSpecState):
         return u"正在卸载"
 
     @committed
-    def side_effect(self):
+    def side_effect(self, **kwargs):
         self.obj.status = cargo_const.STATUS_LOADING
         self.obj.finish_time = None
         return self.obj.model
@@ -54,7 +54,7 @@ class StateWeighing(State):
         return u"等待称重"
 
     @committed
-    def side_effect(self):
+    def side_effect(self, **kwargs):
         self.obj.status = cargo_const.STATUS_WEIGHING
         return self.obj.model
 
@@ -77,7 +77,7 @@ class StateClosed(RuleSpecState):
         return u"关闭"
 
     @committed
-    def side_effect(self):
+    def side_effect(self, **kwargs):
         self.obj.status = cargo_const.STATUS_CLOSED
         from datetime import datetime
 

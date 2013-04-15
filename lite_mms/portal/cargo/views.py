@@ -217,6 +217,11 @@ def goods_receipt_preview(id_):
     from lite_mms import apis
 
     receipt = apis.cargo.get_goods_receipt(id_)
+    PER_PAGE  = apis.config.get("print_count_per_page", 10, type=int)
+    pages = len(receipt.unload_task_list) / PER_PAGE
+    if not pages:
+        pages = 1
     if not receipt:
         abort(404)
-    return {"receipt": receipt}
+    return {"receipt": receipt, "titlename": u"收货单打印预览", "pages": pages,
+            "per_page": PER_PAGE}

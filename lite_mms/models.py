@@ -836,8 +836,20 @@ class TODO(db.Model):
     __tablename__ = "TB_TODO"
 
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
+    user = db.relationship("User", primaryjoin="TODO.user_id==User.id")
     obj_cls = db.Column(db.String(64))
+    obj_pk = db.Column(db.String(64))
     create_time = db.Column(db.DateTime, default=datetime.now)
     actor_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
-    actor = db.relationship("User")
+    actor = db.relationship("User", primaryjoin="TODO.actor_id==User.id")
     action = db.Column(db.String(64))
+    priority = db.Column(db.Integer)
+
+class Config(db.Model):
+    __tablename__ = "TB_CONFIG"
+
+    id = db.Column(db.Integer, primary_key=True)
+    property_name = db.Column(db.String(64), nullable=False)
+    property_desc = db.Column(db.String(64))
+    property_value = db.Column(db.String(64), nullable=False)

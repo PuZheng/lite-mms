@@ -62,6 +62,7 @@ import harbor
 import broker
 import plate
 import log
+import config
 
 from path import path
 

@@ -224,13 +224,12 @@ def consignment_preview(id_):
     import lite_mms.apis as apis
 
     cons = apis.delivery.get_consignment(id_)
-    PER_PAGE  = apis.config.get("print_count_per_page", 10, type=int)
-    pages = len(cons.product_list) / PER_PAGE
-    if not pages:
-        pages = 1
     if not cons:
         abort(404)
     else:
+        PER_PAGE  = apis.config.get("print_count_per_page", 5.0, type=float)
+        import math
+        pages = int(math.ceil(len(cons.product_list) / PER_PAGE))
         return dict(plate=cons.plate, consignment=cons, titlename=u'发货单详情',
                     pages=pages, per_page=PER_PAGE)
 

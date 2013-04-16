@@ -63,7 +63,7 @@
           <input type="number" name="weight" value="{{ store_bill.weight }}" required="required">
         </div>
       </div>
-      {% if store_bill.sub_order.measured_by_weight %}
+      {% if not store_bill.sub_order.measured_by_weight %}
         <div class="control-group">
           <label class="control-label">
             <strong>数量</strong>

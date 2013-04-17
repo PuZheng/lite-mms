@@ -148,6 +148,14 @@ class UnloadTaskWrapper(ModelWrapper):
     def __eq__(self, other):
         return isinstance(other, UnloadTaskWrapper) and other.id == self.id
 
+    @cached_property
+    def goods_receipt(self):
+        for goods_receipt in self.unload_session.goods_receipt_list:
+            if goods_receipt.customer.id == self.customer.id:
+                return goods_receipt
+        else:
+            return None
+
 
 class GoodsReceiptWrapper(ModelWrapper):
     def __repr__(self):

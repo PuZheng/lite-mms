@@ -227,7 +227,11 @@ def consignment_preview(id_):
     if not cons:
         abort(404)
     else:
-        return dict(plate=cons.plate, consignment=cons, titlename=u'发货单详情')
+        PER_PAGE  = apis.config.get("print_count_per_page", 5.0, type=float)
+        import math
+        pages = int(math.ceil(len(cons.product_list) / PER_PAGE))
+        return dict(plate=cons.plate, consignment=cons, titlename=u'发货单详情',
+                    pages=pages, per_page=PER_PAGE)
 
 
 @delivery_page.route("/store-bill/<int:id_>", methods=["GET"])

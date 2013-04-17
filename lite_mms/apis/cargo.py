@@ -156,9 +156,11 @@ class GoodsReceiptWrapper(ModelWrapper):
 
     @cached_property
     def unload_task_list(self):
+        task_list = []
         for task in self.unload_session.task_list:
             if task.customer.id == self.customer.id:
-                yield task
+                task_list.append(task)
+        return task_list
 
     def update(self, **kwargs):
         for k, v in kwargs.items():

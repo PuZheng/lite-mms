@@ -12,7 +12,8 @@ from flask.ext.databrowser import ModelView, column_spec
 from flask.ext.databrowser.action import DeleteAction
 from flask.ext.databrowser.filters import BaseFilter
 
-from lite_mms.models import User, Group, Department, Team, Procedure, Harbor
+from lite_mms.models import User, Group, Department, Team, Procedure, \
+    Harbor, Config
 import lite_mms.constants as constants
 import lite_mms.constants.groups as groups_const
 from lite_mms.permissions.roles import AdminPermission
@@ -158,6 +159,20 @@ class ProcedureModelView(AdminModelView):
     __customized_actions__ = [DeleteAction(u"删除", AdminPermission)]
 
 procedure_model_view = ProcedureModelView(Procedure, u"工序")
+
+class ConfigModelView(AdminModelView):
+    __column_labels__ = {"property_name": u"属性名称", "property_desc": u"描述",
+                         "property_value": u"值"}
+    can_create = False
+
+    __form_columns__ = [
+        column_spec.InputColumnSpec("property_name", label=u"属性名称",
+                                    read_only=True),
+        "property_desc",
+        "property_value"]
+
+config_model_view = ConfigModelView(Config, u"配置项")
+
 
 @admin2_page.route("/broker/index.html")
 @templated("/admin2/broker/index.html")

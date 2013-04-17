@@ -48,6 +48,9 @@ thead th {
     .table-bordered td, .table-bordered th{
         border: 1px solid #000000;
     }
+    .page-next{
+        page-break-after: always;
+    }
 }
 
 .well {

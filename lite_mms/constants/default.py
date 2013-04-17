@@ -23,3 +23,5 @@ EXTRA_ORDER_TYPE_NAME = u"计件"
 STANDARD_ORDER_TYPE_NAME = u"计重"
 
 ADMIN_USER_ID = 1
+
+PRINT_COUNT_PER_PAGE = u"print_count_per_page"

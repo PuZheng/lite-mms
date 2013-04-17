@@ -1,4 +1,5 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
+
 """
 SYNOPSIS
     python runserver.py [options]
@@ -13,7 +14,6 @@ OPTIONS
 
 from getopt import getopt
 import sys
-
 opts, _ = getopt(sys.argv[1:], "s:p:h")
 
 host = None

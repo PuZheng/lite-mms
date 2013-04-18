@@ -93,7 +93,7 @@
       </div>
 
       <legend>收货任务列表
-        <button class="btn btn-info" onclick="window.location.reload()">
+        <button class="btn btn-info" onclick="window.location.reload()" type="button">
           <i class="icon-refresh icon-white"></i>&nbsp;刷新
         </button>
       </legend>
@@ -152,10 +152,10 @@
         </table>
         <div class="control-group">
           <div class="controls">
-            <button class="btn btn-info btn-large" data-toggle="modal" data-target="#new-receipt-dialog" id="new-receipt">
+            <button class="btn btn-info btn-large" data-toggle="modal" data-target="#new-receipt-dialog" id="new-receipt" type="button">
               <i class="icon-edit icon-white"></i>&nbsp;{{ _("创建收货单") }}
             </button>
-            <button class="btn btn-info btn-large" id="view-receipts" data-toggle="modal" data-target="#view-receipts-dialog">
+            <button class="btn btn-info btn-large" id="view-receipts" data-toggle="modal" data-target="#view-receipts-dialog" type="button">
               <i class="icon-eye-open icon-white"></i>&nbsp;{{ _("查看收货单") }}
             </button>
             <a class="btn btn-large" href="{{ request.args.get("url") or url_for('cargo.unload_session_list') }}">

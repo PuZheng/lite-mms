@@ -172,7 +172,7 @@ class DeliveryTaskWrapper(ModelWrapper):
             new_sb.printed = True
             finished_store_bills.append(new_sb)
             # 重新计算未完成仓单的数量，重量, 并且加入到已有的完成仓单列表中
-            unfinished_store_bill.harbor = unfinished_store_bill.harbor
+            new_sb.harbor = unfinished_store_bill.harbor
             # 必须先计算净重
             unfinished_store_bill.weight = int(
                 unfinished_store_bill.unit_weight * remain)

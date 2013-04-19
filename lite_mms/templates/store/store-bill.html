@@ -1,4 +1,16 @@
 {% extends "layout.html" %}
+{% block __data_browser__custom_external_block %}
+  <script type="text/javascript">
+    $(function () {
+      $("form").submit(function () {
+        if ($("#harbor").val() == "") {
+          $(".required").removeClass("hide");
+          return false;
+        }
+      });
+    });
+  </script>
+{% endblock %}
 {% block body %}
   <div class="container">
     <legend>仓单详情</legend>
@@ -42,7 +54,8 @@
         </label>
 
         <div class="controls">
-          <select name="harbor" id="harbor" required="required">
+          <select name="harbor" id="harbor">
+            <option></option>
             {% for harbor in harbors %}
               <option value="{{ harbor.name }}"
                   {% if harbor.name == store_bill.harbor.name %}
@@ -52,6 +65,7 @@
               </option>
             {% endfor %}
           </select>
+          <span class="required hide">请选择</span>
         </div>
       </div>
       <div class="control-group">
@@ -113,14 +127,16 @@
       </div>
       <div class="control-group">
         <div class="controls">
-          <input type="hidden" name="url" value="{{ request.args.get("url") or url_for("store_bill.store_bill_list")}}">
+          <input type="hidden" name="url" value="{{ request.args.get("url") or url_for("store_bill.store_bill_list") }}">
           {% if permissions.roles.QualityInspectorPermission.can() %}
             <button class="btn btn-primary btn-large">
               <i class="icon-ok icon-white"></i>&nbsp;保存
             </button>
-            <a class="btn btn-large btn-success" href="{{ url_for("store_bill.store_bill_preview", id_=store_bill.id, url=request.url) }}">
-              <i class="icon-print icon-white"></i>&nbsp;预览
-            </a>
+            {% if store_bill.harbor %}
+              <a class="btn btn-large btn-success" href="{{ url_for("store_bill.store_bill_preview", id_=store_bill.id, url=request.url) }}">
+                <i class="icon-print icon-white"></i>&nbsp;预览
+              </a>
+            {% endif %}
             <a class="btn btn-large" href="{{ request.args.get("url") or url_for("store_bill.store_bill_list") }}">
               <i class="icon-backward"></i>&nbsp;返回
             </a>

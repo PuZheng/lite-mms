@@ -175,17 +175,15 @@ def consignment(id_=None):
                 abort(404)
             params = {}
             if request.form:
-                notes_ = request.form.get("notes")
                 params["pay_in_cash"] = request.form.get("pay_in_cash",
                                                          type=int)
-                if notes_:
-                    params["notes"] = notes_
-                    try:
-                        cons.update(cons.id, **params)
-                        if CargoClerkPermission.can():
-                            flash(u"更新成功")
-                    except ValueError, e:
-                        flash(unicode(e.message), "error")
+                params["notes"] = request.form.get("notes")
+                try:
+                    cons.update(cons.id, **params)
+                    if CargoClerkPermission.can():
+                        flash(u"更新成功")
+                except ValueError, e:
+                    flash(unicode(e.message), "error")
             else:
                 if cons.pay_in_cash:
                     cons.paid()

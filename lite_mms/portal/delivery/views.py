@@ -282,7 +282,7 @@ def consignment_product(id_):
                         product_types=apis.product.get_product_types(),
                         products=json.dumps(apis.product.get_products()),
                         team_list=apis.manufacture.get_team_list(),
-                        titlename=u"产品详情")
+                        titlename=u"发货产品详情")
         else:
             class ProductForm(Form):
                 team_id = IntegerField("team_id")

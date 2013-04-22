@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-@author: Yangminghua
-"""
 import re
-from datetime import datetime
 import json
 
 from flask import request, abort, url_for, render_template, flash
@@ -16,7 +12,7 @@ from wtforms import Form, IntegerField, validators, HiddenField
 from werkzeug.datastructures import OrderedMultiDict
 
 from lite_mms.portal.cargo import cargo_page, fsm
-from lite_mms.utilities import decorators, Pagination, do_commit
+from lite_mms.utilities import decorators, do_commit
 from lite_mms.permissions import CargoClerkPermission,AdminPermission
 from lite_mms import constants
 from lite_mms.basemain import nav_bar
@@ -81,7 +77,7 @@ class UnloadSessionModelView(ModelView):
 
     def get_customized_actions(self, model=None):
         from lite_mms.portal.cargo.actions import MyDeleteAction, CloseAction, OpenAction
-        if model == None: # for list
+        if model is None: # for list
             return [MyDeleteAction(u"删除", CargoClerkPermission), CloseAction(u"关闭"), OpenAction(u"打开")]
         else:
             if model.status in [cargo_const.STATUS_CLOSED, cargo_const.STATUS_DISMISSED]:
@@ -129,6 +125,7 @@ plate_model_view = plateModelView(Plate, u"车辆")
 @cargo_page.route("/weigh-unload-task/<int:id_>", methods=["GET", "POST"])
 @decorators.templated("/cargo/unload-task.haml")
 def weigh_unload_task(id_):
+    from lite_mms import apis
     task = apis.cargo.get_unload_task(id_)
     if not task:
         abort(404)

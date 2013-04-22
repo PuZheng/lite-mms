@@ -766,8 +766,7 @@ class ConsignmentProduct(db.Model):
     spec = db.Column(db.String(64))
     type = db.Column(db.String(64))
     returned_weight = db.Column(db.Integer)
-    team_id = db.Column(db.Integer, db.ForeignKey("TB_TEAM.id"),
-                        nullable=False)
+    team_id = db.Column(db.Integer, db.ForeignKey("TB_TEAM.id"))
     team = db.relationship("Team")
 
     def __init__(self, product, delivery_task, consignment):

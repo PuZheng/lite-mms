@@ -94,7 +94,7 @@
                 </td>
               {% endif %}
               <td>
-                {{ product.team.name }}
+                {{ product.team.name if product.team else "" }}
               </td>
             </tr>
           {% endfor %}

@@ -192,10 +192,4 @@ def deduplicate(seq, idfun=None):
                 seen.add(x_)
                 yield x
 
-    return _seek(seq=seq, idfun=idfun)
-
-
-def camel_case(str_):
-    import re
-    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', str_)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+    return list(_seek(seq=seq, idfun=idfun))

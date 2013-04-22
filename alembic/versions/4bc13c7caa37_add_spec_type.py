@@ -43,7 +43,8 @@ def upgrade():
                 if t.customer:
                     if t.customer.id == consignment.customer_id:
                         p = ConsignmentProduct(t.product, t, consignment)
-                        p.team = t.team_list.next()
+                        if t.team_list:
+                            p.team = t.team_list[0]
                         p.weight = t.weight
                         p.returned_weight = t.returned_weight
                         if not t.quantity:

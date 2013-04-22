@@ -61,6 +61,10 @@ class UnloadSessionWrapper(ModelWrapper):
         return list(set([task.customer for task in self.task_list]))
 
     @property
+    def customer_list_unwrapped(self):
+        return [o.model for o in self.customer_list]
+
+    @property
     def closeable(self):
         return not self.finish_time and all(ut.weight for ut in self.task_list)
 

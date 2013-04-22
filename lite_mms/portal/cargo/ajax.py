@@ -1,10 +1,12 @@
 # -*- coding: UTF-8 -*-
+import json
 from flask import request
 from sqlalchemy.exc import SQLAlchemyError
 from wtforms import Form, TextField, IntegerField
 from lite_mms.portal.cargo import cargo_page
+from lite_mms.utilities import get_or_404, dictview
 from lite_mms.utilities.decorators import ajax_call
-import json
+from lite_mms.models import UnloadSession
 from flask.ext.babel import _
 
 @cargo_page.route("/ajax/receipts-list", methods=["GET"])
@@ -67,5 +69,22 @@ def ajax_receipt():
         except SQLAlchemyError:
             return _(u"更新失败"), 403
 
+def _log2dict(log):
+    return {
+        "obj_cls": u"卸货会话" if log.obj_cls == "UnloadSession" else u"卸货任务",
+        "action": log.action, 
+        "create_time": log.create_time.strftime("%y-%m-%d %H:%M:%S"), 
+        "actor": log.actor.username, 
+        "obj": unicode(log.obj), 
+        "message": log.message
+    }
 
-
+@cargo_page.route("/ajax/log-list", methods=["GET"])
+def log_list():
+    gr_id = int(request.args["gr_id"])
+    gr = get_or_404(UnloadSession, gr_id)
+    log_list = gr.log_list 
+    return json.dumps({
+        "count": len(log_list),
+        "data": [_log2dict(log) for log in log_list if log.obj_cls in {"UnloadSession", "UnloadTask"}],
+    }) 

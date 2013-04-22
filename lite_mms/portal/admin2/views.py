@@ -12,8 +12,8 @@ from flask.ext.databrowser import ModelView, column_spec
 from flask.ext.databrowser.action import DeleteAction
 from flask.ext.databrowser.filters import BaseFilter
 
-from lite_mms.models import User, Group, Department, Team, Procedure, \
-    Harbor, Config
+from lite_mms.models import (User, Group, Department, Team, Procedure,
+    Harbor, Config, Customer)
 import lite_mms.constants as constants
 import lite_mms.constants.groups as groups_const
 from lite_mms.permissions.roles import AdminPermission
@@ -68,6 +68,11 @@ class UserModelView(AdminModelView):
     __create_columns__ = __form_columns__ = ["username", "password", "groups"]
 
 user_model_view = UserModelView(User, u"用户")
+
+class CustomerModelView(ModelView):
+    pass
+
+customer_model_view = CustomerModelView(Customer, u"客户")
 
 class GroupModelView(AdminModelView):
 
@@ -302,3 +307,4 @@ def team_performance():
         response.headers[
         'Content-Disposition'] = 'attachment; filename=export.csv'
         return response
+

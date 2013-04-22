@@ -110,7 +110,7 @@ class InitializeTestDB(Command):
         #     - 车上有人, 有两个任务, 分别来自不同的客户, 并且都已经称重
         unload_session1 = do_commit(UnloadSession(plate_=vehicle1, gross_weight=10000, with_person=True,
                                                   finish_time=datetime.now(), status=cargo_const.STATUS_CLOSED))
-        default_product = Product.query.get(DEFAULT_PRODUCT_NAME)
+        default_product = Product.query.filter(Product.name==DEFAULT_PRODUCT_NAME).one()
         unload_task1 = do_commit(UnloadTask(unload_session1, harbor1, customer1, l, default_product, "0.png",
                        weight=1000))
         unload_task2 = do_commit(UnloadTask(unload_session1, harbor2, customer2, l, product2, "1.png", weight=3000))

@@ -57,5 +57,7 @@
       {% endfor %}
       </tbody>
     </table>
+    {% from "pagination.html" import render_pagination %}
+    {{ render_pagination(pagination) }}
   </div>
 {% endblock %}

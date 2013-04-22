@@ -32,7 +32,7 @@
         <label class="control-label" for="product_type"><strong>产品类型</strong></label>
 
         <div class="controls">
-          <select id="product_type" name="product_type_id">
+          <select id="product_type" name="product_type_id" required="required">
             {% for pt in product_types %}
               <option value="{{ pt.id }}"
                       {% if pt.id == current.product.product_type_id %}selected="selected"{% endif %}>{{ pt.name }}</option>
@@ -64,32 +64,32 @@
 
           <div class="controls">
             <input type="text" name="quantity" id="quantity"
-                   value="{{ current.quantity }}"></div>
+                   value="{{ current.quantity }}" required="required"></div>
         </div>
         <div class="control-group">
           <label class="control-label" for="unit"><strong>单位</strong></label>
 
           <div class="controls"><input type="text" name="unit" id="unit"
-                                       value="{{ current.unit }}"></div>
+                                       value="{{ current.unit }}" required="required"></div>
         </div>
       {% endif %}
       <div class="control-group">
         <label class="control-label" for="weight"><strong>净重(KG)</strong></label>
 
         <div class="controls"><input type="number" name="weight" id="weight"
-                                     value="{{ current.weight }}"></div>
+                                     value="{{ current.weight }}" required="required"></div>
       </div>
       <div class="control-group">
         <label class="control-label" for="returned_weight"><strong>退镀重量(KG)</strong></label>
 
         <div class="controls">
           <input type="number" name="returned_weight" id="returned_weight"
-                 value="{{ current.returned_weight }}"></div>
+                 value="{{ current.returned_weight }}" required="required"></div>
       </div>
       <div class="control-group">
         <label class="control-label" for="team"><strong>生产班组</strong></label>
 
-        <div class="controls"><select name="team_id" id="team">
+        <div class="controls"><select name="team_id" id="team" required="required">
           {% for team in team_list %}
             <option value="{{ team.id }}"
                 {% if team.id == current.team_id %}

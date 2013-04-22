@@ -100,7 +100,7 @@
             <td>{{ current.delivery_task.weight }}-->({{ current.weight }})</td>
             <td>{{ current.delivery_task.returned_weight }}-->({{ current.returned_weight }})
             </td>
-            <td>{{ current.delivery_task.team_list|join(" ",attribute="name")|safe }}-->({{ current.team.name }})
+            <td>{{ current.delivery_task.team_list|join(" ",attribute="name")|safe }}-->({{ current.team.name if current.team else "" }})
             </td>
           </tr>
         {% endfor %}

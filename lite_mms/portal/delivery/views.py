@@ -175,17 +175,15 @@ def consignment(id_=None):
                 abort(404)
             params = {}
             if request.form:
-                notes_ = request.form.get("notes")
                 params["pay_in_cash"] = request.form.get("pay_in_cash",
                                                          type=int)
-                if notes_:
-                    params["notes"] = notes_
-                    try:
-                        cons.update(cons.id, **params)
-                        if CargoClerkPermission.can():
-                            flash(u"更新成功")
-                    except ValueError, e:
-                        flash(unicode(e.message), "error")
+                params["notes"] = request.form.get("notes")
+                try:
+                    cons.update(cons.id, **params)
+                    if CargoClerkPermission.can():
+                        flash(u"更新成功")
+                except ValueError, e:
+                    flash(unicode(e.message), "error")
             else:
                 if cons.pay_in_cash:
                     cons.paid()
@@ -259,17 +257,27 @@ def consignment_list():
     is_paid = request.args.get("is_paid", 0, type=int)
     customer_id = request.args.get("customer_id", 0, type=int)
     customer = apis.customer.get_customer(customer_id)
-    cons = apis.delivery.get_consignment_list(pay_in_cash=True,
-                                              is_paid=is_paid,
-                                              customer_id=customer_id)
+    page = request.args.get("page", 1, type=int)
+    page_size = constants.DELIVERY_SESSION_PER_PAGE
 
+    cons, total_cnt = apis.delivery.get_consignment_list(pay_in_cash=True,
+                                                         is_paid=is_paid,
+                                                         customer_id=customer_id,
+                                                         idx=(
+                                                             page - 1) * page_size,
+                                                         cnt=page_size)
+
+
+    pagination = Pagination(page, constants.DELIVERY_SESSION_PER_PAGE,
+                            total_cnt)
     return dict(titlename=u'发货单列表', consignment_list=cons,
                 customer_list=apis.delivery.ConsignmentWrapper
                 .get_customer_list(),
-                customer=customer)
+                customer=customer, pagination=pagination)
 
 @delivery_page.route("/product/<int:id_>", methods=["POST", "GET"])
 @decorators.templated("delivery/consignment-product.html")
+@decorators.nav_bar_set
 def consignment_product(id_):
     from flask.ext.principal import Permission
 
@@ -283,7 +291,8 @@ def consignment_product(id_):
             return dict(current=current_product,
                         product_types=apis.product.get_product_types(),
                         products=json.dumps(apis.product.get_products()),
-                        team_list=apis.manufacture.get_team_list())
+                        team_list=apis.manufacture.get_team_list(),
+                        titlename=u"发货产品详情")
         else:
             class ProductForm(Form):
                 team_id = IntegerField("team_id")

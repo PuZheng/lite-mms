@@ -15,7 +15,7 @@ def consignment_list():
     if session_id is not None:
         import lite_mms.apis as apis
 
-        consignments = apis.delivery.get_consignment_list(session_id)
+        consignments, totalcnt = apis.delivery.get_consignment_list(session_id)
         if not consignments:
             return _(u"当前没有任何发货单"), 404
         return json.dumps(

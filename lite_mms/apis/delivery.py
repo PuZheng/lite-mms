@@ -172,7 +172,7 @@ class DeliveryTaskWrapper(ModelWrapper):
             new_sb.printed = True
             finished_store_bills.append(new_sb)
             # 重新计算未完成仓单的数量，重量, 并且加入到已有的完成仓单列表中
-            unfinished_store_bill.harbor = unfinished_store_bill.harbor
+            new_sb.harbor = unfinished_store_bill.harbor
             # 必须先计算净重
             unfinished_store_bill.weight = int(
                 unfinished_store_bill.unit_weight * remain)
@@ -278,12 +278,16 @@ class DeliveryTaskWrapper(ModelWrapper):
 
     @property
     def unit(self):
-        return self.sub_order_list.next().unit
+        if self.sub_order_list:
+            return self.sub_order_list[0].unit
+        else:
+            return ""
 
 class ConsignmentWrapper(ModelWrapper):
     @classmethod
     def get_list(cls, delivery_session_id=None, is_paid=None,
-                 exporting=False, pay_in_cash=False, customer_id=0):
+                 exporting=False, pay_in_cash=False, customer_id=0, idx=0,
+                 cnt=sys.maxint):
         cons_q = models.Consignment.query
         if is_paid is not None:
             cons_q = cons_q.filter(
@@ -298,7 +302,9 @@ class ConsignmentWrapper(ModelWrapper):
             cons_q = cons_q.filter(models.Consignment.MSSQL_ID == None)
         if customer_id:
             cons_q = cons_q.filter(models.Consignment.customer_id == customer_id)
-        return [ConsignmentWrapper(c) for c in cons_q.all()]
+        totalcnt = cons_q.count()
+        return [ConsignmentWrapper(c) for c in
+                cons_q.offset(idx).limit(cnt).all()], totalcnt
 
     @cached_property
     def measured_by_weight(self):
@@ -339,17 +345,19 @@ class ConsignmentWrapper(ModelWrapper):
         for t in delivery_session.delivery_task_list:
             if t.customer.id == customer_id:
                 p = models.ConsignmentProduct(t.product, t, consignment)
-                p.team = t.team_list.next()
+                if t.team_list:
+                    p.team = t.team_list[0]
                 p.weight = t.weight
                 p.returned_weight = t.returned_weight
                 if not t.quantity:
                     t.quantity = sum(store_bill.quantity for store_bill in
                         t.store_bill_list)
                 p.quantity = t.quantity
-                sb = t.sub_order_list.next()
-                p.unit = sb.unit
-                p.spec = sb.spec
-                p.type = sb.type
+                if t.sub_order_list:
+                    sb = t.sub_order_list[0]
+                    p.unit = sb.unit
+                    p.spec = sb.spec
+                    p.type = sb.type
                 do_commit(p)
         return ConsignmentWrapper(do_commit(consignment))
 

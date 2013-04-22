@@ -13,7 +13,7 @@ from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.column_spec import InputColumnSpec, ColumnSpec, PlaceHolderColumnSpec, ListColumnSpec
 from werkzeug.utils import redirect
 from wtforms import Form, IntegerField, validators, HiddenField
-from brownie.datastructures import OrderedDict
+from werkzeug.datastructures import OrderedMultiDict
 
 from lite_mms.portal.cargo import cargo_page, fsm
 from lite_mms.utilities import decorators, Pagination, do_commit
@@ -91,7 +91,7 @@ class UnloadSessionModelView(ModelView):
 
     # ================= FORM PART ============================
     __create_columns__ = ["plate_", InputColumnSpec("with_person", label=u"驾驶室是否有人"), "gross_weight"]
-    __form_columns__ = OrderedDict()
+    __form_columns__ = OrderedMultiDict()
     __form_columns__[u"详细信息"] = [
         "plate_",  # TODO, unloading plate can't be selected
         InputColumnSpec("with_person", label=u"驾驶室是否有人"),

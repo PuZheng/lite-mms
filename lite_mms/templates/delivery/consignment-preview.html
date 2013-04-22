@@ -108,6 +108,7 @@
               总重量(KG):{{ consignment.product_list|sum(attribute='weight') }}</td>
           </tr>
         </table>
+        <p class="text-right">注:若有质量疑义，请在收货之日起三日内以书面形式告知</p>
       </div>
       <div class="text-center">
         <p>支付类型：{% if consignment.pay_in_cash %}现金支付&nbsp;

@@ -108,9 +108,8 @@ def schedule():
 
             from lite_mms.utilities.functions import deduplicate
 
-            department_set = list(
-                deduplicate([wc.department for wc in work_command_list],
-                            lambda x: x.name))
+            department_set = deduplicate(
+                [wc.department for wc in work_command_list], lambda x: x.name)
             if len(department_set) == 1: # 所有的工单都来自于同一个车间
                 default_department_id = department_set.pop().id
 

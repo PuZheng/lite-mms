@@ -277,6 +277,7 @@ def consignment_list():
 
 @delivery_page.route("/product/<int:id_>", methods=["POST", "GET"])
 @decorators.templated("delivery/consignment-product.html")
+@decorators.nav_bar_set
 def consignment_product(id_):
     from flask.ext.principal import Permission
 

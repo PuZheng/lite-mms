@@ -278,7 +278,10 @@ class DeliveryTaskWrapper(ModelWrapper):
 
     @property
     def unit(self):
-        return self.sub_order_list.next().unit
+        if self.sub_order_list:
+            return self.sub_order_list[0].unit
+        else:
+            return ""
 
 class ConsignmentWrapper(ModelWrapper):
     @classmethod
@@ -342,17 +345,19 @@ class ConsignmentWrapper(ModelWrapper):
         for t in delivery_session.delivery_task_list:
             if t.customer.id == customer_id:
                 p = models.ConsignmentProduct(t.product, t, consignment)
-                p.team = t.team_list.next()
+                if t.team_list:
+                    p.team = t.team_list[0]
                 p.weight = t.weight
                 p.returned_weight = t.returned_weight
                 if not t.quantity:
                     t.quantity = sum(store_bill.quantity for store_bill in
                         t.store_bill_list)
                 p.quantity = t.quantity
-                sb = t.sub_order_list.next()
-                p.unit = sb.unit
-                p.spec = sb.spec
-                p.type = sb.type
+                if t.sub_order_list:
+                    sb = t.sub_order_list[0]
+                    p.unit = sb.unit
+                    p.spec = sb.spec
+                    p.type = sb.type
                 do_commit(p)
         return ConsignmentWrapper(do_commit(consignment))
 

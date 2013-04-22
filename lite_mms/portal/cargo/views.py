@@ -16,6 +16,7 @@ from lite_mms.utilities import decorators, do_commit
 from lite_mms.permissions import CargoClerkPermission,AdminPermission
 from lite_mms import constants
 from lite_mms.basemain import nav_bar
+from lite_mms.apis import wraps
 import lite_mms.constants.cargo as cargo_const
 from lite_mms.models import UnloadSession, Plate
 
@@ -89,7 +90,7 @@ class UnloadSessionModelView(ModelView):
     __create_columns__ = ["plate_", InputColumnSpec("with_person", label=u"驾驶室是否有人"), "gross_weight"]
     __form_columns__ = OrderedMultiDict()
     __form_columns__[u"详细信息"] = [
-        "plate_",  # TODO, unloading plate can't be selected
+        InputColumnSpec("plate_", opt_filter=lambda obj: not wraps(obj).unloading), 
         InputColumnSpec("with_person", label=u"驾驶室是否有人"),
         ColumnSpec("status", label=u"状态", formatter=lambda v, obj: '<strong>' + cargo_const.desc_status(v) + '</strong>', 
                    css_class="input-small uneditable-input"), 

@@ -11,12 +11,13 @@ from flask import flash, redirect, url_for, request, render_template
 from flask.ext.databrowser import ModelView, column_spec
 from flask.ext.databrowser.action import DeleteAction
 from flask.ext.databrowser.filters import BaseFilter
+from flask.ext.principal import Permission
 
 from lite_mms.models import (User, Group, Department, Team, Procedure,
     Harbor, Config, Customer)
 import lite_mms.constants as constants
 import lite_mms.constants.groups as groups_const
-from lite_mms.permissions.roles import AdminPermission
+from lite_mms.permissions.roles import AdminPermission, CargoClerkPermission
 from lite_mms.portal.admin2 import admin2_page
 from lite_mms.basemain import nav_bar
 from lite_mms.utilities.decorators import templated
@@ -29,6 +30,12 @@ class AdminModelView(ModelView):
 
     def try_view(self):
         AdminPermission.test()
+
+    def try_edit(self):
+        AdminPermission.test()
+
+    def can_edit(self):
+        return AdminPermission.can()
 
 class UserModelView(AdminModelView):
 
@@ -69,8 +76,11 @@ class UserModelView(AdminModelView):
 
 user_model_view = UserModelView(User, u"用户")
 
-class CustomerModelView(ModelView):
-    pass
+class CustomerModelView(AdminModelView):
+    
+    def try_view(self):
+        Permission.union(AdminPermission, CargoClerkPermission).test()
+
 
 customer_model_view = CustomerModelView(Customer, u"客户")
 

@@ -5,6 +5,7 @@
 """
 from sqlalchemy.exc import SQLAlchemyError
 from lite_mms import models
+from lite_mms.apis import ModelWrapper
 
 def get_plate_list(status=None):
     def _get_condition(plate_q, status):
@@ -18,3 +19,9 @@ def get_plate_list(status=None):
             model.finish_time == None)
 
     return [p.name for p in _get_condition(models.Plate.query, status).all()]
+
+class PlateWrapper(ModelWrapper):
+
+    @property
+    def unloading(self):
+        return models.UnloadSession.query.filter(models.UnloadSession.plate==self.name).filter(models.UnloadSession.finish_time==None).count() > 0

@@ -283,7 +283,8 @@ class DeliveryTaskWrapper(ModelWrapper):
 class ConsignmentWrapper(ModelWrapper):
     @classmethod
     def get_list(cls, delivery_session_id=None, is_paid=None,
-                 exporting=False, pay_in_cash=False, customer_id=0):
+                 exporting=False, pay_in_cash=False, customer_id=0, idx=0,
+                 cnt=sys.maxint):
         cons_q = models.Consignment.query
         if is_paid is not None:
             cons_q = cons_q.filter(
@@ -298,7 +299,9 @@ class ConsignmentWrapper(ModelWrapper):
             cons_q = cons_q.filter(models.Consignment.MSSQL_ID == None)
         if customer_id:
             cons_q = cons_q.filter(models.Consignment.customer_id == customer_id)
-        return [ConsignmentWrapper(c) for c in cons_q.all()]
+        totalcnt = cons_q.count()
+        return [ConsignmentWrapper(c) for c in
+                cons_q.offset(idx).limit(cnt).all()], totalcnt
 
     @cached_property
     def measured_by_weight(self):

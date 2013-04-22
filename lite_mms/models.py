@@ -291,6 +291,22 @@ class GoodsReceipt(db.Model):
         return "<GoodsReceipt %d>" % self.id
 
 
+class GoodsReceiptEntry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    goods_receipt_id = db.Column(db.Integer,
+                                 db.ForeignKey("TB_GOODS_RECEIPT.id"))
+    goods_receipt = db.relationship("GoodsReceipt")
+    weight = db.Column(db.Integer, nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey("TB_PRODUCT.id"))
+    product = db.relationship("Product")
+
+    def __unicode__(self):
+        return unicode(self.id)
+
+    def __repr__(self):
+        return "<GoodsReceiptProduct %d>" % self.id
+
+
 class Order(db.Model):
     __modelname__ = u"订单"
     __tablename__ = "TB_ORDER"

@@ -70,7 +70,7 @@ class DataAdminView(BaseView):
     def consignments(self):
         import lite_mms.apis as apis
 
-        current_consignments = apis.delivery.get_consignment_list(exporting=True)
+        current_consignments, totalcnt = apis.delivery.get_consignment_list(exporting=True)
         content = u"读出%d条发货单信息，" % len(current_consignments)
         count = 0
         for consignment in current_consignments:

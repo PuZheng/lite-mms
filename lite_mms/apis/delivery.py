@@ -350,10 +350,11 @@ class ConsignmentWrapper(ModelWrapper):
                     t.quantity = sum(store_bill.quantity for store_bill in
                         t.store_bill_list)
                 p.quantity = t.quantity
-                sb = t.sub_order_list.next()
-                p.unit = sb.unit
-                p.spec = sb.spec
-                p.type = sb.type
+                if t.sub_order_list:
+                    sb = t.sub_order_list[0]
+                    p.unit = sb.unit
+                    p.spec = sb.spec
+                    p.type = sb.type
                 do_commit(p)
         return ConsignmentWrapper(do_commit(consignment))
 

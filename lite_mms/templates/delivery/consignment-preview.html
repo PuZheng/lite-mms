@@ -99,7 +99,7 @@
                 </td>
               {% endif %}
               <td>
-                {{ product.team.name }}
+                {{ product.team.name if product.team else "" }}
               </td>
             </tr>
           {% endfor %}
@@ -113,6 +113,7 @@
               总重量(KG):{{ consignment.product_list|sum(attribute='weight') }}</td>
           </tr>
         </table>
+        <p class="text-right">注:若有质量疑义，请在收货之日起三日内以书面形式告知</p>
       </div>
       <div id="printArea">
         {% for i in range(pages) %}

@@ -13,11 +13,17 @@ class ModelWrapper(object):
         return self.__model
 
     def __getattr__(self, name):
-        attr = getattr(self.__model, name)
+        unwrapped = False
+        if name.endswith("unwrapped"):
+            name = name.strip("_unwrapped")
+            unwrapped = True
+            attr = getattr(self, name)
+        else:
+            attr = getattr(self.__model, name)
         if isinstance(attr, types.ListType) or isinstance(attr,
                                                           types.TupleType):
             return type(attr)(self.__wrap(i) for i in attr)
-        return self.__wrap(attr)
+        return attr if unwrapped else self.__wrap(attr) 
 
     def __setattr__(self, key, value):
         if key != '_ModelWrapper__model':

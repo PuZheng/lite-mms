@@ -192,4 +192,4 @@ def deduplicate(seq, idfun=None):
                 seen.add(x_)
                 yield x
 
-    return _seek(seq=seq, idfun=idfun)
+    return list(_seek(seq=seq, idfun=idfun))

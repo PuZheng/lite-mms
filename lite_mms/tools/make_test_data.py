@@ -131,9 +131,11 @@ class InitializeTestDB(Command):
             UnloadSession(plate_=vehicle2, gross_weight=10000, with_person=False,
                           status=cargo_const.STATUS_LOADING))
 
-        # 生成收货会话, 注意这里故意不为某些客户生成收货单
+        # 生成收货会话和收货项, 注意这里故意不为某些客户生成收货单
         goods_receipt1 = do_commit(
             GoodsReceipt(customer1, unload_session1))
+        do_commit(GoodsReceiptEntry(goods_receipt=goods_receipt1, weight=1000, product=product1))
+        do_commit(GoodsReceiptEntry(goods_receipt=goods_receipt1, weight=3000, product=product2))
         goods_receipt2 = do_commit(
             GoodsReceipt(customer2, unload_session1))
         # 生成订单, 注意这里故意不为某些收货会话生成订单

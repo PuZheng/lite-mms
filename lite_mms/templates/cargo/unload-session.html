@@ -10,6 +10,11 @@
     $(function () {
       $(".fancybox").fancybox();
       $(".collapse").collapse();
+      $(".collapse[data-role=gr-entries]").on('shown', function () {
+        $(this).prev().attr("class", "icon-chevron-up");
+        }).on('hidden', function () {
+        $(this).prev().attr("class", "icon-chevron-down");
+        });
       $("#log-accordion a").click(function () {
         var e = $("#log-list .accordion-inner ul");
         if (e.children().size() > 0) {

@@ -218,7 +218,11 @@ class GoodsReceiptWrapper(ModelWrapper):
         for ut in self.unload_task_list:
             do_commit(
                 models.GoodsReceiptEntry(product=ut.product, weight=ut.weight,
-                                         goods_receipt=self.model))
+                                         goods_receipt=self.model,
+                                         harbor=ut.harbor,
+                                         pic_path=ut.pic_path))
+        self.model.printed = False
+        do_commit(self.model)
 
     def delete(self):
         do_commit(self.model, "delete")

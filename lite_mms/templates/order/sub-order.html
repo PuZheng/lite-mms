@@ -57,10 +57,10 @@
           return false;
         }
       });
-      {% if sub_order.measured_by_weight %}
+      {% if sub_order.measured_by_weight and sub_order.default_harbor %}
         $("select[name='harbor']").change(function () {
-          if ($(this).val() != '{{ sub_order.unload_task.harbor.name }}') {
-            alert("该子订单的默认卸货点是'{{ sub_order.unload_task.harbor.name }}'");
+          if ($(this).val() != '{{ sub_order.default_harbor.name }}') {
+            alert("该子订单的默认卸货点是'{{ sub_order.default_harbor.name }}'");
           }
         });
       {% endif %}

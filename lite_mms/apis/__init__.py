@@ -15,7 +15,7 @@ class ModelWrapper(object):
     def __getattr__(self, name):
         unwrapped = False
         if name.endswith("unwrapped"):
-            name = name.strip("_unwrapped")
+            name = name[0:-len("_unwrapped")]
             unwrapped = True
             attr = getattr(self, name)
         else:

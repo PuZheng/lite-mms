@@ -19,7 +19,8 @@ from lite_mms import constants
 from lite_mms.basemain import nav_bar
 from lite_mms.apis import wraps
 import lite_mms.constants.cargo as cargo_const
-from lite_mms.models import UnloadSession, Plate, DeliverySession
+from lite_mms.models import UnloadSession, Plate, GoodsReceiptEntry
+
 
 @cargo_page.route('/')
 def index():
@@ -154,6 +155,15 @@ class plateModelView(ModelView):
         return Plate(name=name)
 
 plate_model_view = plateModelView(Plate, u"车辆")
+
+class GoodsReceiptEntryModelView(ModelView):
+
+    pass
+
+
+goods_receipt_entry_view = GoodsReceiptEntryModelView(GoodsReceiptEntry, u"收货产品")
+
+
 
 @cargo_page.route("/weigh-unload-task/<int:id_>", methods=["GET", "POST"])
 @decorators.templated("/cargo/unload-task.html")

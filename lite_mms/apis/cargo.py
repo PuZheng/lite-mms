@@ -186,7 +186,7 @@ class GoodsReceiptWrapper(ModelWrapper):
             _entries = [(entry.product.id, entry.weight) for entry in
                         self.goods_receipt_entries]
             _uts = [(ut.product.id, ut.weight) for ut in self.unload_task_list]
-            return sorted(_entries) == sorted(_uts)
+            return sorted(_entries) != sorted(_uts)
         return False
 
 def get_unload_session_list(idx=0, cnt=sys.maxint, unfinished_only=False,

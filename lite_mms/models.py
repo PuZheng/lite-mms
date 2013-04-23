@@ -295,7 +295,8 @@ class GoodsReceiptEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     goods_receipt_id = db.Column(db.Integer,
                                  db.ForeignKey("TB_GOODS_RECEIPT.id"))
-    goods_receipt = db.relationship("GoodsReceipt")
+    goods_receipt = db.relationship("GoodsReceipt",
+                                    backref="goods_receipt_entries")
     weight = db.Column(db.Integer, nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey("TB_PRODUCT.id"))
     product = db.relationship("Product")

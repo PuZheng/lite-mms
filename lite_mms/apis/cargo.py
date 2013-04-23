@@ -176,6 +176,17 @@ class GoodsReceiptWrapper(ModelWrapper):
                 setattr(self.model, k, v)
         do_commit(self.model)
 
+    @property
+    def stale(self):
+        if self.unload_session.finish_time > self.create_time:
+            _entries = [(entry.product.id, entry.weight) for entry in
+                        self.goods_receipt_entries]
+            _uts = [(ut.product.id, ut.weight) for ut in self.unload_task_list]
+            return sorted(_entries) != sorted(_uts)
+        return False
+
+    def refresh(self):
+        pass
 
 def get_unload_session_list(idx=0, cnt=sys.maxint, unfinished_only=False,
                             keywords=None):

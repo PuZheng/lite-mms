@@ -46,3 +46,19 @@ class OpenAction(BaseAction):
 
     def get_forbidden_msg_formats(self):
         return {-2: u"发货会话%s处在打开状态, 只有已经关闭的会话才能被打开"}
+
+
+class CreateReceiptAction(BaseAction):
+
+    def test_enabled(self, model):
+        from lite_mms.apis import wraps
+        if model.goods_receipt_list and all(
+                not wraps(gr).stale for gr in model.goods_receipt_list):
+            return -2
+        return 0
+
+    def op(self, obj):
+        obj.clean_goods_receipts()
+
+    def get_forbidden_msg_formats(self):
+        return {-2: u"%s已生成收货单"}

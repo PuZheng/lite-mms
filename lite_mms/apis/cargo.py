@@ -15,7 +15,8 @@ g_status_desc = {
     constants.cargo.STATUS_WEIGHING: u"等待称重",
     constants.cargo.STATUS_CLOSED: u"关闭",
     constants.cargo.STATUS_DISMISSED: u"取消",
-    }
+}
+
 
 class UnloadSessionWrapper(ModelWrapper):
     @property
@@ -59,6 +60,10 @@ class UnloadSessionWrapper(ModelWrapper):
     @cached_property
     def customer_list(self):
         return list(set([task.customer for task in self.task_list]))
+
+    @cached_property
+    def customer_id_list(self):
+        return [customer.id for customer in self.customer_list]
 
     @property
     def closeable(self):
@@ -104,6 +109,28 @@ class UnloadSessionWrapper(ModelWrapper):
         """
         self.model.finish_time = finish_time
         do_commit(self.model)
+
+    def gc_goods_receipts(self):
+        """
+        delete the goods_receipt which has not entry converted from current
+        unload_session's unload_task_list
+        """
+        for gr in self.goods_receipt_list:
+            if gr.customer.id not in self.customer_id_list:
+                do_commit(gr.model, "delete")
+
+
+    def clean_goods_receipts(self):
+        """
+        Iterator the customers and create a goods_receipt.
+        Then delete the unnecessary goods_receipts.
+        """
+        for id_ in self.customer_id_list:
+            create_or_update_goods_receipt(unload_session_id=self.id,
+                                                      customer_id=id_)
+
+        self.gc_goods_receipts()
+
 
 
 class UnloadTaskWrapper(ModelWrapper):
@@ -185,8 +212,16 @@ class GoodsReceiptWrapper(ModelWrapper):
             return sorted(_entries) != sorted(_uts)
         return False
 
-    def refresh(self):
-        pass
+    def add_product_entries(self):
+        for entry in self.goods_receipt_entries:
+            do_commit(entry, "delete")
+        for ut in self.unload_task_list:
+            do_commit(
+                models.GoodsReceiptEntry(product=ut.product, weight=ut.weight,
+                                         goods_receipt=self.model))
+
+    def delete(self):
+        do_commit(self.model, "delete")
 
 def get_unload_session_list(idx=0, cnt=sys.maxint, unfinished_only=False,
                             keywords=None):
@@ -293,11 +328,21 @@ def new_goods_receipt(customer_id, unload_session_id):
         raise ValueError(u"没有该卸货会话(%d)" % int(unload_session_id))
     model = do_commit(models.GoodsReceipt(customer=customer.model,
                                           unload_session=unload_session.model))
-    for ut in unload_session.task_list:
-        if ut.customer.id == customer_id:
-            ut.goods_receipt = model
-    do_commit(unload_session)
-    return GoodsReceiptWrapper(model)
+    gr = GoodsReceiptWrapper(model)
+    gr.add_product_entries()
+    return gr
+
+
+def create_or_update_goods_receipt(customer_id, unload_session_id):
+    try:
+        gr = GoodsReceiptWrapper(models.GoodsReceipt.query.filter(
+            models.GoodsReceipt.customer_id == customer_id).filter(
+            models.GoodsReceipt.unload_session_id == unload_session_id).one())
+        if gr.stale:
+            gr.add_product_entries()
+        return gr
+    except NoResultFound:
+        return new_goods_receipt(customer_id, unload_session_id)
 
 
 def new_unload_task(session_id, harbor, customer_id, creator_id,

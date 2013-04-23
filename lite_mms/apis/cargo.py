@@ -131,8 +131,6 @@ class UnloadSessionWrapper(ModelWrapper):
 
         self.gc_goods_receipts()
 
-
-
 class UnloadTaskWrapper(ModelWrapper):
     @property
     def pic_url(self):

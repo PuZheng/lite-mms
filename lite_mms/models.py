@@ -240,7 +240,6 @@ class Department(db.Model):
     def __repr__(self):
         return "<Department %d>" % self.id
 
-
 class Team(db.Model):
     __modelname__ = u"班组"
     __tablename__ = "TB_TEAM"

@@ -6,7 +6,9 @@ from flask import request, abort, url_for, render_template, flash
 from flask.ext.babel import _
 from flask.ext.login import current_user
 from flask.ext.databrowser import ModelView
-from flask.ext.databrowser.column_spec import InputColumnSpec, ColumnSpec, PlaceHolderColumnSpec, ListColumnSpec
+from flask.ext.databrowser.column_spec import (InputColumnSpec, ColumnSpec, 
+                                               PlaceHolderColumnSpec, ListColumnSpec, 
+                                               TableColumnSpec)
 from sqlalchemy import exists
 from werkzeug.utils import redirect
 from wtforms import Form, IntegerField, validators, HiddenField
@@ -19,7 +21,7 @@ from lite_mms import constants
 from lite_mms.basemain import nav_bar
 from lite_mms.apis import wraps
 import lite_mms.constants.cargo as cargo_const
-from lite_mms.models import UnloadSession, Plate, DeliverySession
+from lite_mms.models import (UnloadSession, Plate, DeliverySession, GoodsReceipt)
 
 @cargo_page.route('/')
 def index():
@@ -240,62 +242,96 @@ def unload_task(id_):
                     abort(403)
 
 
-@cargo_page.route("/goods-receipt/", methods=["GET", "POST"])
-@cargo_page.route("/goods-receipt/<int:id_>", methods=["GET", "POST"])
-@decorators.templated("cargo/goods-receipt.html")
-@decorators.nav_bar_set
-def goods_receipt(id_=None):
-    from lite_mms import apis
-    if id_:
-        receipt = apis.cargo.get_goods_receipt(id_)
-        if not receipt:
-            abort(404)
-        if request.method == "GET":
-            return dict(receipt=receipt, titlename=u"收货单详情",
-                        product_types=apis.product.get_product_types(),
-                        products=json.dumps(apis.product.get_products()))
-        else:
-            if request.form.get("method") == "delete":
-                if receipt.order:
-                    abort(403)
-                else:
-                    do_commit(receipt, "delete")
-                    flash(u"删除收货单%s成功" % receipt.receipt_id)
-                return redirect(
-                    request.form.get("url") or url_for("cargo.unload_session",
-                                                       id_=receipt.unload_session.id))
-            else:
-                if request.form.get("type") == "extra":
-                    order_type = constants.EXTRA_ORDER_TYPE
-                    type_ = constants.EXTRA_ORDER_TYPE_NAME
-                else:
-                    order_type = constants.STANDARD_ORDER_TYPE
-                    type_ = constants.STANDARD_ORDER_TYPE_NAME
+class GoodsReceiptModelView(ModelView):
 
-                order = apis.order.new_order(receipt.id,
-                                             order_type,
-                                             current_user.id)
+    edit_template = "cargo/goods-receipt.html"
+    
+    can_create = False
+    can_batchly_edit = False
+    as_radio_group = True
 
-                flash(u"创建%s类型的订单成功"% type_)
-                return redirect(url_for("order.order", id_=order.id,
-                                        url=request.form.get("url")))
-    else:
-        class _ValidationForm(Form):
-            customer = IntegerField('customer', [validators.required()])
-            unload_session_id = IntegerField('unload_session_id',
-                                             [validators.required()])
-            url = HiddenField('url')
+    def preprocess(self, obj):
+        return wraps(obj)
 
-        form = _ValidationForm(request.form)
-        if form.validate():
-            receipt = apis.cargo.new_goods_receipt(form.customer.data,
-                                                   form.unload_session_id.data)
-            return redirect(
-                url_for("cargo.goods_receipt", id_=receipt.id, _method="GET",
-                        url=form.url.data))
-        else:
-            flash(form.errors, "error")
-            return redirect(form.url.data or url_for("cargo.unload_session"))
+    __list_columns__ = ["receipt_id", "customer", "unload_session.plate", 
+                        "printed", "stale"]  
+
+    __form_columns__ = OrderedMultiDict()
+    __form_columns__[u"详细信息"] = [
+        "receipt_id", 
+        "customer", 
+        "unload_session.plate", 
+        InputColumnSpec("create_time", read_only=True, label=u"创建时间"), 
+        ColumnSpec("printed", label=u"是否打印",
+                        formatter=lambda v, obj: u"是" if v else u'<span class="text-error">否</span>'), 
+        ColumnSpec("stale", label=u"是否过时", 
+                  formatter=lambda v, obj: u'<span class="text-error">是</span>' if v else u"否")]
+    __form_columns__[u"产品列表"] = [
+        TableColumnSpec("goods_receipt_entries", label="", col_specs=[
+            "id", ColumnSpec("product", label=u"产品"), ColumnSpec("product.product_type", label=u"产品类型"),
+            ColumnSpec("weight", label=u"净重(KG)")])
+    ]
+    __column_labels__ = {"receipt_id": u'编号', "customer": u'客户', "unload_session.plate": u"车牌号", 
+                         "printed": u'是否打印', "stale": u"是否过时"}
+
+goods_receipt_model_view = GoodsReceiptModelView(GoodsReceipt, u"收货单")
+
+#@cargo_page.route("/goods-receipt/", methods=["GET", "POST"])
+#@cargo_page.route("/goods-receipt/<int:id_>", methods=["GET", "POST"])
+#@decorators.templated("cargo/goods-receipt.html")
+#@decorators.nav_bar_set
+#def goods_receipt(id_=None):
+    #from lite_mms import apis
+    #if id_:
+        #receipt = apis.cargo.get_goods_receipt(id_)
+        #if not receipt:
+            #abort(404)
+        #if request.method == "GET":
+            #return dict(receipt=receipt, titlename=u"收货单详情",
+                        #product_types=apis.product.get_product_types(),
+                        #products=json.dumps(apis.product.get_products()))
+        #else:
+            #if request.form.get("method") == "delete":
+                #if receipt.order:
+                    #abort(403)
+                #else:
+                    #do_commit(receipt, "delete")
+                    #flash(u"删除收货单%s成功" % receipt.receipt_id)
+                #return redirect(
+                    #request.form.get("url") or url_for("cargo.unload_session",
+                                                       #id_=receipt.unload_session.id))
+            #else:
+                #if request.form.get("type") == "extra":
+                    #order_type = constants.EXTRA_ORDER_TYPE
+                    #type_ = constants.EXTRA_ORDER_TYPE_NAME
+                #else:
+                    #order_type = constants.STANDARD_ORDER_TYPE
+                    #type_ = constants.STANDARD_ORDER_TYPE_NAME
+
+                #order = apis.order.new_order(receipt.id,
+                                             #order_type,
+                                             #current_user.id)
+
+                #flash(u"创建%s类型的订单成功"% type_)
+                #return redirect(url_for("order.order", id_=order.id,
+                                        #url=request.form.get("url")))
+    #else:
+        #class _ValidationForm(Form):
+            #customer = IntegerField('customer', [validators.required()])
+            #unload_session_id = IntegerField('unload_session_id',
+                                             #[validators.required()])
+            #url = HiddenField('url')
+
+        #form = _ValidationForm(request.form)
+        #if form.validate():
+            #receipt = apis.cargo.new_goods_receipt(form.customer.data,
+                                                   #form.unload_session_id.data)
+            #return redirect(
+                #url_for("cargo.goods_receipt", id_=receipt.id, _method="GET",
+                        #url=form.url.data))
+        #else:
+            #flash(form.errors, "error")
+            #return redirect(form.url.data or url_for("cargo.unload_session"))
 
 
 @cargo_page.route("/goods-receipt-preview/<int:id_>")

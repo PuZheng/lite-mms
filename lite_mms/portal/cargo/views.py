@@ -33,17 +33,32 @@ class UnloadSessionModelView(ModelView):
     as_radio_group = True
     can_batchly_edit = False
 
-    __list_columns__ = ["id", "plate_", "create_time", "finish_time", "with_person", "status", 
-                        ListColumnSpec("customer_list_unwrapped", label=u"客户列表", compressed=True),
-                        PlaceHolderColumnSpec("goods_receipt_list", label=u"收货单", template_fname="cargo/goods-receipts-snippet.html")]
+    def get_list_columns(self):
+        def gr_item_formatter(v, obj):
+            # 格式化每个仓单，未打印或者过期，需要提示出来
+            ret = unicode(v)
+            if not v.printed:
+                ret += u'<small class="text-error"> (未打印)</small>'
+            if v.stale:
+                ret += u'<small class="text-error"> (过期)</small>'
+            return ret
+        return ["id", "plate_", "create_time", "finish_time", "with_person", "status", 
+                ListColumnSpec("customer_list_unwrapped", label=u"客 户", compressed=True),
+                ListColumnSpec("goods_receipt_list_unwrapped", 
+                               label=u"收货单", 
+                               compressed=True, 
+                               item_col_spec=ColumnSpec("", formatter=gr_item_formatter)),
+               ]
 
     __column_labels__ = {"id": u"编号", "plate_": u"车辆", "create_time": u"创建时间", "finish_time": u"结束时间", 
                          "with_person": u"驾驶室", "status": u"状态", "goods_receipt_list": u"收货单", "gross_weight": u"净重"}
 
 
     def patch_row_css(self, idx, obj): 
-        if len(obj.customer_list) > len(obj.goods_receipt_list):
-            return "alert alert-warning"
+        test = len(obj.customer_list) > len(obj.goods_receipt_list)
+        test = test or any(((not gr.printed) or gr.stale) for gr in obj.goods_receipt_list)
+        if test:
+            return "alert alert-error"
 
     __column_formatters__ = {
         "create_time": lambda v, obj: v.strftime("%m月%d日 %H点").decode("utf-8"),
@@ -66,7 +81,8 @@ class UnloadSessionModelView(ModelView):
 
     __column_filters__ = [filters.BiggerThan("create_time", name=u"在", default_value=str(yesterday),
                                              options=[(yesterday, u'一天内'), (week_ago, u'一周内'), (_30days_ago, u'30天内')]),
-                          filters.Only("status", display_col_name=u"仅展示未完成会话", test=lambda col: ~col.in_([cargo_const.STATUS_CLOSED, cargo_const.STATUS_DISMISSED]), notation="__only_unclosed")
+                          filters.EqualTo("plate_", name=u"是"),
+                          filters.Only("status", display_col_name=u"仅展示未完成会话", test=lambda col: ~col.in_([cargo_const.STATUS_CLOSED, cargo_const.STATUS_DISMISSED]), notation="__only_unclosed"),
                          ]
 
     def try_view(self):

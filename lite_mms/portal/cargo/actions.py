@@ -45,4 +45,4 @@ class OpenAction(BaseAction):
         fsm.next(cargo_const.ACT_OPEN, current_user)
 
     def get_forbidden_msg_formats(self):
-        return {-2: u"只有已经关闭的会话才能被打开"}
+        return {-2: u"发货会话%s处在打开状态, 只有已经关闭的会话才能被打开"}

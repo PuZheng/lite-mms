@@ -32,7 +32,7 @@ def upgrade():
                     Column('type', String(length=64)),
                     Column('returned_weight', Integer()),
                     Column('team_id', Integer(), ForeignKey('TB_TEAM.id'),
-                           nullable=False))
+                           nullable=True))
 
     from lite_mms.utilities import do_commit
     from lite_mms.apis.delivery import get_delivery_session_list

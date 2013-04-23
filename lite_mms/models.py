@@ -292,6 +292,8 @@ class GoodsReceipt(db.Model):
 
 
 class GoodsReceiptEntry(db.Model):
+    __tablename__ = "TB_GOODS_RECEIPT_ENTRY"
+
     id = db.Column(db.Integer, primary_key=True)
     goods_receipt_id = db.Column(db.Integer,
                                  db.ForeignKey("TB_GOODS_RECEIPT.id"))

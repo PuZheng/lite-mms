@@ -94,12 +94,12 @@ class UnloadSessionModelView(ModelView):
         return apis.cargo.UnloadSessionWrapper(model)
 
     def get_customized_actions(self, model=None):
-        from lite_mms.portal.cargo.actions import MyDeleteAction, CloseAction, OpenAction
+        from lite_mms.portal.cargo.actions import MyDeleteAction, CloseAction, OpenAction, CreateReceiptAction
         if model is None: # for list
             return [MyDeleteAction(u"删除", CargoClerkPermission), CloseAction(u"关闭"), OpenAction(u"打开")]
         else:
             if model.status in [cargo_const.STATUS_CLOSED, cargo_const.STATUS_DISMISSED]:
-                return [MyDeleteAction(u"删除", CargoClerkPermission), OpenAction(u"打开")]
+                return [MyDeleteAction(u"删除", CargoClerkPermission), OpenAction(u"打开"), CreateReceiptAction(u"生成收货单")]
             else:
                 return [MyDeleteAction(u"删除", CargoClerkPermission), CloseAction(u"关闭")]
 
@@ -126,8 +126,11 @@ class UnloadSessionModelView(ModelView):
         InputColumnSpec("finish_time", label=u"结束时间", read_only=True),
         PlaceHolderColumnSpec(col_name="id", label=u"日志", template_fname="cargo/us-log-snippet.html")
     ]
-    __form_columns__[u"收货任务列表"] = [PlaceHolderColumnSpec(col_name="task_list", label=u"", template_fname="cargo/unload-task-list-snippet.haml")]
+    __form_columns__[u"收货任务列表"] = [
+        PlaceHolderColumnSpec(col_name="task_list", label=u"",
+                              template_fname="cargo/unload-task-list-snippet.haml")]
     __form_columns__[u"收货单列表"] = [PlaceHolderColumnSpec(col_name="goods_receipt_list", label=u"", template_fname="cargo/gr-list-snippet.html")]
+
 
 unload_session_model_view = UnloadSessionModelView(UnloadSession, u"卸货会话")
 
@@ -153,7 +156,7 @@ class plateModelView(ModelView):
 plate_model_view = plateModelView(Plate, u"车辆")
 
 @cargo_page.route("/weigh-unload-task/<int:id_>", methods=["GET", "POST"])
-@decorators.templated("/cargo/unload-task.haml")
+@decorators.templated("/cargo/unload-task.html")
 def weigh_unload_task(id_):
     from lite_mms import apis
     task = apis.cargo.get_unload_task(id_)
@@ -321,5 +324,5 @@ def refresh_gr(id_):
     if not receipt.stale:
         return render_template("error.html", msg=u"收货单%d未过时，不需要更新" % id_), 403
     else:
-        receipt.refresh()
+        receipt.add_product_entries()
         return redirect(request.args.get("url") or url_for("cargo.goods_receipt", id_=id_))

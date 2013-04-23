@@ -53,12 +53,13 @@ class UnloadSessionModelView(ModelView):
     __column_labels__ = {"id": u"编号", "plate_": u"车辆", "create_time": u"创建时间", "finish_time": u"结束时间", 
                          "with_person": u"驾驶室", "status": u"状态", "goods_receipt_list": u"收货单", "gross_weight": u"净重"}
 
-
-    def patch_row_css(self, idx, obj): 
+    def patch_row_attr(self, idx, obj):
         test = len(obj.customer_list) > len(obj.goods_receipt_list)
         test = test or any(((not gr.printed) or gr.stale) for gr in obj.goods_receipt_list)
         if test:
-            return "alert alert-error"
+            return {
+                "title": u"有客户收货单没有生成，或者存在收货单未打印或者已经过期, 强烈建议您重新生成收货单!", 
+                "class": "alert alert-error"}
 
     __column_formatters__ = {
         "create_time": lambda v, obj: v.strftime("%m月%d日 %H点").decode("utf-8"),
@@ -77,7 +78,6 @@ class UnloadSessionModelView(ModelView):
     yesterday = today.date()                                                 
     week_ago = (today - timedelta(days=7)).date()                         
     _30days_ago = (today - timedelta(days=30)).date()      
-
 
     __column_filters__ = [filters.BiggerThan("create_time", name=u"在", default_value=str(yesterday),
                                              options=[(yesterday, u'一天内'), (week_ago, u'一周内'), (_30days_ago, u'30天内')]),
@@ -104,17 +104,6 @@ class UnloadSessionModelView(ModelView):
                 return [MyDeleteAction(u"删除", CargoClerkPermission), CloseAction(u"关闭")]
 
     # ================= FORM PART ============================
-    # __create_columns__ = [InputColumnSpec("plate_",
-    #                                       filter_=lambda q: q.filter(
-    #                                           ~exists().where(
-    #                                               UnloadSession.plate ==
-    #                                               Plate.name).where(
-    #                                               DeliverySession.plate == Plate.name).where(
-    #                                               UnloadSession.finish_time == None).where(
-    #                                               DeliverySession.finish_time == None))),
-    #                       InputColumnSpec("with_person", label=u"驾驶室是否有人"),
-    #                       "gross_weight"]
-
     def get_create_columns(self):
         from lite_mms import apis
 
@@ -138,6 +127,7 @@ class UnloadSessionModelView(ModelView):
         PlaceHolderColumnSpec(col_name="id", label=u"日志", template_fname="cargo/us-log-snippet.html")
     ]
     __form_columns__[u"收货任务列表"] = [PlaceHolderColumnSpec(col_name="task_list", label=u"", template_fname="cargo/unload-task-list-snippet.haml")]
+    __form_columns__[u"收货单列表"] = [PlaceHolderColumnSpec(col_name="goods_receipt_list", label=u"", template_fname="cargo/gr-list-snippet.html")]
 
 unload_session_model_view = UnloadSessionModelView(UnloadSession, u"卸货会话")
 

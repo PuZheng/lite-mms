@@ -1,0 +1,36 @@
+{% if field_value %}
+<table class="table table-bordered table-condensed">
+  <thead>
+    <tr>
+    	<th>编号</th>
+    	<th>客户</th>
+    	<th>是否打印</th>
+    	<th>是否过期</th>
+    	<th>订单</th>
+    	<th>创建日期</th>
+    </tr>
+  </thead>
+    {% for gr in field_value %}
+      <tr>
+        <td>{{ gr.receipt_id }}</td>
+        <td>
+          <a href="{{ model_view.data_browser.get_form_url(gr.customer) }}">{{ gr.customer.name }}</a>
+        </td>
+        <td>{% if gr.printed %}是{% else %}否{% endif %}</td>
+        <td>{% if gr.stale %}是{% else %}否{% endif %}</td>
+        <td>
+          {% if gr.order_unwrapped %}
+            <a href="{{ model_view.data_browser.get_form_url(gr.order)}}">{{gr.order.customer_order_number}}</a>
+          {% else %}
+            --
+          {% endif %}
+        </td>
+        <td>{{ gr.create_time }}</td>
+      </tr>
+    {% endfor %}
+  <tbody>
+  </tbody>  
+</table>
+{% else %}
+<span class="text-error">无</span>
+{% endif %}

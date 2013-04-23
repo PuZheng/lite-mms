@@ -7,6 +7,7 @@ from flask.ext.babel import _
 from flask.ext.login import current_user
 from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.column_spec import InputColumnSpec, ColumnSpec, PlaceHolderColumnSpec, ListColumnSpec
+from sqlalchemy import exists
 from werkzeug.utils import redirect
 from wtforms import Form, IntegerField, validators, HiddenField
 from werkzeug.datastructures import OrderedMultiDict
@@ -18,7 +19,7 @@ from lite_mms import constants
 from lite_mms.basemain import nav_bar
 from lite_mms.apis import wraps
 import lite_mms.constants.cargo as cargo_const
-from lite_mms.models import UnloadSession, Plate
+from lite_mms.models import UnloadSession, Plate, DeliverySession
 
 @cargo_page.route('/')
 def index():
@@ -87,13 +88,35 @@ class UnloadSessionModelView(ModelView):
                 return [MyDeleteAction(u"删除", CargoClerkPermission), CloseAction(u"关闭")]
 
     # ================= FORM PART ============================
-    __create_columns__ = ["plate_", InputColumnSpec("with_person", label=u"驾驶室是否有人"), "gross_weight"]
+    # __create_columns__ = [InputColumnSpec("plate_",
+    #                                       filter_=lambda q: q.filter(
+    #                                           ~exists().where(
+    #                                               UnloadSession.plate ==
+    #                                               Plate.name).where(
+    #                                               DeliverySession.plate == Plate.name).where(
+    #                                               UnloadSession.finish_time == None).where(
+    #                                               DeliverySession.finish_time == None))),
+    #                       InputColumnSpec("with_person", label=u"驾驶室是否有人"),
+    #                       "gross_weight"]
+
+    def get_create_columns(self):
+        from lite_mms import apis
+
+        plates = set(
+            apis.plate.get_plate_list("unloading") + apis.plate.get_plate_list(
+                "delivering"))
+        return [InputColumnSpec("plate_",
+                                opt_filter=lambda obj: obj.name not in plates),
+                InputColumnSpec("with_person", label=u"驾驶室是否有人"),
+                "gross_weight"]
+
+
     __form_columns__ = OrderedMultiDict()
     __form_columns__[u"详细信息"] = [
-        InputColumnSpec("plate_", opt_filter=lambda obj: not wraps(obj).unloading), 
+        InputColumnSpec("plate_"),
         InputColumnSpec("with_person", label=u"驾驶室是否有人"),
         ColumnSpec("status", label=u"状态", formatter=lambda v, obj: '<strong>' + cargo_const.desc_status(v) + '</strong>', 
-                   css_class="input-small uneditable-input"), 
+                   css_class="uneditable-input"),
         InputColumnSpec("create_time", label=u"创建时间", read_only=True),
         InputColumnSpec("finish_time", label=u"结束时间", read_only=True),
         PlaceHolderColumnSpec(col_name="id", label=u"日志", template_fname="cargo/us-log-snippet.html")
@@ -153,69 +176,6 @@ def weigh_unload_task(id_):
                                    back_url=unload_session_model_view.url_for_object(model=task.unload_session.model),
                                    nav_bar=nav_bar), 403
 
-
-@cargo_page.route("/unload-session/", methods=["POST", "GET"])
-@cargo_page.route("/unload-session/<int:id_>", methods=["POST", "GET"])
-def unload_session(id_=None):
-    from lite_mms import apis
-
-    if request.method == "GET":
-        if id_:
-            unload_session = apis.cargo.get_unload_session(id_)
-            if not unload_session:
-                abort(404)
-            return render_template("cargo/unload-session.html",
-                                   unload_session=unload_session,
-                                   titlename=u"卸货会话详情",
-                                   order_types=apis.order.get_order_type_list(),
-                                   nav_bar=nav_bar)
-        else:
-            working_list = []
-            working_list.extend(apis.plate.get_plate_list("unloading"))
-            working_list.extend(apis.plate.get_plate_list("delivering"))
-            return render_template("cargo/unload-session-add.html",
-                                   titlename=u"新增卸货会话",
-                                   plateNumbers=apis.plate.get_plate_list(),
-                                   working_plate_list=json.dumps(working_list),
-                                   nav_bar=nav_bar)
-    else:
-        if id_:
-            unload_session = apis.cargo.get_unload_session(id_)
-            url = request.form.get('url')
-            if not unload_session:
-                abort(404)
-            if request.form.get("method") == "reopen":
-                if unload_session.closed:
-                    fsm.fsm.reset_obj(unload_session)
-                    fsm.fsm.next(constants.cargo.ACT_OPEN, current_user)
-                    flash(u"重新打开卸货会话%d成功！" % unload_session.id)
-                else:
-                    return _(u"该会话不能重新打开"), 403
-            elif request.form.get("method") == "finish":
-                if unload_session.closeable:
-                    fsm.fsm.reset_obj(unload_session)
-                    fsm.fsm.next(constants.cargo.ACT_CLOSE, current_user)
-                    flash(u"结束卸货会话%d成功！" % unload_session.id)
-                else:
-                    return _(u"该会话不能结束"), 403
-            elif request.form.get("method") == "delete":
-                if unload_session.deleteable:
-                    do_commit(unload_session, action="delete")
-                    flash(u"删除成功！")
-                    return redirect(url_for("cargo.unload_session_list"))
-                else:
-                    return _(u'该卸货会话已经有卸货任务不能删除！'), 403
-            return redirect(url_for('cargo.unload_session', id_=id_,
-                                    _method="GET", url=url))
-        else:
-            with_person = request.form.get("with_person", False, type=bool)
-            unload_session = apis.cargo.new_unload_session(
-                request.form['plateNumber'], request.form['grossWeight'],
-                with_person)
-
-            return redirect(
-                url_for('cargo.unload_session', id_=unload_session.id,
-                        _method="GET"))
 
 
 @cargo_page.route("/unload-task/<int:id_>", methods=["GET", "POST"])
@@ -343,3 +303,17 @@ def goods_receipt_preview(id_):
         abort(404)
     return {"receipt": receipt, "titlename": u"收货单打印预览", "pages": pages,
             "per_page": PER_PAGE}
+
+
+def refresh_gr(id_):
+    from lite_mms import apis
+
+    receipt = apis.cargo.get_goods_receipt(id_)
+
+    if not receipt:
+        abort(404)
+    if not receipt.stale:
+        return render_template("error.html", msg=u"收货单%d未过时，不需要更新" % id_), 403
+    else:
+        receipt.refresh()
+        return redirect(request.args.get("url") or url_for("cargo.goods_receipt", id_=id_))

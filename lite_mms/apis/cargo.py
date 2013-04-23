@@ -189,6 +189,9 @@ class GoodsReceiptWrapper(ModelWrapper):
             return sorted(_entries) != sorted(_uts)
         return False
 
+    def refresh(self):
+        pass
+
 def get_unload_session_list(idx=0, cnt=sys.maxint, unfinished_only=False,
                             keywords=None):
     """

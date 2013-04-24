@@ -37,7 +37,7 @@
             -if row.weight
               {{ row.weight }} 
             -else
-              %a.btn.btn-primary href="{{ url_for('cargo.weigh_unload_task', id_=row.id) }}" << 称重
+              %a.btn.btn-primary href="{{ url_for('cargo.weigh_unload_task', id_=row.id, url=request.url) }}" << 称重
 
   %script type="text/javascript"
     $(function () {

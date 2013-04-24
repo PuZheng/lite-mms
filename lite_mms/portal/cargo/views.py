@@ -97,16 +97,19 @@ class UnloadSessionModelView(ModelView):
         from lite_mms import apis
         return apis.cargo.UnloadSessionWrapper(model)
 
-    def get_customized_actions(self, model=None):
+    def get_customized_actions(self, model_list=None):
         from lite_mms.portal.cargo.actions import MyDeleteAction, CloseAction, OpenAction, CreateReceiptAction
-        if model is None: # for list
-            return [MyDeleteAction(u"删除", CargoClerkPermission), CloseAction(u"关闭"), OpenAction(u"打开")]
+        action_list = [MyDeleteAction(u"删除", CargoClerkPermission)]
+        if model_list is None: # for list
+            action_list.append(CloseAction(u"关闭")).append(OpenAction(u"打开"))
         else:
-            if model.status in [cargo_const.STATUS_CLOSED, cargo_const.STATUS_DISMISSED]:
-                return [MyDeleteAction(u"删除", CargoClerkPermission), OpenAction(u"打开"), CreateReceiptAction(u"生成收货单")]
-            else:
-                return [MyDeleteAction(u"删除", CargoClerkPermission), CloseAction(u"关闭")]
-
+            if len(model_list) ==1:
+                if model_list[0].status in [cargo_const.STATUS_CLOSED, cargo_const.STATUS_DISMISSED]:
+                    action_list.append(OpenAction(u"打开"))
+                else:
+                    action_list.append(CloseAction(u"关闭"))
+                action_list.append(CreateReceiptAction(u"生成收货单"))
+        return action_list
     # ================= FORM PART ============================
     def get_create_columns(self):
         from lite_mms import apis
@@ -166,8 +169,10 @@ class GoodsReceiptEntryModelView(ModelView):
         InputColumnSpec("goods_receipt", label=u"收货单", read_only=True),
         InputColumnSpec("weight", label=u"重量"),
         InputColumnSpec("harbor", label=u"装卸点"),
-        ImageColumnSpec("pic_path", label=u"图片")]
+        ImageColumnSpec("pic_url", label=u"图片")]
 
+    def preprocess(self, obj):
+        return wraps(obj)
 
 goods_receipt_entry_view = GoodsReceiptEntryModelView(GoodsReceiptEntry, u"收货单产品")
 
@@ -285,9 +290,13 @@ class GoodsReceiptModelView(ModelView):
         PlaceHolderColumnSpec("id", label=u"日志", template_fname="cargo/gr-logs-snippet.html")
     ]
     __form_columns__[u"产品列表"] = [
-        TableColumnSpec("goods_receipt_entries", label="", col_specs=[
-            "id", ColumnSpec("product", label=u"产品"), ColumnSpec("product.product_type", label=u"产品类型"),
-            ColumnSpec("weight", label=u"净重(KG)"), ImageColumnSpec("pic_path", label=u"图片")])
+        TableColumnSpec("goods_receipt_entries_unwrapped", label="",
+                        col_specs=[
+                            "id", ColumnSpec("product", label=u"产品"),
+                            ColumnSpec("product.product_type", label=u"产品类型"),
+                            ColumnSpec("weight", label=u"净重(KG)"),
+                            PlaceHolderColumnSpec(col_name="pic_url", label=u"图片", template_fname="cargo/pic-snippet.html")],
+                        preprocess=lambda obj: wraps(obj))
     ]
     __column_labels__ = {"receipt_id": u'编号', "customer": u'客户', "unload_session.plate": u"车牌号", 
                          "printed": u'是否打印', "stale": u"是否过时"}

@@ -42,7 +42,6 @@ class ModelWrapper(object):
         return attr
 
     def __unwrap(self, attr):
-        from lite_mms.database import db
 
         if isinstance(attr, ModelWrapper):
             return attr.model

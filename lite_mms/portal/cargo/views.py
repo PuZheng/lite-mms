@@ -284,9 +284,9 @@ class GoodsReceiptModelView(ModelView):
         PlaceHolderColumnSpec("id", label=u"日志", template_fname="cargo/gr-logs-snippet.html")
     ]
     __form_columns__[u"产品列表"] = [
-        TableColumnSpec("goods_receipt_entries_unwrapped", label="", col_specs=[
+        TableColumnSpec("goods_receipt_entries", label="", col_specs=[
             "id", ColumnSpec("product", label=u"产品"), ColumnSpec("product.product_type", label=u"产品类型"),
-            ColumnSpec("weight", label=u"净重(KG)"), ImageColumnSpec("pic_path", label=u"图片")], preprocess=lambda o: wraps(o))
+            ColumnSpec("weight", label=u"净重(KG)"), ImageColumnSpec("pic_path", label=u"图片")])
     ]
     __column_labels__ = {"receipt_id": u'编号', "customer": u'客户', "unload_session.plate": u"车牌号", 
                          "printed": u'是否打印', "stale": u"是否过时"}

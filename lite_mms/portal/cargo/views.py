@@ -40,6 +40,7 @@ class UnloadSessionModelView(ModelView):
         def gr_item_formatter(v, obj):
             # 格式化每个仓单，未打印或者过期，需要提示出来
             ret = unicode(v)
+            v = wraps(v)
             if not v.printed:
                 ret += u'<small class="text-error"> (未打印)</small>'
             if v.stale:

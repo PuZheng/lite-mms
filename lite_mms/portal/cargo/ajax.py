@@ -6,7 +6,7 @@ from wtforms import Form, TextField, IntegerField
 from lite_mms.portal.cargo import cargo_page
 from lite_mms.utilities import get_or_404, dictview
 from lite_mms.utilities.decorators import ajax_call
-from lite_mms.models import UnloadSession
+from lite_mms.models import UnloadSession, GoodsReceipt
 from flask.ext.babel import _
 
 @cargo_page.route("/ajax/receipts-list", methods=["GET"])
@@ -79,11 +79,21 @@ def _log2dict(log):
         "message": log.message
     }
 
-@cargo_page.route("/ajax/log-list", methods=["GET"])
-def log_list():
+@cargo_page.route("/ajax/gr-log-list", methods=["GET"])
+def gr_log_list():
     gr_id = int(request.args["gr_id"])
-    gr = get_or_404(UnloadSession, gr_id)
+    gr = get_or_404(GoodsReceipt, gr_id)
     log_list = gr.log_list 
+    return json.dumps({
+        "count": len(log_list),
+        "data": [_log2dict(log) for log in log_list if log.obj_cls in {"GoodsReceipt", "GoodsReceiptEntry"}],
+    }) 
+
+@cargo_page.route("/ajax/us-log-list", methods=["GET"])
+def us_log_list():
+    us_id = int(request.args["us_id"])
+    us = get_or_404(UnloadSession, us_id)
+    log_list = us.log_list 
     return json.dumps({
         "count": len(log_list),
         "data": [_log2dict(log) for log in log_list if log.obj_cls in {"UnloadSession", "UnloadTask"}],

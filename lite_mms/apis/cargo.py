@@ -202,6 +202,16 @@ class GoodsReceiptWrapper(ModelWrapper):
         do_commit(self.model)
 
     @property
+    def log_list(self):
+        from lite_mms.models import Log
+        ret = Log.query.filter(Log.obj_pk == str(self.id)).filter(
+            Log.obj_cls == self.model.__class__.__name__).all()
+        for entry in self.goods_receipt_entries:
+            ret.extend(Log.query.filter(Log.obj_pk == str(entry.id)).filter(
+            Log.obj_cls == "GoodsReceiptEntry").all())
+        return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time))
+
+    @property
     def stale(self):
         if self.unload_session.finish_time > self.create_time:
             _entries = [(entry.product.id, entry.weight) for entry in
@@ -216,7 +226,11 @@ class GoodsReceiptWrapper(ModelWrapper):
         for ut in self.unload_task_list:
             do_commit(
                 models.GoodsReceiptEntry(product=ut.product, weight=ut.weight,
-                                         goods_receipt=self.model))
+                                         goods_receipt=self.model,
+                                         harbor=ut.harbor,
+                                         pic_path=ut.pic_path))
+        self.model.printed = False
+        do_commit(self.model)
 
     def delete(self):
         do_commit(self.model, "delete")

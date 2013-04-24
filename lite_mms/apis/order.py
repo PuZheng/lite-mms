@@ -104,17 +104,15 @@ class OrderWrapper(ModelWrapper):
             do_commit(order)
             if order_type == constants.STANDARD_ORDER_TYPE:
                 sub_orders = []
-                customer = goods_receipt.customer
-                for ut in goods_receipt.unload_session.task_list:
-                    if ut.customer == customer:
+                for entry in goods_receipt.goods_receipt_entries:
                         sub_order = models.SubOrder(order=order,
-                                                    product=ut.product,
-                                                    weight=ut.weight,
-                                                    pic_path=ut.pic_path,
-                                                    harbor=ut.harbor,
-                                                    quantity=ut.weight,
+                                                    product=entry.product,
+                                                    weight=entry.weight,
+                                                    pic_path=entry.pic_path,
+                                                    harbor=entry.harbor,
+                                                    quantity=entry.weight,
                                                     unit=u'KG',
-                                                    unload_task=ut)
+                                                    default_harbor=entry.harbor)
                         sub_orders.append(sub_order)
 
                 do_commit(sub_orders)

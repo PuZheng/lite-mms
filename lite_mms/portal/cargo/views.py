@@ -8,7 +8,7 @@ from flask.ext.login import current_user
 from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.column_spec import (InputColumnSpec, ColumnSpec, 
                                                PlaceHolderColumnSpec, ListColumnSpec, 
-                                               TableColumnSpec)
+                                               TableColumnSpec, ImageColumnSpec)
 from sqlalchemy import exists
 from werkzeug.utils import redirect
 from wtforms import Form, IntegerField, validators, HiddenField
@@ -21,7 +21,8 @@ from lite_mms import constants
 from lite_mms.basemain import nav_bar
 from lite_mms.apis import wraps
 import lite_mms.constants.cargo as cargo_const
-from lite_mms.models import (UnloadSession, Plate, DeliverySession, GoodsReceipt)
+from lite_mms.models import (UnloadSession, Plate, DeliverySession, 
+                             GoodsReceipt, GoodsReceiptEntry, Product)
 
 @cargo_page.route('/')
 def index():
@@ -157,6 +158,20 @@ class plateModelView(ModelView):
 
 plate_model_view = plateModelView(Plate, u"车辆")
 
+class GoodsReceiptEntryModelView(ModelView):
+
+    __form_columns__ = [
+        InputColumnSpec("product", group_by=Product.product_type, label=u"产品"), 
+        InputColumnSpec("goods_receipt", label=u"收货单", read_only=True),
+        InputColumnSpec("weight", label=u"重量"),
+        InputColumnSpec("harbor", label=u"装卸点"),
+        ImageColumnSpec("pic_path", label=u"图片")]
+
+
+goods_receipt_entry_view = GoodsReceiptEntryModelView(GoodsReceiptEntry, u"收货单产品")
+
+
+
 @cargo_page.route("/weigh-unload-task/<int:id_>", methods=["GET", "POST"])
 @decorators.templated("/cargo/unload-task.html")
 def weigh_unload_task(id_):
@@ -265,14 +280,19 @@ class GoodsReceiptModelView(ModelView):
         ColumnSpec("printed", label=u"是否打印",
                         formatter=lambda v, obj: u"是" if v else u'<span class="text-error">否</span>'), 
         ColumnSpec("stale", label=u"是否过时", 
-                  formatter=lambda v, obj: u'<span class="text-error">是</span>' if v else u"否")]
+                  formatter=lambda v, obj: u'<span class="text-error">是</span>' if v else u"否"),
+        PlaceHolderColumnSpec("id", label=u"日志", template_fname="cargo/gr-logs-snippet.html")
+    ]
     __form_columns__[u"产品列表"] = [
         TableColumnSpec("goods_receipt_entries", label="", col_specs=[
             "id", ColumnSpec("product", label=u"产品"), ColumnSpec("product.product_type", label=u"产品类型"),
-            ColumnSpec("weight", label=u"净重(KG)")])
+            ColumnSpec("weight", label=u"净重(KG)"), ImageColumnSpec("pic_path", label=u"图片")])
     ]
     __column_labels__ = {"receipt_id": u'编号', "customer": u'客户', "unload_session.plate": u"车牌号", 
                          "printed": u'是否打印', "stale": u"是否过时"}
+    from lite_mms.portal.cargo.actions import PrintGoodsReceipt
+
+    __customized_actions__ = [PrintGoodsReceipt(u"打印")]
 
 goods_receipt_model_view = GoodsReceiptModelView(GoodsReceipt, u"收货单")
 

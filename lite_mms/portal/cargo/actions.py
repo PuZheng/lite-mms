@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from flask import url_for, redirect, request
 from flask.ext.databrowser.action import DeleteAction, BaseAction
 from lite_mms.constants import cargo as cargo_const
 
@@ -62,3 +63,9 @@ class CreateReceiptAction(BaseAction):
 
     def get_forbidden_msg_formats(self):
         return {-2: u"%s已生成收货单"}
+
+class PrintGoodsReceipt(BaseAction):
+
+    def op_upon_list(self, objs, model_view):
+        model_view.do_update_log(objs[0], self.name)
+        return redirect(url_for("cargo.goods_receipt_preview", id_=objs[0].id, url=request.url))

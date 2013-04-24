@@ -67,16 +67,16 @@
             <th>净重(KG)</th>
             <th>交货日期</th>
           </tr>
-          {% for task in receipt.unload_task_list %}
+          {% for entry in receipt.goods_receipt_entries %}
             <tr>
               <td>
-                {{ task.product.product_type.name }}
+                {{ entry.product.product_type.name }}
               </td>
               <td>
-                {{ task.product.name }}
+                {{ entry.product.name }}
               </td>
               <td>
-                {{ task.weight }}
+                {{ entry.weight }}
               </td>
               <td></td>
             </tr>

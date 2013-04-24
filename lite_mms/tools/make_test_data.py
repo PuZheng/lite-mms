@@ -134,8 +134,8 @@ class InitializeTestDB(Command):
         # 生成收货会话和收货项, 注意这里故意不为某些客户生成收货单
         goods_receipt1 = do_commit(
             GoodsReceipt(customer1, unload_session1))
-        do_commit(GoodsReceiptEntry(goods_receipt=goods_receipt1, weight=1000, product=product1))
-        do_commit(GoodsReceiptEntry(goods_receipt=goods_receipt1, weight=3000, product=product2))
+        do_commit(GoodsReceiptEntry(goods_receipt=goods_receipt1, weight=1000, product=product1, harbor=harbor1))
+        do_commit(GoodsReceiptEntry(goods_receipt=goods_receipt1, weight=3000, product=product2, harbor=harbor2))
         goods_receipt2 = do_commit(
             GoodsReceipt(customer2, unload_session1))
         # 生成订单, 注意这里故意不为某些收货会话生成订单
@@ -149,10 +149,10 @@ class InitializeTestDB(Command):
         #     - 生成计重类型的子订单, 还有50公斤没有分配出去
         sub_order1 = do_commit(
             SubOrder(product1, 300, harbor1, order1, 300, "KG",
-                     due_time=datetime.today(), unload_task=unload_task1, returned=True))
+                     due_time=datetime.today(), default_harbor=harbor1, returned=True))
         sub_order2 = do_commit(
             SubOrder(product2, 1000, harbor2, order1, 1000, "KG",
-                     due_time=datetime.today(), unload_task=unload_task1, returned=True))
+                     due_time=datetime.today(), default_harbor=harbor2, returned=True))
 
         # 生成工单
         #     - DISPATCHING STATUS

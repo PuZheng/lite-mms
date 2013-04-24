@@ -22,7 +22,10 @@ class ModelWrapper(object):
             attr = getattr(self.__model, name)
         if isinstance(attr, types.ListType) or isinstance(attr,
                                                           types.TupleType):
-            return type(attr)(self.__wrap(i) for i in attr)
+            if unwrapped:
+                return type(attr)(self.__unwrap(i) for i in attr)
+            else:
+                return type(attr)(self.__wrap(i) for i in attr)
         return attr if unwrapped else self.__wrap(attr) 
 
     def __setattr__(self, key, value):
@@ -36,6 +39,13 @@ class ModelWrapper(object):
 
         if isinstance(attr, db.Model):
             return self.__do_wrap(attr)
+        return attr
+
+    def __unwrap(self, attr):
+        from lite_mms.database import db
+
+        if isinstance(attr, ModelWrapper):
+            return attr.model
         return attr
 
     def __do_wrap(self, attr):

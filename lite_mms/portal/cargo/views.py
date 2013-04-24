@@ -101,7 +101,7 @@ class UnloadSessionModelView(ModelView):
         from lite_mms.portal.cargo.actions import MyDeleteAction, CloseAction, OpenAction, CreateReceiptAction
         action_list = [MyDeleteAction(u"删除", CargoClerkPermission)]
         if model_list is None: # for list
-            action_list.append(CloseAction(u"关闭")).append(OpenAction(u"打开"))
+            action_list.extend((CloseAction(u"关闭"), OpenAction(u"打开")))
         else:
             if len(model_list) ==1:
                 if model_list[0].status in [cargo_const.STATUS_CLOSED, cargo_const.STATUS_DISMISSED]:

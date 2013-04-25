@@ -32,7 +32,7 @@
           {% if gr.goods_receipt_entries %}
           <a data-toggle="collapse" href="#gr-{{ gr.id }}-entries">{{ gr.goods_receipt_entries|length }}</a>
           <i class="icon-chevron-down"></i>
-          <div id="gr-{{ gr.id }}-entries" class="collapse in" data-role="gr-entries">
+          <div id="gr-{{ gr.id }}-entries" class="collapse" data-role="gr-entries">
             <div class="accordion-inner">
               {% for entry in gr.goods_receipt_entries %} 
               <div><a href="{{ model_view.data_browser.get_form_url(entry) }}">{{ entry.product.product_type}} - {{ entry.product }}({{ entry.weight}}公斤)</a></div>

@@ -210,6 +210,7 @@ class Product(db.Model):
     product_type_id = db.Column(db.Integer,
                                 db.ForeignKey("TB_PRODUCT_TYPE.id"))
     product_type = db.relationship("ProductType", backref="products")
+    enabled = db.Column(db.Boolean, default=True)
 
     def __init__(self, name, product_type, MSSQL_ID=0):
         self.name = name

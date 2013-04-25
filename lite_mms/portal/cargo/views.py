@@ -187,7 +187,7 @@ class GoodsReceiptEntryModelView(ModelView):
             if obj:
                 if isinstance(obj, self.data_browser.db.Model):
                     obj = wraps(obj)
-                if obj.goods_receipt.stale:
+                if obj.goods_receipt.stale or obj.goods_receipt.order:
                     raise PermissionDenied
 
         if isinstance(objs, list) or isinstance(objs, tuple):
@@ -233,7 +233,7 @@ def weigh_unload_task(id_):
 class UnloadTaskModelView(ModelView):
 
     __form_columns__ = [
-        "id",
+        ColumnSpec("id", label=u"编号"),
         InputColumnSpec("product", group_by=Product.product_type, label=u"产品"),
         InputColumnSpec("weight", label=u"重量"),
         InputColumnSpec("harbor", label=u"装卸点"),
@@ -354,7 +354,7 @@ class GoodsReceiptModelView(ModelView):
             if obj:
                 if isinstance(obj, self.data_browser.db.Model):
                     obj = wraps(obj)
-                if obj.stale:
+                if obj.stale or obj.order:
                     raise PermissionDenied
 
         if isinstance(objs, list) or isinstance(objs, tuple):

@@ -71,9 +71,8 @@ class OpenAction(BaseAction):
 class CreateReceiptAction(ReadOnlyAction):
 
     def test_enabled(self, model):
-        from lite_mms.apis import wraps
         if model.goods_receipt_list and all(
-                not wraps(gr).stale for gr in model.goods_receipt_list):
+                not gr.stale for gr in model.goods_receipt_list):
             return -2
         return 0
 

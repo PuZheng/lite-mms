@@ -67,11 +67,22 @@ class UnloadSessionModelView(ModelView):
 
     def patch_row_attr(self, idx, obj):
         test = len(obj.customer_list) > len(obj.goods_receipt_list)
-        test = test or any(((not gr.printed) or gr.stale) for gr in obj.goods_receipt_list)
+        stale = False
+        unprinted = False
+        for gr in obj.goods_receipt_list:
+            if not gr.printed:
+                unprinted = True
+            if gr.stale:
+                stale = True
         if test:
-            return {
-                "title": u"有客户收货单没有生成，或者存在收货单未打印或者已经过期, 强烈建议您重新生成收货单!", 
-                "class": "alert alert-error"}
+            if stale:
+                return {
+                    "title": u"有客户收货单没有生成，或者存在已经过期的收货单, 强烈建议您重新生成收货单!", 
+                    "class": "alert alert-error"}
+            elif unprinted:
+                return {
+                    "title": u"有客户收货单没有打印",
+                    "class": "alert alert-warning"}
 
     __column_formatters__ = {
         "create_time": lambda v, obj: v.strftime("%m月%d日 %H点").decode("utf-8"),
@@ -109,7 +120,7 @@ class UnloadSessionModelView(ModelView):
         from lite_mms.portal.cargo.actions import MyDeleteAction, CloseAction, OpenAction, CreateReceiptAction
         action_list = [MyDeleteAction(u"删除", CargoClerkPermission)]
         if model_list is None: # for list
-            action_list.extend((CloseAction(u"关闭"), OpenAction(u"打开")))
+            action_list.extend([CloseAction(u"关闭"), OpenAction(u"打开"), CreateReceiptAction(u"生成收货单")])
         else:
             if len(model_list) ==1:
                 if model_list[0].status in [cargo_const.STATUS_CLOSED, cargo_const.STATUS_DISMISSED]:
@@ -154,7 +165,7 @@ class plateModelView(ModelView):
     can_edit = False
     create_template = "cargo/plate.html" 
     
-    __create_columns__ = [
+    __create_columns__ = __form_columns__ = [
         InputColumnSpec("name", 
                         doc=u'车牌号的形式应当是"省份缩写+字母+空格+五位数字或字母"',
                         validators=[validators.Regexp(u'^[\u4E00-\u9FA3][a-z]\s*[a-z0-9]{5}$', flags=re.IGNORECASE|re.U, message=u"格式错误")]),

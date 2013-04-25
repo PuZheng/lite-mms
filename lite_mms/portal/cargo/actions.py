@@ -67,7 +67,6 @@ class OpenAction(BaseAction):
     def get_forbidden_msg_formats(self):
         return {-2: u"收货会话%s处在打开状态, 只有已经关闭的会话才能被打开"}
 
-
 class CreateReceiptAction(ReadOnlyAction):
 
     def test_enabled(self, model):

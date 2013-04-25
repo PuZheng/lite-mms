@@ -15,7 +15,7 @@ class OrderModelView(ModelView):
     list_template = "order2/order-list.haml"
 
     def try_create(self):
-        raise PermissionDenied
+        raise PermissionDenied()
 
     can_batchly_edit = False
 
@@ -64,7 +64,7 @@ class OrderModelView(ModelView):
         return apis.OrderWrapper(model)
 
 
-    def try_view(self):
+    def try_view(self, objs=None):
         from flask.ext.principal import Permission
         Permission.union(CargoClerkPermission, AdminPermission).test()
 
@@ -156,11 +156,5 @@ extra_params = {
 }
 data_browser.register_model_view(order_model_view, order2_page, extra_params=extra_params)
 
-extra_params = {
-    "form_view": {
-        "nav_bar": main_nav_bar,
-        "titlename": u"收货单详情"
-    }
-}
 
 from lite_mms.portal.order2 import ajax, views

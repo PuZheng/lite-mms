@@ -12,7 +12,12 @@ def _():
     with CargoClerkPermission.require():
         pass
 
-from lite_mms.portal.cargo.views import (unload_session_model_view, plate_model_view, goods_receipt_entry_view, goods_receipt_model_view)
+
+from lite_mms.portal.cargo.views import (unload_session_model_view,
+                                         plate_model_view,
+                                         goods_receipt_entry_view,
+                                         goods_receipt_model_view,
+                                         unload_task_model_view)
 from lite_mms.basemain import data_browser, nav_bar
 
 
@@ -36,7 +41,8 @@ def _do_register(model_view):
 
 
 for model_view in [unload_session_model_view, goods_receipt_entry_view,
-                   plate_model_view, goods_receipt_model_view]:
+                   plate_model_view, goods_receipt_model_view,
+                   unload_task_model_view]:
     _do_register(model_view)
 
 from . import views, ajax

@@ -36,6 +36,10 @@ class UnloadSessionModelView(ModelView):
     as_radio_group = True
     can_batchly_edit = False
 
+    def try_edit(self, processed_objs=None):
+        pass
+
+
     def get_list_columns(self):
         def gr_item_formatter(v, obj):
             # 格式化每个仓单，未打印或者过期，需要提示出来
@@ -89,7 +93,7 @@ class UnloadSessionModelView(ModelView):
                           filters.Only("status", display_col_name=u"仅展示未完成会话", test=lambda col: ~col.in_([cargo_const.STATUS_CLOSED, cargo_const.STATUS_DISMISSED]), notation="__only_unclosed"),
                          ]
 
-    def try_view(self):
+    def try_view(self, processed_objs=None):
         from flask.ext.principal import Permission
         Permission.union(CargoClerkPermission, AdminPermission).test()
 

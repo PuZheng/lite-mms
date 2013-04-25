@@ -131,6 +131,11 @@ class UnloadSessionWrapper(ModelWrapper):
 
         self.gc_goods_receipts()
 
+    @property
+    def goods_receipt_stale(self):
+        return any(gr.stale for gr in self.goods_receipt_list)
+
+
 class UnloadTaskWrapper(ModelWrapper):
     @property
     def pic_url(self):
@@ -213,7 +218,7 @@ class GoodsReceiptWrapper(ModelWrapper):
 
     @property
     def stale(self):
-        if self.unload_session.finish_time > self.create_time:
+        if self.unload_session.finish_time and self.unload_session.finish_time > self.create_time:
             _entries = [(entry.product.id, entry.weight) for entry in
                         self.goods_receipt_entries]
             _uts = [(ut.product.id, ut.weight) for ut in self.unload_task_list]

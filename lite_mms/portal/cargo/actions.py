@@ -1,7 +1,24 @@
 # -*- coding: utf-8 -*-
 from flask import url_for, redirect, request
-from flask.ext.databrowser.action import DeleteAction, BaseAction
+from flask.ext.databrowser.action import DeleteAction, BaseAction, ReadOnlyAction
 from lite_mms.constants import cargo as cargo_const
+
+
+class UnloadTaskDeleteAtion(DeleteAction):
+    def test_enabled(self, model):
+        if model.unload_session.goods_receipt_list:
+            return -2
+        return 0
+    
+    def get_forbidden_msg_formats(self):
+        return {-2: u"收货任务%s已经生成收货单，请先删除对应收货单以后再删除此收货会话!"}
+
+    def op(self, obj):
+        from lite_mms.portal.cargo.fsm import fsm
+        from lite_mms import constants
+        from flask.ext.login import current_user
+        fsm.fsm.reset_obj(obj.unload_session)
+        fsm.fsm.next(constants.cargo.ACT_WEIGHT, current_user)
 
 class MyDeleteAction(DeleteAction):
 
@@ -11,7 +28,8 @@ class MyDeleteAction(DeleteAction):
         return 0
 
     def get_forbidden_msg_formats(self):
-        return {-2: u"发货会话%s已经生成了收货单，请先删除对应收货单以后再删除此发货会话!"}
+        return {-2: u"收货会话%s已经生成了收货单，请先删除对应收货单以后再删除此收货会话!"}
+
 
 class CloseAction(BaseAction):
 
@@ -29,8 +47,9 @@ class CloseAction(BaseAction):
         fsm.next(cargo_const.ACT_CLOSE, current_user)
 
     def get_forbidden_msg_formats(self):
-        return {-2: u"发货会话%s已经被关闭", 
-                -3: u"发货会话%s有卸货任务没有称重，请确保所有的卸货任务都已经称重！"}
+        return {-2: u"收货会话%s已经被关闭", 
+                -3: u"收货会话%s有卸货任务没有称重，请确保所有的卸货任务都已经称重！"}
+
 
 class OpenAction(BaseAction):
 
@@ -46,12 +65,11 @@ class OpenAction(BaseAction):
         fsm.next(cargo_const.ACT_OPEN, current_user)
 
     def get_forbidden_msg_formats(self):
-        return {-2: u"发货会话%s处在打开状态, 只有已经关闭的会话才能被打开"}
+        return {-2: u"收货会话%s处在打开状态, 只有已经关闭的会话才能被打开"}
 
-class CreateReceiptAction(BaseAction):
+class CreateReceiptAction(ReadOnlyAction):
 
     def test_enabled(self, model):
-        from lite_mms.apis import wraps
         if model.goods_receipt_list and all(
                 not gr.stale for gr in model.goods_receipt_list):
             return -2
@@ -62,6 +80,7 @@ class CreateReceiptAction(BaseAction):
 
     def get_forbidden_msg_formats(self):
         return {-2: u"%s已生成收货单"}
+
 
 class PrintGoodsReceipt(BaseAction):
 

@@ -28,14 +28,14 @@ class AdminModelView(ModelView):
     list_template = "admin2/list.html"
     create_template = edit_template = "admin2/object.html"
 
-    def try_view(self):
-        AdminPermission.test()
+    #def try_view(self):
+        #AdminPermission.test()
 
-    def try_edit(self):
-        AdminPermission.test()
+    #def try_edit(self):
+        #AdminPermission.test()
 
-    def can_edit(self):
-        return AdminPermission.can()
+    #def can_edit(self):
+        #return AdminPermission.can()
 
 class UserModelView(AdminModelView):
 

@@ -2,27 +2,25 @@
 import re
 import json
 
-from flask import request, abort, url_for, render_template, flash
-from flask.ext.babel import _
-from flask.ext.login import current_user
+from flask import request, abort, url_for, render_template
 from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.column_spec import (InputColumnSpec, ColumnSpec, 
                                                PlaceHolderColumnSpec, ListColumnSpec, 
                                                TableColumnSpec, ImageColumnSpec)
-from sqlalchemy import exists
+
+from flask.ext.principal import PermissionDenied
 from werkzeug.utils import redirect
-from wtforms import Form, IntegerField, validators, HiddenField
+from wtforms import Form, IntegerField, validators
 from werkzeug.datastructures import OrderedMultiDict
 
 from lite_mms.portal.cargo import cargo_page, fsm
 from lite_mms.utilities import decorators, do_commit
 from lite_mms.permissions import CargoClerkPermission,AdminPermission
-from lite_mms import constants
 from lite_mms.basemain import nav_bar
 from lite_mms.apis import wraps
 import lite_mms.constants.cargo as cargo_const
-from lite_mms.models import (UnloadSession, Plate, DeliverySession, 
-                             GoodsReceipt, GoodsReceiptEntry, Product)
+from lite_mms.models import (UnloadSession, Plate, GoodsReceipt,
+                             GoodsReceiptEntry, Product, UnloadTask)
 
 @cargo_page.route('/')
 def index():
@@ -35,6 +33,16 @@ class UnloadSessionModelView(ModelView):
 
     as_radio_group = True
     can_batchly_edit = False
+
+    def try_edit(self, objs=None):
+        def _try_edit(obj_):
+            if obj_ and obj_.finish_time:
+                raise PermissionDenied
+
+        if isinstance(objs, (list, tuple)):
+            return any(_try_edit(obj_) for obj_ in objs)
+        else:
+            return _try_edit(objs)
 
     def get_list_columns(self):
         def gr_item_formatter(v, obj):
@@ -100,7 +108,7 @@ class UnloadSessionModelView(ModelView):
                           filters.Only("status", display_col_name=u"仅展示未完成会话", test=lambda col: ~col.in_([cargo_const.STATUS_CLOSED, cargo_const.STATUS_DISMISSED]), notation="__only_unclosed"),
                          ]
 
-    def try_view(self, objs=None):
+    def try_view(self, processed_objs=None):
         from flask.ext.principal import Permission
         Permission.union(CargoClerkPermission, AdminPermission).test()
 
@@ -185,6 +193,19 @@ class GoodsReceiptEntryModelView(ModelView):
     def preprocess(self, obj):
         return wraps(obj)
 
+    def try_edit(self, objs=None):
+        def _try_edit(obj):
+            if obj:
+                if isinstance(obj, self.data_browser.db.Model):
+                    obj = wraps(obj)
+                if obj.goods_receipt.stale or obj.goods_receipt.order:
+                    raise PermissionDenied
+
+        if isinstance(objs, list) or isinstance(objs, tuple):
+            return any(_try_edit(obj) for obj in objs)
+        else:
+            return _try_edit(objs)
+
 goods_receipt_entry_view = GoodsReceiptEntryModelView(GoodsReceiptEntry, u"收货单产品")
 
 
@@ -199,7 +220,8 @@ def weigh_unload_task(id_):
     if request.method == 'GET':
         return dict(plate=task.unload_session.plate, task=task,
             product_types=apis.product.get_product_types(),
-            products=json.dumps(apis.product.get_products()))
+            products=json.dumps(apis.product.get_products()),
+            titlename=u"收货任务")
     else: # POST
         class _ValidationForm(Form):
             weight = IntegerField('weight', [validators.required()])
@@ -219,59 +241,81 @@ def weigh_unload_task(id_):
                                    back_url=unload_session_model_view.url_for_object(model=task.unload_session.model),
                                    nav_bar=nav_bar), 403
 
+class UnloadTaskModelView(ModelView):
+
+    __form_columns__ = [
+        ColumnSpec("id", label=u"编号"),
+        InputColumnSpec("product", group_by=Product.product_type, label=u"产品"),
+        InputColumnSpec("weight", label=u"重量"),
+        InputColumnSpec("harbor", label=u"装卸点"),
+        ImageColumnSpec("pic_url", label=u"图片")]
+
+    def preprocess(self, obj):
+        return wraps(obj)
+
+    def get_customized_actions(self, processed_objs=None):
+        from lite_mms.portal.cargo.actions import UnloadTaskDeleteAtion
+        delete_action = UnloadTaskDeleteAtion(u"删除")
+
+        if isinstance(processed_objs, (list, tuple)):
+            if any(delete_action.test_enabled(obj) == 0 for obj in processed_objs):
+                return [delete_action]
+        return []
 
 
-@cargo_page.route("/unload-task/<int:id_>", methods=["GET", "POST"])
-@decorators.templated("cargo/unload-task.html")
-@decorators.nav_bar_set
-def unload_task(id_):
-    from lite_mms import apis
+unload_task_model_view = UnloadTaskModelView(UnloadTask)
 
-    if request.method == 'GET':
-        task = apis.cargo.get_unload_task(id_)
-        if not task:
-            abort(404)
-        return dict(task=task, product_types=apis.product.get_product_types(),
-                    products=json.dumps(apis.product.get_products()))
-    else: # POST
-        if id_:
-            task = apis.cargo.get_unload_task(id_)
-            if not task:
-                abort(404)
-            if request.form.get("method") == "delete":
-                us = task.unload_session
-                do_commit(task, "delete")
-                fsm.fsm.reset_obj(us)
-                fsm.fsm.next(constants.cargo.ACT_WEIGHT, current_user)
-                flash(u"删除卸货任务%d成功" % task.id)
-                return redirect(
-                    request.form.get("url") or url_for("cargo.unload_session",
-                                                       id_=task.session_id,
-                                                       _method="GET"))
-            else:
-                class _ValidationForm(Form):
-                    weight = IntegerField('weight', [validators.required()])
-                    product = IntegerField('product')
-                    url = HiddenField("url")
-
-                form = _ValidationForm(request.form)
-                if form.validate():
-                    session = apis.cargo.get_unload_session(session_id=task.session_id)
-                    if not session:
-                        abort(404)
-
-                    weight = task.last_weight - form.weight.data
-                    if weight < 0:
-                        abort(500)
-                    if not task.weight:
-                        fsm.fsm.reset_obj(task.unload_session)
-                        fsm.fsm.next(constants.cargo.ACT_WEIGHT, current_user)
-                    task.update(weight=weight, product_id=form.product.data)
-                    url = form.url.data or url_for("cargo.unload_session",
-                                                   id_=task.session_id, _method="GET")
-                    return redirect(url)
-                else:
-                    abort(403)
+# @cargo_page.route("/unload-task/<int:id_>", methods=["GET", "POST"])
+# @decorators.templated("cargo/unload-task.html")
+# @decorators.nav_bar_set
+# def unload_task(id_):
+#     from lite_mms import apis
+#
+#     if request.method == 'GET':
+#         task = apis.cargo.get_unload_task(id_)
+#         if not task:
+#             abort(404)
+#         return dict(task=task, product_types=apis.product.get_product_types(),
+#                     products=json.dumps(apis.product.get_products()))
+#     else: # POST
+#         if id_:
+#             task = apis.cargo.get_unload_task(id_)
+#             if not task:
+#                 abort(404)
+#             if request.form.get("method") == "delete":
+#                 us = task.unload_session
+#                 do_commit(task, "delete")
+#                 fsm.fsm.reset_obj(us)
+#                 fsm.fsm.next(constants.cargo.ACT_WEIGHT, current_user)
+#                 flash(u"删除卸货任务%d成功" % task.id)
+#                 return redirect(
+#                     request.form.get("url") or url_for("cargo.unload_session",
+#                                                        id_=task.session_id,
+#                                                        _method="GET"))
+#             else:
+#                 class _ValidationForm(Form):
+#                     weight = IntegerField('weight', [validators.required()])
+#                     product = IntegerField('product')
+#                     url = HiddenField("url")
+#
+#                 form = _ValidationForm(request.form)
+#                 if form.validate():
+#                     session = apis.cargo.get_unload_session(session_id=task.session_id)
+#                     if not session:
+#                         abort(404)
+#
+#                     weight = task.last_weight - form.weight.data
+#                     if weight < 0:
+#                         abort(500)
+#                     if not task.weight:
+#                         fsm.fsm.reset_obj(task.unload_session)
+#                         fsm.fsm.next(constants.cargo.ACT_WEIGHT, current_user)
+#                     task.update(weight=weight, product_id=form.product.data)
+#                     url = form.url.data or url_for("cargo.unload_session",
+#                                                    id_=task.session_id, _method="GET")
+#                     return redirect(url)
+#                 else:
+#                     abort(403)
 
 
 class GoodsReceiptModelView(ModelView):
@@ -314,6 +358,20 @@ class GoodsReceiptModelView(ModelView):
     from lite_mms.portal.cargo.actions import PrintGoodsReceipt
 
     __customized_actions__ = [PrintGoodsReceipt(u"打印")]
+
+
+    def try_edit(self, objs=None):
+        def _try_edit(obj):
+            if obj:
+                if isinstance(obj, self.data_browser.db.Model):
+                    obj = wraps(obj)
+                if obj.stale or obj.order:
+                    raise PermissionDenied
+
+        if isinstance(objs, list) or isinstance(objs, tuple):
+            return any(_try_edit(obj) for obj in objs)
+        else:
+            return _try_edit(objs)
 
 goods_receipt_model_view = GoodsReceiptModelView(GoodsReceipt, u"收货单")
 

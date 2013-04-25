@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from flask import url_for, redirect, request
-from flask.ext.databrowser.action import DeleteAction, BaseAction, LinkAction
+from flask.ext.databrowser.action import DeleteAction, BaseAction, ReadOnlyAction
 from lite_mms.constants import cargo as cargo_const
 
 
@@ -68,7 +68,7 @@ class OpenAction(BaseAction):
         return {-2: u"收货会话%s处在打开状态, 只有已经关闭的会话才能被打开"}
 
 
-class CreateReceiptAction(LinkAction):
+class CreateReceiptAction(ReadOnlyAction):
 
     def test_enabled(self, model):
         from lite_mms.apis import wraps

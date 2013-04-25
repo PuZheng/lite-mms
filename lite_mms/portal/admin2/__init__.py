@@ -12,7 +12,7 @@ from lite_mms.portal.admin2.views import (user_model_view, group_model_view,
                                           department_model_view,
                                           team_model_view, harbor_model_view,
                                           procedure_model_view, config_model_view, 
-                                          customer_model_view)
+                                          customer_model_view, product_model_view)
 from nav_bar import NavBar
 sub_nav_bar = NavBar()
 sub_nav_bar.register(lambda: user_model_view.url_for_list(), u"用户管理",
@@ -27,6 +27,9 @@ sub_nav_bar.register(lambda: harbor_model_view.url_for_list(), u"装卸点管理
     enabler=lambda: harbor_model_view.within_domain(request.url, "admin2"), group=u"对象管理")
 sub_nav_bar.register(lambda: procedure_model_view.url_for_list(), u"工序管理", 
     enabler=lambda: procedure_model_view.within_domain(request.url, "admin2"), group=u"对象管理")
+sub_nav_bar.register(lambda: product_model_view.url_for_list(), u"产品管理",
+                     enabler=lambda: product_model_view.within_domain(
+                         request.url, "admin2"), group=u"对象管理")
 sub_nav_bar.register(lambda: config_model_view.url_for_list(), u"配置项管理",
                      enabler=lambda: config_model_view.within_domain(
                          request.url, "admin2"), group=u"对象管理")
@@ -61,7 +64,8 @@ def _do_register(model_name, model_view):
 for mn, mv in [(u"用户", user_model_view), (u"用户组", group_model_view),
                (u"车间", department_model_view), (u"班组", team_model_view),
                (u"装卸点", harbor_model_view), (u"工序", procedure_model_view),
-               (u"配置项", config_model_view), (u"客户", customer_model_view)]:
+               (u"配置项", config_model_view), (u"客户", customer_model_view),
+               (u"产品", product_model_view)]:
     _do_register(mn, mv)
 
 @admin2_page.errorhandler(socket.error)

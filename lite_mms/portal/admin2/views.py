@@ -8,13 +8,13 @@ import errno
 
 from wtforms import Form, DateField
 from flask import flash, redirect, url_for, request, render_template
-from flask.ext.databrowser import ModelView, column_spec
+from flask.ext.databrowser import ModelView, column_spec, filters
 from flask.ext.databrowser.action import DeleteAction
 from flask.ext.databrowser.filters import BaseFilter
-from flask.ext.principal import Permission
+from flask.ext.principal import Permission, PermissionDenied
 
 from lite_mms.models import (User, Group, Department, Team, Procedure,
-    Harbor, Config, Customer)
+    Harbor, Config, Customer, Product)
 import lite_mms.constants as constants
 import lite_mms.constants.groups as groups_const
 from lite_mms.permissions.roles import AdminPermission, CargoClerkPermission
@@ -28,14 +28,11 @@ class AdminModelView(ModelView):
     list_template = "admin2/list.html"
     create_template = edit_template = "admin2/object.html"
 
-    def try_view(self):
+    def try_view(self, objs=None):
         AdminPermission.test()
 
-    def try_edit(self):
+    def try_edit(self, objs=None):
         AdminPermission.test()
-
-    def can_edit(self):
-        return AdminPermission.can()
 
 class UserModelView(AdminModelView):
 
@@ -78,7 +75,7 @@ user_model_view = UserModelView(User, u"用户")
 
 class CustomerModelView(AdminModelView):
     
-    def try_view(self):
+    def try_view(self, objs=None):
         Permission.union(AdminPermission, CargoClerkPermission).test()
 
 
@@ -178,7 +175,8 @@ procedure_model_view = ProcedureModelView(Procedure, u"工序")
 class ConfigModelView(AdminModelView):
     __column_labels__ = {"property_name": u"属性名称", "property_desc": u"描述",
                          "property_value": u"值"}
-    can_create = False
+    def try_create(self):
+        raise PermissionDenied
 
     __form_columns__ = [
         column_spec.InputColumnSpec("property_name", label=u"属性名称",
@@ -188,6 +186,21 @@ class ConfigModelView(AdminModelView):
 
 config_model_view = ConfigModelView(Config, u"配置项")
 
+class ProductModelView(AdminModelView):
+    """
+    产品的管理类
+    """
+    __list_columns__ = ["id", "MSSQL_ID", "name", "product_type", "enabled"]
+
+    __column_labels__ = {"id": u"产品编号", "MSSQL_ID": u"在mssql的编号",
+                         "name": u"名称", "product_type": u"产品类型",
+                         "enabled": u"是否启用"}
+
+    __column_formatters__ = {"enabled": lambda v, obj: u"是" if v else u"否"}
+
+    __column_filters__ = [filters.EqualTo("product_type", name=u"产品类型")]
+
+product_model_view = ProductModelView(Product, u"产品")
 
 @admin2_page.route("/broker/index.html")
 @templated("/admin2/broker/index.html")
@@ -281,7 +294,7 @@ def team_performance():
                 # write to the target stream
                 self.stream.write(data)
                 # empty queue
-                self.queue.truncate(0)
+                self.queue.truncate()
 
             def writerows(self, rows):
                 for row in rows:

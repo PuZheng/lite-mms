@@ -74,15 +74,14 @@ class UnloadSessionModelView(ModelView):
                 unprinted = True
             if gr.stale:
                 stale = True
-        if test:
-            if stale:
-                return {
-                    "title": u"有客户收货单没有生成，或者存在已经过期的收货单, 强烈建议您重新生成收货单!", 
-                    "class": "alert alert-error"}
-            elif unprinted:
-                return {
-                    "title": u"有客户收货单没有打印",
-                    "class": "alert alert-warning"}
+        if test or stale:
+            return {
+                "title": u"有客户收货单没有生成，或者存在已经过期的收货单, 强烈建议您重新生成收货单!",
+                "class": "alert alert-error"}
+        elif unprinted:
+            return {
+                "title": u"有客户收货单没有打印",
+                "class": "alert alert-warning"}
 
     __column_formatters__ = {
         "create_time": lambda v, obj: v.strftime("%m月%d日 %H点").decode("utf-8"),

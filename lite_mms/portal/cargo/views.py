@@ -173,7 +173,8 @@ plate_model_view = plateModelView(Plate, u"车辆")
 class GoodsReceiptEntryModelView(ModelView):
 
     __form_columns__ = [
-        InputColumnSpec("product", group_by=Product.product_type, label=u"产品"), 
+        InputColumnSpec("product", group_by=Product.product_type, label=u"产品",
+                        filter_=lambda q: q.filter(Product.enabled)),
         InputColumnSpec("goods_receipt", label=u"收货单", read_only=True),
         InputColumnSpec("weight", label=u"重量"),
         InputColumnSpec("harbor", label=u"装卸点"),
@@ -234,7 +235,8 @@ class UnloadTaskModelView(ModelView):
 
     __form_columns__ = [
         ColumnSpec("id", label=u"编号"),
-        InputColumnSpec("product", group_by=Product.product_type, label=u"产品"),
+        InputColumnSpec("product", group_by=Product.product_type, label=u"产品",
+                        filter_=lambda q: q.filter(Product.enabled)),
         InputColumnSpec("weight", label=u"重量"),
         InputColumnSpec("harbor", label=u"装卸点"),
         ImageColumnSpec("pic_url", label=u"图片")]

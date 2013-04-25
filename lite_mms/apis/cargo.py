@@ -235,6 +235,16 @@ class GoodsReceiptWrapper(ModelWrapper):
     def delete(self):
         do_commit(self.model, "delete")
 
+
+class GoodsReceiptEntryWrapper(ModelWrapper):
+    @property
+    def pic_url(self):
+        if self.pic_path:
+            return url_for("serv_pic", filename=self.pic_path)
+        else:
+            return ""
+
+
 def get_unload_session_list(idx=0, cnt=sys.maxint, unfinished_only=False,
                             keywords=None):
     """

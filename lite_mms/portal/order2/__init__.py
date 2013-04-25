@@ -162,6 +162,6 @@ extra_params = {
     }
 }
 
-data_browser.register_model_view(GoodsReceiptModelView(GoodsReceipt, u"收货单"), order2_page, extra_params=extra_params)
+#data_browser.register_model_view(GoodsReceiptModelView(GoodsReceipt, u"收货单"), order2_page, extra_params=extra_params)
 
 from lite_mms.portal.order2 import ajax, views

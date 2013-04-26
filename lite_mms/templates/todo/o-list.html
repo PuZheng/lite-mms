@@ -35,7 +35,7 @@
             <div class="accordion-inner">
               {% for obj in list %}
                 <li>
-                  {% if obj.url %}
+                  <em>{{ obj.actor }}</em>&nbsp;<strong>{{ obj.action }}</strong>了{% if obj.url %}
                     <a href="{{ obj.url }}">
                       {{ obj.obj_cls }}{{ obj.obj_pk }}</a>
                   {% else %}

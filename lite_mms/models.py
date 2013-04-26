@@ -3,7 +3,7 @@ from datetime import datetime
 from lite_mms.constants import STANDARD_ORDER_TYPE
 from lite_mms.constants.work_command import STATUS_DISPATCHING, HT_NORMAL
 import lite_mms.constants.cargo as cargo_const
-from lite_mms.database import db
+from lite_mms.database import db, mongo
 
 permission_and_group_table = db.Table("TB_PERMISSION_AND_GROUP",
                                       db.Column("permission_name",
@@ -873,6 +873,7 @@ class TODO(db.Model):
     action = db.Column(db.String(64))
     priority = db.Column(db.Integer)
 
+
 class Config(db.Model):
     __tablename__ = "TB_CONFIG"
 
@@ -880,3 +881,29 @@ class Config(db.Model):
     property_name = db.Column(db.String(64), nullable=False)
     property_desc = db.Column(db.String(64))
     property_value = db.Column(db.String(64), nullable=False)
+
+
+class Message(mongo.Document):
+    message = mongo.StringField(required=True)
+    author = mongo.ReferenceField("Identity", dbref=True)
+    create_time = mongo.DateTimeField(default=datetime.now)
+    obj_cls = mongo.StringField()
+    obj_pk = mongo.StringField()
+    priority = mongo.IntField()
+    next_actor = mongo.ReferenceField("Identity", dbref=True)
+    meta = {
+        'ordering': ['-create_time']
+    }
+
+
+class Identity(mongo.Document):
+    user_id = mongo.IntField(required=True, unique=True)
+    to_read_messages = mongo.ListField(mongo.ReferenceField("Message", dbref=True))
+
+    @property
+    def messages(self):
+        return Message.objects.filter(next_actor=self)
+
+    @property
+    def create_messages(self):
+        return Message.objects.filter(author=self)

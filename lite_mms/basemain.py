@@ -2,7 +2,7 @@
 import os
 from sqlalchemy.exc import SQLAlchemyError
 from flask import Flask, render_template, request
-from flaskext.babel import Babel, gettext
+from flask.ext.babel import Babel, gettext
 from flask.ext.nav_bar import FlaskNavBar
 
 app = Flask(__name__, instance_relative_config=True)

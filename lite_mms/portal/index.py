@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+import json
 from flask import redirect, send_from_directory, url_for, abort, render_template, request
 from flask.ext.login import current_user, login_required
 from lite_mms.basemain import app, nav_bar
@@ -31,3 +32,10 @@ def serv_pic(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
+@app.route("/message")
+def ajax_new_message():
+    from lite_mms.apis.todo import MongoAPI
+    messages = []
+    for message in current_user.to_read_messages:
+        messages.append(MongoAPI.wrap_message(message))
+    return json.dumps(messages)

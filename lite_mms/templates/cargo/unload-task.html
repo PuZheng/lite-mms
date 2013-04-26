@@ -4,9 +4,11 @@
     $(function () {
       var products = {{ products|safe }};
       var selected_product_type = {{ task.product.product_type.id }};
-      $.each(products[selected_product_type], function (idx, entry) {
-        $("#product").append('<option value="' + entry.id + '">' + entry.name + '</option>');
-      });
+      if (selected_product_type in products) {
+        $.each(products[selected_product_type], function (idx, entry) {
+          $("#product").append('<option value="' + entry.id + '">' + entry.name + '</option>');
+        });
+      }
       var product_id = {{ task.product.id }};
       $("#product").val(product_id);
       $("#product_type").change(function (ui) {
@@ -39,8 +41,7 @@
       <strong>{{ task.customer.name }}</strong>
       的卸货任务
     </div>
-    <form class="form-horizontal" method="POST"
-          action="{{ url_for('cargo.unload_task', id_=task.id) }}">
+    <form class="form-horizontal" method="POST">
       <legend>卸货任务详情&nbsp;
         {% if not task.weight %}
           <button class="btn btn-danger" type="button" id="delete-button">

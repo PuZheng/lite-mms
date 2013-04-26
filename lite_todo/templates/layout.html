@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html lang="cn">
+<head>
+  <meta charset="UTF-8">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename="bootstrap/css/bootstrap.min.css") }}" media="screen">
+  <link rel="stylesheet" href="{{ url_for('static', filename="bootstrap/css/bootstrap-responsive.min.css") }}" media="screen">
+  <link rel="stylesheet" href="{{ url_for('static', filename="select2/select2.css") }}" media="screen">
+  <link rel="stylesheet" href="{{ url_for('static', filename="css/customer.css") }}">
+  <link href="{{ url_for('static', filename='css/datepicker.css') }}" rel="stylesheet">
+  {% block __customized_css__ %}{% endblock %}
+  <script type="text/javascript" src="{{ url_for("static", filename="js/jquery-1.8.3.min.js") }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename="bootstrap/js/bootstrap.min.js") }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename="select2/select2.min.js") }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename="js/JSPinYin.js") }}"></script>
+  {% block __data_browser__builtin_head_block %}{% endblock %}
+  {% block __data_browser__custom_external_block %}{% endblock %}
+  {% block __data_browser__customized_head_block %}{% endblock %}
+  {% block custom_external %}{% endblock %}
+  <script type="text/javascript">
+    $(function () {
+      setTimeout(function () {
+          $(".flash").fadeOut("slow")
+      }, 3000);
+      $("select").select2({
+        width: "element",
+        placeholder: "请选择",
+        matcher: function (term, text) {
+          return pinyin.getCamelChars(text).toUpperCase().indexOf(term.toUpperCase()) >= 0;
+        }
+      });
+    })
+  </script>
+</head>
+<body>
+
+<header class="navbar navbar-inverse navbar-fixed-top">
+  <div class="navbar-inner">
+    <div class="container">
+      <nav class="nav-collapse">
+        {% if current_user.is_authenticated() %}
+          <bold class="navbar-text pull-right">
+            {{ _("欢迎") }}
+            <mark><strong>{{ current_user.username }}</strong>
+            </mark>
+            {{ _("您是") }}
+            <strong>{{ current_user.group_name }}</strong>
+            <a href="{{ url_for('logout') }}">{{ _("退出") }}</a>
+          </bold>
+        {% else %}
+          <div class="brand">
+            LITE-MMS
+          </div>
+        {% endif %}
+      </nav>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid">
+  {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+      <div class="flash">
+      {% for category, m in messages %}
+        {% if category == 'error' %}
+          <div class="alert alert-error">
+            <button type="button" class="close"
+                    data-dismiss="alert">&times;</button>
+            <strong>错误！</strong>{{ m }}
+          </div>
+        {% else %}
+          <div class="alert alert-success">
+            <button type="button" class="close"
+                    data-dismiss="alert">&times;</button>
+            <strong>成功！</strong>{{ m }}
+          </div>
+        {% endif %}
+      {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+</div>
+{% block body %}{% endblock %}
+
+<footer class="footer">
+  <div class="container">
+    <div class="muted">
+      copyright@ LITE-MMS
+    </div>
+  </div>
+</footer>
+</body>
+</html>

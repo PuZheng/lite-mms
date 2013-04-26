@@ -419,6 +419,12 @@ def new_unload_task(session_id, harbor, customer_id, creator_id,
         pic_path=pic_path,
         product=product, is_last=is_last))
 
+    from lite_mms.apis.todo import MongoAPI
+    from lite_mms.apis.auth import get_user_list
+
+    MongoAPI.object_notify(ut, to_user=get_user_list(
+        constants.groups.CARGO_CLERK), sender=creator, action=u"新建")
+
     return UnloadTaskWrapper(ut)
 
 

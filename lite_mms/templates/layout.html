@@ -26,7 +26,7 @@
   <script type="text/javascript">
     $(function () {
       setTimeout(function () {
-          $(".flash").fadeOut("slow")
+        $(".flash").fadeOut("slow")
       }, 3000);
       $("select").select2({
         width: "element",
@@ -37,6 +37,36 @@
       });
     })
   </script>
+  <script type="text/javascript" src="{{ url_for("static", filename="js/jquery.pnotify.min.js") }}"></script>
+  <link rel="stylesheet" href="{{ url_for("static", filename="css/jquery.pnotify.default.css") }}"/>
+  <script type="text/javascript">
+    $(function () {
+      stack_bottomright = {"dir1": "up", "dir2": "left", "firstpos1": 25, "firstpos2": 25};
+
+      function f() {
+        $.getJSON('{{ url_for("ajax_new_message") }}', function (data) {
+          for (var i = 0; i < data.length; i++) {
+            $.pnotify({
+              title: '新待办事项',
+              text: data[i],
+              addclass: "stack-bottomright",
+              stack: stack_bottomright
+            });
+          }
+          setTimeout(f, 60000);
+        })
+      }
+
+      f();
+    })
+  </script>
+  <style type="text/css">
+    .stack-bottomright {
+      /* These are just CSS default values to reset the pnotify CSS. */
+      right: auto;
+      top: auto;
+    }
+  </style>
 </head>
 <body>
 
@@ -77,21 +107,21 @@
   {% with messages = get_flashed_messages(with_categories=True) %}
     {% if messages %}
       <div class="flash">
-      {% for category, m in messages %}
-        {% if category == 'error' %}
-          <div class="alert alert-error">
-            <button type="button" class="close"
-                    data-dismiss="alert">&times;</button>
-            <strong>错误！</strong>{{ m }}
-          </div>
-        {% else %}
-          <div class="alert alert-success">
-            <button type="button" class="close"
-                    data-dismiss="alert">&times;</button>
-            <strong>成功！</strong>{{ m }}
-          </div>
-        {% endif %}
-      {% endfor %}
+        {% for category, m in messages %}
+          {% if category == 'error' %}
+            <div class="alert alert-error">
+              <button type="button" class="close"
+                      data-dismiss="alert">&times;</button>
+              <strong>错误！</strong>{{ m }}
+            </div>
+          {% else %}
+            <div class="alert alert-success">
+              <button type="button" class="close"
+                      data-dismiss="alert">&times;</button>
+              <strong>成功！</strong>{{ m }}
+            </div>
+          {% endif %}
+        {% endfor %}
       </div>
     {% endif %}
   {% endwith %}

@@ -51,7 +51,7 @@ class CloseAction(BaseAction):
                 -3: u"收货会话%s有卸货任务没有称重，请确保所有的卸货任务都已经称重！"}
 
 
-class OpenAction(BaseAction):
+class OpenAction(ReadOnlyAction):
 
     def test_enabled(self, model):
         if model.status != cargo_const.STATUS_CLOSED:

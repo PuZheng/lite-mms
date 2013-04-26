@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% block body %}
+  {% if form %}
+    <div class="container">
+      <form action="" method="POST" class="form-horizontal"
+          {% if form.has_file_field %} enctype="multipart/form-data"{% endif %}>
+        {% for f in form if f.type != 'HiddenField' and f.type != 'CSRFTokenField' %}
+          <div class="control-group{{ ' error' if f.errors }}">
+            <div class="control-label">
+              <strong>{{ f.label.text }}</strong>
+            </div>
+            <div class="controls">
+              {{ f()|safe }}
+            </div>
+          </div>
+        {% endfor %}
+        <div class="control-group">
+          <div class="controls">
+            <button class="btn btn-primary btn-large">{{ _("Submit") }}</button>
+            <a class="btn btn-large" href="{{ request.args.get("url") or "/" }}">{{ _("Cancel") }}</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  {% else %}
+
+  {% endif %}
+{% endblock %}

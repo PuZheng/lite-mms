@@ -7,7 +7,13 @@ app.config["SQLALCHEMY_ECHO"] = False
 db = SQLAlchemy(app)
 
 app.config["MONGODB_DB"] = "localhost"
-mongo = MongoEngine(app)
+mongo = MongoEngine()
+
+try:
+    mongo.init_app(app)
+except:
+    pass
+
 
 def init_db():
     # 必须要import models, 否则不会建立表

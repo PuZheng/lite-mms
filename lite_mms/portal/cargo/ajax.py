@@ -1,12 +1,13 @@
 # -*- coding: UTF-8 -*-
 import json
-from flask import request
+from flask import request, flash
 from sqlalchemy.exc import SQLAlchemyError
 from wtforms import Form, TextField, IntegerField
+from lite_mms import constants
 from lite_mms.portal.cargo import cargo_page
-from lite_mms.utilities import get_or_404, dictview
+from lite_mms.utilities import get_or_404, do_commit
 from lite_mms.utilities.decorators import ajax_call
-from lite_mms.models import UnloadSession, GoodsReceipt
+from lite_mms.models import UnloadSession, GoodsReceipt, UnloadTask
 from flask.ext.babel import _
 
 @cargo_page.route("/ajax/receipts-list", methods=["GET"])
@@ -98,3 +99,17 @@ def us_log_list():
         "count": len(log_list),
         "data": [_log2dict(log) for log in log_list if log.obj_cls in {"UnloadSession", "UnloadTask"}],
     }) 
+
+
+@cargo_page.route("/ajax/unload-task/<int:id_>", methods=["POST"])
+@ajax_call
+def unload_task(id_):
+    if request.form["action"] == "delete":
+        ut = get_or_404(UnloadTask, id_)
+        if ut.weight != 0:
+            return u"已经称重的卸货任务不能删除", 403
+        else:
+            if ut.delete():
+                flash(u"删除卸货任务%d成功" % ut.id)
+                return "success"
+        return "error", 403

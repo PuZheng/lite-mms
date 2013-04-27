@@ -4,22 +4,6 @@ from flask.ext.databrowser.action import DeleteAction, BaseAction, ReadOnlyActio
 from lite_mms.constants import cargo as cargo_const
 
 
-class UnloadTaskDeleteAtion(DeleteAction):
-    def test_enabled(self, model):
-        if model.unload_session.goods_receipt_list:
-            return -2
-        return 0
-    
-    def get_forbidden_msg_formats(self):
-        return {-2: u"收货任务%s已经生成收货单，请先删除对应收货单以后再删除此收货会话!"}
-
-    def op(self, obj):
-        from lite_mms.portal.cargo.fsm import fsm
-        from lite_mms import constants
-        from flask.ext.login import current_user
-        fsm.fsm.reset_obj(obj.unload_session)
-        fsm.fsm.next(constants.cargo.ACT_WEIGHT, current_user)
-
 class MyDeleteAction(DeleteAction):
 
     def test_enabled(self, model):

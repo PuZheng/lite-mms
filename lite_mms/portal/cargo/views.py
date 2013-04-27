@@ -2,7 +2,7 @@
 import re
 import json
 
-from flask import request, abort, url_for, render_template
+from flask import request, abort, url_for, render_template, flash
 from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.column_spec import (InputColumnSpec, ColumnSpec, 
                                                PlaceHolderColumnSpec, ListColumnSpec, 
@@ -232,11 +232,17 @@ def weigh_unload_task(id_):
             if weight < 0:
                 abort(403)
             task.update(weight=weight, product_id=form.product.data)
+            from lite_mms.apis.todo import TODOWrapper
+            TODOWrapper.delete("UnloadTask", task.id)
             from flask.ext.login import current_user
             fsm.fsm.reset_obj(task.unload_session)
             fsm.fsm.next(cargo_const.ACT_WEIGHT, current_user)
             return redirect(unload_session_model_view.url_for_object(model=task.unload_session.model))
         else:
+            if request.form.get("method") == "delete":
+                if task.delete():
+                    flash(u"删除卸货任务%d成功" % task.id)
+                    return redirect(unload_session_model_view.url_for_object(model=task.unload_session.model))
             return render_template("validation-error.html", errors=form.errors,
                                    back_url=unload_session_model_view.url_for_object(model=task.unload_session.model),
                                    nav_bar=nav_bar), 403
@@ -253,16 +259,6 @@ class UnloadTaskModelView(ModelView):
 
     def preprocess(self, obj):
         return wraps(obj)
-
-    def get_customized_actions(self, processed_objs=None):
-        from lite_mms.portal.cargo.actions import UnloadTaskDeleteAtion
-        delete_action = UnloadTaskDeleteAtion(u"删除")
-
-        if isinstance(processed_objs, (list, tuple)):
-            if any(delete_action.test_enabled(obj) == 0 for obj in processed_objs):
-                return [delete_action]
-        return []
-
 
 unload_task_model_view = UnloadTaskModelView(UnloadTask)
 

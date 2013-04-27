@@ -42,12 +42,12 @@
   %script type="text/javascript"
     $(function () {
       $("a.del-ut").click(function () {
-          if (confirm("您确认要删除卸货任务" + $(this).attr("data-pk") + "?")) {
-            $.post("/cargo/ajax/unload-task/" + $(this).attr("data-pk"), {"action": "delete"}, 
-            function () {
-                window.location.reload(false);
-            });
-          }
+        if (confirm("您确认要删除卸货任务" + $(this).attr("data-pk") + "?")) {
+          $.post("/cargo/ajax/unload-task/" + $(this).attr("data-pk"), {"action": "delete"},
+          function () {
+            window.location.reload(false);
+          });
+        }
       });
     });
 -else

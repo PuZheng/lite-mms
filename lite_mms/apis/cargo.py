@@ -186,7 +186,33 @@ class UnloadTaskWrapper(ModelWrapper):
         else:
             return None
 
+    @property
+    def url(self):
+        if self.weight:
+            return url_for("cargo.unload_task", id_=self.id)
+        else:
+            return url_for("cargo.weigh_unload_task", id_=self.id)
 
+    def delete(self):
+        us = self.unload_session
+        do_commit(self.model, "delete")
+        from lite_mms.portal.cargo.fsm import fsm
+        fsm.reset_obj(us)
+        from flask.ext.login import current_user
+        from lite_mms.basemain import timeline_logger
+
+        timeline_logger.info(u"删除了卸货任务%d" % self.id,
+                             extra={"obj": self.unload_session.model,
+                                    "obj_pk": self.unload_session.id,
+                                    "action": u"删除卸货任务",
+                                    "actor": current_user})
+        fsm.next(constants.cargo.ACT_WEIGHT, current_user)
+
+        from lite_mms.apis.todo import TODOWrapper
+        TODOWrapper.delete("UnloadTask", self.id)
+        return True
+    
+    
 class GoodsReceiptWrapper(ModelWrapper):
     def __repr__(self):
         return u"<GoodsReceiptWrapper %d customer-%s>" % (

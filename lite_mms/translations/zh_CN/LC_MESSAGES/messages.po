@@ -8,26 +8,26 @@ msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2013-04-24 11:48+0800\n"
-"PO-Revision-Date: 2013-04-04 12:40+0800\n"
-"Last-Translator: xiechao<xiechao06@gmail.com>\n"
+"PO-Revision-Date: 2013-04-27 15:16+0800\n"
+"Last-Translator: xiechao <xiechao06@gmail.com>\n"
 "Language-Team: zh_CN <LL@li.org>\n"
-"Plural-Forms: nplurals=1; plural=0\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 0.9.6\n"
+"X-Generator: Poedit 1.5.5\n"
 
 #: action.py:39
 #, python-format
 msgid ""
-"operation %(action)s applied upon %(model_name)s - [%(models)s] "
-"successfully"
+"operation %(action)s applied upon %(model_name)s - [%(models)s] successfully"
 msgstr "%(model_name)s[%(models)s]被成功%(action)s"
 
 #: action.py:47
 #, python-format
 msgid "operation %(action)s failed to apply upon %(model_name)s - [%(models)s]"
-msgstr "(%model_name)s[%(models)s]没有被成功%(action)s"
+msgstr "%(model_name)s[%(models)s]没有被成功%(action)s"
 
 #: action.py:57
 #, python-format
@@ -91,8 +91,7 @@ msgstr "正在编辑%(model_name)s-%(obj)s"
 #: base.py:472
 #, python-format
 msgid ""
-"you are viewing %(model_name)s-%(obj)s, since you have only read "
-"permission"
+"you are viewing %(model_name)s-%(obj)s, since you have only read permission"
 msgstr "您正在查看%(model_name)s-%(obj)s, 因为您只有只读权限"
 
 #: base.py:499
@@ -177,8 +176,8 @@ msgid "Invalid time format"
 msgstr "错误的时间格式"
 
 #: templates/__data_browser__/error.html:38
-msgid "点击返回"
-msgstr "click to return"
+msgid "click to return"
+msgstr "点击返回"
 
 #: templates/__data_browser__/error_mob.html:12
 msgid "Error"
@@ -338,4 +337,3 @@ msgstr "您成功的创建了%(model_cls)s\"%(obj)s\""
 #: templates/__data_browser__/on_fly_result.haml:25
 msgid "I see"
 msgstr "我知道了"
-

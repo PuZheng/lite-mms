@@ -5,17 +5,8 @@ from lite_mms import models
 from lite_mms.utilities import do_commit
 from .notify import notifications
 
-class TODOWrapper(ModelWrapper):
-    def get_list(self, user):
-        return [ModelWrapper(obj) for obj in
-                models.TODO.query.filter(models.TODO.user == user).all()]
 
-    def get(self, id_):
-        one = models.TODO.get(id_)
-        if one:
-            return ModelWrapper(one)
-        else:
-            return None
+class TODOWrapper(ModelWrapper):
 
     @classmethod
     def add(cls, obj_cls, obj_pk, obj, action, next_actor=None, actor=None,

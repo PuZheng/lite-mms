@@ -1,5 +1,5 @@
 #-*- coding:utf-8 -*-
-import Queue
+from collections import deque
 
 
 class Notification(object):
@@ -23,33 +23,22 @@ class Notification(object):
     def add(self, key, val):
         if key in self.dictionary:
             q = self.dictionary[key]
-            if q.full():
-                q.get()
-                q.put_nowait(val)
-                return 1
+            q.appendleft(val)
         else:
             return self.set(key, val)
 
     def set(self, key, val):
         """Sets the `key` with `val`."""
-        if isinstance(val, Queue.Queue):
-            self.dictionary[key] = val
-        else:
-            q = Queue.Queue(self.__maxsize__)
-            q.put_nowait(val)
-            self.dictionary[key] = q
+        self.dictionary[key] = deque([val], maxlen=self.__maxsize__)
         return 1
 
     def get(self, key):
         """Retrieves a value of the `key` from the internal dictionary."""
-        list_ = []
         try:
             q = self.dictionary[key]
-            while not q.empty():
-                list_.append(q.get_nowait())
+            return list(q)
         except KeyError:
-            pass
-        return list_
+            return []
 
     def __repr__(self):
         modname = "" if __name__ == "__main__" else __name__ + "."

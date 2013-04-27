@@ -42,14 +42,19 @@
     <link rel="stylesheet" href="{{ url_for("static", filename="css/jquery.pnotify.default.css") }}"/>
     <script type="text/javascript">
       $(function () {
-        stack_bottomright = {"dir1": "up", "dir2": "left", "firstpos1": 25, "firstpos2": 25};
+        var stack_bottomright = {"dir1": "up", "dir2": "left", "firstpos1": 25, "firstpos2": 25};
+
+        function display(message){
+          return "在" + message.create_time + "由" + message.author + message.action + "了编号为" + message.obj_pk + "的" + message.obj_cls + "给您，请操作";
+        }
+
 
         function f() {
           $.getJSON('{{ url_for("ajax_new_message") }}', function (data) {
             for (var i = 0; i < data.length; i++) {
               $.pnotify({
                 title: '新待办事项',
-                text: data[i],
+                text: display(data[i]),
                 addclass: "stack-bottomright",
                 stack: stack_bottomright
               });

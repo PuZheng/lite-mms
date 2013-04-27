@@ -36,5 +36,5 @@ def ajax_new_message():
     from lite_mms.apis.todo import TODOWrapper
     messages = []
     for message in TODOWrapper.get_all_notify(current_user.id):
-        messages.append(message.to_json())
+        messages.append(message.to_dict())
     return json.dumps(messages)

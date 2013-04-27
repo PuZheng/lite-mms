@@ -69,8 +69,8 @@ class TODOWrapper(ModelWrapper):
     def create_date(self):
         return self.create_time.date()
 
-    def to_json(self):
-        return u"在%(create_time)s, 由%(author)s通过%(action)s分配给了一个%(obj_cls)s_%(obj_pk)s给你" % {
-        "create_time": self.create_time, "author": self.actor.username,
-        "action": self.action, "obj_cls": self.obj_cls,
-        "obj_pk": self.obj_pk}
+    def to_dict(self):
+        return {"create_time": str(self.create_time),
+                "author": self.actor.username,
+                "action": self.action, "obj_cls": self.obj_cls,
+                "obj_pk": self.obj_pk, "next_actor": self.user.username}

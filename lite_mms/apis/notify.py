@@ -21,15 +21,8 @@ class Notification(object):
         return 0
 
     def add(self, key, val):
-        if key in self.dictionary:
-            q = self.dictionary[key]
-            q.appendleft(val)
-        else:
-            return self.set(key, val)
-
-    def set(self, key, val):
-        """Sets the `key` with `val`."""
-        self.dictionary[key] = deque([val], maxlen=self.__maxsize__)
+        q = self.dictionary.setdefault(key , deque(maxlen=self.__maxsize__))
+        q.appendleft(val)
         return 1
 
     def get(self, key):

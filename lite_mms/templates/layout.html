@@ -107,21 +107,21 @@
   {% with messages = get_flashed_messages(with_categories=True) %}
     {% if messages %}
       <div class="flash">
-        {% for category, m in messages %}
-          {% if category == 'error' %}
-            <div class="alert alert-error">
-              <button type="button" class="close"
-                      data-dismiss="alert">&times;</button>
-              <strong>错误！</strong>{{ m }}
-            </div>
-          {% else %}
-            <div class="alert alert-success">
-              <button type="button" class="close"
-                      data-dismiss="alert">&times;</button>
-              <strong>成功！</strong>{{ m }}
-            </div>
-          {% endif %}
-        {% endfor %}
+      {% for category, m in messages %}
+        {% if category == 'error' %}
+          <div class="alert alert-error">
+            <button type="button" class="close"
+                    data-dismiss="alert">&times;</button>
+            <strong>错误！</strong>{{ m }}
+          </div>
+        {% else %}
+          <div class="alert alert-success">
+            <button type="button" class="close"
+                    data-dismiss="alert">&times;</button>
+            <strong>成功！</strong>{{ m }}
+          </div>
+        {% endif %}
+      {% endfor %}
       </div>
     {% endif %}
   {% endwith %}

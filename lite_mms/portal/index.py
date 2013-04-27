@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
-import json
-from flask import redirect, send_from_directory, url_for, abort, render_template, request
+from flask import redirect, send_from_directory, url_for, abort, render_template, request, json
 from flask.ext.login import current_user, login_required
 from lite_mms.basemain import app, nav_bar
 from lite_mms.utilities import decorators
@@ -34,8 +33,8 @@ def serv_pic(filename):
 
 @app.route("/message")
 def ajax_new_message():
-    from lite_mms.apis.todo import MongoAPI
+    from lite_mms.apis.todo import TODOWrapper
     messages = []
-    for message in current_user.to_read_messages:
-        messages.append(MongoAPI.wrap_message(message))
+    for message in TODOWrapper.get_all_notify(current_user.id):
+        messages.append(message.to_json())
     return json.dumps(messages)

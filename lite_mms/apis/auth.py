@@ -48,20 +48,6 @@ class UserWrapper(login.UserMixin, ModelWrapper):
     def __repr__(self):
         return "<UserWrapper %s> " % self.username
 
-    @property
-    def messages(self):
-        from lite_mms.apis.todo import MongoAPI
-        return MongoAPI.get_message_list(user_id=self.id)
-
-    @property
-    def to_read_messages(self):
-        from lite_mms.apis.todo import MongoAPI
-        mongo_user = MongoAPI.get_mongo_user(self.id)
-        to_read_messages = mongo_user.to_read_messages
-        mongo_user.to_read_messages = []
-        mongo_user.save()
-        return to_read_messages
-
 def get_user(id_):
     if not id_:
         return None

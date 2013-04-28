@@ -59,10 +59,8 @@ class ModelWrapper(object):
     def __dir__(self):
         return self.model.__dict__.keys()
 
-
 def wraps(model):
     return _wrappers[model.__class__.__name__ + "Wrapper"](model)
-
 
 import auth
 import cargo

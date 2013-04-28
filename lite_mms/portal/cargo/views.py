@@ -2,7 +2,7 @@
 import re
 import json
 
-from flask import request, abort, url_for, render_template, flash
+from flask import request, abort, url_for, render_template, render_template_string, flash
 from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.column_spec import (InputColumnSpec, ColumnSpec, 
                                                PlaceHolderColumnSpec, ListColumnSpec, 
@@ -117,7 +117,7 @@ class UnloadSessionModelView(ModelView):
 
     def get_customized_actions(self, model_list=None):
         from lite_mms.portal.cargo.actions import MyDeleteAction, CloseAction, OpenAction, CreateReceiptAction
-        action_list = [MyDeleteAction(u"删除", CargoClerkPermission)]
+        action_list = []
         if model_list is None: # for list
             action_list.extend([CloseAction(u"关闭"), OpenAction(u"打开"), CreateReceiptAction(u"生成收货单")])
         else:
@@ -128,6 +128,10 @@ class UnloadSessionModelView(ModelView):
                     action_list.append(CloseAction(u"关闭"))
                 action_list.append(CreateReceiptAction(u"生成收货单"))
         return action_list
+
+    def get_list_help(self):
+        return render_template("cargo/us-list-help.html")
+
     # ================= FORM PART ============================
     def get_create_columns(self):
         from lite_mms import apis
@@ -156,6 +160,11 @@ class UnloadSessionModelView(ModelView):
                               template_fname="cargo/unload-task-list-snippet.haml")]
     __form_columns__[u"收货单列表"] = [PlaceHolderColumnSpec(col_name="goods_receipt_list", label=u"", template_fname="cargo/gr-list-snippet.html")]
 
+    def get_edit_help(self, objs):
+        return render_template("cargo/us-edit-help.html")
+
+    def get_create_help(self):
+        return render_template("cargo/us-create-help.html")
 
 unload_session_model_view = UnloadSessionModelView(UnloadSession, u"卸货会话")
 
@@ -184,7 +193,7 @@ class GoodsReceiptEntryModelView(ModelView):
 
     __form_columns__ = [
         InputColumnSpec("product", group_by=Product.product_type, label=u"产品",
-                        filter_=lambda q: q.filter(Product.enabled)),
+                        filter_=lambda q: q.filter(Product.enabled==True)),
         InputColumnSpec("goods_receipt", label=u"收货单", read_only=True),
         InputColumnSpec("weight", label=u"重量"),
         InputColumnSpec("harbor", label=u"装卸点"),
@@ -207,8 +216,6 @@ class GoodsReceiptEntryModelView(ModelView):
             return _try_edit(objs)
 
 goods_receipt_entry_view = GoodsReceiptEntryModelView(GoodsReceiptEntry, u"收货单产品")
-
-
 
 @cargo_page.route("/weigh-unload-task/<int:id_>", methods=["GET", "POST"])
 @decorators.templated("/cargo/unload-task.html")
@@ -252,7 +259,7 @@ class UnloadTaskModelView(ModelView):
     __form_columns__ = [
         ColumnSpec("id", label=u"编号"),
         InputColumnSpec("product", group_by=Product.product_type, label=u"产品",
-                        filter_=lambda q: q.filter(Product.enabled)),
+                        filter_=lambda q: q.filter(Product.enabled==True)),
         InputColumnSpec("weight", label=u"重量"),
         InputColumnSpec("harbor", label=u"装卸点"),
         ImageColumnSpec("pic_url", label=u"图片")]
@@ -260,60 +267,25 @@ class UnloadTaskModelView(ModelView):
     def preprocess(self, obj):
         return wraps(obj)
 
-unload_task_model_view = UnloadTaskModelView(UnloadTask)
+    def get_customized_actions(self, processed_objs=None):
+        from lite_mms.portal.cargo.actions import UnloadTaskDeleteAtion
+        delete_action = UnloadTaskDeleteAtion(u"删除")
 
-# @cargo_page.route("/unload-task/<int:id_>", methods=["GET", "POST"])
-# @decorators.templated("cargo/unload-task.html")
-# @decorators.nav_bar_set
-# def unload_task(id_):
-#     from lite_mms import apis
-#
-#     if request.method == 'GET':
-#         task = apis.cargo.get_unload_task(id_)
-#         if not task:
-#             abort(404)
-#         return dict(task=task, product_types=apis.product.get_product_types(),
-#                     products=json.dumps(apis.product.get_products()))
-#     else: # POST
-#         if id_:
-#             task = apis.cargo.get_unload_task(id_)
-#             if not task:
-#                 abort(404)
-#             if request.form.get("method") == "delete":
-#                 us = task.unload_session
-#                 do_commit(task, "delete")
-#                 fsm.fsm.reset_obj(us)
-#                 fsm.fsm.next(constants.cargo.ACT_WEIGHT, current_user)
-#                 flash(u"删除卸货任务%d成功" % task.id)
-#                 return redirect(
-#                     request.form.get("url") or url_for("cargo.unload_session",
-#                                                        id_=task.session_id,
-#                                                        _method="GET"))
-#             else:
-#                 class _ValidationForm(Form):
-#                     weight = IntegerField('weight', [validators.required()])
-#                     product = IntegerField('product')
-#                     url = HiddenField("url")
-#
-#                 form = _ValidationForm(request.form)
-#                 if form.validate():
-#                     session = apis.cargo.get_unload_session(session_id=task.session_id)
-#                     if not session:
-#                         abort(404)
-#
-#                     weight = task.last_weight - form.weight.data
-#                     if weight < 0:
-#                         abort(500)
-#                     if not task.weight:
-#                         fsm.fsm.reset_obj(task.unload_session)
-#                         fsm.fsm.next(constants.cargo.ACT_WEIGHT, current_user)
-#                     task.update(weight=weight, product_id=form.product.data)
-#                     url = form.url.data or url_for("cargo.unload_session",
-#                                                    id_=task.session_id, _method="GET")
-#                     return redirect(url)
-#                 else:
-#                     abort(403)
+        if isinstance(processed_objs, (list, tuple)):
+            if any(delete_action.test_enabled(obj) == 0 for obj in processed_objs):
+                return [delete_action]
+        return []
 
+    def try_edit(self, objs):
+        if any(obj.unload_session.status==cargo_const.STATUS_CLOSED for obj in objs):
+            raise PermissionDenied()
+
+    def edit_hint_message(self, objs, read_only):
+        if read_only:
+            return u"本卸货会话已经关闭，所以不能修改卸货任务"
+        return super(UnloadTaskModelView, self).edit_hint_message(objs, read_only)
+
+unload_task_model_view = UnloadTaskModelView(UnloadTask, u"卸货任务")
 
 class GoodsReceiptModelView(ModelView):
 
@@ -372,64 +344,6 @@ class GoodsReceiptModelView(ModelView):
 
 goods_receipt_model_view = GoodsReceiptModelView(GoodsReceipt, u"收货单")
 
-#@cargo_page.route("/goods-receipt/", methods=["GET", "POST"])
-#@cargo_page.route("/goods-receipt/<int:id_>", methods=["GET", "POST"])
-#@decorators.templated("cargo/goods-receipt.html")
-#@decorators.nav_bar_set
-#def goods_receipt(id_=None):
-    #from lite_mms import apis
-    #if id_:
-        #receipt = apis.cargo.get_goods_receipt(id_)
-        #if not receipt:
-            #abort(404)
-        #if request.method == "GET":
-            #return dict(receipt=receipt, titlename=u"收货单详情",
-                        #product_types=apis.product.get_product_types(),
-                        #products=json.dumps(apis.product.get_products()))
-        #else:
-            #if request.form.get("method") == "delete":
-                #if receipt.order:
-                    #abort(403)
-                #else:
-                    #do_commit(receipt, "delete")
-                    #flash(u"删除收货单%s成功" % receipt.receipt_id)
-                #return redirect(
-                    #request.form.get("url") or url_for("cargo.unload_session",
-                                                       #id_=receipt.unload_session.id))
-            #else:
-                #if request.form.get("type") == "extra":
-                    #order_type = constants.EXTRA_ORDER_TYPE
-                    #type_ = constants.EXTRA_ORDER_TYPE_NAME
-                #else:
-                    #order_type = constants.STANDARD_ORDER_TYPE
-                    #type_ = constants.STANDARD_ORDER_TYPE_NAME
-
-                #order = apis.order.new_order(receipt.id,
-                                             #order_type,
-                                             #current_user.id)
-
-                #flash(u"创建%s类型的订单成功"% type_)
-                #return redirect(url_for("order.order", id_=order.id,
-                                        #url=request.form.get("url")))
-    #else:
-        #class _ValidationForm(Form):
-            #customer = IntegerField('customer', [validators.required()])
-            #unload_session_id = IntegerField('unload_session_id',
-                                             #[validators.required()])
-            #url = HiddenField('url')
-
-        #form = _ValidationForm(request.form)
-        #if form.validate():
-            #receipt = apis.cargo.new_goods_receipt(form.customer.data,
-                                                   #form.unload_session_id.data)
-            #return redirect(
-                #url_for("cargo.goods_receipt", id_=receipt.id, _method="GET",
-                        #url=form.url.data))
-        #else:
-            #flash(form.errors, "error")
-            #return redirect(form.url.data or url_for("cargo.unload_session"))
-
-
 @cargo_page.route("/goods-receipt-preview/<int:id_>")
 @decorators.templated("cargo/goods-receipt-preview.html")
 @decorators.nav_bar_set
@@ -444,7 +358,6 @@ def goods_receipt_preview(id_):
         abort(404)
     return {"receipt": receipt, "titlename": u"收货单打印预览", "pages": pages,
             "per_page": PER_PAGE}
-
 
 def refresh_gr(id_):
     from lite_mms import apis

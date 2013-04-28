@@ -190,15 +190,15 @@ class ProductModelView(AdminModelView):
     """
     产品的管理类
     """
+    as_radio_group = False
+    can_batchly_edit = True
     __list_columns__ = ["id", "MSSQL_ID", "name", "product_type", "enabled"]
-
     __column_labels__ = {"id": u"产品编号", "MSSQL_ID": u"在mssql的编号",
                          "name": u"名称", "product_type": u"产品类型",
                          "enabled": u"是否启用"}
-
     __column_formatters__ = {"enabled": lambda v, obj: u"是" if v else u"否"}
-
-    __column_filters__ = [filters.EqualTo("product_type", name=u"产品类型")]
+    __column_filters__ = [filters.EqualTo("product_type", name=u"是")]
+    __batch_form_columns__ = ["product_type", "enabled"]
 
 product_model_view = ProductModelView(Product, u"产品")
 

@@ -18,6 +18,11 @@ from flask.ext.principal import Principal
 
 principal = Principal(app)
 
+app.config["DEBUG_TB_PROFILER_ENABLED"] = True
+
+from flask_debugtoolbar import DebugToolbarExtension
+#toolbar = DebugToolbarExtension(app)
+
 import logging
 import logging.handlers
 
@@ -143,7 +148,7 @@ nav_bar.register(deduction_page, name=u"扣重管理", default_url="/deduction/"
 nav_bar.register(time_line_page, name=u"时间线", default_url="/timeline/log-list")
 nav_bar.register(search_page, name=u"搜索", default_url="/search/search")
 nav_bar.register(admin2_page, name=u"管理中心", default_url="/admin2/user-list", permissions=[AdminPermission])
-nav_bar.register(to_do_page, name=u"待办事项", default_url="/todo/o-list")
+nav_bar.register(to_do_page, name=u"待办事项", default_url="/todo/todo-list")
 
 #install jinja utilities
 from lite_mms.utilities import url_for_other_page, datetimeformat

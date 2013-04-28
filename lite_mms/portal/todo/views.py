@@ -30,7 +30,7 @@ class TODOView(ModelView):
         return [_Proxy(wraps(obj)) for obj in models]
 
     @login_required
-    def try_view(self):
+    def try_view(self, list_=None):
         pass
 
 

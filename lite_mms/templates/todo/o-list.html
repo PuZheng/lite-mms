@@ -24,7 +24,7 @@
 {% block lists %}
   {% if __data__ %}
     <div class="accordion container" id="accordion1">
-      {% for grouper, list in __data__|groupby("create_date") %}
+      {% for grouper, list in __data__|groupby("create_date")|reverse %}
         <div class="accordion-group">
           <div class="accordion-heading">
             <a class="accordion-toggle" href="#{{ grouper }}" data-toggle="collapse" data-parent="#accordion1">
@@ -35,7 +35,7 @@
             <div class="accordion-inner">
               {% for obj in list %}
                 <li>
-                  {% if obj.url %}
+                  <em>{{ obj.actor }}</em>&nbsp;<strong>{{ obj.action }}</strong>了{% if obj.url %}
                     <a href="{{ obj.url }}">
                       {{ obj.obj_cls }}{{ obj.obj_pk }}</a>
                   {% else %}

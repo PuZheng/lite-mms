@@ -110,7 +110,7 @@ class InitializeTestDB(Command):
         #     - 车上有人, 有两个任务, 分别来自不同的客户, 并且都已经称重
         unload_session1 = do_commit(UnloadSession(plate_=vehicle1, gross_weight=10000, with_person=True,
                                                   finish_time=datetime.now(), status=cargo_const.STATUS_CLOSED))
-        default_product = Product.query.get(DEFAULT_PRODUCT_NAME)
+        default_product = Product.query.filter(Product.name==DEFAULT_PRODUCT_NAME).one()
         unload_task1 = do_commit(UnloadTask(unload_session1, harbor1, customer1, l, default_product, "0.png",
                        weight=1000))
         unload_task2 = do_commit(UnloadTask(unload_session1, harbor2, customer2, l, product2, "1.png", weight=3000))
@@ -131,9 +131,11 @@ class InitializeTestDB(Command):
             UnloadSession(plate_=vehicle2, gross_weight=10000, with_person=False,
                           status=cargo_const.STATUS_LOADING))
 
-        # 生成收货会话, 注意这里故意不为某些客户生成收货单
+        # 生成收货会话和收货项, 注意这里故意不为某些客户生成收货单
         goods_receipt1 = do_commit(
             GoodsReceipt(customer1, unload_session1))
+        do_commit(GoodsReceiptEntry(goods_receipt=goods_receipt1, weight=1000, product=product1, harbor=harbor1))
+        do_commit(GoodsReceiptEntry(goods_receipt=goods_receipt1, weight=3000, product=product2, harbor=harbor2))
         goods_receipt2 = do_commit(
             GoodsReceipt(customer2, unload_session1))
         # 生成订单, 注意这里故意不为某些收货会话生成订单
@@ -147,10 +149,10 @@ class InitializeTestDB(Command):
         #     - 生成计重类型的子订单, 还有50公斤没有分配出去
         sub_order1 = do_commit(
             SubOrder(product1, 300, harbor1, order1, 300, "KG",
-                     due_time=datetime.today(), unload_task=unload_task1, returned=True))
+                     due_time=datetime.today(), default_harbor=harbor1, returned=True))
         sub_order2 = do_commit(
             SubOrder(product2, 1000, harbor2, order1, 1000, "KG",
-                     due_time=datetime.today(), unload_task=unload_task1, returned=True))
+                     due_time=datetime.today(), default_harbor=harbor2, returned=True))
 
         # 生成工单
         #     - DISPATCHING STATUS

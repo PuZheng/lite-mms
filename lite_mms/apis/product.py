@@ -46,7 +46,7 @@ def get_products():
         '2': [{"id": 3, "name": "product c"}],
     }
     """
-    products = models.Product.query.all()
+    products = models.Product.query.filter(models.Product.enabled).all()
     ret = {}
     for p in products:
         ret.setdefault(str(p.product_type_id), []).append(

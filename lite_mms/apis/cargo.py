@@ -15,7 +15,8 @@ g_status_desc = {
     constants.cargo.STATUS_WEIGHING: u"等待称重",
     constants.cargo.STATUS_CLOSED: u"关闭",
     constants.cargo.STATUS_DISMISSED: u"取消",
-    }
+}
+
 
 class UnloadSessionWrapper(ModelWrapper):
     @property
@@ -59,6 +60,10 @@ class UnloadSessionWrapper(ModelWrapper):
     @cached_property
     def customer_list(self):
         return list(set([task.customer for task in self.task_list]))
+
+    @cached_property
+    def customer_id_list(self):
+        return [customer.id for customer in self.customer_list]
 
     @property
     def closeable(self):
@@ -104,6 +109,31 @@ class UnloadSessionWrapper(ModelWrapper):
         """
         self.model.finish_time = finish_time
         do_commit(self.model)
+
+    def gc_goods_receipts(self):
+        """
+        delete the goods_receipt which has not entry converted from current
+        unload_session's unload_task_list
+        """
+        for gr in self.goods_receipt_list:
+            if gr.customer.id not in self.customer_id_list:
+                do_commit(gr.model, "delete")
+
+
+    def clean_goods_receipts(self):
+        """
+        Iterator the customers and create a goods_receipt.
+        Then delete the unnecessary goods_receipts.
+        """
+        for id_ in self.customer_id_list:
+            create_or_update_goods_receipt(unload_session_id=self.id,
+                                                      customer_id=id_)
+
+        self.gc_goods_receipts()
+
+    @property
+    def goods_receipt_stale(self):
+        return any(gr.stale for gr in self.goods_receipt_list)
 
 
 class UnloadTaskWrapper(ModelWrapper):
@@ -156,7 +186,33 @@ class UnloadTaskWrapper(ModelWrapper):
         else:
             return None
 
+    @property
+    def url(self):
+        if self.weight:
+            return url_for("cargo.unload_task", id_=self.id)
+        else:
+            return url_for("cargo.weigh_unload_task", id_=self.id)
 
+    def delete(self):
+        us = self.unload_session
+        do_commit(self.model, "delete")
+        from lite_mms.portal.cargo.fsm import fsm
+        fsm.reset_obj(us)
+        from flask.ext.login import current_user
+        from lite_mms.basemain import timeline_logger
+
+        timeline_logger.info(u"删除了卸货任务%d" % self.id,
+                             extra={"obj": self.unload_session.model,
+                                    "obj_pk": self.unload_session.id,
+                                    "action": u"删除卸货任务",
+                                    "actor": current_user})
+        fsm.next(constants.cargo.ACT_WEIGHT, current_user)
+
+        from lite_mms.apis.todo import TODOWrapper
+        TODOWrapper.delete("UnloadTask", self.id)
+        return True
+    
+    
 class GoodsReceiptWrapper(ModelWrapper):
     def __repr__(self):
         return u"<GoodsReceiptWrapper %d customer-%s>" % (
@@ -175,6 +231,49 @@ class GoodsReceiptWrapper(ModelWrapper):
             if hasattr(self.model, k):
                 setattr(self.model, k, v)
         do_commit(self.model)
+
+    @property
+    def log_list(self):
+        from lite_mms.models import Log
+        ret = Log.query.filter(Log.obj_pk == str(self.id)).filter(
+            Log.obj_cls == self.model.__class__.__name__).all()
+        for entry in self.goods_receipt_entries:
+            ret.extend(Log.query.filter(Log.obj_pk == str(entry.id)).filter(
+            Log.obj_cls == "GoodsReceiptEntry").all())
+        return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time))
+
+    @property
+    def stale(self):
+        if self.unload_session.finish_time and self.unload_session.finish_time > self.create_time:
+            _entries = [(entry.product.id, entry.weight) for entry in
+                        self.goods_receipt_entries]
+            _uts = [(ut.product.id, ut.weight) for ut in self.unload_task_list]
+            return sorted(_entries) != sorted(_uts)
+        return False
+
+    def add_product_entries(self):
+        for entry in self.goods_receipt_entries:
+            do_commit(entry, "delete")
+        for ut in self.unload_task_list:
+            do_commit(
+                models.GoodsReceiptEntry(product=ut.product, weight=ut.weight,
+                                         goods_receipt=self.model,
+                                         harbor=ut.harbor,
+                                         pic_path=ut.pic_path))
+        self.model.printed = False
+        do_commit(self.model)
+
+    def delete(self):
+        do_commit(self.model, "delete")
+
+
+class GoodsReceiptEntryWrapper(ModelWrapper):
+    @property
+    def pic_url(self):
+        if self.pic_path:
+            return url_for("serv_pic", filename=self.pic_path)
+        else:
+            return ""
 
 
 def get_unload_session_list(idx=0, cnt=sys.maxint, unfinished_only=False,
@@ -282,11 +381,21 @@ def new_goods_receipt(customer_id, unload_session_id):
         raise ValueError(u"没有该卸货会话(%d)" % int(unload_session_id))
     model = do_commit(models.GoodsReceipt(customer=customer.model,
                                           unload_session=unload_session.model))
-    for ut in unload_session.task_list:
-        if ut.customer.id == customer_id:
-            ut.goods_receipt = model
-    do_commit(unload_session)
-    return GoodsReceiptWrapper(model)
+    gr = GoodsReceiptWrapper(model)
+    gr.add_product_entries()
+    return gr
+
+
+def create_or_update_goods_receipt(customer_id, unload_session_id):
+    try:
+        gr = GoodsReceiptWrapper(models.GoodsReceipt.query.filter(
+            models.GoodsReceipt.customer_id == customer_id).filter(
+            models.GoodsReceipt.unload_session_id == unload_session_id).one())
+        if gr.stale:
+            gr.add_product_entries()
+        return gr
+    except NoResultFound:
+        return new_goods_receipt(customer_id, unload_session_id)
 
 
 def new_unload_task(session_id, harbor, customer_id, creator_id,
@@ -335,6 +444,12 @@ def new_unload_task(session_id, harbor, customer_id, creator_id,
         creator=creator,
         pic_path=pic_path,
         product=product, is_last=is_last))
+
+    from lite_mms.apis.todo import TODOWrapper
+    from lite_mms.apis.auth import get_user_list
+
+    TODOWrapper.object_notify(ut, to_user=get_user_list(
+        constants.groups.CARGO_CLERK), sender=creator, action=u"新建")
 
     return UnloadTaskWrapper(ut)
 

@@ -13,11 +13,20 @@ class ModelWrapper(object):
         return self.__model
 
     def __getattr__(self, name):
-        attr = getattr(self.__model, name)
+        unwrapped = False
+        if name.endswith("unwrapped"):
+            name = name[0:-len("_unwrapped")]
+            unwrapped = True
+            attr = getattr(self, name)
+        else:
+            attr = getattr(self.__model, name)
         if isinstance(attr, types.ListType) or isinstance(attr,
                                                           types.TupleType):
-            return type(attr)(self.__wrap(i) for i in attr)
-        return self.__wrap(attr)
+            if unwrapped:
+                return type(attr)(self.__unwrap(i) for i in attr)
+            else:
+                return type(attr)(self.__wrap(i) for i in attr)
+        return attr if unwrapped else self.__wrap(attr) 
 
     def __setattr__(self, key, value):
         if key != '_ModelWrapper__model':
@@ -32,6 +41,12 @@ class ModelWrapper(object):
             return self.__do_wrap(attr)
         return attr
 
+    def __unwrap(self, attr):
+
+        if isinstance(attr, ModelWrapper):
+            return attr.model
+        return attr
+
     def __do_wrap(self, attr):
         try:
             return _wrappers[attr.__class__.__name__ + "Wrapper"](attr)
@@ -44,10 +59,8 @@ class ModelWrapper(object):
     def __dir__(self):
         return self.model.__dict__.keys()
 
-
 def wraps(model):
     return _wrappers[model.__class__.__name__ + "Wrapper"](model)
-
 
 import auth
 import cargo

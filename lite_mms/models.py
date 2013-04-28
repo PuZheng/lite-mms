@@ -177,10 +177,10 @@ class Harbor(db.Model):
 
 
     def __unicode__(self):
-        return self.name
+        return unicode(self.name)
 
     def __repr__(self):
-        return "<Harbor %s>" % self.name.encode("utf-8")
+        return "<Harbor %s>" % self.name
 
 
 class ProductType(db.Model):
@@ -210,6 +210,7 @@ class Product(db.Model):
     product_type_id = db.Column(db.Integer,
                                 db.ForeignKey("TB_PRODUCT_TYPE.id"))
     product_type = db.relationship("ProductType", backref="products")
+    enabled = db.Column(db.Boolean, default=True)
 
     def __init__(self, name, product_type, MSSQL_ID=0):
         self.name = name
@@ -239,7 +240,6 @@ class Department(db.Model):
 
     def __repr__(self):
         return "<Department %d>" % self.id
-
 
 class Team(db.Model):
     __modelname__ = u"班组"
@@ -291,6 +291,28 @@ class GoodsReceipt(db.Model):
         return "<GoodsReceipt %d>" % self.id
 
 
+class GoodsReceiptEntry(db.Model):
+    __tablename__ = "TB_GOODS_RECEIPT_ENTRY"
+
+    id = db.Column(db.Integer, primary_key=True)
+    goods_receipt_id = db.Column(db.Integer,
+                                 db.ForeignKey("TB_GOODS_RECEIPT.id"))
+    goods_receipt = db.relationship("GoodsReceipt",
+                                    backref="goods_receipt_entries")
+    weight = db.Column(db.Integer, nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey("TB_PRODUCT.id"))
+    product = db.relationship("Product")
+    harbor_name = db.Column(db.String(32), db.ForeignKey('TB_HABOR.name'))
+    harbor = db.relationship("Harbor")
+    pic_path = db.Column(db.String(256))
+
+    def __unicode__(self):
+        return unicode(self.id)
+
+    def __repr__(self):
+        return "<GoodsReceiptProduct %d>" % self.id
+
+
 class Order(db.Model):
     __modelname__ = u"订单"
     __tablename__ = "TB_ORDER"
@@ -333,14 +355,20 @@ class SubOrder(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey("TB_PRODUCT.id"))
     product = db.relationship("Product")
+
     task_id = db.Column(db.Integer, db.ForeignKey("TB_UNLOAD_TASK.id"))
     unload_task = db.relationship("UnloadTask", backref=db.backref(
         "sub_order", uselist=False), uselist=False)
+
+    default_harbor_name = db.Column(db.String(32), db.ForeignKey("TB_HABOR.name"))
+    default_harbor = db.relationship("Harbor",
+                                     primaryjoin="Harbor.name == SubOrder.default_harbor_name")
     spec = db.Column(db.String(64))
     type = db.Column(db.String(64))
     weight = db.Column(db.Integer, default=0)
     harbor_name = db.Column(db.String(32), db.ForeignKey('TB_HABOR.name'))
-    harbor = db.relationship("Harbor")
+    harbor = db.relationship("Harbor",
+                             primaryjoin="Harbor.name == SubOrder.harbor_name")
     order_id = db.Column(db.Integer, db.ForeignKey("TB_ORDER.id"))
     urgent = db.Column(db.Boolean)
     returned = db.Column(db.Boolean)
@@ -371,7 +399,7 @@ class SubOrder(db.Model):
                  quantity, unit, order_type=STANDARD_ORDER_TYPE,
                  create_time=None, finish_time=None, urgent=False,
                  returned=False, pic_path="", tech_req="", due_time=None,
-                 spec="", type="", unload_task=None):
+                 spec="", type="", default_harbor=None):
         self.product = product
         self.spec = spec
         self.type = type
@@ -388,7 +416,7 @@ class SubOrder(db.Model):
         self.tech_req = tech_req
         self.due_time = due_time
         self.order_type = order_type
-        self.unload_task = unload_task
+        self.default_harbor = default_harbor
 
     def __unicode__(self):
         return unicode(self.id)

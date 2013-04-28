@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-from flask import redirect, send_from_directory, url_for, abort, render_template, request
+from flask import redirect, send_from_directory, url_for, abort, render_template, request, json
 from flask.ext.login import current_user, login_required
 from lite_mms.basemain import app, nav_bar
 from lite_mms.utilities import decorators
@@ -31,3 +31,10 @@ def serv_pic(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
+@app.route("/message")
+def ajax_new_message():
+    from lite_mms.apis.todo import TODOWrapper
+    messages = []
+    for message in TODOWrapper.get_all_notify(current_user.id):
+        messages.append(message.to_dict())
+    return json.dumps(messages)

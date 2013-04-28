@@ -67,16 +67,16 @@
             <th>净重(KG)</th>
             <th>交货日期</th>
           </tr>
-          {% for task in receipt.unload_task_list %}
+          {% for entry in receipt.goods_receipt_entries %}
             <tr>
               <td>
-                {{ task.product.product_type.name }}
+                {{ entry.product.product_type.name }}
               </td>
               <td>
-                {{ task.product.name }}
+                {{ entry.product.name }}
               </td>
               <td>
-                {{ task.weight }}
+                {{ entry.weight }}
               </td>
               <td></td>
             </tr>
@@ -161,7 +161,7 @@
           <i class="icon-print icon-white"></i>&nbsp;{{ _("打印") }}
         </button>
         <a href="{{ request.args.get("url") or url_for('cargo.goods_receipt',id_=receipt.id) }}" class="btn btn-large">
-          <i class="icon-backward"></i>&nbsp;{{ _("返回") }}
+          <i class="icon-backward"></i>&nbsp;{{ _("返回修改") }}
         </a>
       </div>
     </div>

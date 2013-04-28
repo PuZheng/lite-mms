@@ -5,6 +5,8 @@ from flask.ext.sqlalchemy import SQLAlchemy
 app.config["SQLALCHEMY_ECHO"] = False
 db = SQLAlchemy(app)
 
+app.config["MONGODB_DB"] = "localhost"
+
 def init_db():
     # 必须要import models, 否则不会建立表
     from lite_mms import models

@@ -32,17 +32,16 @@ def store_bill(id_):
             class StoreBillForm(Form):
                 harbor = TextField("harbor", [validators.required()])
                 weight = IntegerField("weight", [validators.required()])
-                quantity = IntegerField("quantity", [validators.required()])
+                quantity = IntegerField("quantity")
 
             form = StoreBillForm(request.form)
             if form.validate():
+                kwargs = dict(printed=True, weight=form.weight.data,
+                              harbor=form.harbor.data)
+                if form.quantity.data:
+                    kwargs["quantity"] = form.quantity.data
                 try:
-                    apis.delivery.update_store_bill(store_bill.id,
-                                                    printed=True,
-                                                    weight=form.weight.data,
-                                                    quantity=form.quantity
-                                                    .data,
-                                                    harbor=form.harbor.data)
+                    apis.delivery.update_store_bill(store_bill.id, **kwargs)
                     flash(u"修改仓单%d成功" % id_)
                     return redirect(url_for("store_bill.store_bill", id_=id_,
                                             url=request.form.get("url")))

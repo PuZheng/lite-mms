@@ -1,137 +1,51 @@
-{% extends "layout.html" %}
-{% block custom_external %}
+{% extends "__data_browser__/form.haml" %}
+{% block __data_browser__custom_external_block %}
+  <link rel="stylesheet" href="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.css") }}" type="text/css" media="screen">
+  <script type="text/javascript" src="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.pack.js") }}"></script>
+  <script type="text/javascript" src="{{ url_for('static',filename="js/spin.min.js") }}"></script>
+  <script src="{{ url_for('__data_browser__.static', filename='js/sprintf-0.6.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static',filename="js/jquery.spin.js") }}"></script>
   <script type="text/javascript">
     $(function () {
-      $('.dropdown-toggle').dropdown();
-      $(".dropdown-menu a").click(function () {
-        $("input[name=type]").val($(this).attr("id"));
-        $(this).parents("form").submit();
-      });
-      $("#delete-button").click(function () {
-        $("input[name=method]").val("delete");
-        {% if request.args.get("url") %}
-            $("input[name=url]").val("{{ request.args.get("url") }}");
-        {% endif %}
+      $(".fancybox").fancybox();
+      $("#log-accordion a").click(function () {
+        var e = $("#log-list .accordion-inner ul");
+        if (e.children().size() > 0) {
+          return true;
+        }
+        $(this).next().spin();
+        $.getJSON("{{ url_for("cargo.gr_log_list", gr_id=obj.id) }}", function (data) {
+          if (data["count"] == 0) {
+            e.append("<li>没有日志</li>")
+          } else {
+            $.each(data["data"], function (idx, log) {
+              var s = "";
+              if (log.action == "新建") {
+                  s = sprintf("[%s]: 用户%s创建了本卸货会话", log.create_time, log.actor);
+              } else {
+                  s = sprintf("[%s]: 用户%s对<i>%s</i>(%s)执行了[%s]操作", log.create_time, log.actor, log.obj_cls, log.obj, log.action);
+              }
+              if (log.message.length > 0) {
+                s += " - " + log.message;
+              }
+              e.append("<li>" + s + "</li>");
+            });
+          }
+          $("#log-accordion a").next().spin(false);
+        });
+        return true;
       });
     });
   </script>
 {% endblock %}
+
 {% block body %}
-  <div class="container">
-    <form action="{{ url_for("cargo.goods_receipt",id_=receipt.id) }}" method="POST" class="form-horizontal">
-      <legend>收货单详情{% if not receipt.order %}
-        <input type="hidden" name="method" value="">
-        <button class="btn btn-danger" id="delete-button">
-          <i class="icon-remove icon-white"></i>&nbsp;删除收货单
-        </button>
-      {% endif %} </legend>
-
-      <div class="control-group">
-        <label class="control-label">
-          <strong>收货单号</strong>
-        </label>
-
-        <div class="controls">
-          <p class="padding">{{ receipt.receipt_id }}</p>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">
-          <strong>公司名称</strong>
-        </label>
-
-        <div class="controls">
-          <p class="padding">{{ receipt.customer.name }}</p>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">
-          <strong>车辆车牌号</strong>
-        </label>
-
-        <div class="controls">
-          <p class="padding">{{ receipt.unload_session.plate }}</p>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">
-          <strong>日期</strong>
-        </label>
-
-        <div class="controls">
-          <p class="padding">{{ receipt.create_time.date() }}</p>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label"><strong>打印状态</strong></label>
-
-        <div class="controls">
-          {% if receipt.printed %}
-            <p class="padding text-info">已打印</p>
-          {% else %}
-            <a class="btn btn-primary" href="{{ url_for('cargo.goods_receipt_preview', id_=receipt.id, url=request.url) }}">
-              <i class="icon-print icon-white"></i> 未打印
-            </a>
-          {% endif %}
-
-        </div>
-      </div>
-      <legend>产品列表</legend>
-      <table class="table table-striped table-bordered table-condensed">
-        <thead>
-        <tr>
-          <th>卸货任务ID</th>
-          <th>产品类型</th>
-          <th>产品名称</th>
-          <th>净重(KG)</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for task in receipt.unload_task_list %}
-          <tr>
-            <td>
-              <a href="{{ url_for('cargo.unload_task',id_=task.id, url=request.url) }}" title="点击修改该产品">
-                <i class="icon-edit"></i> {{ task.id }}
-              </a>
-            </td>
-            <td>{{ task.product.product_type.name }}</td>
-            <td>{{ task.product.name }}</td>
-            <td>{{ task.weight }}</td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-
-      <div class="control-group">
-        <div class="controls">
-          {% if not receipt.order %}
-            <input type="hidden" name="url" value="{{ request.url }}">
-            <input type="hidden" name="type" value="">
-            <div class="btn-group">
-              <a class="dropdown-toggle btn btn-large btn-primary" data-toggle="dropdown" href="#">生成订单<b class="caret"></b></a>
-              <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-                <li role="presentation">
-                  <a href="#" tabindex="-1" role="menuitem" id="stander">计重</a>
-                </li>
-                <li role="presentation">
-                  <a href="#" tabindex="-1" role="menuitem" id="extra">计件</a>
-                </li>
-              </ul>
-            </div>
-          {% else %}
-            <a class="btn btn-large btn-primary" href="{{ url_for("order.order",id_=receipt.order.id, url=request.url) }}">
-              <i class="icon-eye-open icon-white"></i>&nbsp;查看订单
-            </a>
-          {% endif %}
-
-          <a class="btn btn-large btn-success" href="{{ url_for('cargo.goods_receipt_preview', id_=receipt.id, url=request.url) }}">
-            <i class="icon-print icon-white"></i>&nbsp;预览
-          </a>
-          <a href="{{ request.args.get("url") or url_for('cargo.unload_session',id_=receipt.unload_session.id) }}" class="btn btn-large">
-            <i class="icon-backward"></i>&nbsp;返回
-          </a>
-        </div>
-      </div>
-    </form>
+  {% if obj.stale %}
+  <div class="alert alert-info">
+    <h3>警告</h3>
+    由于您修改过卸货会话，本收货单已经过时，请重新生成!
   </div>
+  {% endif %}
+  {{ super() }}
 {% endblock %}
+

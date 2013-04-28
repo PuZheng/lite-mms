@@ -14,7 +14,9 @@ class OrderModelView(ModelView):
 
     list_template = "order2/order-list.haml"
 
-    can_create = False
+    def try_create(self):
+        raise PermissionDenied()
+
     can_batchly_edit = False
 
     __list_columns__ = ["id", "customer_order_number", "goods_receipt.customer", "net_weight", "remaining_weight", "manufacturing_weight", "qi_weight", "to_deliver_weight", "done_work_weight", "delivered_weight", 
@@ -62,7 +64,7 @@ class OrderModelView(ModelView):
         return apis.OrderWrapper(model)
 
 
-    def try_view(self):
+    def try_view(self, objs=None):
         from flask.ext.principal import Permission
         Permission.union(CargoClerkPermission, AdminPermission).test()
 
@@ -81,6 +83,8 @@ class OrderModelView(ModelView):
     def url_for_object(self, model, **kwargs):
         if model:
             return url_for("order.order", id_=model.id, **kwargs)
+        else:
+            return url_for("order2.order")
 
     # =================== FORM PARTS ===================================
 
@@ -152,16 +156,5 @@ extra_params = {
 }
 data_browser.register_model_view(order_model_view, order2_page, extra_params=extra_params)
 
-class GoodsReceiptModelView(ModelView):
-    can_edit = False
-
-extra_params = {
-    "form_view": {
-        "nav_bar": main_nav_bar,
-        "titlename": u"收货单详情"
-    }
-}
-
-data_browser.register_model_view(GoodsReceiptModelView(GoodsReceipt, u"收货单"), order2_page, extra_params=extra_params)
 
 from lite_mms.portal.order2 import ajax, views

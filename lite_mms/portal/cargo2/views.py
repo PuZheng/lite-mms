@@ -28,7 +28,6 @@ g_status_desc = {
     cargo_const.STATUS_DISMISSED: u"取消",
 }
 
-
 class UnloadSessionModelView(ModelView):
 
     list_template = "cargo2/unload-session-list.haml"

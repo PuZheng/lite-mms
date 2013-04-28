@@ -61,10 +61,12 @@ def get_user(id_):
         return None
 
 
-def get_user_list():
+def get_user_list(group_id=None):
     from lite_mms import models
-
-    return [UserWrapper(user) for user in models.User.query.all()]
+    q = models.User.query
+    if group_id:
+        q = q.filter(models.User.groups.any(models.Group.id == group_id))
+    return [UserWrapper(user) for user in q.all()]
 
 
 def authenticate(username, password):

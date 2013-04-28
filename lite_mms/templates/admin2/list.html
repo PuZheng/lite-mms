@@ -47,9 +47,11 @@
     {% block lists %} 
       {{ super() }}
     {% endblock %}
-    {% block filters %} 
-      {{ super() }}
-    {% endblock %}
+    <div class="span2">
+      {% block filters %} 
+        {{ super() }}
+      {% endblock %}
+    </div>
   </div>
 </div>
 {% endblock %}

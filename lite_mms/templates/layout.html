@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="{{ url_for('__data_browser__.static', filename="bootstrap/css/bootstrap.min.css") }}" media="screen">
   <link rel="stylesheet" href="{{ url_for('__data_browser__.static', filename="bootstrap/css/bootstrap-responsive.min.css") }}" media="screen">
   <link rel="stylesheet" href="{{ url_for('__data_browser__.static', filename="select2/select2.css") }}" media="screen">
+  <link rel="stylesheet" href="{{ url_for('__data_browser__.static', filename="css/admin.css") }}" media="screen">
   <link rel="stylesheet" href="{{ url_for('static', filename="css/customer.css") }}">
   <link href="{{ url_for('__data_browser__.static', filename='css/datepicker.css') }}" rel="stylesheet">
   {% block __customized_css__ %}{% endblock %}
@@ -17,6 +18,7 @@
   <script src="{{ url_for('__data_browser__.static', filename='js/bootstrap-datepicker.js') }}"></script>
   <script src="{{ url_for('__data_browser__.static', filename='js/bootstrap-datepicker-zh_CN.js') }}"></script>
   <script src="{{ url_for('__data_browser__.static', filename='js/form.js') }}"></script>
+  <script src="{{ url_for('__data_browser__.static', filename='js/sprintf-0.6.js') }}"></script>
   {% block __data_browser__builtin_head_block %}{% endblock %}
   {% block __data_browser__custom_external_block %}{% endblock %}
   {% block __data_browser__customized_head_block %}{% endblock %}
@@ -24,7 +26,7 @@
   <script type="text/javascript">
     $(function () {
       setTimeout(function () {
-          $(".flash").fadeOut("slow")
+        $(".flash").fadeOut("slow")
       }, 3000);
       $("select").select2({
         width: "element",
@@ -35,6 +37,43 @@
       });
     })
   </script>
+  {% if current_user.is_authenticated() %}
+    <script type="text/javascript" src="{{ url_for("static", filename="js/jquery.pnotify.min.js") }}"></script>
+    <link rel="stylesheet" href="{{ url_for("static", filename="css/jquery.pnotify.default.css") }}"/>
+    <script type="text/javascript">
+      $(function () {
+        var stack_bottomright = {"dir1": "up", "dir2": "left", "firstpos1": 25, "firstpos2": 25};
+
+        function display(message){
+          return "在"  + message.create_time + "由" + message.author + message.action + "了编号为" + message.obj_pk + "的" + message.obj_cls + "给您，请操作";
+        }
+
+
+        function f() {
+          $.getJSON('{{ url_for("ajax_new_message") }}', function (data) {
+            for (var i = 0; i < data.length; i++) {
+              $.pnotify({
+                title: '新待办事项',
+                text: display(data[i]),
+                addclass: "stack-bottomright",
+                stack: stack_bottomright
+              });
+            }
+            setTimeout(f, 60000);
+          })
+        }
+
+        f();
+      })
+    </script>
+    <style type="text/css">
+      .stack-bottomright {
+        /* These are just CSS default values to reset the pnotify CSS. */
+        right: auto;
+        top: auto;
+      }
+    </style>
+  {% endif %}
 </head>
 <body>
 

@@ -2,7 +2,7 @@
 import re
 import json
 
-from flask import request, abort, url_for, render_template, render_template_string, flash
+from flask import request, abort, url_for, render_template, flash
 from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.column_spec import (InputColumnSpec, ColumnSpec, 
                                                PlaceHolderColumnSpec, ListColumnSpec, 
@@ -14,7 +14,7 @@ from wtforms import Form, IntegerField, validators
 from werkzeug.datastructures import OrderedMultiDict
 
 from lite_mms.portal.cargo import cargo_page, fsm
-from lite_mms.utilities import decorators, do_commit
+from lite_mms.utilities import decorators
 from lite_mms.permissions import CargoClerkPermission,AdminPermission
 from lite_mms.basemain import nav_bar
 from lite_mms.apis import wraps
@@ -116,7 +116,7 @@ class UnloadSessionModelView(ModelView):
         return apis.cargo.UnloadSessionWrapper(model)
 
     def get_customized_actions(self, model_list=None):
-        from lite_mms.portal.cargo.actions import MyDeleteAction, CloseAction, OpenAction, CreateReceiptAction
+        from lite_mms.portal.cargo.actions import CloseAction, OpenAction, CreateReceiptAction
         action_list = []
         if model_list is None: # for list
             action_list.extend([CloseAction(u"关闭"), OpenAction(u"打开"), CreateReceiptAction(u"生成收货单")])
@@ -267,20 +267,11 @@ class UnloadTaskModelView(ModelView):
     def preprocess(self, obj):
         return wraps(obj)
 
-    def get_customized_actions(self, processed_objs=None):
-        from lite_mms.portal.cargo.actions import UnloadTaskDeleteAtion
-        delete_action = UnloadTaskDeleteAtion(u"删除")
-
-        if isinstance(processed_objs, (list, tuple)):
-            if any(delete_action.test_enabled(obj) == 0 for obj in processed_objs):
-                return [delete_action]
-        return []
-
-    def try_edit(self, objs):
+    def try_edit(self, objs=None):
         if any(obj.unload_session.status==cargo_const.STATUS_CLOSED for obj in objs):
-            raise PermissionDenied()
+            raise PermissionDenied
 
-    def edit_hint_message(self, objs, read_only):
+    def edit_hint_message(self, objs, read_only=False):
         if read_only:
             return u"本卸货会话已经关闭，所以不能修改卸货任务"
         return super(UnloadTaskModelView, self).edit_hint_message(objs, read_only)

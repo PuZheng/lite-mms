@@ -83,7 +83,6 @@ class User(db.Model):
     def __repr__(self):
         return "<User %d>" % self.id
 
-
 class UnloadSession(db.Model):
     __modelname__ = u"卸货会话"
     __tablename__ = "TB_UNLOAD_SESSION"
@@ -556,7 +555,6 @@ class QIReport(db.Model):
     def __repr__(self):
         return "<QIReport %d>" % self.id
 
-
 class DeliverySession(db.Model):
     __modelname__ = u"发货会话"
     __tablename__ = "TB_DELIVERY_SESSION"
@@ -872,6 +870,7 @@ class TODO(db.Model):
     actor = db.relationship("User", primaryjoin="TODO.actor_id==User.id")
     action = db.Column(db.String(64))
     priority = db.Column(db.Integer)
+    msg = db.Column(db.String(128))
 
 class Config(db.Model):
     __tablename__ = "TB_CONFIG"

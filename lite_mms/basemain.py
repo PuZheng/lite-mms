@@ -62,8 +62,9 @@ if serve_web:
     app.register_blueprint(deduction_page, url_prefix="/deduction")
     from lite_mms.portal.auth import auth
     app.register_blueprint(auth, url_prefix="/auth")
-    from lite_mms.portal.cargo import cargo_page
+    from lite_mms.portal.cargo import cargo_page, gr_page
     app.register_blueprint(cargo_page, url_prefix='/cargo')
+    app.register_blueprint(gr_page, url_prefix='/goods_receipt')
     from lite_mms.portal.delivery import delivery_page
     app.register_blueprint(delivery_page, url_prefix='/delivery')
     from lite_mms.portal.misc import misc
@@ -119,8 +120,8 @@ from lite_mms.permissions.roles import (CargoClerkPermission,
                                        AdminPermission)
 from lite_mms.permissions.order import view_order, schedule_order
 from lite_mms.permissions.work_command import view_work_command
-nav_bar.register(cargo_page, name=u"卸货管理", permissions=[CargoClerkPermission])
-#nav_bar.register(cargo2_page, default_url="/cargo2/unload-session-list?status__only_unclosed=on", name=u"卸货管理(beta)", permissions=[CargoClerkPermission])
+nav_bar.register(cargo_page, name=u"卸货会话", permissions=[CargoClerkPermission], group=u"卸货管理")
+nav_bar.register(gr_page, name=u"收货单", permissions=[CargoClerkPermission], group=u"卸货管理")
 nav_bar.register(order_page, default_url='/order/order-list', name=u"订单管理",
                  permissions=[view_order])
 nav_bar.register(order2_page, default_url='/order2/order-list?order_by=id&desc=1', name=u"订单管理(beta)",

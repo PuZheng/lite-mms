@@ -82,7 +82,7 @@
     <div class="container">
       <nav class="nav-collapse">
         {% if current_user.is_authenticated() and nav_bar %}
-          {{ nav_bar.as_ul("active")|safe }}
+          {{ nav_bar.as_ul("active", grouped=True)|safe }}
           <form class="navbar-search pull-right form-search"
                 action="{{ url_for('search.search') }}" method="GET">
             <div class="input-append">

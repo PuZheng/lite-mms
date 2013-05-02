@@ -34,7 +34,6 @@ class CloseAction(BaseAction):
         return {-2: u"收货会话%s已经被关闭", 
                 -3: u"收货会话%s有卸货任务没有称重，请确保所有的卸货任务都已经称重！"}
 
-
 class OpenAction(ReadOnlyAction):
 
     def test_enabled(self, model):
@@ -65,9 +64,15 @@ class CreateReceiptAction(ReadOnlyAction):
     def get_forbidden_msg_formats(self):
         return {-2: u"%s已生成收货单"}
 
-
 class PrintGoodsReceipt(BaseAction):
 
     def op_upon_list(self, objs, model_view):
         model_view.do_update_log(objs[0], self.name)
         return redirect(url_for("cargo.goods_receipt_preview", id_=objs[0].id, url=request.url))
+
+class BatchPrintGoodsReceipt(ReadOnlyAction):
+
+    def op_upon_list(self, objs, model_view):
+        for obj in objs:
+            model_view.do_update_log(obj, self.name)
+        return redirect(url_for("goods_receipt.goods_receipts_batch_print", id_=",".join([str(obj.id) for obj in objs]), url=request.url))

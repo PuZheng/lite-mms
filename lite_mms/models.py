@@ -693,6 +693,7 @@ class Consignment(db.Model):
     delivery_session = db.relationship("DeliverySession",
                                        backref="consignment_list")
     actor_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
+    actor = db.relationship("User")
     create_time = db.Column(db.DateTime, default=datetime.now)
     customer_id = db.Column(db.Integer, db.ForeignKey("TB_CUSTOMER.id"))
     customer = db.relationship("Customer")

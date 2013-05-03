@@ -175,7 +175,7 @@
                   <td>{{ order.create_time|_datetimeformat("%Y-%m-%d %H:%M") }}</td>
                   <td>{% if order.urgent %}是{% else %}否{% endif %}</td>
                   <td>
-                    <a href="{{ url_for('cargo.goods_receipt', id_=order.goods_receipt_id, url=request.url) }}">{{ order.goods_receipt.receipt_id }}</a>
+                    <a href="{{ url_for('goods_receipt.goods_receipt', id_=order.goods_receipt_id, url=request.url) }}">{{ order.goods_receipt.receipt_id }}</a>
                   </td>
                   <td>{{ order.net_weight }}</td>
                   <td>{{ order.remaining_weight }}</td>

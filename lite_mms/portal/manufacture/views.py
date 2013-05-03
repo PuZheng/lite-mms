@@ -3,20 +3,20 @@ from flask.ext.databrowser import ModelView, filters, column_spec
 from flask.ext.login import login_required
 from flask.ext.principal import PermissionDenied
 
-from lite_mms.models import WorkCommand, Procedure
-from lite_mms.apis.manufacture import get_wc_status_list
+from lite_mms.models import WorkCommand
+from lite_mms.apis.manufacture import get_wc_status_list, get_status_list, get_handle_type_list
 
 
 class WorkCommandView(ModelView):
-
-
-    __list_columns__ = ["id", "department", "team", "org_weight", "org_cnt", "sub_order.unit", "urgent",
-                        "sub_order.returned", "tech_req", "handle_type", "status", "procedure", "previous_procedure"]
+    __list_columns__ = ["id", "sub_order.order.customer_order_number", "department", "team", "org_weight", "org_cnt",
+                        "sub_order.unit", "urgent", "sub_order.returned", "tech_req", "handle_type", "status",
+                        "procedure", "previous_procedure"]
 
     __column_labels__ = {"id": u"编号", "department": u"车间", "team": u"班组", "sub_order.unit": u"单位",
                          "sub_order.returned": u"退镀", "urgent": u"加急", "org_weight": u"重量（公斤）", "org_cnt": u"数量",
                          "handle_type": u"处理类型", "tech_req": u"技术要求", "status": u"状态", "procedure": u"工序",
-                         "previous_procedure": u"上道工序"}
+                         "previous_procedure": u"上道工序", "sub_order.order.customer_order_number": u"订单编号",
+                         "sub_order": u"子订单编号"}
 
     __default_order__ = ("urgent", "desc")
 
@@ -26,12 +26,18 @@ class WorkCommandView(ModelView):
     week_ago = (today - timedelta(days=7)).date()
     _30days_ago = (today - timedelta(days=30)).date()
 
-    __column_filters__ = [
-        filters.EqualTo("status", u"状态", options=[(k, v[0]) for k, v in get_wc_status_list().iteritems()], default_value=str(1)),
-        filters.BiggerThan("create_time", name=u"在",
-                           options=[(yesterday, u'一天内'), (week_ago, u'一周内'), (_30days_ago, u'30天内')],
-                           default_value=str(_30days_ago)),
+    class In_filter(filters.BaseFilter):
+        __notation__ = "__in_e"
 
+        def __operator__(self, attr, value):
+            return attr.in_(set(value))
+
+    __column_filters__ = [
+        In_filter("status", u"是", options=[i[:2] for i in get_status_list()], default_value=str((1,8)), display_col_name=u"状态"),
+        filters.BiggerThan("create_time",name=u"在",
+                           options=[(yesterday, u'一天内'), (week_ago, u'一周内'), (_30days_ago, u'30天内')],
+                           default_value=str(_30days_ago), display_col_name=u"创建时间"),
+        # filters.Contains("sub_order.order.customer_order_number", name=u"包含", display_col_name=u"订单编号")
     ]
 
     __column_formatters__ = {
@@ -41,7 +47,8 @@ class WorkCommandView(ModelView):
         "sub_order.returned": lambda v, model: u"是" if v else u"否",
         "urgent": lambda v, model: u"是" if v else u"否",
         "procedure": lambda v, model: v if v else "",
-        "previous_procedure": lambda v, model: v if v else ""
+        "previous_procedure": lambda v, model: v if v else "",
+        "handle_type": lambda v, model: get_handle_type_list().get(v, u"未知")
     }
 
     def try_create(self):
@@ -53,6 +60,31 @@ class WorkCommandView(ModelView):
 
     def try_edit(self, processed_objs=None):
         raise PermissionDenied
+
+    def get_customized_actions(self, processed_objs=None):
+        from .actions import schedule_action, retrieve_action
+
+        def _get_status_filter(desc):
+            for i in get_status_list():
+                if i[1] == desc:
+                    return i[0]
+            else:
+                return None
+
+        if self.__column_filters__[0].value == unicode(_get_status_filter(u"待生产")) or (
+                processed_objs and all(schedule_action.test_enabled(obj) == 0 for obj in processed_objs)):
+            return [schedule_action]
+        elif self.__column_filters__[0].value == unicode(_get_status_filter(u"生产中")) or (
+                processed_objs and all(retrieve_action.test_enabled(obj) == 0 for obj in processed_objs)):
+            return [retrieve_action]
+        else:
+            return []
+
+    __form_columns__ = ["id", "sub_order", "sub_order.order.customer_order_number", "department", "team", "org_weight",
+                        "org_cnt", "sub_order.unit", "procedure", "previous_procedure",
+                        column_spec.ColumnSpec("urgent", formatter=lambda v, obj: u"是" if v else u'否',label=u"加急"),
+                        "sub_order.returned", "tech_req", "status",
+                        column_spec.ColumnSpec("handle_type", label=u"处理类型", formatter=lambda v, obj: get_handle_type_list().get(v, u"未知"))]
 
 work_command_view = WorkCommandView(WorkCommand)
 # from flask import (request, abort, redirect, url_for, render_template, json,

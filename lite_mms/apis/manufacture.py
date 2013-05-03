@@ -374,8 +374,9 @@ class TeamWrapper(ModelWrapper):
 
 def get_status_list():
     return [
-        (constants.work_command.STATUS_DISPATCHING, u'待生产', u"需要调度员排产的工单"),
-        (constants.work_command.STATUS_ENDING, u'生产中', u"进入生产环节的工单"),
+        ((constants.work_command.STATUS_DISPATCHING, constants.work_command.STATUS_REFUSED), u'待生产', u"需要调度员排产的工单"),
+        ((constants.work_command.STATUS_ENDING, constants.work_command.STATUS_ASSIGNING,
+          constants.work_command.STATUS_LOCKED), u'生产中', u"进入生产环节的工单"),
         (constants.work_command.STATUS_QUALITY_INSPECTING, u'待质检',
          u"待质检员质检完成的工单"),
         (constants.work_command.STATUS_FINISHED, u'已完成', u"已经结束生产的工单"),

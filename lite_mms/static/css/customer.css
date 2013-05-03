@@ -48,7 +48,7 @@ thead th {
     .table-bordered td, .table-bordered th{
         border: 1px solid #000000;
     }
-    .page-next{
+    .page-next:not(:last-child) {
         page-break-after: always;
     }
 }

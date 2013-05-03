@@ -290,9 +290,10 @@ class GoodsReceiptModelView(ModelView):
 
     edit_template = "cargo/goods-receipt.html"
     
-    can_create = False
-    can_batchly_edit = False
     as_radio_group = False
+
+    def try_create(self):
+        raise PermissionDenied
 
     def preprocess(self, obj):
         return wraps(obj)

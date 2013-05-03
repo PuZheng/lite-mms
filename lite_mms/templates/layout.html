@@ -44,6 +44,7 @@
           $(this).data("select2").opts.matcher = my_matcher;
         });
       }
+      $("[data-toggle=tooltip]").tooltip();
     })
   </script>
   {% if current_user.is_authenticated() %}

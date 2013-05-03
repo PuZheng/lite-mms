@@ -2,8 +2,10 @@
 from flask.ext.databrowser import ModelView, filters, column_spec
 from flask.ext.login import login_required
 from flask.ext.principal import PermissionDenied
+from werkzeug.utils import cached_property
+from lite_mms import constants
 
-from lite_mms.models import WorkCommand
+from lite_mms.models import WorkCommand, Order, SubOrder
 from lite_mms.apis.manufacture import get_wc_status_list, get_status_list, get_handle_type_list
 
 
@@ -18,7 +20,13 @@ class WorkCommandView(ModelView):
                          "previous_procedure": u"上道工序", "sub_order.order.customer_order_number": u"订单编号",
                          "sub_order": u"子订单编号"}
 
-    __default_order__ = ("urgent", "desc")
+    __default_order__ = ("id", "desc")
+
+    __sortable_columns__ = ["sub_order.order.customer_order_number", "urgent", "sub_order.returned"]
+
+    def patch_row_attr(self, idx, row):
+        if row.status != constants.work_command.STATUS_FINISHED and (row.urgent or row.sub_order.returned):
+            return {"class":"warning", "title":u"退镀或加急"}
 
     from datetime import datetime, timedelta
     today = datetime.today()
@@ -26,18 +34,30 @@ class WorkCommandView(ModelView):
     week_ago = (today - timedelta(days=7)).date()
     _30days_ago = (today - timedelta(days=30)).date()
 
-    class In_filter(filters.BaseFilter):
-        __notation__ = "__in_e"
+    class In_Filter(filters.BaseFilter):
+        __notation__ = "__in_ex"
 
         def __operator__(self, attr, value):
             return attr.in_(set(value))
 
+    class OrderIDFilter(filters.BaseFilter):
+        def set_sa_criterion(self, q):
+            q = q.filter(Order.id == self.value).join(SubOrder).join(Order)
+            return q
+
+        @cached_property
+        def attr(self):
+            return ""
+
+
     __column_filters__ = [
-        In_filter("status", u"是", options=[i[:2] for i in get_status_list()], default_value=str((1,8)), display_col_name=u"状态"),
-        filters.BiggerThan("create_time",name=u"在",
-                           options=[(yesterday, u'一天内'), (week_ago, u'一周内'), (_30days_ago, u'30天内')],
-                           default_value=str(_30days_ago), display_col_name=u"创建时间"),
-        # filters.Contains("sub_order.order.customer_order_number", name=u"包含", display_col_name=u"订单编号")
+        In_Filter("status", u"是", options=[i[:2] for i in get_status_list()], display_col_name=u"状态"),
+        filters.BiggerThan("create_time", name=u"在", display_col_name=u"创建时间",
+                           options=[(yesterday, u'一天内'), (week_ago, u'一周内'), (_30days_ago, u'30天内')]),
+        filters.Contains("sub_order.order.customer_order_number", name=u"包含", display_col_name=u"订单编号"),
+        OrderIDFilter("order_id", hidden=True),
+        filters.Only("urgent", display_col_name=u"只展示加急", test=lambda v: v == True, notation="__urgent"),
+        filters.Only("sub_order.returned", display_col_name=u"只展示退镀", test=lambda v: v == True, notation="__returned")
     ]
 
     __column_formatters__ = {

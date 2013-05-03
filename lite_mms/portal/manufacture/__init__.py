@@ -21,8 +21,6 @@ def _wrapper(department):
                                 department.procedure_list])
 
 
-department_list = [_wrapper(d) for d in get_department_list()]
-
 
 def _do_register(model_view):
     extra_params = {
@@ -57,13 +55,13 @@ def schedule():
         if 1 == len(work_command_list):
             work_command = work_command_list[0]
             return render_template("manufacture/schedule-work-command.html", titlename=u'排产',
-                                   department_list=department_list, work_command=work_command)
+                                   department_list=[_wrapper(d) for d in get_department_list()], work_command=work_command)
         else:
             from lite_mms.utilities.functions import deduplicate
 
             department_set = deduplicate([wc.department for wc in work_command_list], lambda x: x.name)
 
-            param_dic = {'titlename': u'批量排产', 'department_list': department_list,
+            param_dic = {'titlename': u'批量排产', 'department_list': [_wrapper(d) for d in get_department_list()],
                          'work_command_list': work_command_list,
                          'default_department_id': department_set[0].id if len(department_set) == 1 else None}
 

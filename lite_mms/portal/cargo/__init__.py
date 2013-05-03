@@ -6,12 +6,14 @@ from lite_mms.permissions import CargoClerkPermission
 cargo_page = Blueprint("cargo", __name__, static_folder="static",
                        template_folder="templates")
 
+gr_page = Blueprint("goods_receipt", __name__, static_folder="static",
+                       template_folder="templates")
 
 @cargo_page.before_request
+@gr_page.before_request
 def _():
     with CargoClerkPermission.require():
         pass
-
 
 from lite_mms.portal.cargo.views import (unload_session_model_view,
                                          plate_model_view,
@@ -21,7 +23,7 @@ from lite_mms.portal.cargo.views import (unload_session_model_view,
 from lite_mms.basemain import data_browser, nav_bar
 
 
-def _do_register(model_view):
+def _do_register(model_view, bp):
     extra_params = {
         "list_view": {
             "nav_bar": nav_bar,
@@ -37,12 +39,14 @@ def _do_register(model_view):
         }
 
     }
-    data_browser.register_model_view(model_view, cargo_page, extra_params)
-
+    data_browser.register_model_view(model_view, bp, extra_params)
 
 for model_view in [unload_session_model_view, goods_receipt_entry_view,
-                   plate_model_view, goods_receipt_model_view,
+                   plate_model_view, 
                    unload_task_model_view]:
-    _do_register(model_view)
+    _do_register(model_view, cargo_page)
+
+for model_view in [goods_receipt_model_view]:
+    _do_register(model_view, gr_page)
 
 from . import views, ajax

@@ -4,6 +4,7 @@ import json
 
 from flask import request, abort, url_for, render_template, flash
 from flask.ext.databrowser import ModelView
+from flask.ext.databrowser.action import DeleteAction
 from flask.ext.databrowser.column_spec import (InputColumnSpec, ColumnSpec, 
                                                PlaceHolderColumnSpec, ListColumnSpec, 
                                                TableColumnSpec, ImageColumnSpec)
@@ -13,18 +14,24 @@ from werkzeug.utils import redirect
 from wtforms import Form, IntegerField, validators
 from werkzeug.datastructures import OrderedMultiDict
 
-from lite_mms.portal.cargo import cargo_page, fsm
-from lite_mms.utilities import decorators
+from lite_mms.portal.cargo import cargo_page, fsm, gr_page
+from lite_mms.utilities import decorators, get_or_404
 from lite_mms.permissions import CargoClerkPermission,AdminPermission
 from lite_mms.basemain import nav_bar
 from lite_mms.apis import wraps
 import lite_mms.constants.cargo as cargo_const
+from lite_mms.database import db
 from lite_mms.models import (UnloadSession, Plate, GoodsReceipt,
                              GoodsReceiptEntry, Product, UnloadTask)
 
 @cargo_page.route('/')
 def index():
     return redirect(unload_session_model_view.url_for_list())
+
+@gr_page.route('/')
+def index():
+    return redirect(goods_receipt_model_view.url_for_list(order_by="create_time", desc=1))
+
 
 class UnloadSessionModelView(ModelView):
 
@@ -203,6 +210,7 @@ class GoodsReceiptEntryModelView(ModelView):
         return wraps(obj)
 
     def try_edit(self, objs=None):
+        # 若收货单已经生成了订单，或者收货单已经过时，那么不能进行修改
         def _try_edit(obj):
             if obj:
                 if isinstance(obj, self.data_browser.db.Model):
@@ -284,13 +292,43 @@ class GoodsReceiptModelView(ModelView):
     
     can_create = False
     can_batchly_edit = False
-    as_radio_group = True
+    as_radio_group = False
 
     def preprocess(self, obj):
         return wraps(obj)
 
-    __list_columns__ = ["receipt_id", "customer", "unload_session.plate", 
-                        "printed", "stale"]  
+    __sortable_columns__ = ["id", "create_time"]
+
+    __list_columns__ = ["id", "receipt_id", "customer", "unload_session.plate", InputColumnSpec("order", formatter=lambda v, obj: v or "--", label=u"订单"),
+                        ColumnSpec("printed", formatter=lambda v, obj: u"是" if v else u"否", label=u"是否打印"), 
+                        ColumnSpec("stale", formatter=lambda v, obj: u"是" if v else u"否", label=u"是否过时"),
+                        ColumnSpec("create_time", formatter=lambda v, obj: v.strftime("%y年%m月%d日 %H时%M分").decode("utf-8"), label=u"创建时间"), 
+                        ListColumnSpec("goods_receipt_entries", label=u"产品", compressed=True, 
+                                       item_col_spec=ColumnSpec("", formatter=lambda v, obj: unicode(v.product.product_type) + u"-" + unicode(v.product)))]  
+
+    def patch_row_attr(self, idx, obj):
+        if obj.stale:
+            return {
+                "class": "alert alert-error",
+                "title": u"本收货单已经过时，请回到卸货会话重新生成"
+            }
+        if not obj.printed:
+            return {
+                "class": "alert alert-warning",
+                "title": u"本收货单尚未打印"
+            }
+
+    from flask.ext.databrowser import filters                             
+    from datetime import datetime, timedelta                              
+    today = datetime.today()                                              
+    yesterday = today.date()                                                 
+    week_ago = (today - timedelta(days=7)).date()                         
+    _30days_ago = (today - timedelta(days=30)).date()      
+    __column_filters__ = [filters.BiggerThan("create_time", name=u"在", default_value=str(yesterday),
+                                             options=[(yesterday, u'一天内'), (week_ago, u'一周内'), (_30days_ago, u'30天内')]),
+                          filters.EqualTo("customer", name=u"是"),
+                          filters.Only("printed", display_col_name=u"仅展示未打印收货单", test=lambda col: ~col, notation="__only_unprinted"),
+                         ]
 
     __form_columns__ = OrderedMultiDict()
     __form_columns__[u"详细信息"] = [
@@ -313,12 +351,15 @@ class GoodsReceiptModelView(ModelView):
                             PlaceHolderColumnSpec(col_name="pic_url", label=u"图片", template_fname="cargo/pic-snippet.html")],
                         preprocess=lambda obj: wraps(obj))
     ]
-    __column_labels__ = {"receipt_id": u'编号', "customer": u'客户', "unload_session.plate": u"车牌号", 
-                         "printed": u'是否打印', "stale": u"是否过时"}
-    from lite_mms.portal.cargo.actions import PrintGoodsReceipt
+    __column_labels__ = {"receipt_id": u'编 号', "customer": u'客 户', "unload_session.plate": u"车牌号", 
+                         "printed": u'是否打印', "stale": u"是否过时", "create_time": u"创建时间", "order": u"订 单"}
 
-    __customized_actions__ = [PrintGoodsReceipt(u"打印")]
-
+    def get_customized_actions(self, objs=None):
+        from lite_mms.portal.cargo.actions import PrintGoodsReceipt, BatchPrintGoodsReceipt
+        if not objs:
+            return [BatchPrintGoodsReceipt(u"批量打印"), DeleteAction(u"删除")]
+        else: 
+            return [PrintGoodsReceipt(u"打印"), DeleteAction(u"删除")]
 
     def try_edit(self, objs=None):
         def _try_edit(obj):
@@ -362,3 +403,20 @@ def refresh_gr(id_):
     else:
         receipt.add_product_entries()
         return redirect(request.args.get("url") or url_for("cargo.goods_receipt", id_=id_))
+
+@gr_page.route("/goods-receipts-batch-print/<id_>")
+@decorators.templated("cargo/goods-receipts-batch-print.html")
+@decorators.nav_bar_set
+def goods_receipts_batch_print(id_):
+    from lite_mms import apis
+    per_page  = apis.config.get("print_count_per_page", 5, type=int)
+    gr_list = [get_or_404(GoodsReceipt, i) for i in id_.split(",")]
+    pages = 0
+    for gr in gr_list:
+        gr.printed = True
+        import math
+        pages += int(math.ceil(len(gr.unload_task_list) / per_page))
+    db.session.commit()
+    return {"gr_list": gr_list, 
+            "per_page": per_page, "pages": pages, "back_url": request.args.get("url", "/")}
+

@@ -25,65 +25,37 @@
   {% if __data__ %}
     <div class="accordion container" id="accordion1">
       {% for grouper, list in __data__|groupby("create_date")|reverse %}
+        {% if grouper == today %}
+          {% set grouper = '今天' %}
+        {% elif grouper == yesterday %}
+          {% set grouper = '昨天' %}
+        {% endif %}
+
         <div class="accordion-group">
           <div class="accordion-heading">
             <a class="accordion-toggle" href="#{{ grouper }}" data-toggle="collapse" data-parent="#accordion1">
-              <i class="icon-chevron-down"></i>&nbsp;{{ grouper }}
+              <i class="icon-chevron-down"></i>&nbsp;{{ grouper }}<i>({{ list|length }})</i>
             </a>
           </div>
           <div class="accordion-body collapse" id="{{ grouper }}">
             <div class="accordion-inner">
-              {% for obj in list %}
-                <li>
-                  <em>{{ obj.actor }}</em>&nbsp;<strong>{{ obj.action }}</strong>了{% if obj.url %}
-                    <a href="{{ obj.url }}">
-                      {{ obj.obj_cls }}{{ obj.obj_pk }}</a>
-                  {% else %}
-                    {{ obj.obj_cls }}{{ obj.obj_pk }}
-                  {% endif %}
-                  {% if obj.action_list %}
-                    {% if obj.action_list|length > 1 %}
-                      <div class="btn-group">
-                        <a class="btn dropdown-toggle btn-primary" href="#" data-toggle="dropdown">
-                          {{ _("Action") }}<span class="caret"></span>
-                        </a>
-
-                        <ul class="dropdown-menu">
-                          {% for action in obj.action_list %}
-                            <li>
-                              <a href="#{{ action.name }}" name="{{ action.name }}">{{ action.name }}</a>
-
-                              <form action="{{ action.url or obj.url }}" method="{{ action.method if action.method else "POST" }}">
-                                <input type="hidden" name="action" value="{{ action.name }}">
-                                <input type="hidden" name="url" value="{{ request.url }}">
-                                {% if action.extra %}
-                                  {% for k,v in action.extra.items() %}
-                                    <input type="hidden" name="{{ k }}" value="{{ v }}">
-                                  {% endfor %}
-                                {% endif %}
-                              </form>
-                            </li>
-                          {% endfor %}
-                        </ul>
-                      </div>
-                    {% else %}
-                      {% set action = obj.action_list[0] %}
-                      <form action="{{ action.url or obj.url }}" method="{{ action.method if action.method else "POST" }}">
-                        <input type="hidden" name="url" value="{{ request.url }}">
-                        <input type="submit" value="{{ action.name }}" name="action" class="btn btn-primary">
-                        {% if action.extra %}
-                          {% for k,v in action.extra.items() %}
-                            <input type="hidden" name="{{ k }}" value="{{ v }}">
-                          {% endfor %}
-                        {% endif %}
-                      </form>
-                    {% endif %}
-                  {% endif %}
-                </li>{% endfor %}
+              {% for todo in list %}
+              <blockquote>
+                <span class="muted">
+                  {{ todo.create_time.strftime("%H:%M") }}
+                </span>
+                {{todo.msg}}
+                {% if todo.context_url %}
+                  <a href="{{todo.context_url}}">开始&gt;&gt;</a>
+                {% endif %}
+              </blockquote>
+              {% endfor %}
             </div>
           </div>
         </div>
       {% endfor %}
     </div>
+  {% else %}
+    <p class="alert alert-success">恭喜您！ 您的所有工作都完成了</p>
   {% endif %}
 {% endblock %}

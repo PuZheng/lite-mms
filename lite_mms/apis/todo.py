@@ -1,5 +1,4 @@
 #-*- coding:utf-8 -*-
-#TODO to be completed
 from . import ModelWrapper
 from lite_mms import models
 from lite_mms.utilities import do_commit
@@ -8,69 +7,66 @@ from .notify import notifications
 
 class TODOWrapper(ModelWrapper):
 
-    @classmethod
-    def add(cls, obj_cls, obj_pk, obj, action, next_actor=None, actor=None,
-            priority=0):
-
-        if obj_cls is None:
-            obj_cls = obj.__class__.__name__
-        if obj_pk is None and hasattr(obj, "id"):
-            obj_pk = obj.id
-        if actor is None:
-            from flask.ext.login import current_user
-
-            if current_user.is_authenticated():
-                actor = current_user
-
-        to_do = models.TODO()
-        to_do.obj_cls = obj_cls
-        to_do.obj_pk = obj_pk
-        to_do.actor = actor
-        to_do.action = action
-        if next_actor:
-            to_do.user = next_actor
-        to_do.priority = priority
-
-        return do_commit(to_do)
-
-    @classmethod
-    def object_notify(cls, obj, to_user=(), sender=None, **kwargs):
-
-        for user in to_user:
-            to_do = cls.add(obj_cls=obj.__class__.__name__, obj_pk=obj.id, obj=obj,
-                    action=kwargs.get("action"), next_actor=user, actor=sender)
-            cls.notify(user.id, to_do.id)
-
-    @classmethod
-    def delete(cls, obj_cls, obj_pk):
-        for to_do in models.TODO.query.filter(
-                        models.TODO.obj_cls == obj_cls).filter(
-                        models.TODO.obj_pk == obj_pk).all():
-            do_commit(to_do, "delete")
-
-    @classmethod
-    def notify(cls, user_id, to_do_id):
-        notifications.add(user_id, to_do_id)
-
-    @classmethod
-    def get_all_notify(cls, user_id):
-        notifies = notifications.get(user_id)
-        if notifies:
-            notifications.delete(user_id)
-            notifies = cls.get_messages(notifies)
-        return notifies
-
-    @classmethod
-    def get_messages(cls, id_list):
-        return [TODOWrapper(todo) for todo in
-                models.TODO.query.filter(models.TODO.id.in_(id_list)).all()]
-
     @property
     def create_date(self):
         return self.create_time.date()
 
-    def to_dict(self):
-        return {"create_time": str(self.create_time),
-                "author": self.actor.username,
-                "action": self.action, "obj_cls": self.obj_cls,
-                "obj_pk": self.obj_pk, "next_actor": self.user.username}
+
+def new_todo(whom, action, obj=None, msg="", sender=None, **kwargs):
+    """
+    告诉"whom"对"obj"执行"action" 
+    :param whom: who should be responsible for this todo
+    :type whom: models.User
+    :param str action: what should do
+    :param obj: action should be performed upon which
+    :param msg: supplementary message
+    :param sender: who send this message, if not specified, we regard SYSTEM
+        send this todo
+    :Param kwargs: supplementary information
+    """
+    do_commit(todo_factory.render(whom, action, obj, msg, sender, **kwargs))
+
+def notify(cls, user_id, to_do_id):
+    notifications.add(user_id, to_do_id)
+
+def remove_todo(action, obj_pk):
+    for to_do in models.TODO.query.filter(
+                    models.TODO.action==action).filter(
+                    models.TODO.obj_pk==obj_pk).all():
+        do_commit(to_do, "delete")
+
+class ToDoFactory(object):
+
+    def __init__(self):
+        self.__map = {}
+
+    def render(self, whom, action, obj, msg, sender, **kwargs):
+        return self.__map[action](whom, action, obj, msg, sender, **kwargs)
+
+    def upon(self, action):
+        def _(strategy):
+            self.__map[action] = strategy
+        return _
+
+todo_factory = ToDoFactory()
+
+def get_all_notify(user_id):
+    #id_list = notifications.get(user_id)
+    id_list = [1]
+    if id_list:
+        return [TODOWrapper(i) for i in models.TODO.query.filter(models.TODO.id.in_(id_list)).all()]
+    return []
+
+WEIGH_UNLOAD_TASK = u"weigh_unload_task"
+
+@todo_factory.upon(WEIGH_UNLOAD_TASK)
+def weigh_unload_task(whom, action, obj, msg, sender, **kwargs):
+    """
+    称重任务
+    """
+    from lite_mms.basemain import data_browser
+    msg = u'装卸工%s完成了一次来自%s(车牌号"%s")卸货任务，请称重！' % (obj.creator.username, obj.customer.name, obj.unload_session.plate) + (msg and " - " + msg)
+    return models.TODO(user=whom, action=action, obj_pk=obj.id, actor=sender, 
+                msg=msg, 
+                context_url=data_browser.get_form_url(obj.unload_session))
+    

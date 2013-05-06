@@ -1,6 +1,6 @@
 #-*- coding:utf-8 -*-
 from flask.ext.databrowser import action
-from flask import redirect, url_for
+from flask import redirect, url_for, request
 from flask.ext.login import current_user
 from lite_mms import constants
 from lite_mms.apis import wraps
@@ -9,7 +9,8 @@ from lite_mms.apis import wraps
 class ScheduleAction(action.ReadOnlyAction):
 
     def op_upon_list(self, objs, model_view):
-        return redirect(url_for("manufacture.schedule", _method="GET", work_command_id=[obj.id for obj in objs]))
+        return redirect(
+            url_for("manufacture.schedule", _method="GET", work_command_id=[obj.id for obj in objs], url=request.url))
 
     def test_enabled(self, model):
         if model.status in (constants.work_command.STATUS_DISPATCHING, constants.work_command.STATUS_REFUSED):

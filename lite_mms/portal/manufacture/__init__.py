@@ -40,7 +40,7 @@ _do_register(views.work_command_view)
 
 @manufacture_page.route("/")
 def index():
-    return redirect(url_for("manufacture.work_command_list"))
+    return redirect(url_for("manufacture.work_command_list", status__in_ex="(1, 8)"))
 
 
 @manufacture_page.route('/schedule', methods=['GET', 'POST'])

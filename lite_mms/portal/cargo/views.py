@@ -229,6 +229,7 @@ goods_receipt_entry_view = GoodsReceiptEntryModelView(GoodsReceiptEntry, u"收�
 @decorators.templated("/cargo/unload-task.html")
 def weigh_unload_task(id_):
     from lite_mms import apis
+    from lite_mms.apis import todo
     task = apis.cargo.get_unload_task(id_)
     if not task:
         abort(404)
@@ -247,15 +248,17 @@ def weigh_unload_task(id_):
             if weight < 0:
                 abort(403)
             task.update(weight=weight, product_id=form.product.data)
-            from lite_mms.apis.todo import TODOWrapper
-            TODOWrapper.delete("UnloadTask", task.id)
             from flask.ext.login import current_user
             fsm.fsm.reset_obj(task.unload_session)
             fsm.fsm.next(cargo_const.ACT_WEIGHT, current_user)
+            # delete todo
+            todo.remove_todo(todo.WEIGH_UNLOAD_TASK, id_)
             return redirect(unload_session_model_view.url_for_object(model=task.unload_session.model))
         else:
             if request.form.get("method") == "delete":
                 if task.delete():
+                    # delete todo
+                    todo.remove_todo(todo.WEIGH_UNLOAD_TASK, id_)
                     flash(u"删除卸货任务%d成功" % task.id)
                     return redirect(unload_session_model_view.url_for_object(model=task.unload_session.model))
             return render_template("validation-error.html", errors=form.errors,

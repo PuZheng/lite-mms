@@ -25,6 +25,7 @@
   {% block custom_external %}{% endblock %}
   <script type="text/javascript">
     $(function () {
+
       setTimeout(function () {
         $(".flash").fadeOut("slow")
       }, 3000);
@@ -52,27 +53,34 @@
     <link rel="stylesheet" href="{{ url_for("static", filename="css/jquery.pnotify.default.css") }}"/>
     <script type="text/javascript">
       $(function () {
+        $.pnotify.defaults.history = false
         var stack_bottomright = {"dir1": "up", "dir2": "left", "firstpos1": 25, "firstpos2": 25};
 
         function display(message){
-          return "在" + message.create_time + "由" + message.author + message.action + "了编号为" + message.obj_pk + "的" + message.obj_cls + "给您，请操作";
+          var ret = message["msg"];
+          if (message.context_url.length > 0) {
+            ret += sprintf('<a href="%s">开始&gt;&gt;</a>', message.context_url)
+          }
+          return ret;
         }
 
 
         function f() {
           $.getJSON('{{ url_for("ajax_new_message") }}', function (data) {
-            for (var i = 0; i < data.length; i++) {
+            var messages = data["messages"];
+            for (var i = 0; i < messages.length; i++) {
               $.pnotify({
                 title: '新待办事项',
-                text: display(data[i]),
+                text: display(messages[i]), 
                 addclass: "stack-bottomright",
                 stack: stack_bottomright
               });
             }
-            setTimeout(f, 60000);
+            var e = $('header a[href="/todo/todo-list"]');
+            e.html(e.html().replace(/待办事项(\(\d+\))?/, "待办事项("+data["total_cnt"]+")"));
+            setTimeout(f, 30000);
           })
         }
-
         f();
       })
     </script>

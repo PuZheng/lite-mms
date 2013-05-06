@@ -56,13 +56,15 @@ class CreateReceiptAction(ReadOnlyAction):
         if model.goods_receipt_list and all(
                 not gr.stale for gr in model.goods_receipt_list):
             return -2
+        elif not model.task_list:
+            return -3
         return 0
 
     def op(self, obj):
         obj.clean_goods_receipts()
 
     def get_forbidden_msg_formats(self):
-        return {-2: u"%s已生成收货单"}
+        return {-2: u"卸货会话%s已生成收货单", -3: u"卸货会话%s没有卸货任务，请先生成卸货任务"}
 
 class PrintGoodsReceipt(BaseAction):
 

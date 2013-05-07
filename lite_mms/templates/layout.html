@@ -98,6 +98,11 @@
 <header class="navbar navbar-inverse navbar-fixed-top">
   <div class="navbar-inner">
     <div class="container">
+      <button class="btn btn-navbar" data-target=".nav-collapse" data-toggle="collapse" type="button">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
       <nav class="nav-collapse">
         {% if current_user.is_authenticated() and nav_bar %}
           {{ nav_bar.as_ul("active", grouped=True)|safe }}

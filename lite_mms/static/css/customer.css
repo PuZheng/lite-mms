@@ -1,6 +1,13 @@
-body {
-    position: relative;
-    padding-top: 45px;
+@media (min-width: 1200px) {
+    .container-fluid:first-of-type {
+        padding-top: 45px !important;
+    }
+}
+
+@media (max-width: 979px) {
+    body{
+        padding: 0 !important;
+    }
 }
 
 .footer {

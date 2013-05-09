@@ -1,4 +1,4 @@
-@media (min-width: 1200px) {
+@media (min-width: 979px) {
     body {
         padding-top: 45px !important;
     }
@@ -11,9 +11,11 @@
 }
 
 @media (max-width: 979px) {
-    body {
-        padding: 0 !important;
-    }
+}
+
+.form-signin {
+    padding: 15px;
+    margin-top: 20px;
 }
 
 .form-signin .controls {
@@ -64,10 +66,6 @@ thead th {
     padding: 8px 0;
 }
 
-header.navbar {
-    margin-left: 0;
-    margin-right: 0;
-}
 
 header li.dropdown>a.dropdown-toggle {
     padding-left: 0px;

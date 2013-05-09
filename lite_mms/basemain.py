@@ -123,8 +123,8 @@ from lite_mms.permissions.order import view_order, schedule_order
 from lite_mms.permissions.work_command import view_work_command
 nav_bar.register(cargo_page, name=u"卸货会话", permissions=[CargoClerkPermission], group=u"卸货管理")
 nav_bar.register(gr_page, name=u"收货单", permissions=[CargoClerkPermission], group=u"卸货管理")
-nav_bar.register(order_page, default_url='/order/order-list', name=u"订单管理",
-                 permissions=[view_order])
+#nav_bar.register(order_page, default_url='/order/order-list', name=u"订单管理",
+                 #permissions=[view_order])
 nav_bar.register(order2_page, default_url='/order2/order-list?order_by=id&desc=1', name=u"订单管理(beta)",
                  permissions=[view_order])
 nav_bar.register(delivery_page, name=u'发货会话',

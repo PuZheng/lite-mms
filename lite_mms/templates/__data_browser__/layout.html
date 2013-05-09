@@ -1,0 +1,118 @@
+{% extends "__data_browser__/base_layout.html" %}
+
+{% block __data_browser__title_block %}
+  {{ titlename }} - 金禾域生产管理系统 
+{% endblock %}
+
+{% block __data_browser__customized_head_block %}
+<link rel="stylesheet" href="{{ url_for('static', filename="css/customer.css") }}">
+<script type="text/javascript">
+  $(function () {
+
+    setTimeout(function () {
+      $(".flash").fadeOut("slow")
+    }, 3000);
+    function my_matcher(term, text) {
+      return pinyin.getCamelChars(text).toUpperCase().indexOf(term.toUpperCase()) >= 0;
+    }
+
+    if ($("select").data("select2") == undefined || $("select").data("select2") == null) {
+      $("select").select2({
+        width: "element",
+        placeholder: "请选择",
+        matcher: my_matcher
+      });
+    } else {
+      $("select").each(function () {
+        $(this).data("select2").opts.placeholder = "请选择";
+        $(this).data("select2").opts.matcher = my_matcher;
+      });
+    }
+    $("[data-toggle=tooltip]").tooltip();
+    // 展示代办事项
+    $.pnotify.defaults.history = false;
+    var stack_bottomright = {"dir1": "up", "dir2": "left", "firstpos1": 25, "firstpos2": 25};
+
+    function display(message) {
+      var ret = message["msg"];
+      if (message.context_url.length > 0) {
+        ret += sprintf('<a href="%s">开始&gt;&gt;</a>', message.context_url)
+      }
+      return ret;
+    }
+    (function () {
+      $.getJSON('{{ url_for("ajax_new_message") }}', function (data) {
+          var messages = data["messages"];
+          for (var i = 0; i < messages.length; i++) {
+          $.pnotify({
+            title: '新待办事项',
+            text: display(messages[i]), 
+            addclass: "stack-bottomright",
+            stack: stack_bottomright
+            });
+          }
+        var e = $('header a[href="/todo/todo-list"]');
+        e.html(e.html().replace(/待办事项(\(\d+\))?/, "待办事项("+data["total_cnt"]+")"));
+        setTimeout(f, 30000);
+      })
+    })();
+  })
+</script>
+<style type="text/css">
+  .stack-bottomright {
+    /* These are just CSS default values to reset the pnotify CSS. */
+    right: auto;
+    top: auto;
+  }
+</style>
+{% endblock %}
+
+{% block __data_browser__nav_bar_block %}
+<header class="navbar navbar-inverse navbar-fixed-top">
+  <div class="navbar-inner">
+    <div class="container">
+      {% if current_user.is_authenticated() and nav_bar %}
+        <button class="btn btn-navbar" data-target=".nav-collapse" data-toggle="collapse" type="button">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <nav class="nav-collapse">
+          {{ nav_bar.as_ul("active", grouped=True)|safe }}
+          <form class="navbar-search pull-right form-search"
+                action="{{ url_for('search.search') }}" method="GET">
+            <div class="input-append">
+              <input class="search-query span2" type="text"
+                     placeholder="搜索..." name="content"
+                     {% if keywords %}value="{{ keywords }}"{% endif %}/>
+              <button class="btn btn-inverse">搜索</button>
+            </div>
+          </form>
+          <bold class="navbar-text pull-right">
+            {{ _("欢迎") }}
+            <mark><strong>{{ current_user.username }}</strong>
+            </mark>
+            {{ _("您是") }}
+            <strong>{{ current_user.group_name }}</strong>
+            <a href="{{ url_for('auth.logout') }}">{{ _("退出") }}</a>
+          </bold>
+        </nav>
+      {% else %}
+        <div class="brand">
+          LITE-MMS
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</header>
+{% endblock %}
+
+{% block __data_browser__footer_block %}
+<footer class="footer hidden-phone">
+  <div class="container">
+    <div class="muted">
+      copyright@ LITE-MMS
+    </div>
+  </div>
+</footer>
+{% endblock %}

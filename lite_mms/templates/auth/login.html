@@ -16,7 +16,7 @@
   </style>
 {% endblock %}
 {% block body %}
-  <div class="container">
+  <div class="container visible-desktop">
     <form class="alert alert-info form-horizontal form-signin" action="{{ url_for("auth.login") }}" method="POST">
     <h4>请登陆:</h4>
     {% if error %}
@@ -30,6 +30,30 @@
     {% if next_url %}
       <input type="hidden" name="next_url" value="{{ next_url }}">
     {% endif %}
+    </form>
+  </div>
+  <div class="container hidden-desktop">
+    {% if error %}
+      <div class="alert alert-error">{{ error }}</div>
+    {% endif %}
+    <form action="{{ url_for("auth.login") }}" class="alert alert-info form-horizontal" method="POST">
+      <div class="control-group">
+        <div class="controls">
+            <input type="text" name="username" id="username" required="required" placeholder="用户名" class="input-block-level"/>
+        </div>
+      </div>
+      <div class="control-group">
+        <div class="controls">
+            <input type="password" name="password" id="password" required="required" placeholder="密码" class="input-block-level"/>
+        </div>
+      </div>
+      <div class="control-group">
+        <div class="controls">
+          <button class="btn btn-block btn-large btn-success">
+            <i class="icon-signin"></i>&nbsp;登录
+          </button>
+        </div>
+      </div>
     </form>
   </div>
 {% endblock %}

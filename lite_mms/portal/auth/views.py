@@ -9,11 +9,12 @@ from flask.ext.login import login_user, logout_user, login_required, \
     current_user
 from lite_mms.exceptions import AuthenticateFailure
 
+
 @auth.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "GET":
         if current_user.is_anonymous():
-            return render_template("auth/login.html",titlename=u'登录')
+            return render_template("auth/login.html", titlename=u'登录')
         return redirect("/")
     else:
         class LoginForm(Form):
@@ -27,20 +28,18 @@ def login():
             password = form.password.data
             try:
                 import lite_mms.apis as apis
+
                 user = apis.auth.authenticate(username, password)
             except AuthenticateFailure:
-                return render_template("auth/login.html",
-                                       error=_(u"用户名或者密码错误"))
+                return render_template("auth/login.html", error=_(u"用户名或者密码错误"), titlename=u"请登录")
             if not login_user(user):
-                return render_template("auth/login.html",
-                                       error=_(u"登陆失败"))
+                return render_template("auth/login.html", error=_(u"登陆失败"), titlename=u"请登录")
 
-            identity_changed.send(current_app._get_current_object(),
-                                  identity=Identity(user.id))
+            identity_changed.send(current_app._get_current_object(), identity=Identity(user.id))
             return redirect(form.next_url.data or "/")
         else:
-            return render_template("auth/login.html",
-                             error=_(u"请输入用户名及密码"))
+            return render_template("auth/login.html", error=_(u"请输入用户名及密码"), titlename=u"请登录")
+
 
 @auth.route("/logout")
 @login_required

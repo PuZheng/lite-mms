@@ -64,7 +64,15 @@ thead th {
     padding: 8px 0;
 }
 
+header.navbar {
+    margin-left: 0;
+    margin-right: 0;
+}
+
 header li.dropdown>a.dropdown-toggle {
     padding-left: 0px;
 }
 
+.icon-off {
+    color: red;
+}

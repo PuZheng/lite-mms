@@ -12,10 +12,10 @@ from flask.ext.databrowser import ModelView, DataBrowser
 
 class OrderModelView(ModelView):
 
-    list_template = "order2/order-list.haml"
+    list_template = "order2/order-list.html"
 
     def try_create(self):
-        raise PermissionDenied()
+        raise PermissionDenied
 
     can_batchly_edit = False
 
@@ -61,7 +61,7 @@ class OrderModelView(ModelView):
     
     def preprocess(self, model):
         from lite_mms import apis
-        return apis.OrderWrapper(model)
+        return apis.order.OrderWrapper(model)
 
 
     def try_view(self, objs=None):

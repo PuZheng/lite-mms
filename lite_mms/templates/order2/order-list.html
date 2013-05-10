@@ -1,0 +1,132 @@
+{% extends "__data_browser__/list.html" %}
+{% block __data_browser__hint_block %}
+    {% if hint_message %}
+        <div class="alert alert-info">
+            * {{ hint_message }}
+        </div>
+    {% endif %}
+{% endblock %}
+{% block __customized_css__ %}
+    <link type="text/css" href="{{ url_for("static", filename="css/jquery-ui-1.10.1.custom.min.css") }}" rel="stylesheet" />
+{% endblock %}
+{% block __data_browser__custom_external_block %}
+    {{ super() }}
+    <script>
+        $(function () {
+            $('#team_work_reports').dialog({
+                modal:true,
+                autoOpen:false,
+                closeOnEscape:true,
+                stack:true,
+                buttons:{
+                    "关闭":function () {
+                        $(this).dialog("close");
+                    }
+                }
+            });
+            $('#store_bill_list').dialog({
+                modal:true,
+                autoOpen:false,
+                closeOnEscape:true,
+                stack:true,
+                buttons:{
+                    "关闭":function () {
+                        $(this).dialog("close");
+                    }
+                }
+            });
+            $('#team_manufacturing_reports').dialog({
+                modal:true,
+                autoOpen:false,
+                closeOnEscape:true,
+                stack:true,
+                buttons:{
+                    "关闭":function () {
+                        $(this).dialog("close");
+                    }
+                }
+            });
+            $("tr.alert-warning").attr("title", "此订单没有完善，请先完善订单");
+            $("tr.alert-error").attr("title", "此订单请加急完成");
+            $(".abnormal-weight").attr("title", "此订单的收货重量大于未分配重量，生产中重量，已发货重量，待发货重量之和");
+            $(".done-weight-link").click(function() {
+                var dialog = $('#team_work_reports');
+                var order_id = $(this).next().val();
+                $.getJSON("/order2/ajax/team-work-reports?order_id="+order_id,
+                    function (data) {
+                        dialog.children("ul").empty()
+                        $.each(data, function (idx, v) {
+                            dialog.children("ul").append('<li>' + v[0] + "班组: " + v[1] + "(公斤)" + '</li>');
+                        });
+                        dialog.dialog("open");
+                    }).error(function (data) {
+                        alert(data.responseText);
+                    });
+            });
+            $(".deliverable-weight-link").click(function() {
+                var dialog = $('#store_bill_list');
+                var order_id = $(this).next().val();
+                $.getJSON("/order2/ajax/store-bill-list?order_id="+order_id,
+                    function (data) {
+                        dialog.children("ul").empty()
+                        $.each(data, function (idx, v) {
+                            var s = '<li>' + v.id + "(" + v.product;
+                            if (v.spec) {
+                                s += ":" + v.spec;
+                            }
+                            if (v.type) {
+                                s += ":" + v.type;
+                            }
+                            s += ")" + " - " + v.weight + "(公斤)";
+                            if (!v.printed) {
+                                s += "(未打印)";
+                            }
+                            dialog.children("ul").append(s + '</li>');
+                        });
+                        dialog.dialog("open");
+                    }).error(function (data) {
+                        alert(data.responseText);
+                    });
+            });
+            $(".manufacturing-weight-link").click(function() {
+                var dialog = $('#store_bill_list');
+                var order_id = $(this).next().val();
+                $.getJSON("/order2/ajax/team-manufacturing-reports?order_id="+order_id,
+                    function (data) {
+                        dialog.children("ul").empty()
+                        $.each(data, function (idx, v) {
+                            var s = '<li>' +  v.team + " - " + v.weight + "(公斤)" + "</li>";
+                            dialog.children("ul").append(s);
+                        });
+                        dialog.dialog("open");
+                    }).error(function (data) {
+                        alert(data.responseText);
+                    });
+            });
+            var customer_abbr_map = {{ customer_abbr_map|tojson|safe }};
+            $('select[name="goods_receipt.customer"]').select2({
+                matcher: function (term, text) {
+                    if (text in customer_abbr_map)
+                        return customer_abbr_map[text].indexOf(term)==0
+                    else {
+                        return true;
+                    }
+                }
+            });
+        });
+    </script>
+    <script src="{{ url_for("static", filename="js/jquery-ui-1.10.1.custom.min.js") }}" />
+{% endblock %}
+{% block body %}
+    {{ sub_nav_bar.as_ul("active")|safe }}
+    {{ super() }}
+    <div id="team_work_reports" title="班组生产汇总">
+        <ul>        </ul>
+    </div>
+    <div id="store_bill_list" title="仓单列表">
+        <ul>        </ul>
+    </div>
+    <div id="team_manufacturing_reports" title="班组实时生产情况">
+        <ul>        </ul>
+    </div>
+{% endblock %}

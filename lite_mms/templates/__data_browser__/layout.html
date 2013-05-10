@@ -9,6 +9,7 @@
 {% if g.request_from_mobile %}
 <script type="text/javascript" src="{{ url_for("static", filename="js/cordova-2.5.0.js") }}"></script>
 {% endif %}
+  <script type="text/javascript" src="{{ url_for("static", filename="js/JSPinYin.js") }}"></script>
 <script type="text/javascript">
   {% if g.request_from_mobile %}
   function onLoad() {

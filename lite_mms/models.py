@@ -879,3 +879,6 @@ class Config(db.Model):
     property_name = db.Column(db.String(64), nullable=False)
     property_desc = db.Column(db.String(64))
     property_value = db.Column(db.String(64), nullable=False)
+
+    def __unicode__(self):
+        return self.property_name

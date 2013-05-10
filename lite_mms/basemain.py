@@ -2,7 +2,7 @@
 import os
 from sqlalchemy.exc import SQLAlchemyError
 from flask import Flask, render_template, request
-from flaskext.babel import Babel, gettext
+from flask.ext.babel import Babel, gettext
 from flask.ext.nav_bar import FlaskNavBar
 
 app = Flask(__name__, instance_relative_config=True)
@@ -225,7 +225,7 @@ def permission_denied(error):
         return redirect(url_for("error", msg=u'请联系管理员获得访问权限!',
                                 back_url=request.args.get("url")))
         #如果用户还未登录则转向到登录面
-    return render_template("auth/login.haml",
+    return render_template("auth/login.html",
                            error=gettext(u"请登录"), next_url=request.url)
 
 

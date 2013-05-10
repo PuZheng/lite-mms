@@ -75,3 +75,25 @@ header li.dropdown>a.dropdown-toggle {
     color: red;
 }
 
+.context-menu {
+    position: fixed;
+    width: 100%;
+    background-color: #ECF0F1;
+    min-height: 10%;
+    margin-left: 0px;
+    margin-right: 0px;
+    text-align: center;
+    opacity: 1.0;
+}
+.context-menu .btn-group {
+    height: 100%;
+    margin-bottom:0;
+}
+
+.context-menu .btn-group a {
+    color: black;
+    background-color: #ECF0F1;
+    text-align: center;
+    vertical-align: middle;
+    height: 100%;
+}

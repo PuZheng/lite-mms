@@ -151,6 +151,11 @@ class UnloadSessionModelView(ModelView):
                 InputColumnSpec("with_person", label=u"驾驶室是否有人"),
                 "gross_weight"]
 
+    def edit_hint_message(self,obj, read_only=False):
+        if read_only:
+            return u"已关闭的卸货会话不能修改"
+        else:
+            return super(UnloadSessionModelView, self).edit_hint_message(obj, read_only)
 
     __form_columns__ = OrderedMultiDict()
     __form_columns__[u"详细信息"] = [
@@ -222,6 +227,17 @@ class GoodsReceiptEntryModelView(ModelView):
             return any(_try_edit(obj) for obj in objs)
         else:
             return _try_edit(objs)
+
+    def edit_hint_message(self, obj, read_only=False):
+        if read_only:
+            if obj.goods_receipt.stale:
+                return u"收货单过时，不能修改"
+            elif obj.goods_receipt.order:
+                return u"收货单已生成订单，不能修改"
+            else:
+                return u""
+        else:
+            return super(GoodsReceiptEntryModelView, self).edit_hint_message(obj, read_only)
 
 goods_receipt_entry_view = GoodsReceiptEntryModelView(GoodsReceiptEntry, u"收货单产品")
 

@@ -12,25 +12,43 @@
   <script type="text/javascript" src="{{ url_for("static", filename="js/JSPinYin.js") }}"></script>
 <script type="text/javascript">
   {% if g.request_from_mobile %}
-  function onLoad() {
+    function onLoad() {
       document.addEventListener("deviceready", onDeviceReady, false);
-  }
-  window.onload = onLoad();
+    }
+    window.onload = onLoad();
 
-  function onDeviceReady() {
+    function exitApp() {
+      function onConfirm(buttonIndex) {
+        if (buttonIndex == 1) {
+          navigator.app.exitApp();
+        }
+      }
+      navigator.notification.confirm("{{ _("确认退出吗?") }}", onConfirm, "退出?", "退出,取消");
+    }
+
+    function onBackKeyDown() {
+      if (window.location.pathname.lastIndexOf("-list") >= 0) {
+        exitApp()
+      } else {
+        navigator.app.backHistory();
+      }
+    }
+    function onDeviceReady() {
       document.addEventListener("menubutton", onMenuKeyDown, false);
-  }
+      document.addEventListener("backbutton", onBackKeyDown, false)
+    }
 
-  function onMenuKeyDown() {
-    $(".context-menu").toggle();
-  }
+    function onMenuKeyDown() {
+      $(".context-menu").toggle();
+    }
 
-  $(function () {
-    $(".context-menu").hide();
-    $(".context-menu .refresh-btn").click(function (e) {
-     location.reload();
-     return false;
-     });
+    $(function () {
+      $(".context-menu").hide();
+      $(".context-menu .refresh-btn").click(function (e) {
+        location.reload();
+        return false;
+      });
+      $(".context-menu .exit-btn").click(function(){exitApp()});
     });
   {% endif %}
   $(function () {
@@ -66,23 +84,26 @@
       }
       return ret;
     }
+
     function f() {
       $.getJSON('{{ url_for("ajax_new_message") }}', function (data) {
-          var messages = data["messages"];
-          for (var i = 0; i < messages.length; i++) {
+        var messages = data["messages"];
+        for (var i = 0; i < messages.length; i++) {
           $.pnotify({
             title: '新待办事项',
-            text: display(messages[i]), 
+            text: display(messages[i]),
             addclass: "stack-bottomright",
             stack: stack_bottomright
-            });
-          }
+          });
+        }
         var e = $('header a[href="/todo/todo-list"]');
-        e.html(e.html().replace(/待办事项(\(\d+\))?/, "待办事项("+data["total_cnt"]+")"));
+        e.html(e.html().replace(/待办事项(\(\d+\))?/, "待办事项(" + data["total_cnt"] + ")"));
         setTimeout(f, 30000);
       })
     };
-    f();
+    {% if current_user.is_authenticated()%}
+      f();
+    {% endif %}
   })
 </script>
 <style type="text/css">
@@ -172,6 +193,11 @@
       <i class="icon-refresh"></i>
       <span>刷新</span>
     </a>
+  </div>
+  <div class="btn-group">
+    <button class="btn btn-large exit-btn">
+      <i class="icon-home"></i>&nbsp;退出
+    </button>
   </div>
 </div>
 {% endif %}

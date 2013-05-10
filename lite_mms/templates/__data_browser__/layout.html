@@ -17,15 +17,18 @@
     }
     window.onload = onLoad();
 
-    function onBackKeyDown() {
+    function exitApp() {
       function onConfirm(buttonIndex) {
         if (buttonIndex == 1) {
           navigator.app.exitApp();
         }
       }
+      navigator.notification.confirm("{{ _("确认退出吗?") }}", onConfirm, "退出?", "退出,取消");
+    }
 
+    function onBackKeyDown() {
       if (window.location.pathname.lastIndexOf("-list") >= 0) {
-        navigator.notification.confirm("{{ _("确认退出吗?") }}", onConfirm, "退出?", "退出,取消");
+        exitApp()
       } else {
         navigator.app.backHistory();
       }
@@ -45,6 +48,7 @@
         location.reload();
         return false;
       });
+      $(".context-menu .exit-btn").click(function(){exitApp()});
     });
   {% endif %}
   $(function () {
@@ -189,6 +193,11 @@
       <i class="icon-refresh"></i>
       <span>刷新</span>
     </a>
+  </div>
+  <div class="btn-group">
+    <button class="btn btn-large exit-btn">
+      <i class="icon-home"></i>&nbsp;退出
+    </button>
   </div>
 </div>
 {% endif %}

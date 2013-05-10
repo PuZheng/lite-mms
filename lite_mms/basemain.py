@@ -224,6 +224,6 @@ def permission_denied(error):
                                 back_url=request.args.get("url")))
         #如果用户还未登录则转向到登录面
     return render_template("auth/login.html",
-                           error=gettext(u"请登录"), next_url=request.url)
+                           error=gettext(u"请登录"), next_url=request.url, titlename=u"请登录")
 
 

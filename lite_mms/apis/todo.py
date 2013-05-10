@@ -51,8 +51,7 @@ class ToDoFactory(object):
 todo_factory = ToDoFactory()
 
 def get_all_notify(user_id):
-    #id_list = notifications.get(user_id)
-    id_list = [1]
+    id_list = notifications.get(user_id)
     if id_list:
         return [TODOWrapper(i) for i in models.TODO.query.filter(models.TODO.id.in_(id_list)).all()]
     return []

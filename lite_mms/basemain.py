@@ -162,8 +162,6 @@ app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 app.jinja_env.globals['permissions'] = permissions
 app.jinja_env.filters['_datetimeformat'] = datetimeformat
 app.jinja_env.add_extension("jinja2.ext.loopcontrols")
-from hamlish_jinja import HamlishTagExtension
-app.jinja_env.add_extension(HamlishTagExtension)
 
 from flask.ext.principal import (identity_loaded, RoleNeed, UserNeed,
                                  PermissionDenied, Permission)

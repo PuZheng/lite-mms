@@ -1,6 +1,7 @@
 <!--仓单的打印预览界面-->
 {% extends "layout.html" %}
-{% block custom_external %}
+{% block __data_browser__custom_external_block %}
+  {{ super() }}
   <link rel="stylesheet" href="{{ url_for('static', filename="css/customer.css") }}" media="print">
 
   <script src="{{ url_for("static", filename="js/jquery-printarea.js") }}" type="text/javascript"></script>

@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
-{% block custom_external %}
+{% block __data_browser__custom_external_block %}
+  {{ super() }}
   <script type="text/javascript">
     $(function () {
       $("input[name='check_all']").click(function () {

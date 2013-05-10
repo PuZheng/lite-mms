@@ -73,12 +73,12 @@ class Test(BaseTest):
                 assert 302 == rv.status_code
                 task = apis.cargo.get_unload_task(task.id)
                 assert 2000 == task.weight
-                rv = c.post(url_for('cargo.goods_receipt'),
+                rv = c.post(url_for('goods_receipt.goods_receipt'),
                             data={"customer": customer.id, "order_type": 1,
                                   "unload_session_id": task.session_id})
                 goods_receipt = apis.cargo.get_goods_receipts_list(task.session_id)[0]
                 assert 302 == rv.status_code
-                rv = c.post(url_for("cargo.goods_receipt", id_=goods_receipt.id))
+                rv = c.post(url_for("goods_receipt.goods_receipt", id_=goods_receipt.id))
                 assert 302 == rv.status_code
                 ord_list, count = apis.order.get_order_list(
                     undispatched_only=True)

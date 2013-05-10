@@ -38,7 +38,7 @@ class OrderView(ModelView):
         else:
             return []
 
-    list_template = "schedule/order-list.haml"
+    list_template = "schedule/order-list-ex.html"
 
     __list_columns__ = ["id", "customer_order_number",
                         "goods_receipt.customer", "net_weight",

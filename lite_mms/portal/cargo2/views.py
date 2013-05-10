@@ -30,7 +30,7 @@ g_status_desc = {
 
 class UnloadSessionModelView(ModelView):
 
-    list_template = "cargo2/unload-session-list.haml"
+    list_template = "cargo2/unload-session-list.html"
 
     as_radio_group = True
     can_batchly_edit = False
@@ -136,7 +136,7 @@ class UnloadSessionModelView(ModelView):
                                    css_class="input-small uneditable-input"), 
                         InputColumnSpec("create_time", label=u"创建时间", read_only=True),
                         InputColumnSpec("finish_time", label=u"结束时间", read_only=True),
-                        PlaceHolderColumnSpec(col_name="task_list", label=u"卸货任务", template_fname="cargo2/unload-task-list-snippet.haml"), 
+                        PlaceHolderColumnSpec(col_name="task_list", label=u"卸货任务", template_fname="cargo2/unload-task-list-snippet.html"),
                         ListColumnSpec(col_name="log_list", label=u"日志", formatter=format_log),
                         ]
 
@@ -174,7 +174,7 @@ class GoodsReceiptView(ModelView):
             return render_template("validation-error.html", hint_message=form.errors.values()[0][0], 
                                    back_url=unload_session_model_view.url_for_list(),
                                    nav_bar=nav_bar), 403
-        return render_template("cargo2/goods-receipt.haml", form=form, nav_bar=nav_bar, purl=unload_session_model_view.url_for_list())
+        return render_template("cargo2/goods-receipt.html", form=form, nav_bar=nav_bar, purl=unload_session_model_view.url_for_list())
 
 goods_receipt_model_view = GoodsReceiptView(GoodsReceipt, u"收货单")
 
@@ -187,7 +187,7 @@ class plateModelView(ModelView):
 plate_model_view = plateModelView(Plate, u"车辆")
 
 @cargo2_page.route("/weigh-unload-task/<int:id_>", methods=["GET", "POST"])
-@decorators.templated("/cargo2/unload-task.haml")
+@decorators.templated("/cargo2/unload-task.html")
 def weigh_unload_task(id_):
     task = apis.cargo.get_unload_task(id_)
     if not task:

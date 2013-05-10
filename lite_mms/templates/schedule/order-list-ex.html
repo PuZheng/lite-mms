@@ -1,0 +1,72 @@
+{% extends "__data_browser__/list.html" %}
+{% block __data_browser__hint_block %}
+    {% if hint_message %}
+        <div class="alert alert-info">
+            * {{ hint_message }}
+        </div>
+    {% endif %}
+{% endblock %}
+{% block __data_browser__custom_external_block %}
+    {{ super() }}
+    <script>
+        $(function () {
+            $('#work_command_list').dialog({
+                modal:true,
+                autoOpen:false,
+                closeOnEscape:true,
+                stack:true,
+                buttons:{
+                    "关闭":function () {
+                        $(this).dialog("close");
+                    }
+                }
+            });
+            $(".manufacturing-weight-link").click(function() {
+                var dialog = $('#work_command_list');
+                var order_id = $(this).next().val();
+                $.getJSON("/order2/ajax/team-manufacturing-reports?order_id="+order_id,
+                    function (data) {
+                        dialog.children("ul").empty()
+                        $.each(data, function (idx, v) {
+                            var s = '<li>' +  v.team + " - " + v.weight + "(公斤)" + "</li>";
+                            dialog.children("ul").append(s);
+                        });
+                        dialog.dialog("open");
+                    }).error(function (data) {
+                        alert(data.responseText);
+                    });
+            });
+            $(".to-work-weight-link").click(function(){
+                var dialog = $('#work_command_list');
+                var order_id = $(this).next().val();
+                $.getJSON("/schedule2/ajax/to_dispatch?order_id="+order_id,
+                    function (data) {
+                        dialog.children("ul").empty();
+                        $.each(data, function (idx, v) {
+                            var s = '<li>工单号' +  v.id + ": " + v.status + " - " + v.weight + "(公斤)" + "</li>";
+                            dialog.children("ul").append(s);
+                        });
+                        dialog.dialog("open");
+                    }).error(function (data) {
+                        alert(data.responseText);
+                    });
+            });
+            var customer_abbr_map = {{ customer_abbr_map|tojson|safe }};
+            $('select[name="goods_receipt.customer"]').select2({
+                matcher: function (term, text) {
+                    if (text in customer_abbr_map)
+                        return customer_abbr_map[text].indexOf(term)==0
+                    else {
+                        return true;
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}
+{% block body %}
+    {{ super() }}
+    <div id="work_command_list" title="工单列表">
+        <ul>        </ul>
+    </div>
+{% endblock %}

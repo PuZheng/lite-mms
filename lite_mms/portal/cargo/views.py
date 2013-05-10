@@ -164,7 +164,7 @@ class UnloadSessionModelView(ModelView):
     ]
     __form_columns__[u"收货任务列表"] = [
         PlaceHolderColumnSpec(col_name="task_list", label=u"",
-                              template_fname="cargo/unload-task-list-snippet.haml")]
+                              template_fname="cargo/unload-task-list-snippet.html")]
     __form_columns__[u"收货单列表"] = [PlaceHolderColumnSpec(col_name="goods_receipt_list", label=u"", template_fname="cargo/gr-list-snippet.html")]
 
     def get_edit_help(self, objs):

@@ -23,7 +23,7 @@
         <td>{% if gr.stale %}<div class="text-error">是</div>{% else %}否{% endif %}</td>
         <td>
           {% if gr.order_unwrapped %}
-            <a href="{{ url_for("order.order", id_=gr.order.id)}}">{{gr.order.customer_order_number}}</a>
+            <a href="{{ url_for("order.order", id_=gr.order.id, url=request.url)}}">{{gr.order.customer_order_number}}</a>
           {% else %}
             --
           {% endif %}

@@ -5,6 +5,7 @@
 """
 import json
 from flask import Blueprint, url_for, render_template, abort, request
+from flask.ext.principal import PermissionDenied
 from lite_mms import constants
 from lite_mms.permissions import SchedulerPermission
 from lite_mms.utilities import get_or_404
@@ -68,7 +69,7 @@ class OrderView(ModelView):
     def preprocess(self, model):
         from lite_mms import apis
 
-        return apis.OrderWrapper(model)
+        return apis.order.OrderWrapper(model)
 
     from datetime import datetime, timedelta
 
@@ -88,16 +89,16 @@ class OrderView(ModelView):
         if row.urgent and row.remaining_weight > 0:
             return {"class": "text-error", "title": u"该订单加急，请尽快处理"}
 
-    can_create = can_edit = False
+    def try_create(self):
+        raise PermissionDenied
+
+    def try_edit(self, processed_objs=None):
+        raise PermissionDenied
 
     __sortable_columns__ = ["id", "customer_order_number",
                             "goods_receipt.customer", "create_time"]
 
     __default_order__ = ("id", "desc")
-
-    from .action import schedule_action
-
-    __customized_actions__ = [schedule_action]
 
     def edit_view(self, id_):
         order = self.get_one(id_)

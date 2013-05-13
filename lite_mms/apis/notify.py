@@ -25,10 +25,10 @@ class Notification(object):
         q.appendleft(val)
         return 1
 
-    def get(self, key):
+    def pop(self, key):
         """Retrieves a value of the `key` from the internal dictionary."""
         try:
-            q = self.dictionary[key]
+            q = self.dictionary.pop(key)
             return list(q)
         except KeyError:
             return []

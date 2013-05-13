@@ -4,7 +4,7 @@ import json
 
 from flask import request, abort, url_for, render_template, flash, g
 from flask.ext.databrowser import ModelView
-from flask.ext.databrowser.action import DeleteAction
+from flask.ext.databrowser.action import DeleteAction, BaseAction, ReadOnlyAction
 from flask.ext.databrowser.column_spec import (InputColumnSpec, ColumnSpec,
                                                PlaceHolderColumnSpec, ListColumnSpec,
                                                TableColumnSpec, ImageColumnSpec)
@@ -129,6 +129,11 @@ class UnloadSessionModelView(ModelView):
 
     def get_customized_actions(self, model_list=None):
         from lite_mms.portal.cargo.actions import CloseAction, OpenAction, CreateReceiptAction
+        class _PrintGoodsReceipt(ReadOnlyAction):
+            def op_upon_list(self, objs, model_list):
+                obj = objs[0]
+                return redirect(url_for("goods_receipt.goods_receipts_batch_print", id_=",".join([str(gr.id) for gr in obj.goods_receipt_list]), url=request.url))
+
         action_list = []
         if model_list is None: # for list
             action_list.extend([CloseAction(u"关闭"), OpenAction(u"打开"), CreateReceiptAction(u"生成收货单")])
@@ -139,6 +144,8 @@ class UnloadSessionModelView(ModelView):
                 else:
                     action_list.append(CloseAction(u"关闭"))
                 action_list.append(CreateReceiptAction(u"生成收货单"))
+                if model_list[0].goods_receipt_list:
+                    action_list.append(_PrintGoodsReceipt(u"打印收货单"))
         return action_list
 
     def get_list_help(self):

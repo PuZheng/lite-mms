@@ -24,9 +24,10 @@ def new_todo(whom, action, obj=None, msg="", sender=None, **kwargs):
         send this todo
     :Param kwargs: supplementary information
     """
-    do_commit(todo_factory.render(whom, action, obj, msg, sender, **kwargs))
+    todo = do_commit(todo_factory.render(whom, action, obj, msg, sender, **kwargs))
+    notify(whom.id, todo.id)
 
-def notify(cls, user_id, to_do_id):
+def notify(user_id, to_do_id):
     notifications.add(user_id, to_do_id)
 
 def remove_todo(action, obj_pk):
@@ -51,7 +52,7 @@ class ToDoFactory(object):
 todo_factory = ToDoFactory()
 
 def get_all_notify(user_id):
-    id_list = notifications.get(user_id)
+    id_list = notifications.pop(user_id)
     if id_list:
         return [TODOWrapper(i) for i in models.TODO.query.filter(models.TODO.id.in_(id_list)).all()]
     return []

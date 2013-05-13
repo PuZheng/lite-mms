@@ -361,8 +361,11 @@ class ConsignmentModelView(ModelView):
     __column_formatters__ = {"actor": lambda v, obj: v if v is None else u""}
 
     __column_filters__ = [filters.EqualTo("customer", name=u"是"),
-                          filters.Only("is_paid", display_col_name=u"只查询未付款发货单", test=lambda col: col == False,
-                                       notation=u"is_paid", default_value=False)]
+                          filters.Only("is_paid", display_col_name=u"只展示未付款发货单", test=lambda col: col == False,
+                                       notation=u"is_paid", default_value=False),
+                          filters.Only("MSSQL_ID", display_col_name=u"只展示未导出发货单", test=lambda col: col == None,
+                                       notation="is_export", default_value=False)
+                          ]
 
     __form_columns__ = [ColumnSpec("consignment_id"), ColumnSpec("actor"), 
                        ColumnSpec("create_time"), ColumnSpec("customer"),

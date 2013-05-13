@@ -1,6 +1,6 @@
 {% set total_weight = field_value|sum("org_weight") %}
 {% if field_value|length %}
-  <a href="#modal_{{ obj.id }}_wcl" role="button" data-toggle="modal">{{ total_weight }}公斤</a>
+  <a href="#modal_{{ obj.id }}_wcl" role="button" data-toggle="modal">{{ total_weight }}</a>
   <div class="modal hide fade" id="modal_{{ obj.id }}_wcl">
     <div class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>

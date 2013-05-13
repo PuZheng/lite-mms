@@ -360,13 +360,17 @@ class ConsignmentModelView(ModelView):
         return []
     
     def get_list_columns(self):
-        return ["id", "consignment_id", "delivery_session", "actor", "create_time", "customer",
+        return ["id", "consignment_id", "delivery_session", "actor", "create_time", "customer", "pay_in_cash",
                 ColumnSpec("is_paid", formatter=lambda v, obj: u"是" if v else u"否"), ColumnSpec("notes", trunc=8)]
 
-    __column_labels__ = {"consignment_id": u"发货单编号", "customer": u"客户", 
-                         "delivery_session": u"发货会话", "actor": u"发起人", "create_time": u"创建时间", "is_paid": u"是否支付", "notes": u"备注"}
 
-    __column_formatters__ = {"actor": lambda v, obj: u"--" if v is None else v}
+
+    __column_labels__ = {"consignment_id": u"发货单编号", "customer": u"客户", "delivery_session": u"车牌号",
+                         "actor": u"发起人", "delivery_session.id": u"发货会话", "create_time": u"创建时间", "is_paid": u"是否支付",
+                         "pay_in_cash": u"支付方式", "notes": u"备注"}
+
+    __column_formatters__ = {"actor": lambda v, obj: u"--" if v is None else v,
+                             "pay_in_cash": lambda v, obj: u"现金支付" if v else u"月结"}
 
     __column_filters__ = [filters.EqualTo("customer", name=u"是"),
                           filters.Only("is_paid", display_col_name=u"只展示未付款发货单", test=lambda col: col == False,
@@ -375,26 +379,43 @@ class ConsignmentModelView(ModelView):
                                        notation="is_export", default_value=False)
                           ]
 
-    __form_columns__ = OrderedDict()
-    __form_columns__[u"发货单详情"] = [
-            ColumnSpec("consignment_id"), 
-            ColumnSpec("actor"), 
-            ColumnSpec("create_time"), 
+    def get_form_columns(self, obj=None):
+        self.__form_columns__ = OrderedDict()
+        self.__form_columns__[u"发货单详情"] = [
+            ColumnSpec("consignment_id"),
+            ColumnSpec("actor"),
+            ColumnSpec("create_time"),
             ColumnSpec("customer"),
-            ColumnSpec("delivery_session"), 
+            ColumnSpec("delivery_session"),
             ColumnSpec("notes", trunc=24),
             ColumnSpec("is_paid", formatter=lambda v, obj: u"是" if v else u"否"),
         ]
-    __form_columns__[u"产品列表"] = [
-        TableColumnSpec("product_list_unwrapped", label="", col_specs=[
-            "id", 
-            ColumnSpec("product", label=u"产品", formatter=lambda v, obj: unicode(v.product_type)+"-"+unicode(v)),
-            ColumnSpec("weight", label=u"重量"),
-            ColumnSpec("returned_weight", label=u"退镀重量"),
-            ColumnSpec("team", label=u"生产班组"),
-        ],
-        sum_fields=["weight", "returned_weight"]) 
-    ]
+        if obj and self.preprocess(obj).measured_by_weight:
+            col_specs = ["id", ColumnSpec("product", label=u"产品",
+                                          formatter=lambda v, obj: unicode(v.product_type) + "-" + unicode(v)),
+                         ColumnSpec("weight", label=u"重量"),
+                         ColumnSpec("returned_weight",
+                                    label=u"退镀重量"),
+                         ColumnSpec("team", label=u"生产班组")]
+
+        else:
+            col_specs = ["id", ColumnSpec("product", label=u"产品",
+                                          formatter=lambda v, obj: unicode(v.product_type) + "-" + unicode(v)),
+                         ColumnSpec("weight", label=u"重量"),
+                         ColumnSpec("spec", label=u"型号"),
+                         ColumnSpec("type", label=u"规格"),
+                         ColumnSpec("quantity", label=u"数量"),
+                         ColumnSpec("unit", label=u"单位"),
+                         ColumnSpec("returned_weight",
+                                    label=u"退镀重量"),
+                         ColumnSpec("team", label=u"生产班组")]
+
+        self.__form_columns__[u"产品列表"] = [
+                TableColumnSpec("product_list_unwrapped", label="", col_specs=col_specs,
+                                sum_fields=["weight", "returned_weight"])
+            ]
+        return self.__form_columns__
+
 
     def preprocess(self, obj):
         return apis.delivery.ConsignmentWrapper(obj)
@@ -404,8 +425,8 @@ consigment_model_view = ConsignmentModelView(Consignment, u"发货单")
 
 
 class ConsignmentProductModelView(ModelView):
-
-    __column_labels__ = {"product": u"产品", "weight": u"净重", "returned_weight": u"退镀重量", "team": u"班组"}
+    __column_labels__ = {"product": u"产品", "weight": u"净重", "returned_weight": u"退镀重量", "team": u"班组",
+                         "quantity": u"数量", "unit": u"单位", "spec": u"型号", "type": u"规格"}
     
     def try_edit(self, processed_objs=None):
         from lite_mms import permissions
@@ -422,7 +443,11 @@ class ConsignmentProductModelView(ModelView):
         return super(ConsignmentProductModelView, self).edit_hint_message(obj, read_only)
 
     def get_form_columns(self, obj=None):
-        return [InputColumnSpec("product", group_by=Product.product_type), "weight", "returned_weight", "team"]
+        if obj and apis.delivery.ConsignmentWrapper(obj.consignment).measured_by_weight:
+            return [InputColumnSpec("product", group_by=Product.product_type), "weight", "returned_weight", "team"]
+        else:
+            return [InputColumnSpec("product", group_by=Product.product_type), "weight", "quantity", "unit", "spec",
+                    "type", "returned_weight", "team"]
 
 consigment_product_model_view = ConsignmentProductModelView(ConsignmentProduct, u"发货单项")
     

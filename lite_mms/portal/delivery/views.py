@@ -5,6 +5,7 @@
 import json
 from socket import error
 import time
+from collections import OrderedDict
 from flask import request, abort, render_template, url_for, flash
 from lite_mms.utilities import _, do_commit
 from werkzeug.utils import redirect
@@ -14,6 +15,7 @@ from lite_mms.permissions import CargoClerkPermission, AccountantPermission
 from lite_mms.utilities import decorators, Pagination
 from lite_mms.database import db
 import lite_mms.constants as constants
+import lite_mms.apis as apis
 
 
 @delivery_page.route('/')
@@ -319,16 +321,22 @@ def index():
 
 from flask.ext.principal import PermissionDenied
 from flask.ext.databrowser import ModelView
-from flask.ext.databrowser.column_spec import ColumnSpec, InputColumnSpec, LinkColumnSpec
-from flask.ext.databrowser.action import BaseAction
+from flask.ext.databrowser.column_spec import ColumnSpec, InputColumnSpec, LinkColumnSpec, TableColumnSpec
+from flask.ext.databrowser.action import BaseAction, ReadOnlyAction
 from flask.ext.databrowser import filters
-from lite_mms.models import Consignment
+from lite_mms.models import Consignment, ConsignmentProduct, Product
 
 class PayAction(BaseAction):
 
     def op(self, obj):
         obj.is_paid = True
         db.session.commit()
+
+class PreviewConsignment(ReadOnlyAction):
+    
+    def op_upon_list(self, objs, model_view):
+        return redirect(url_for("delivery.consignment_preview", id_=objs[0].id, url=request.url))
+
 
 class ConsignmentModelView(ModelView):
 
@@ -338,14 +346,14 @@ class ConsignmentModelView(ModelView):
     as_radio_group = True
 
     def get_customized_actions(self, processed_objs=None):
+        ret = [PreviewConsignment(u"打印预览")]
         from lite_mms.permissions.roles import AccountantPermission
         if AccountantPermission.can() and isinstance(processed_objs, (list, tuple)):
             if any(obj.pay_in_cash and not obj.is_paid for obj in processed_objs):
-                return [PayAction(u"支付")]
-        return []
+                ret.append(PayAction(u"支付"))
+        return ret
 
     def __list_filters__(self):
-        ## TODO, only show to accountant
         from lite_mms.permissions.roles import AccountantPermission
         if AccountantPermission.can():
             return [filters.EqualTo("pay_in_cash", value=True)]
@@ -358,7 +366,7 @@ class ConsignmentModelView(ModelView):
     __column_labels__ = {"consignment_id": u"发货单编号", "customer": u"客户", 
                          "delivery_session": u"发货会话", "actor": u"发起人", "create_time": u"创建时间", "is_paid": u"是否支付", "notes": u"备注"}
 
-    __column_formatters__ = {"actor": lambda v, obj: v if v is None else u""}
+    __column_formatters__ = {"actor": lambda v, obj: u"--" if v is None else v}
 
     __column_filters__ = [filters.EqualTo("customer", name=u"是"),
                           filters.Only("is_paid", display_col_name=u"只展示未付款发货单", test=lambda col: col == False,
@@ -367,11 +375,46 @@ class ConsignmentModelView(ModelView):
                                        notation="is_export", default_value=False)
                           ]
 
-    __form_columns__ = [ColumnSpec("consignment_id"), ColumnSpec("actor"), 
-                       ColumnSpec("create_time"), ColumnSpec("customer"),
-                       ColumnSpec("delivery_session"), ColumnSpec("notes", trunc=24),
-                        ColumnSpec("is_paid", formatter=lambda v, obj: u"是" if v else u"否")]
+    __form_columns__ = OrderedDict()
+    __form_columns__[u"发货单详情"] = [
+            ColumnSpec("consignment_id"), 
+            ColumnSpec("actor"), 
+            ColumnSpec("create_time"), 
+            ColumnSpec("customer"),
+            ColumnSpec("delivery_session"), 
+            ColumnSpec("notes", trunc=24),
+            ColumnSpec("is_paid", formatter=lambda v, obj: u"是" if v else u"否"),
+        ]
+    __form_columns__[u"产品列表"] = [
+        TableColumnSpec("product_list_unwrapped", label="", col_specs=[
+            "id", 
+            ColumnSpec("product", label=u"产品", formatter=lambda v, obj: unicode(v.product_type)+"-"+unicode(v)),
+            ColumnSpec("weight", label=u"重量"),
+            ColumnSpec("returned_weight", label=u"退镀重量"),
+            ColumnSpec("team", label=u"生产班组"),
+        ],
+        sum_fields=["weight", "returned_weight"]) 
+    ]
 
+    def preprocess(self, obj):
+        return apis.delivery.ConsignmentWrapper(obj)
 
 
 consigment_model_view = ConsignmentModelView(Consignment, u"发货单")
+
+
+class ConsignmentProductModelView(ModelView):
+
+    __column_labels__ = {"product": u"产品", "weight": u"净重", "returned_weight": u"退镀重量", "team": u"班组"}
+    
+    def try_edit(self, processed_objs=None):
+        from lite_mms import permissions
+        permissions.CargoClerkPermission.test() 
+        if processed_objs[0].consignment.MSSQL_ID is not None:
+            raise PermissionDenied
+
+    def get_form_columns(self):
+        return [InputColumnSpec("product", group_by=Product.product_type), "weight", "returned_weight", "team"]
+
+consigment_product_model_view = ConsignmentProductModelView(ConsignmentProduct, u"发货单项")
+    

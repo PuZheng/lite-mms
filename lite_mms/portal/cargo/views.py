@@ -275,12 +275,14 @@ def weigh_unload_task(id_):
             fsm.fsm.next(cargo_const.ACT_WEIGHT, current_user)
             # delete todo
             todo.remove_todo(todo.WEIGH_UNLOAD_TASK, id_)
-            return redirect(unload_session_model_view.url_for_object(model=task.unload_session.model))
+            return redirect(
+                request.form.get("url", unload_session_model_view.url_for_object(model=task.unload_session.model)))
         else:
             if request.form.get("method") == "delete":
                 if task.delete():
                     flash(u"删除卸货任务%d成功" % task.id)
-                    return redirect(unload_session_model_view.url_for_object(model=task.unload_session.model))
+                    return redirect(request.form.get("url", unload_session_model_view.url_for_object(
+                        model=task.unload_session.model)))
             return render_template("validation-error.html", errors=form.errors,
                                    back_url=unload_session_model_view.url_for_object(model=task.unload_session.model),
                                    nav_bar=nav_bar), 403

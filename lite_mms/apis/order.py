@@ -166,6 +166,13 @@ class OrderWrapper(ModelWrapper):
             sub_order.to_deliver_weight for sub_order in self.sub_order_list)
 
     @cached_property
+    def to_deliver_store_bill_list(self):
+        import itertools
+
+        return list(
+            itertools.chain.from_iterable(sub_order.to_deliver_store_bill_list for sub_order in self.sub_order_list))
+
+    @cached_property
     def manufacturing_weight(self):
         """
         生产中重量
@@ -173,6 +180,13 @@ class OrderWrapper(ModelWrapper):
         return sum(
             sub_order.manufacturing_weight for sub_order in self.sub_order_list
         )
+
+    @cached_property
+    def manufacturing_work_command_list(self):
+        import itertools
+
+        return list(itertools.chain.from_iterable(
+            sub_order.manufacturing_work_command_list for sub_order in self.sub_order_list))
 
     @property
     def can_refine(self):
@@ -230,7 +244,6 @@ class OrderWrapper(ModelWrapper):
             0].order_type if self.sub_order_list else constants \
             .EXTRA_ORDER_TYPE
 
-
     def update(self, **kwargs):
         for k, v in kwargs.items():
             if hasattr(self.model, k) and v not in (None, u''):
@@ -252,6 +265,10 @@ class OrderWrapper(ModelWrapper):
             return url_for("schedule.order", id_=self.id, url=request.url)
         else:
             return ""
+    @cached_property
+    def qi_work_command_list(self):
+        import itertools
+        return list(itertools.chain.from_iterable(sub_order.qi_work_command_list for sub_order in self.sub_order_list))
 
 
 
@@ -403,11 +420,11 @@ class SubOrderWrapper(ModelWrapper):
 
     @cached_property
     def to_deliver_weight(self):
-        return sum(
-            store_bill.weight for store_bill in self.store_bill_list if not
-            store_bill.delivery_task_id
-        )
+        return sum(store_bill.weight for store_bill in self.to_deliver_store_bill_list)
 
+    @cached_property
+    def to_deliver_store_bill_list(self):
+        return [store_bill for store_bill in self.store_bill_list if not store_bill.delivery_task_id]
 
 def get_order_type_list():
     t1 = dict(id=constants.STANDARD_ORDER_TYPE,

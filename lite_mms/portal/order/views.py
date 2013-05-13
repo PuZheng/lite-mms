@@ -132,6 +132,7 @@ def order(id_):
         method = request.form.get("method", "save")
         if "save" == method:
             inst.update(customer_order_number=request.form["customer_order_number"])
+            flash(u"订单修改订单编号成功!")
         else:
             inst.update(refined=True)
         url = request.form.get("url")

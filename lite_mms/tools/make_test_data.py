@@ -216,6 +216,11 @@ class InitializeTestDB(Command):
         consignment.actor = cc
         consignment.notes = "".join(str(i) for i in xrange(100))
         do_commit(consignment)
+        cp = ConsignmentProduct(product1, delivery_task, consignment)
+        cp.weight = 100
+        cp.returned_weight = 50
+        do_commit(cp)
+
 
 if __name__ == "__main__":
     from distutils.dist import Distribution

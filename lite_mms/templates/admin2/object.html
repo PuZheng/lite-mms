@@ -22,7 +22,7 @@
             {% for nav_link in group.nav_links %}
               {% if nav_link.enabler() %}
               <li class="text-center active">
-              <a href="#" ><strong>{{nav_link.anchor}}</strong></a>
+              <a href="{{nav_link.url}}" ><strong>{{nav_link.anchor}}</strong></a>
               </li>
               {% else %}
               <li class="text-center">

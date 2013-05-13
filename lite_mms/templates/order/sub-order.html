@@ -32,7 +32,7 @@
         $("#product").append('<option value="' + entry.id + '">' + entry.name + '</option>');
       });
       var product_id = {{ sub_order.product.id }};
-      $("#product").val(product_id);
+      $("#product").val(product_id).trigger("change");
       $("#product_type").change(function (ui) {
         var selected_product_type = $("#product_type").val();
         $("#product").empty();

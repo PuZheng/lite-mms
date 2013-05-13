@@ -9,9 +9,10 @@ from flask import request, abort, render_template, url_for, flash
 from lite_mms.utilities import _, do_commit
 from werkzeug.utils import redirect
 from wtforms import Form, IntegerField, validators, HiddenField, TextField
-from lite_mms.portal.delivery import delivery_page
+from lite_mms.portal.delivery import delivery_page, consignment_page
 from lite_mms.permissions import CargoClerkPermission, AccountantPermission
 from lite_mms.utilities import decorators, Pagination
+from lite_mms.database import db
 import lite_mms.constants as constants
 
 
@@ -310,3 +311,67 @@ def consignment_product(id_):
                                                    id_=current_product.consignment.id))
     else:
         return _(u"没有该产品编号:%d" + id_), 404
+
+
+@consignment_page.route("/")
+def index():
+    return redirect(consigment_model_view.url_for_list(order_by="create_time", desc=1))
+
+from flask.ext.principal import PermissionDenied
+from flask.ext.databrowser import ModelView
+from flask.ext.databrowser.column_spec import ColumnSpec, InputColumnSpec, LinkColumnSpec
+from flask.ext.databrowser.action import BaseAction
+from flask.ext.databrowser import filters
+from lite_mms.models import Consignment
+
+class PayAction(BaseAction):
+
+    def op(self, obj):
+        obj.is_paid = True
+        db.session.commit()
+
+class ConsignmentModelView(ModelView):
+
+    def try_create(self):
+        raise PermissionDenied
+
+    as_radio_group = True
+
+    def get_customized_actions(self, processed_objs=None):
+        from lite_mms.permissions.roles import AccountantPermission
+        if AccountantPermission.can() and isinstance(processed_objs, (list, tuple)):
+            if any(obj.pay_in_cash and not obj.is_paid for obj in processed_objs):
+                return [PayAction(u"支付")]
+        return []
+
+    def __list_filters__(self):
+        ## TODO, only show to accountant
+        from lite_mms.permissions.roles import AccountantPermission
+        if AccountantPermission.can():
+            return [filters.EqualTo("pay_in_cash", value=True)]
+        return []
+    
+    def get_list_columns(self):
+        return ["id", "consignment_id", "delivery_session", "actor", "create_time", "customer",
+                ColumnSpec("is_paid", formatter=lambda v, obj: u"是" if v else u"否"), ColumnSpec("notes", trunc=8)]
+
+    __column_labels__ = {"consignment_id": u"发货单编号", "customer": u"客户", 
+                         "delivery_session": u"发货会话", "actor": u"发起人", "create_time": u"创建时间", "is_paid": u"是否支付", "notes": u"备注"}
+
+    __column_formatters__ = {"actor": lambda v, obj: v if v is None else u""}
+
+    __column_filters__ = [filters.EqualTo("customer", name=u"是"),
+                          filters.Only("is_paid", display_col_name=u"只展示未付款发货单", test=lambda col: col == False,
+                                       notation=u"is_paid", default_value=False),
+                          filters.Only("MSSQL_ID", display_col_name=u"只展示未导出发货单", test=lambda col: col == None,
+                                       notation="is_export", default_value=False)
+                          ]
+
+    __form_columns__ = [ColumnSpec("consignment_id"), ColumnSpec("actor"), 
+                       ColumnSpec("create_time"), ColumnSpec("customer"),
+                       ColumnSpec("delivery_session"), ColumnSpec("notes", trunc=24),
+                        ColumnSpec("is_paid", formatter=lambda v, obj: u"是" if v else u"否")]
+
+
+
+consigment_model_view = ConsignmentModelView(Consignment, u"发货单")

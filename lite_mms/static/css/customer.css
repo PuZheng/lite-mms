@@ -1,13 +1,37 @@
-@media (min-width: 1200px) {
-    .container-fluid:first-of-type {
+@media (min-width: 979px) {
+    body {
         padding-top: 45px !important;
     }
+
+    .form-signin {
+        margin: 10px auto;
+        width: 30em;
+    }
+
 }
 
 @media (max-width: 979px) {
-    body{
-        padding: 0 !important;
+    body {
+        padding-top: 60px;
     }
+    .page-body {
+        padding-bottom: 60px;
+    }
+}
+
+
+.navbar-fixed-top{
+    position: fixed;
+    margin: 0;
+}
+
+.form-signin {
+    padding: 15px;
+    margin-top: 20px;
+}
+
+.form-signin .controls {
+    margin: 0;
 }
 
 .footer {
@@ -30,17 +54,6 @@ thead th {
     background: #e0e0e0;
 }
 
-.form-signin {
-    margin: 10px auto;
-    width: 30em;
-}
-
-.form-signin input[type="text"], .form-signin input[type="password"], .form-signin input[type="submit"] {
-    margin-top: 15px;
-    font-size: 18px;
-    height: auto;
-}
-
 .required {
     color: #800;
 }
@@ -52,9 +65,10 @@ thead th {
         border-collapse: collapse;
     }
 
-    .table-bordered td, .table-bordered th{
+    .table-bordered td, .table-bordered th {
         border: 1px solid #000000;
     }
+
     .page-next:not(:last-child) {
         page-break-after: always;
     }
@@ -65,4 +79,33 @@ thead th {
 }
 
 
+header li.dropdown>a.dropdown-toggle {
+    padding-left: 0px;
+}
 
+.icon-off {
+    color: red;
+}
+
+.context-menu {
+    position: fixed;
+    width: 100%;
+    background-color: #ECF0F1;
+    min-height: 10%;
+    margin-left: 0px;
+    margin-right: 0px;
+    text-align: center;
+    opacity: 1.0;
+}
+.context-menu .btn-group {
+    height: 100%;
+    margin-bottom:0;
+}
+
+.context-menu .btn-group a {
+    color: black;
+    background-color: #ECF0F1;
+    text-align: center;
+    vertical-align: middle;
+    height: 100%;
+}

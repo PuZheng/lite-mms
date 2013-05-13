@@ -97,11 +97,11 @@ class TestOrder(BaseTest):
                             data=dict(username="cc", password="cc"))
                 assert rv.status_code == 302
 
-                rv = c.post(url_for("cargo.goods_receipt"),
+                rv = c.post(url_for("goods_receipt.goods_receipt"),
                             data=dict(customer=self.customer1.id,
                                       unload_session_id=self.us1.id))
                 assert 302 == rv.status_code
-                rv = c.post(url_for("cargo.goods_receipt"),
+                rv = c.post(url_for("goods_receipt.goods_receipt"),
                             data=dict(customer=self.customer2.id,
                                       unload_session_id=self.us1.id))
                 assert 302 == rv.status_code
@@ -110,10 +110,10 @@ class TestOrder(BaseTest):
                 self.goods_receipt1 = _list[0]
                 self.goods_receipt2 = _list[1]
                 rv = c.post(
-                    url_for("cargo.goods_receipt", id_=self.goods_receipt1.id))
+                    url_for("goods_receipt.goods_receipt", id_=self.goods_receipt1.id))
                 assert 302 == rv.status_code
                 rv = c.post(
-                    url_for("cargo.goods_receipt", id_=self.goods_receipt2.id))
+                    url_for("goods_receipt.goods_receipt", id_=self.goods_receipt2.id))
                 assert 302 == rv.status_code
                 ord_list, count = order.get_order_list()
                 assert count == 2

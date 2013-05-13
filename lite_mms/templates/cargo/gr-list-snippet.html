@@ -14,7 +14,7 @@
     {% for gr in field_value %}
       <tr>
         <td>
-          <a href="{{ url_for("cargo.goods_receipt", id_=gr.id, url=request.url) }}">{{ gr.receipt_id }}</a>
+          <a href="{{ url_for("goods_receipt.goods_receipt", id_=gr.id, url=request.url) }}">{{ gr.receipt_id }}</a>
         </td>
         <td>
           <a href="{{ model_view.data_browser.get_form_url(gr.customer) }}">{{ gr.customer.name }}</a>
@@ -23,7 +23,7 @@
         <td>{% if gr.stale %}<div class="text-error">是</div>{% else %}否{% endif %}</td>
         <td>
           {% if gr.order_unwrapped %}
-            <a href="{{ model_view.data_browser.get_form_url(gr.order)}}">{{gr.order.customer_order_number}}</a>
+            <a href="{{ url_for("order.order", id_=gr.order.id, url=request.url)}}">{{gr.order.customer_order_number}}</a>
           {% else %}
             --
           {% endif %}

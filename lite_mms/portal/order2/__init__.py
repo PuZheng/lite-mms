@@ -1,50 +1,44 @@
 # -*- coding: utf-8 -*-
 from flask import Blueprint, request, url_for
 from flask.ext.principal import PermissionDenied
-from lite_mms.permissions import CargoClerkPermission,AdminPermission
+from lite_mms.permissions import CargoClerkPermission, AdminPermission
 
-order2_page = Blueprint("order2", __name__, static_folder="static",
-    template_folder="templates")
+order2_page = Blueprint("order2", __name__, static_folder="static", template_folder="templates")
 
 from .filters import category_filter
 
-from flask.ext.databrowser import ModelView, DataBrowser
+from flask.ext.databrowser import ModelView
+from flask.ext.databrowser.column_spec import PlaceHolderColumnSpec
+
 
 class OrderModelView(ModelView):
 
-    list_template = "order2/order-list.haml"
+    list_template = "order2/order-list.html"
 
     def try_create(self):
-        raise PermissionDenied()
+        raise PermissionDenied
 
-    can_batchly_edit = False
-
-    __list_columns__ = ["id", "customer_order_number", "goods_receipt.customer", "net_weight", "remaining_weight", "manufacturing_weight", "qi_weight", "to_deliver_weight", "done_work_weight", "delivered_weight", 
-     "create_time", "goods_receipt", "urgent", "refined"] 
+    __list_columns__ = ["id", "customer_order_number", "goods_receipt.customer", "net_weight","remaining_weight",
+                        PlaceHolderColumnSpec(col_name="manufacturing_work_command_list", label=u"生产中重量", template_fname="order/todo-work-command-list-snippet.html", doc=u"若大于0,请敦促车间生产"),
+                        PlaceHolderColumnSpec(col_name="qi_work_command_list", label=u"待质检重量", template_fname="order/qi-list-snippet.html"),
+                        PlaceHolderColumnSpec(col_name="done_work_command_list", label=u"已完成重量", template_fname="order/done-work-command-list-snippet.html", doc=u"指订单下所有是最后一道工序的工单,这类工单的工序后质量之和"),
+                        PlaceHolderColumnSpec(col_name="to_deliver_store_bill_list", label=u"待发货重量", template_fname="order/store-bill-list-snippet.html"),
+                        "delivered_weight", "create_time", "goods_receipt", "urgent", "refined"]
 
     __sortable_columns__ = ["id", "customer_order_number", "goods_receipt.customer", "create_time", "goods_receipt"]
 
-    __column_labels__ = {"customer_order_number": u"订单号", "goods_receipt.customer": u"客户",
-        "create_time": u"创建时间", "goods_receipt": u"收货单", "net_weight": u"收货", "remaining_weight": u"待调度", 
-        "manufacturing_weight": u"生产中", "qi_weight": u"待质检", "done_work_weight": u"产 量", "delivered_weight": u"已发货", "to_deliver_weight": u"待发货", "refined": u"完善", "urgent": u"加急", 
-        "category": u"类型",
-        }
+    __column_labels__ = {"customer_order_number": u"订单号", "goods_receipt.customer": u"客户", "create_time": u"创建时间",
+                         "goods_receipt": u"收货单", "net_weight": u"收货重量", "remaining_weight": u"待调度重量",
+                         "delivered_weight": u"已发货重量", "refined": u"完善", "urgent": u"加急",
+                         "category": u"类型", }
 
-
-    __column_docs__ = {
-        "remaining_weight": u"若大于0,请敦促调度员排产",
-        "manufacturing_weight": u"若大于0,请敦促车间生产",
-        "done_work_weight": u"指订单下所有是最后一道工序的工单,这类工单的工序后质量之和",
-    }
+    __column_docs__ = {"remaining_weight": u"若大于0,请敦促调度员排产"}
 
     __column_formatters__ = {"urgent": lambda v, obj: u"是" if v else u"否", 
         "customer_order_number": lambda v, obj: ("" if not obj.warning else '<i class="icon-exclamation-sign"></i>') + v + (u"<b>(退货)</b>" if any(so.returned for so in obj.sub_order_list) else ""), 
         "remaining_weight": lambda v, obj: unicode(v + obj.to_work_weight),
-        "manufacturing_weight": lambda v, obj: v and (u'<a href="#" class="manufacturing-weight-link" >%d</a><input type="hidden" value="%d" />' % (v, obj.id)),
-        "to_deliver_weight": lambda v, obj: v and (u'<a href="#" class="deliverable-weight-link" >%d</a><input type="hidden" value="%d" />' % (v, obj.id)),
-        "refined": lambda v, obj: u"是" if v else u"否", 
+        "refined": lambda v, obj: u"是" if v else u"否",
         "create_time": lambda v, obj: v.strftime("%m-%d %H") + u"点", 
-        "done_work_weight": lambda v, obj: v and (u'<a href="#" class="done-weight-link" >%d</a><input type="hidden" value="%d" />' % (v, obj.id)),
         }
 
     from flask.ext.databrowser import filters                             
@@ -61,7 +55,7 @@ class OrderModelView(ModelView):
     
     def preprocess(self, model):
         from lite_mms import apis
-        return apis.OrderWrapper(model)
+        return apis.order.OrderWrapper(model)
 
 
     def try_view(self, objs=None):
@@ -71,14 +65,13 @@ class OrderModelView(ModelView):
     from lite_mms.portal.order2.actions import dispatch_action, mark_refined_action, account_action
     __customized_actions__ = [dispatch_action, mark_refined_action, account_action]
 
-    def patch_row_css(self, idx, row):
+    def patch_row_attr(self, idx, row):
         if not row.refined:
-            return "alert alert-warning"
-        elif row.urgent:
-            return "alert alert-error"
+            return {"class":"alert alert-warning", "title":u"此订单没有完善，请先完善订单"}
+        elif row.urgent and row.remaining_quantity:
+            return {"class":"alert alert-error", "title": u"此订单请加急完成"}
         elif row.warning:
-            return "abnormal-weight"
-        return ""
+            return {"title": u"此订单的收货重量大于未分配重量，生产中重量，已发货重量，待发货重量之和"}
 
     def url_for_object(self, model, **kwargs):
         if model:
@@ -124,7 +117,8 @@ sub_nav_bar.register(lambda: order_model_view.url_for_list(order_by="id", desc="
         u"仅展示可发货订单", enabler=lambda: request.args.get("category", "")==str(category_filter.DELIVERABLE_ONLY))
 sub_nav_bar.register(lambda: order_model_view.url_for_list(order_by="id", desc="1", category=category_filter.ACCOUNTABLE_ONLY),
         u"仅展示可盘点订单", enabler=lambda: request.args.get("category", "")==str(category_filter.ACCOUNTABLE_ONLY))
-sub_nav_bar.register(lambda: url_for("order2.warning_order_list"), u"仅展示告警订单", enabler=lambda: request.path=="warning-order-list")
+# sub_nav_bar.register(lambda: url_for("order2.warning_order_list"), u"仅展示告警订单", enabler=lambda: request.path=="warning-order-list")
+
 
 def hint_message(model_view):
     

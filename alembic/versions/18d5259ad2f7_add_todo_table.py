@@ -19,14 +19,13 @@ def upgrade():
         "TB_TODO", 
         sa.Column("id", sa.Integer, primary_key=True),
         sa.Column("user_id", sa.Integer, sa.ForeignKey("TB_USER.id")),
-        sa.Column("obj_cls", sa.String(64)),
         sa.Column("obj_pk", sa.String(64)),
         sa.Column("create_time", sa.DateTime, default=datetime.now),
         sa.Column("actor_id", sa.Integer, sa.ForeignKey("TB_USER.id")),
         sa.Column("action", sa.String(64)),
         sa.Column("priority", sa.Integer),
-        sa.Column("msg", sa.String(128)))
-
+        sa.Column("msg", sa.String(128)),
+        sa.Column("context_url", sa.String(256)))
 
 def downgrade():
     op.drop_table("TB_TODO")

@@ -693,6 +693,7 @@ class Consignment(db.Model):
     delivery_session = db.relationship("DeliverySession",
                                        backref="consignment_list")
     actor_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
+    actor = db.relationship("User")
     create_time = db.Column(db.DateTime, default=datetime.now)
     customer_id = db.Column(db.Integer, db.ForeignKey("TB_CUSTOMER.id"))
     customer = db.relationship("Customer")
@@ -856,14 +857,12 @@ class Log(db.Model):
         self.create_time.strftime("%Y-%m-%d %H:%M:%S"), self.actor.username,
         self.obj_cls, self.obj, self.action)
 
-
 class TODO(db.Model):
     __tablename__ = "TB_TODO"
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
     user = db.relationship("User", primaryjoin="TODO.user_id==User.id")
-    obj_cls = db.Column(db.String(64))
     obj_pk = db.Column(db.String(64))
     create_time = db.Column(db.DateTime, default=datetime.now)
     actor_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
@@ -871,6 +870,7 @@ class TODO(db.Model):
     action = db.Column(db.String(64))
     priority = db.Column(db.Integer)
     msg = db.Column(db.String(128))
+    context_url = db.Column(db.String(256))
 
 class Config(db.Model):
     __tablename__ = "TB_CONFIG"
@@ -879,3 +879,6 @@ class Config(db.Model):
     property_name = db.Column(db.String(64), nullable=False)
     property_desc = db.Column(db.String(64))
     property_value = db.Column(db.String(64), nullable=False)
+
+    def __unicode__(self):
+        return self.property_name

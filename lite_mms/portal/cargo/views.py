@@ -5,8 +5,8 @@ import json
 from flask import request, abort, url_for, render_template, flash
 from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.action import DeleteAction
-from flask.ext.databrowser.column_spec import (InputColumnSpec, ColumnSpec, 
-                                               PlaceHolderColumnSpec, ListColumnSpec, 
+from flask.ext.databrowser.column_spec import (InputColumnSpec, ColumnSpec,
+                                               PlaceHolderColumnSpec, ListColumnSpec,
                                                TableColumnSpec, ImageColumnSpec)
 
 from flask.ext.principal import PermissionDenied
@@ -61,15 +61,15 @@ class UnloadSessionModelView(ModelView):
             if v.stale:
                 ret += u'<small class="text-error"> (过期)</small>'
             return ret
-        return ["id", "plate_", "create_time", "finish_time", "with_person", "status", 
+        return ["id", "plate_", "create_time", "finish_time", "with_person", "status",
                 ListColumnSpec("customer_list_unwrapped", label=u"客 户", compressed=True),
-                ListColumnSpec("goods_receipt_list_unwrapped", 
-                               label=u"收货单", 
-                               compressed=True, 
+                ListColumnSpec("goods_receipt_list_unwrapped",
+                               label=u"收货单",
+                               compressed=True,
                                item_col_spec=ColumnSpec("", formatter=gr_item_formatter)),
                ]
 
-    __column_labels__ = {"id": u"编号", "plate_": u"车辆", "create_time": u"创建时间", "finish_time": u"结束时间", 
+    __column_labels__ = {"id": u"编号", "plate_": u"车辆", "create_time": u"创建时间", "finish_time": u"结束时间",
                          "with_person": u"驾驶室", "status": u"状态", "goods_receipt_list": u"收货单", "gross_weight": u"净重"}
 
     def patch_row_attr(self, idx, obj):
@@ -93,7 +93,7 @@ class UnloadSessionModelView(ModelView):
     __column_formatters__ = {
         "create_time": lambda v, obj: v.strftime("%m月%d日 %H点").decode("utf-8"),
         "finish_time": lambda v, obj: v.strftime("%m月%d日 %H点").decode("utf-8") if v else "--",
-        "with_person": lambda v, obj: u'有人' if v else u'无人', 
+        "with_person": lambda v, obj: u'有人' if v else u'无人',
         "status": lambda v, obj: cargo_const.desc_status(v),
     }
 
@@ -101,12 +101,12 @@ class UnloadSessionModelView(ModelView):
 
     __sortable_columns__ = ["id", "plate", "create_time", "finish_time"]
 
-    from flask.ext.databrowser import filters                             
-    from datetime import datetime, timedelta                              
-    today = datetime.today()                                              
-    yesterday = today.date()                                                 
-    week_ago = (today - timedelta(days=7)).date()                         
-    _30days_ago = (today - timedelta(days=30)).date()      
+    from flask.ext.databrowser import filters
+    from datetime import datetime, timedelta
+    today = datetime.today()
+    yesterday = today.date()
+    week_ago = (today - timedelta(days=7)).date()
+    _30days_ago = (today - timedelta(days=30)).date()
 
     __column_filters__ = [filters.BiggerThan("create_time", name=u"在", default_value=str(yesterday),
                                              options=[(yesterday, u'一天内'), (week_ago, u'一周内'), (_30days_ago, u'30天内')]),
@@ -151,12 +151,17 @@ class UnloadSessionModelView(ModelView):
                 InputColumnSpec("with_person", label=u"驾驶室是否有人"),
                 "gross_weight"]
 
+    def edit_hint_message(self,obj, read_only=False):
+        if read_only:
+            return u"已关闭的卸货会话不能修改"
+        else:
+            return super(UnloadSessionModelView, self).edit_hint_message(obj, read_only)
 
     __form_columns__ = OrderedMultiDict()
     __form_columns__[u"详细信息"] = [
         InputColumnSpec("plate_"),
         InputColumnSpec("with_person", label=u"驾驶室是否有人"),
-        ColumnSpec("status", label=u"状态", formatter=lambda v, obj: '<strong>' + cargo_const.desc_status(v) + '</strong>', 
+        ColumnSpec("status", label=u"状态", formatter=lambda v, obj: '<strong>' + cargo_const.desc_status(v) + '</strong>',
                    css_class="uneditable-input"),
         InputColumnSpec("create_time", label=u"创建时间", read_only=True),
         InputColumnSpec("finish_time", label=u"结束时间", read_only=True),
@@ -164,7 +169,7 @@ class UnloadSessionModelView(ModelView):
     ]
     __form_columns__[u"收货任务列表"] = [
         PlaceHolderColumnSpec(col_name="task_list", label=u"",
-                              template_fname="cargo/unload-task-list-snippet.haml")]
+                              template_fname="cargo/unload-task-list-snippet.html")]
     __form_columns__[u"收货单列表"] = [PlaceHolderColumnSpec(col_name="goods_receipt_list", label=u"", template_fname="cargo/gr-list-snippet.html")]
 
     def get_edit_help(self, objs):
@@ -176,12 +181,12 @@ class UnloadSessionModelView(ModelView):
 unload_session_model_view = UnloadSessionModelView(UnloadSession, u"卸货会话")
 
 class plateModelView(ModelView):
-    
+
     can_edit = False
-    create_template = "cargo/plate.html" 
-    
+    create_template = "cargo/plate.html"
+
     __create_columns__ = __form_columns__ = [
-        InputColumnSpec("name", 
+        InputColumnSpec("name",
                         doc=u'车牌号的形式应当是"省份缩写+字母+空格+五位数字或字母"',
                         validators=[validators.Regexp(u'^[\u4E00-\u9FA3][a-z]\s*[a-z0-9]{5}$', flags=re.IGNORECASE|re.U, message=u"格式错误")]),
     ]
@@ -223,12 +228,24 @@ class GoodsReceiptEntryModelView(ModelView):
         else:
             return _try_edit(objs)
 
+    def edit_hint_message(self, obj, read_only=False):
+        if read_only:
+            if obj.goods_receipt.stale:
+                return u"收货单过时，不能修改"
+            elif obj.goods_receipt.order:
+                return u"收货单已生成订单，不能修改"
+            else:
+                return u""
+        else:
+            return super(GoodsReceiptEntryModelView, self).edit_hint_message(obj, read_only)
+
 goods_receipt_entry_view = GoodsReceiptEntryModelView(GoodsReceiptEntry, u"收货单产品")
 
 @cargo_page.route("/weigh-unload-task/<int:id_>", methods=["GET", "POST"])
 @decorators.templated("/cargo/unload-task.html")
 def weigh_unload_task(id_):
     from lite_mms import apis
+    from lite_mms.apis import todo
     task = apis.cargo.get_unload_task(id_)
     if not task:
         abort(404)
@@ -247,15 +264,17 @@ def weigh_unload_task(id_):
             if weight < 0:
                 abort(403)
             task.update(weight=weight, product_id=form.product.data)
-            from lite_mms.apis.todo import TODOWrapper
-            TODOWrapper.delete("UnloadTask", task.id)
             from flask.ext.login import current_user
             fsm.fsm.reset_obj(task.unload_session)
             fsm.fsm.next(cargo_const.ACT_WEIGHT, current_user)
+            # delete todo
+            todo.remove_todo(todo.WEIGH_UNLOAD_TASK, id_)
             return redirect(unload_session_model_view.url_for_object(model=task.unload_session.model))
         else:
             if request.form.get("method") == "delete":
                 if task.delete():
+                    # delete todo
+                    todo.remove_todo(todo.WEIGH_UNLOAD_TASK, id_)
                     flash(u"删除卸货任务%d成功" % task.id)
                     return redirect(unload_session_model_view.url_for_object(model=task.unload_session.model))
             return render_template("validation-error.html", errors=form.errors,
@@ -289,10 +308,11 @@ unload_task_model_view = UnloadTaskModelView(UnloadTask, u"卸货任务")
 class GoodsReceiptModelView(ModelView):
 
     edit_template = "cargo/goods-receipt.html"
-    
-    can_create = False
-    can_batchly_edit = False
+
     as_radio_group = False
+
+    def try_create(self):
+        raise PermissionDenied
 
     def preprocess(self, obj):
         return wraps(obj)
@@ -300,11 +320,11 @@ class GoodsReceiptModelView(ModelView):
     __sortable_columns__ = ["id", "create_time"]
 
     __list_columns__ = ["id", "receipt_id", "customer", "unload_session.plate", InputColumnSpec("order", formatter=lambda v, obj: v or "--", label=u"订单"),
-                        ColumnSpec("printed", formatter=lambda v, obj: u"是" if v else u"否", label=u"是否打印"), 
+                        ColumnSpec("printed", formatter=lambda v, obj: u"是" if v else u"否", label=u"是否打印"),
                         ColumnSpec("stale", formatter=lambda v, obj: u"是" if v else u"否", label=u"是否过时"),
-                        ColumnSpec("create_time", formatter=lambda v, obj: v.strftime("%y年%m月%d日 %H时%M分").decode("utf-8"), label=u"创建时间"), 
-                        ListColumnSpec("goods_receipt_entries", label=u"产品", compressed=True, 
-                                       item_col_spec=ColumnSpec("", formatter=lambda v, obj: unicode(v.product.product_type) + u"-" + unicode(v.product)))]  
+                        ColumnSpec("create_time", formatter=lambda v, obj: v.strftime("%y年%m月%d日 %H时%M分").decode("utf-8"), label=u"创建时间"),
+                        ListColumnSpec("goods_receipt_entries", label=u"产品", compressed=True,
+                                       item_col_spec=ColumnSpec("", formatter=lambda v, obj: unicode(v.product.product_type) + u"-" + unicode(v.product)))]
 
     def patch_row_attr(self, idx, obj):
         if obj.stale:
@@ -318,12 +338,12 @@ class GoodsReceiptModelView(ModelView):
                 "title": u"本收货单尚未打印"
             }
 
-    from flask.ext.databrowser import filters                             
-    from datetime import datetime, timedelta                              
-    today = datetime.today()                                              
-    yesterday = today.date()                                                 
-    week_ago = (today - timedelta(days=7)).date()                         
-    _30days_ago = (today - timedelta(days=30)).date()      
+    from flask.ext.databrowser import filters
+    from datetime import datetime, timedelta
+    today = datetime.today()
+    yesterday = today.date()
+    week_ago = (today - timedelta(days=7)).date()
+    _30days_ago = (today - timedelta(days=30)).date()
     __column_filters__ = [filters.BiggerThan("create_time", name=u"在", default_value=str(yesterday),
                                              options=[(yesterday, u'一天内'), (week_ago, u'一周内'), (_30days_ago, u'30天内')]),
                           filters.EqualTo("customer", name=u"是"),
@@ -332,13 +352,13 @@ class GoodsReceiptModelView(ModelView):
 
     __form_columns__ = OrderedMultiDict()
     __form_columns__[u"详细信息"] = [
-        "receipt_id", 
-        "customer", 
-        "unload_session.plate", 
-        InputColumnSpec("create_time", read_only=True, label=u"创建时间"), 
+        "receipt_id",
+        "customer",
+        "unload_session.plate",
+        InputColumnSpec("create_time", read_only=True, label=u"创建时间"),
         ColumnSpec("printed", label=u"是否打印",
-                        formatter=lambda v, obj: u"是" if v else u'<span class="text-error">否</span>'), 
-        ColumnSpec("stale", label=u"是否过时", 
+                        formatter=lambda v, obj: u"是" if v else u'<span class="text-error">否</span>'),
+        ColumnSpec("stale", label=u"是否过时",
                   formatter=lambda v, obj: u'<span class="text-error">是</span>' if v else u"否"),
         PlaceHolderColumnSpec("id", label=u"日志", template_fname="cargo/gr-logs-snippet.html")
     ]
@@ -351,15 +371,30 @@ class GoodsReceiptModelView(ModelView):
                             PlaceHolderColumnSpec(col_name="pic_url", label=u"图片", template_fname="cargo/pic-snippet.html")],
                         preprocess=lambda obj: wraps(obj))
     ]
-    __column_labels__ = {"receipt_id": u'编 号', "customer": u'客 户', "unload_session.plate": u"车牌号", 
+    __column_labels__ = {"receipt_id": u'编 号', "customer": u'客 户', "unload_session.plate": u"车牌号",
                          "printed": u'是否打印', "stale": u"是否过时", "create_time": u"创建时间", "order": u"订 单"}
 
     def get_customized_actions(self, objs=None):
-        from lite_mms.portal.cargo.actions import PrintGoodsReceipt, BatchPrintGoodsReceipt
+        from lite_mms.portal.cargo.actions import PrintGoodsReceipt, BatchPrintGoodsReceipt, CreateOrderAction, \
+            CreateExtraOrderAction, ViewOrderAction
         if not objs:
             return [BatchPrintGoodsReceipt(u"批量打印"), DeleteAction(u"删除")]
-        else: 
-            return [PrintGoodsReceipt(u"打印"), DeleteAction(u"删除")]
+        else:
+            def _l(obj):
+                if obj.order:
+                    return [ViewOrderAction(u"查看订单")]
+                else:
+                    return [CreateOrderAction(u"生成计重类型订单"), CreateExtraOrderAction(u"生成计件类型订单")]
+
+            if isinstance(objs, (list, tuple)):
+                if len(objs) == 1:
+                    l = _l(objs[0])
+                else:
+                    l = []
+            else:
+                l = _l(objs)
+            l.extend([PrintGoodsReceipt(u"打印"), DeleteAction(u"删除")])
+            return l
 
     def try_edit(self, objs=None):
         def _try_edit(obj):
@@ -373,6 +408,12 @@ class GoodsReceiptModelView(ModelView):
             return any(_try_edit(obj) for obj in objs)
         else:
             return _try_edit(objs)
+
+    def edit_hint_message(self,obj, read_only=False):
+        if read_only:
+            return u"已生成订单的收货单不能修改"
+        else:
+            return super(GoodsReceiptModelView, self).edit_hint_message(obj, read_only)
 
 goods_receipt_model_view = GoodsReceiptModelView(GoodsReceipt, u"收货单")
 
@@ -402,7 +443,7 @@ def refresh_gr(id_):
         return render_template("error.html", msg=u"收货单%d未过时，不需要更新" % id_), 403
     else:
         receipt.add_product_entries()
-        return redirect(request.args.get("url") or url_for("cargo.goods_receipt", id_=id_))
+        return redirect(request.args.get("url") or url_for("goods_receipt.goods_receipt", id_=id_))
 
 @gr_page.route("/goods-receipts-batch-print/<id_>")
 @decorators.templated("cargo/goods-receipts-batch-print.html")
@@ -417,6 +458,6 @@ def goods_receipts_batch_print(id_):
         import math
         pages += int(math.ceil(len(gr.unload_task_list) / per_page))
     db.session.commit()
-    return {"gr_list": gr_list, 
+    return {"gr_list": gr_list,
             "per_page": per_page, "pages": pages, "back_url": request.args.get("url", "/")}
 

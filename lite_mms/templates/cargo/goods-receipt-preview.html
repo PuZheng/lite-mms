@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% block custom_external %}
+{% block __data_browser__custom_external_block %}
   <link rel="stylesheet" href="{{ url_for('static', filename="css/customer.css") }}" media="print">
   <script type="text/javascript" src="{{ url_for("static", filename="js/jquery-printarea.js") }}"></script>
   <script type="text/javascript">
@@ -160,7 +160,7 @@
         <button class="btn btn-primary btn-large" id="print">
           <i class="icon-print icon-white"></i>&nbsp;{{ _("打印") }}
         </button>
-        <a href="{{ request.args.get("url") or url_for('cargo.goods_receipt',id_=receipt.id) }}" class="btn btn-large">
+        <a href="{{ request.args.get("url") or url_for('goods_receipt.goods_receipt',id_=receipt.id) }}" class="btn btn-large">
           <i class="icon-backward"></i>&nbsp;{{ _("返回修改") }}
         </a>
       </div>

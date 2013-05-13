@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
-{% block custom_external %}
+{% block __data_browser__custom_external_block %}
+    {{ super() }}
     <link rel="stylesheet" href="{{ url_for('static', filename="css/customer.css") }}" media="print">
     <script type="text/javascript" src="{{ url_for("static", filename="js/jquery-1.8.3.min.js") }}"></script>
     <script type="text/javascript" src="{{ url_for("static", filename="js/jquery-printarea.js") }}"></script>

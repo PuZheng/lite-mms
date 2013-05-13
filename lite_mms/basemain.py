@@ -2,7 +2,7 @@
 import os
 from sqlalchemy.exc import SQLAlchemyError
 from flask import Flask, render_template, request
-from flaskext.babel import Babel, gettext
+from flask.ext.babel import Babel, gettext
 from flask.ext.nav_bar import FlaskNavBar
 
 app = Flask(__name__, instance_relative_config=True)
@@ -65,8 +65,9 @@ if serve_web:
     from lite_mms.portal.cargo import cargo_page, gr_page
     app.register_blueprint(cargo_page, url_prefix='/cargo')
     app.register_blueprint(gr_page, url_prefix='/goods_receipt')
-    from lite_mms.portal.delivery import delivery_page
+    from lite_mms.portal.delivery import delivery_page, consignment_page
     app.register_blueprint(delivery_page, url_prefix='/delivery')
+    app.register_blueprint(consignment_page, url_prefix='/consignment')
     from lite_mms.portal.misc import misc
     app.register_blueprint(misc, url_prefix="/misc")
     from lite_mms.portal.manufacture import manufacture_page
@@ -122,21 +123,23 @@ from lite_mms.permissions.order import view_order, schedule_order
 from lite_mms.permissions.work_command import view_work_command
 nav_bar.register(cargo_page, name=u"卸货会话", permissions=[CargoClerkPermission], group=u"卸货管理")
 nav_bar.register(gr_page, name=u"收货单", permissions=[CargoClerkPermission], group=u"卸货管理")
-nav_bar.register(order_page, default_url='/order/order-list', name=u"订单管理",
-                 permissions=[view_order])
+#nav_bar.register(order_page, default_url='/order/order-list', name=u"订单管理",
+                 #permissions=[view_order])
 nav_bar.register(order2_page, default_url='/order2/order-list?order_by=id&desc=1', name=u"订单管理(beta)",
                  permissions=[view_order])
-nav_bar.register(delivery_page, name=u'发货管理',
-                 permissions=[CargoClerkPermission])
+nav_bar.register(delivery_page, name=u'发货会话',
+                 permissions=[CargoClerkPermission], group=u"发货管理")
+nav_bar.register(consignment_page, name=u'发货单',
+                 permissions=[CargoClerkPermission.union(AccountantPermission)], group=u"发货管理")
 nav_bar.register(schedule_page, name=u"订单管理", permissions=[schedule_order])
 nav_bar.register(schedule_page2, name=u"订单管理(beta)",
                  permissions=[schedule_order],
                  default_url="/schedule2/order-list")
 nav_bar.register(manufacture_page, name=u"工单管理",
                  permissions=[view_work_command])
-nav_bar.register(delivery_page, name=u"发货单管理",
-                 default_url="/delivery/consignment-list",
-                 permissions=[AccountantPermission])
+#nav_bar.register(delivery_page, name=u"发货单管理",
+                 #default_url="/delivery/consignment-list",
+                 #permissions=[AccountantPermission])
 nav_bar.register(manufacture_page, name=u"质检管理",
                  default_url="/manufacture/qir-list",
                  permissions=[DepartmentLeaderPermission])
@@ -159,8 +162,6 @@ app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 app.jinja_env.globals['permissions'] = permissions
 app.jinja_env.filters['_datetimeformat'] = datetimeformat
 app.jinja_env.add_extension("jinja2.ext.loopcontrols")
-from hamlish_jinja import HamlishTagExtension
-app.jinja_env.add_extension(HamlishTagExtension)
 
 from flask.ext.principal import (identity_loaded, RoleNeed, UserNeed,
                                  PermissionDenied, Permission)
@@ -222,7 +223,7 @@ def permission_denied(error):
         return redirect(url_for("error", msg=u'请联系管理员获得访问权限!',
                                 back_url=request.args.get("url")))
         #如果用户还未登录则转向到登录面
-    return render_template("auth/login.haml",
-                           error=gettext(u"请登录"), next_url=request.url)
+    return render_template("auth/login.html",
+                           error=gettext(u"请登录"), next_url=request.url, titlename=u"请登录")
 
 

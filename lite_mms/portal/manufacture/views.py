@@ -40,22 +40,12 @@ class WorkCommandView(ModelView):
         def __operator__(self, attr, value):
             return attr.in_(set(value))
 
-    class OrderIDFilter(filters.BaseFilter):
-        def set_sa_criterion(self, q):
-            q = q.filter(Order.id == self.value).join(SubOrder).join(Order)
-            return q
-
-        @cached_property
-        def attr(self):
-            return ""
-
-
     __column_filters__ = [
         In_Filter("status", u"是", options=[i[:2] for i in get_status_list()], display_col_name=u"状态"),
         filters.BiggerThan("create_time", name=u"在", display_col_name=u"创建时间",
                            options=[(yesterday, u'一天内'), (week_ago, u'一周内'), (_30days_ago, u'30天内')]),
         filters.Contains("sub_order.order.customer_order_number", name=u"包含", display_col_name=u"订单编号"),
-        OrderIDFilter("order_id", hidden=True),
+        filters.EqualTo("sub_order.order.id", name="", hidden=True),
         filters.Only("urgent", display_col_name=u"只展示加急", test=lambda v: v == True, notation="__urgent"),
         filters.Only("sub_order.returned", display_col_name=u"只展示退镀", test=lambda v: v == True, notation="__returned")
     ]

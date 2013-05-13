@@ -420,7 +420,7 @@ class ConsignmentProductModelView(ModelView):
         if processed_objs[0].consignment.MSSQL_ID is not None:
             return u"您不能修改本发货单，该发货单已经插入原有系统"
 
-    def get_form_columns(self):
+    def get_form_columns(self, obj=None):
         return [InputColumnSpec("product", group_by=Product.product_type), "weight", "returned_weight", "team"]
 
 consigment_product_model_view = ConsignmentProductModelView(ConsignmentProduct, u"发货单项")

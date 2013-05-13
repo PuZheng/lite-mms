@@ -56,7 +56,7 @@ def build_db():
             models.Permission.name.like("work_command%")).all()
         scheduler = do_commit(scheduler)
         #   - 车间主任
-        department_leader = models.Group(id=groups.DEPARTMENT_LEADER, name=u"车间主任", default_url=url_for("manufacture.QI_work_command_list"))
+        department_leader = models.Group(id=groups.DEPARTMENT_LEADER, name=u"车间主任", default_url=url_for("manufacture.work_command_list"))
         department_leader = do_commit(department_leader)
         #   - 班组长
         team_leader = do_commit(models.Group(id=groups.TEAM_LEADER, name=u"班组长"))

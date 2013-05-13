@@ -443,11 +443,14 @@ class ConsignmentProductModelView(ModelView):
         return super(ConsignmentProductModelView, self).edit_hint_message(obj, read_only)
 
     def get_form_columns(self, obj=None):
-        if obj and apis.delivery.ConsignmentWrapper(obj.consignment).measured_by_weight:
-            return [InputColumnSpec("product", group_by=Product.product_type), "weight", "returned_weight", "team"]
-        else:
-            return [InputColumnSpec("product", group_by=Product.product_type), "weight", "quantity", "unit", "spec",
-                    "type", "returned_weight", "team"]
+        #if obj and apis.delivery.ConsignmentWrapper(obj.consignment).measured_by_weight:
+            #return [InputColumnSpec("product", group_by=Product.product_type), "weight", "returned_weight", "team"]
+        #else:
+            #return [InputColumnSpec("product", group_by=Product.product_type), "weight", "quantity", "unit", "spec",
+                    #"type", "returned_weight", "team"]
+        return ['unit']
+        #return [InputColumnSpec("product", group_by=Product.product_type), "weight", "quantity", "unit", "spec",
+                #"type", "returned_weight", "team"]
 
 consigment_product_model_view = ConsignmentProductModelView(ConsignmentProduct, u"发货单项")
     

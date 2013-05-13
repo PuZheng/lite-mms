@@ -2,7 +2,7 @@
 import re
 import json
 
-from flask import request, abort, url_for, render_template, flash
+from flask import request, abort, url_for, render_template, flash, g
 from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.action import DeleteAction
 from flask.ext.databrowser.column_spec import (InputColumnSpec, ColumnSpec,
@@ -50,6 +50,9 @@ class UnloadSessionModelView(ModelView):
             return any(_try_edit(obj_) for obj_ in objs)
         else:
             return _try_edit(objs)
+
+    def repr_obj(self, obj):
+        return unicode(obj) + "(" + cargo_const.desc_status(obj.status) + ")"
 
     def get_list_columns(self):
         def gr_item_formatter(v, obj):
@@ -378,7 +381,10 @@ class GoodsReceiptModelView(ModelView):
         from lite_mms.portal.cargo.actions import PrintGoodsReceipt, BatchPrintGoodsReceipt, CreateOrderAction, \
             CreateExtraOrderAction, ViewOrderAction
         if not objs:
-            return [BatchPrintGoodsReceipt(u"批量打印"), DeleteAction(u"删除")]
+            if g.request_from_mobile:
+                return [DeleteAction(u"删除")]
+            else:
+                return [BatchPrintGoodsReceipt(u"批量打印"), DeleteAction(u"删除")]
         else:
             def _l(obj):
                 if obj.order:
@@ -393,7 +399,9 @@ class GoodsReceiptModelView(ModelView):
                     l = []
             else:
                 l = _l(objs)
-            l.extend([PrintGoodsReceipt(u"打印"), DeleteAction(u"删除")])
+            l.append(DeleteAction(u"删除"))
+            if not g.request_from_mobile:
+                l.append(PrintGoodsReceipt(u"打印"))
             return l
 
     def try_edit(self, objs=None):

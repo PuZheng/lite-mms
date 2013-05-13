@@ -789,7 +789,7 @@ class ConsignmentProduct(db.Model):
     delivery_task = db.relationship("DeliveryTask")
     weight = db.Column(db.Integer)
     quantity = db.Column(db.Integer)
-    unit = db.Column(db.String(16), default="")
+    unit = db.Column(db.String(16), default=u"桶")
     spec = db.Column(db.String(64))
     type = db.Column(db.String(64))
     returned_weight = db.Column(db.Integer)

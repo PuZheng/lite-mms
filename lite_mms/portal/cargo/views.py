@@ -159,7 +159,7 @@ class UnloadSessionModelView(ModelView):
 
     __form_columns__ = OrderedMultiDict()
     __form_columns__[u"详细信息"] = [
-        InputColumnSpec("plate_"),
+        "plate_",
         InputColumnSpec("with_person", label=u"驾驶室是否有人"),
         ColumnSpec("status", label=u"状态", formatter=lambda v, obj: '<strong>' + cargo_const.desc_status(v) + '</strong>',
                    css_class="uneditable-input"),

@@ -10,7 +10,7 @@ consignment_page = Blueprint("consignment", __name__, static_folder="static",
 
 from lite_mms.portal.delivery import views, ajax
 
-from lite_mms.portal.delivery.views import consigment_model_view
+from lite_mms.portal.delivery.views import consigment_model_view, consigment_product_model_view
 
 from lite_mms.basemain import data_browser, nav_bar
 
@@ -25,3 +25,11 @@ extra_params = {
     }
 }
 data_browser.register_model_view(consigment_model_view, consignment_page, extra_params)
+
+extra_params = {
+    "form_view": {
+        "nav_bar": nav_bar,
+        "titlename": u"编辑发货单项",
+    }
+}
+data_browser.register_model_view(consigment_product_model_view, consignment_page, extra_params)

@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
-{% block custom_external %}
+{% block __data_browser__customized_head_block %}
+  {{ super() }}
   <script type="text/javascript">
     $(function () {
       var products = {{ products|safe }};
@@ -10,7 +11,7 @@
         });
       }
       var product_id = {{ task.product.id }};
-      $("#product").val(product_id);
+      $("#product").val(product_id).trigger("change");
       $("#product_type").change(function (ui) {
         var selected_product_type = $("#product_type").val();
         $("#product").empty();

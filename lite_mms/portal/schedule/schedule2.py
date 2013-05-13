@@ -5,6 +5,8 @@
 """
 import json
 from flask import Blueprint, url_for, render_template, abort, request
+from flask.ext.databrowser.column_spec import PlaceHolderColumnSpec
+from flask.ext.principal import PermissionDenied
 from lite_mms import constants
 from lite_mms.permissions import SchedulerPermission
 from lite_mms.utilities import get_or_404
@@ -38,20 +40,29 @@ class OrderView(ModelView):
         else:
             return []
 
-    list_template = "schedule/order-list.haml"
+    list_template = "schedule/order-list-ex.html"
 
     __list_columns__ = ["id", "customer_order_number",
                         "goods_receipt.customer", "net_weight",
-                        "remaining_weight", "to_work_weight",
-                        "manufacturing_weight",
+                        "remaining_weight",
+                        PlaceHolderColumnSpec(col_name="manufacturing_work_command_list", label=u"生产中重量",
+                                              template_fname="order/todo-work-command-list-snippet.html",
+                                              doc=u"若大于0,请敦促车间生产"),
+                        PlaceHolderColumnSpec(col_name="qi_work_command_list", label=u"待质检重量",
+                                              template_fname="order/qi-list-snippet.html"),
+                        PlaceHolderColumnSpec(col_name="done_work_command_list", label=u"已完成重量",
+                                              template_fname="order/done-work-command-list-snippet.html",
+                                              doc=u"指订单下所有是最后一道工序的工单,这类工单的工序后质量之和"),
+                        PlaceHolderColumnSpec(col_name="to_deliver_store_bill_list", label=u"待发货重量",
+                                              template_fname="order/store-bill-list-snippet.html"),
                         "create_time", "goods_receipt.receipt_id",
                         "urgent"]
+
     __column_labels__ = {"customer_order_number": u"订单号",
                          "goods_receipt.customer": u"客户",
                          "create_time": u"创建时间", "goods_receipt.receipt_id": u"收货单",
                          "net_weight": u"收货", "remaining_weight": u"待排产",
-                         "manufacturing_weight":u"生产中",
-                         "to_work_weight": u"待分配", "urgent": u"加急"
+                         "urgent": u"加急"
     }
     __column_formatters__ = {
         "urgent": lambda v, obj: u"是" if v else u"否",
@@ -68,7 +79,7 @@ class OrderView(ModelView):
     def preprocess(self, model):
         from lite_mms import apis
 
-        return apis.OrderWrapper(model)
+        return apis.order.OrderWrapper(model)
 
     from datetime import datetime, timedelta
 
@@ -88,16 +99,16 @@ class OrderView(ModelView):
         if row.urgent and row.remaining_weight > 0:
             return {"class": "text-error", "title": u"该订单加急，请尽快处理"}
 
-    can_create = can_edit = False
+    def try_create(self):
+        raise PermissionDenied
+
+    def try_edit(self, processed_objs=None):
+        raise PermissionDenied
 
     __sortable_columns__ = ["id", "customer_order_number",
                             "goods_receipt.customer", "create_time"]
 
     __default_order__ = ("id", "desc")
-
-    from .action import schedule_action
-
-    __customized_actions__ = [schedule_action]
 
     def edit_view(self, id_):
         order = self.get_one(id_)

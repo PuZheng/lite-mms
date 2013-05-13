@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from flask import url_for, redirect, request
 from flask.ext.databrowser.action import DeleteAction, BaseAction, ReadOnlyAction
+from flask.ext.login import current_user
+from lite_mms import constants
 from lite_mms.constants import cargo as cargo_const
 
 
@@ -78,3 +80,47 @@ class BatchPrintGoodsReceipt(ReadOnlyAction):
         for obj in objs:
             model_view.do_update_log(obj, self.name)
         return redirect(url_for("goods_receipt.goods_receipts_batch_print", id_=",".join([str(obj.id) for obj in objs]), url=request.url))
+
+
+class CreateOrderAction(ReadOnlyAction):
+
+    def test_enabled(self, model):
+        if model.order:
+            return -2
+        return 0
+
+    def op(self, obj):
+        from lite_mms.apis.order import new_order
+        new_order(obj.id, constants.STANDARD_ORDER_TYPE, current_user.id)
+
+    def get_forbidden_msg_formats(self):
+        return {-2: u"已生成订单"}
+
+
+class CreateExtraOrderAction(ReadOnlyAction):
+
+    def test_enabled(self, model):
+        if model.order:
+            return -2
+        return 0
+
+    def op(self, obj):
+        from lite_mms.apis.order import new_order
+        new_order(obj.id, constants.EXTRA_ORDER_TYPE, current_user.id)
+
+    def get_forbidden_msg_formats(self):
+        return {-2: u"已生成订单"}
+
+
+class ViewOrderAction(ReadOnlyAction):
+
+    def test_enabled(self, model):
+        if model.order:
+            return 0
+        return -2
+
+    def get_forbidden_msg_formats(self):
+        return {-2: u"未生成订单"}
+
+    def op_upon_list(self, objs, model_view):
+        return redirect(url_for("order.order", id_=objs[0].order.id, url=request.url))

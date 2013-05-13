@@ -372,12 +372,16 @@ class ConsignmentModelView(ModelView):
     __column_formatters__ = {"actor": lambda v, obj: u"--" if v is None else v,
                              "pay_in_cash": lambda v, obj: u"现金支付" if v else u"月结"}
 
-    __column_filters__ = [filters.EqualTo("customer", name=u"是"),
-                          filters.Only("is_paid", display_col_name=u"只展示未付款发货单", test=lambda col: col == False,
-                                       notation=u"is_paid", default_value=False),
-                          filters.Only("MSSQL_ID", display_col_name=u"只展示未导出发货单", test=lambda col: col == None,
-                                       notation="is_export", default_value=False)
-                          ]
+    def get_column_filters(self):
+        from lite_mms.permissions.roles import AccountantPermission
+        not_paid_default = AccountantPermission.can()
+        return [
+            filters.EqualTo("customer", name=u"是"),
+            filters.Only("is_paid", display_col_name=u"只展示未付款发货单", test=lambda col: col == False,
+                         notation=u"is_paid", default_value=not_paid_default),
+            filters.Only("MSSQL_ID", display_col_name=u"只展示未导出发货单", test=lambda col: col == None,
+                         notation="is_export", default_value=False)
+               ]
 
     def get_form_columns(self, obj=None):
         self.__form_columns__ = OrderedDict()

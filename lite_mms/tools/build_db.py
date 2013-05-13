@@ -68,7 +68,7 @@ def build_db():
         #   - 装卸工
         loader = do_commit(models.Group(id=groups.LOADER, name=u"装卸工"))
         #   - 财会人员
-        accountant = models.Group(id=groups.ACCOUNTANT, name=u"财会人员", default_url=url_for("delivery.consignment_list"))
+        accountant = models.Group(id=groups.ACCOUNTANT, name=u"财会人员", default_url=url_for("consignment.consignment_list"))
         accountant.permissions = [models.Permission.query.filter(models.Permission.name.like("%export_consignment%")).one()]
         accountant = do_commit(accountant)
         #   - 管理员

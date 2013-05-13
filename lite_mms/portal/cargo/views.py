@@ -42,14 +42,16 @@ class UnloadSessionModelView(ModelView):
     can_batchly_edit = False
 
     def try_edit(self, objs=None):
+        
         def _try_edit(obj_):
             if obj_ and obj_.finish_time:
                 raise PermissionDenied
 
         if isinstance(objs, (list, tuple)):
-            return any(_try_edit(obj_) for obj_ in objs)
+            for obj_ in objs:
+                _try_edit(obj_)
         else:
-            return _try_edit(objs)
+            _try_edit(objs)
 
     def repr_obj(self, obj):
         return unicode(obj) + "(" + cargo_const.desc_status(obj.status) + ")"
@@ -163,6 +165,7 @@ class UnloadSessionModelView(ModelView):
     __form_columns__ = OrderedMultiDict()
     __form_columns__[u"详细信息"] = [
         "plate_",
+        InputColumnSpec("gross_weight", label=u"毛重"),
         InputColumnSpec("with_person", label=u"驾驶室是否有人"),
         ColumnSpec("status", label=u"状态", formatter=lambda v, obj: '<strong>' + cargo_const.desc_status(v) + '</strong>',
                    css_class="uneditable-input"),
@@ -276,8 +279,6 @@ def weigh_unload_task(id_):
         else:
             if request.form.get("method") == "delete":
                 if task.delete():
-                    # delete todo
-                    todo.remove_todo(todo.WEIGH_UNLOAD_TASK, id_)
                     flash(u"删除卸货任务%d成功" % task.id)
                     return redirect(unload_session_model_view.url_for_object(model=task.unload_session.model))
             return render_template("validation-error.html", errors=form.errors,

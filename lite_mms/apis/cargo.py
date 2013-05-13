@@ -208,8 +208,9 @@ class UnloadTaskWrapper(ModelWrapper):
                                     "actor": current_user})
         fsm.next(constants.cargo.ACT_WEIGHT, current_user)
 
-        from lite_mms.apis.todo import TODOWrapper
-        TODOWrapper.delete("UnloadTask", self.id)
+        from lite_mms.apis import todo
+        # delete todo
+        todo.remove_todo(todo.WEIGH_UNLOAD_TASK, self.id)
         return True
     
     

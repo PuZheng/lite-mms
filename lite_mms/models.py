@@ -88,7 +88,7 @@ class UnloadSession(db.Model):
     __tablename__ = "TB_UNLOAD_SESSION"
 
     id = db.Column(db.Integer, primary_key=True)
-    plate = db.Column(db.String(32), db.ForeignKey('TB_PLATE.name'))
+    plate = db.Column(db.String(32), db.ForeignKey('TB_PLATE.name'), nullable=False)
     plate_ = db.relationship("Plate")
     gross_weight = db.Column(db.Integer, nullable=False)
     with_person = db.Column(db.Boolean, default=False)

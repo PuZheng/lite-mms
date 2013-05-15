@@ -215,8 +215,10 @@ class InitializeTestDB(Command):
         consignment = Consignment(customer1, delivery_session, True)
         consignment.actor = cc
         consignment.notes = "".join(str(i) for i in xrange(100))
+        consignment.MSSQL_ID = 1
         do_commit(consignment)
         cp = ConsignmentProduct(product1, delivery_task, consignment)
+        cp.unit = u"桶"
         cp.weight = 100
         cp.returned_weight = 50
         do_commit(cp)

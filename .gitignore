@@ -16,6 +16,7 @@ develop-eggs
 .installed.cfg
 lib
 lib64
+upload
 
 # Installer logs
 pip-log.txt
@@ -32,3 +33,5 @@ nosetests.xml
 *.swp
 .Session.vim
 tags
+config.py
+*.log

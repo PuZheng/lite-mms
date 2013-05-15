@@ -245,6 +245,10 @@ class GoodsReceiptWrapper(ModelWrapper):
 
     @property
     def stale(self):
+        """
+        若卸货会话的结束时间晚于收货单的创建时间（即卸货会话在创建收货单之后又打开了），并且的确修改了收货单对应的产品信息，
+        我们认为收货单是过时的
+        """
         if self.unload_session.finish_time and self.unload_session.finish_time > self.create_time:
             _entries = [(entry.product.id, entry.weight) for entry in
                         self.goods_receipt_entries]

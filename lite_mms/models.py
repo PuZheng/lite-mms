@@ -291,6 +291,7 @@ class GoodsReceipt(db.Model):
 
 
 class GoodsReceiptEntry(db.Model):
+    __modelname__ = u"收货单项"
     __tablename__ = "TB_GOODS_RECEIPT_ENTRY"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -810,6 +811,9 @@ class ConsignmentProduct(db.Model):
 
 class Plate(db.Model):
     __modelname__ = u"车辆"
+    __col_desc__ = {
+        u"车牌号": "name"
+    }
     __tablename__ = "TB_PLATE"
 
     name = db.Column(db.String(64), primary_key=True)
@@ -858,6 +862,7 @@ class Log(db.Model):
         self.obj_cls, self.obj, self.action)
 
 class TODO(db.Model):
+    __modelname__ = u"待办事项"
     __tablename__ = "TB_TODO"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -873,6 +878,7 @@ class TODO(db.Model):
     context_url = db.Column(db.String(256))
 
 class Config(db.Model):
+    __modelname__ = u"配置项"
     __tablename__ = "TB_CONFIG"
 
     id = db.Column(db.Integer, primary_key=True)

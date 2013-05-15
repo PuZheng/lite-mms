@@ -10,47 +10,46 @@ def test_cargo():
     flask_sqlalchemy_setup(app, db, create_step_prefix=u"创建",
                            model_name_getter=lambda model: model.__name__,
                            attr_name_getter=lambda model, attr: model.__col_desc__.get(attr, attr),
-                           set_step_pattern=u'(\w+)([\.\w+]+)设置为(.+)',
-                           test_step_pattern=u'(\w+)([\.\w+]+)是(.+)')
+                           set_step_pattern=u'(\w+)([\.\w+]+)设置为(.+)')
 
     with Feature(u"卸货会话生成收货单", ['lite_mms.test.at.steps.cargo'], verbose=False):
         with Scenario(u"准备数据"):
             plate = given(u"创建Plate(浙B 11112)")
             harbor = and_(u"创建Harbor(foo车间)")
             customer = and_(u"创建Customer(宁波机床厂)", abbr="aaa")
+            customer2 = and_(u"创建Customer(宁力紧固件)", abbr="bbb")
             product_type = and_(u"创建ProductType(foo)")
             product = and_(u"创建Product(foo)", product_type=product_type)
 
         with Scenario(u"最简完整流程"):
             us = when(u'收发员创建UnloadSession， 毛重是10000公斤', plate)
-            ut = and_(u'装卸工进行卸货，该货物来自宁波机床厂，并且标记是最后一个任务', customer, harbor, product, us)
+            ut = and_(u'装卸工进行卸货，该货物来自宁波机床厂', customer, harbor, product, us, is_last=True)
             and_(u'收发员称重8000公斤', ut)
 
             then(u"卸货任务的重量是2000公斤", ut)
             and_(u'卸货会话已经关闭', us)
 
-            gr = when(u'收发员生成收货单', us)
-            then(u'该收货单中包含一个项目，该项目的客户是宁波机床厂, 项目的重量是2000公斤', gr, customer)
+            gr_list = when(u'收发员生成收货单', us)
+            then(u'该收货单中包含一个项目，该项目的客户是宁波机床厂, 项目的重量是2000公斤', gr_list)
 
         with Scenario(u"包含多次卸货任务的卸货会话"):
-            when(u'收发员创建Plate(浙B 00001)')
-            and_(u'收发员创建UnloadSession， 毛重是10000公斤')
-            and_(u'装卸工进行卸货，该货物来自宁波机床厂')
-            then(u'装卸工此时不能进行卸货')
+            us = when(u'收发员创建UnloadSession， 毛重是10000公斤', plate)
+            ut1 = and_(u'装卸工进行卸货，该货物来自宁波机床厂', customer, harbor, product, us, is_last=False)
+            then(u'装卸工此时不能进行卸货', us)
 
-            when(u'收发员称重8000公斤')
-            then(u"卸货任务的重量是2000公斤")
-            and_(u'卸货任务没有关闭')
+            when(u'收发员称重8000公斤', ut1)
+            then(u"卸货任务的重量是2000公斤", ut1)
+            and_(u'卸货会话没有关闭', us)
 
-            when(u'装卸工进行卸货，该货物来自宁力紧固件, 并且标记是最后一个任务')
-            and_(u'收发员称重5000公斤')
-            then(u'收货任务的重量是3000公斤')
-            and_(u"卸货会话已经关闭")
+            ut2 = when(u'装卸工进行卸货，该货物来自宁力紧固件', customer2, harbor, product, us, is_last=True)
+            and_(u'收发员称重5000公斤', ut2)
+            then(u'卸货任务的重量是3000公斤', ut2)
+            and_(u"卸货会话已经关闭", us)
 
-            when(u'收发员生成收货单')
-            then(u'该收货单中包含两个项目')
-            and_(u'第一个项目的客户是宁波机床厂, 项目的重量是2000公斤')
-            and_(u'第二个项目的客户是宁力紧固件, 项目的重量是3000公斤')
+            gr_list = when(u'收发员生成收货单', us)
+            then(u'该会话中包含两个项目', gr_list)
+            and_(u'项目的客户是宁波机床厂, 项目的重量是2000公斤', gr_list[0])
+            and_(u'项目的客户是宁力紧固件, 项目的重量是3000公斤', gr_list[1])
 
         with Scenario(u'除非卸货会话关闭，否则卸货会话都可以修改'):
             when(u'创建卸货会话, 其状态是待称重')

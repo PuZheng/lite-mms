@@ -39,7 +39,6 @@ path.py==3.0.1
 py==1.4.12
 pycrypto==2.6
 -e git+https://github.com/xiechao06/pyfeature.git@39da1369c5254da572505e0c9ad495905ca5d4cf#egg=pyfeature-dev
-pylint==0.26.0
 pytest==2.3.4
 pytz==2012g
 ## FIXME: could not find svn URL in dependency_links for this package:

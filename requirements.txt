@@ -24,7 +24,7 @@ Sphinx==1.1.3
 Tempita==0.5.1
 WTForms==1.0.2
 Werkzeug==0.8.3
-alembic==0.4.2
+alembic>=0.5
 argparse==1.2.1
 beautifulsoup4==4.1.3
 blinker==1.2
@@ -34,7 +34,6 @@ cssselect==0.7.1
 dbgp==1.1
 decorator==3.4.0
 docutils==0.9.1
-ipython==0.13.1
 itsdangerous==0.17
 karnickel==0.2
 -e git+https://github.com/xiechao06/lite-sm.git@9204dcaba550ab8da9450576ba95c54c93259406#egg=lite_sm-dev
@@ -43,7 +42,7 @@ logilab-astng==0.24.1
 logilab-common==0.58.3
 lxml==3.1.0
 mock==1.0.1
--e git+https://github.com/xiechao06/nav-bar.git@5a4c17e50ab18387fda58321e1e39eaed57d6261#egg=nav_bar-dev
+-e git+https://github.com/xiechao06/nav-bar.git@48a007c1e1b589d40e58669ae7b40a6900d71c79#egg=nav_bar-dev
 nose==1.2.1
 ore.svn==1.0.5
 paramiko==1.9.0

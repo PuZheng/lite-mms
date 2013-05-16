@@ -30,13 +30,13 @@ def deploy():
     # we only deploy when push to origin/master
     if json.loads(request.form['payload'])['ref'] == 'refs/heads/master':
 	subprocess.call(["fab", "-f", fabfile, "deploy"])
-    return "ok"
+    return "done"
 
-@app.route("/make-test-data", methods=["POST"])
+@app.route("/make-test-data")
 def make_test_data():
     # we only deploy when push to origin/master
     subprocess.call(["fab", "-f", fabfile, "make_test_data"])
-    return "ok"
+    return "done"
 
 #if __name__ == "__main__":
 #    opts, _ = getopt(sys.argv[1:], "f:s:p:h")

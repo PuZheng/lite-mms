@@ -45,3 +45,4 @@ pytz==2012g
 speaklater==1.3
 transaction==1.3.0
 twill==0.9
+Flask-Admin==1.0.4

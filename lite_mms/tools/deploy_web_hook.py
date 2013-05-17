@@ -27,7 +27,7 @@ fabfile = "fabfile.py"
 
 @app.route("/deploy", methods=["POST"])
 def deploy():
-	subprocess.call(["fab", "-f", fabfile, "deploy"])
+    subprocess.call(["fab", "-f", fabfile, "deploy"])
     return "done"
 
 @app.route("/make-test-data")

@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 import json
-from flask import request, render_template
+from flask import request, render_template, abort, flash
 from socket import error
 from wtforms import Form, IntegerField, BooleanField, TextField
 from lite_mms.portal.delivery import delivery_page
@@ -81,3 +81,19 @@ def customer_list():
             return _(u"已经对所有的客户生成了发货单"), 403
 
     return json.dumps([{"id": c.id, "name": c.name} for c in customers])
+
+@delivery_page.route("/ajax/delivery-task/<int:id_>", methods=["POST"])
+@ajax_call
+def delivery_task(id_):
+    from lite_mms import apis
+    task = apis.delivery.get_delivery_task(id_)
+    if not task:
+        abort(404)
+    if task.weight:
+        return _(u"已称重的发货任务不能删除"), 403
+    try:
+        task.delete()
+        flash(u"删除成功")
+        return "success"
+    except Exception, e:
+        return unicode(e), 403

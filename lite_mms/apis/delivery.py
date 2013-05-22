@@ -6,7 +6,7 @@ from flask import url_for
 from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import cached_property
-from lite_mms import models
+from lite_mms import models, constants
 import lite_mms.apis.order
 from lite_mms.database import db
 import lite_mms.apis.customer
@@ -40,19 +40,6 @@ class DeliverySessionWrapper(ModelWrapper):
         return not self.finish_time and (not self.store_bill_list or all(
             store_bill.delivery_task for store_bill in
             self.store_bill_list))
-
-    @property
-    def status(self):
-        if self.finish_time:
-            if len(self.customer_list) > len(self.consignment_list):
-                return u"待生成发货单"
-            else:
-                return u"已完成"
-        else:
-            if self.delivery_task_list and not all(t.weight for t in self.delivery_task_list):
-                return u"待称重"
-            else:
-                return u"待装货"
 
     def __repr__(self):
         return u"<DeliverySession id:(%d) plate:(%r) tare:(%d) create_time:("\
@@ -127,6 +114,7 @@ class DeliverySessionWrapper(ModelWrapper):
             return True
         return False
 
+
 class DeliveryTaskWrapper(ModelWrapper):
     @classmethod
     def new_delivery_task(cls, actor_id, finished_store_bill_id_list,
@@ -193,6 +181,13 @@ class DeliveryTaskWrapper(ModelWrapper):
             do_commit([unfinished_store_bill, dt] + finished_store_bills)
         else:
             do_commit([dt] + finished_store_bills)
+
+        from lite_mms.apis.todo import new_todo, WEIGH_DELIVERY_TASK
+        from lite_mms.apis.auth import get_user_list
+
+        for to in get_user_list(constants.groups.CARGO_CLERK):
+            new_todo(to, WEIGH_DELIVERY_TASK, dt)
+
         return DeliveryTaskWrapper(dt)
 
     @property
@@ -243,6 +238,8 @@ class DeliveryTaskWrapper(ModelWrapper):
         elif kwargs.get("returned_weight"):
             self.model.returned_weight = kwargs["returned_weight"]
                 # 这也说明，若是计件类型的仓单，数量不会根据称重进行调整
+        elif kwargs.get("is_last"):
+            self.model.is_last = kwargs["is_last"]
         do_commit(self.model)
         return self
 
@@ -282,6 +279,27 @@ class DeliveryTaskWrapper(ModelWrapper):
             return self.sub_order_list[0].unit
         else:
             return ""
+
+
+    def delete(self):
+        ds = self.delivery_session
+        do_commit(self.model, "delete")
+        from lite_mms.portal.cargo.fsm import fsm
+        fsm.reset_obj(ds)
+        from flask.ext.login import current_user
+        from lite_mms.basemain import timeline_logger
+
+        timeline_logger.info(u"删除了发货任务%d" % self.id,
+                             extra={"obj": self.delivery_session.model,
+                                    "obj_pk": self.delivery_session.id,
+                                    "action": u"删除发货任务",
+                                    "actor": current_user})
+        fsm.next(constants.delivery.ACT_WEIGHT, current_user)
+
+        from lite_mms.apis import todo
+        # delete todo
+        todo.remove_todo(todo.WEIGH_DELIVERY_TASK, self.id)
+        return True
 
 class ConsignmentWrapper(ModelWrapper):
     @classmethod
@@ -375,7 +393,6 @@ class ConsignmentWrapper(ModelWrapper):
                 setattr(consignment, k, v)
         return ConsignmentWrapper(do_commit(consignment))
 
-
     def paid(self):
         self.model.is_paid = True
         do_commit(self.model)
@@ -384,6 +401,10 @@ class ConsignmentWrapper(ModelWrapper):
     def get_customer_list(cls):
         from lite_mms import apis
         return apis.customer.CustomerWrapper.get_customer_list(models.Consignment)
+
+    @cached_property
+    def stale(self):
+        return False
 
 class ConsignmentProductWrapper(ModelWrapper):
     @classmethod
@@ -412,10 +433,13 @@ class StoreBillWrapper(ModelWrapper):
             return url_for("serv_pic", filename=self.qir.pic_path)
         else:
             return ""
+    @cached_property
+    def product(self):
+        return self.sub_order.product
 
     @property
     def product_name(self):
-        return self.sub_order.product.name
+        return self.product.name
 
     @property
     def unit(self):

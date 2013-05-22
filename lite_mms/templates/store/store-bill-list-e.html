@@ -1,0 +1,8 @@
+{% if get_customer_list|e %}
+  {% set customer_list = get_customer_list() %}
+  {% for grouper, list in customer_list|groupby("name") %}
+  {{ grouper }}
+    {{ list }}
+  {% endfor %}
+
+{% endif %}

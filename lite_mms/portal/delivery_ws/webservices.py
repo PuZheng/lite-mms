@@ -81,16 +81,21 @@ def delivery_task():
             return _(u"需要remain字段"), 403
 
     import lite_mms.apis as apis
+    actor = apis.auth.get_user(actor_id)
+    from lite_mms.portal.delivery.fsm import fsm
+    from lite_mms import constants
     try:
-        dt = apis.delivery.new_delivery_task(actor_id,
-                finished_sb_list, unfinished_sb_list[0] if unfinished_sb_list else None, 
-                remain)
-    except BadRequest, e:
-        return str(e), 403
+        dt = apis.delivery.new_delivery_task(actor.id, finished_sb_list,
+                                             unfinished_sb_list[0] if unfinished_sb_list else None, remain)
+        fsm.reset_obj(dt.delivery_session)
+        fsm.next(constants.delivery.ACT_LOAD, actor)
+    except Exception, e:
+        return unicode(e), 403
 
-    if is_finished: # 卸货会话结束
-       apis.delivery.get_delivery_session(
-            dt.delivery_session_id).update(finish_time=to_timestamp(datetime.now()))
+
+    if is_finished: # 发货会话结束
+        dt.update(is_last=True)
+        dt.delivery_session.update(finish_time=to_timestamp(datetime.now()))
 
     ret = dict(id=dt.actor_id, actor_id=dt.actor_id,
             store_bill_id_list=dt.store_bill_id_list)

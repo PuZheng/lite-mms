@@ -20,7 +20,7 @@
       的装货任务
     </div>
     <legend>发货任务详情</legend>
-    <form class="form-horizontal" method="POST" action="{{ url_for('delivery.delivery_task', id_=task.id) }}">
+    <form class="form-horizontal" method="POST">
 
       <div class="control-group">
         <label class="control-label"><strong>产品名称</strong></label>
@@ -48,7 +48,7 @@
         <label for="weight" class="control-label"><strong>本次称重的重量为(KG)</strong></label>
 
         <div class="controls">
-          <input type="number" name="weight" id="weight" size="20" required="True" min="{{ task.last_weight + 1 }}" value="{{ task.last_weight + task.weight }}"/>
+          <input type="number" name="weight" id="weight" size="20" required="True" min="{{ task.last_weight + 1 }}"/>
         </div>
       </div>
       <div class="control-group">

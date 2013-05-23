@@ -54,7 +54,7 @@ class UnloadSessionModelView(ModelView):
             _try_edit(objs)
 
     def repr_obj(self, obj):
-        return unicode(obj) + "(" + cargo_const.desc_status(obj.status) + ")"
+        return unicode(obj) + "(" + cargo_const.desc_status(obj.status) + ")" + "<br /><p class='text-center'><small class='muted'>" + '&nbsp;' + ",".join([unicode(customer) for customer in obj.customer_list]) + "</small></p>"
 
     def get_list_columns(self):
         def gr_item_formatter(v, obj):
@@ -156,8 +156,7 @@ class UnloadSessionModelView(ModelView):
         from lite_mms import apis
 
         def opt_filter(obj):
-            plates = set(
-                apis.plate.get_plate_list("unloading") + apis.plate.get_plate_list(
+            plates = set(apis.plate.get_plate_list("unloading") + apis.plate.get_plate_list(
                     "delivering"))
             return obj.name not in plates
         return [InputColumnSpec("plate_",

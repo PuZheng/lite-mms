@@ -3,6 +3,7 @@ import re
 import json
 
 from flask import request, abort, url_for, render_template, flash, g
+from sqlalchemy import exists
 from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.action import DeleteAction, BaseAction, ReadOnlyAction
 from flask.ext.databrowser.column_spec import (InputColumnSpec, ColumnSpec,
@@ -22,7 +23,7 @@ from lite_mms.apis import wraps
 import lite_mms.constants.cargo as cargo_const
 from lite_mms.database import db
 from lite_mms.models import (UnloadSession, Plate, GoodsReceipt,
-                             GoodsReceiptEntry, Product, UnloadTask)
+                             GoodsReceiptEntry, Product, UnloadTask, DeliverySession)
 
 @cargo_page.route('/')
 def index():
@@ -153,14 +154,11 @@ class UnloadSessionModelView(ModelView):
 
     # ================= FORM PART ============================
     def get_create_columns(self):
-        from lite_mms import apis
+        def filter_plate(q):
+            return q.filter(
+                ~exists().where(UnloadSession.plate == Plate.name).where(DeliverySession.plate == Plate.name))
 
-        def opt_filter(obj):
-            plates = set(apis.plate.get_plate_list("unloading") + apis.plate.get_plate_list(
-                    "delivering"))
-            return obj.name not in plates
-        return [InputColumnSpec("plate_",
-                                opt_filter=opt_filter),
+        return [InputColumnSpec("plate_",filter_=filter_plate),
                 InputColumnSpec("with_person", label=u"驾驶室是否有人"),
                 "gross_weight"]
 
@@ -445,7 +443,7 @@ def goods_receipt_preview(id_):
     receipt = apis.cargo.get_goods_receipt(id_)
     PER_PAGE  = apis.config.get("print_count_per_page", 5.0, type=float)
     import math
-    pages = int(math.ceil(len(receipt.unload_task_list) / PER_PAGE))
+    pages = int(math.ceil(len(receipt.goods_receipt_entries) / PER_PAGE))
     if not receipt:
         abort(404)
     return {"receipt": receipt, "titlename": u"收货单打印预览", "pages": pages,

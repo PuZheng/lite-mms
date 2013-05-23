@@ -210,7 +210,7 @@ class InitializeTestDB(Command):
         qir3 = do_commit(QIReport(work_command4, 10, 10,
                                   quality_inspection.REPLATE, qi.id))
         store_bill1 = do_commit(StoreBill(qir1))
-        delivery_session = do_commit(DeliverySession(vehicle1.name, 2300))
+        delivery_session = do_commit(DeliverySession(plate=vehicle1.name, tare=2300))
         delivery_task = do_commit(DeliveryTask(delivery_session, cc.id))
         consignment = Consignment(customer1, delivery_session, True)
         consignment.actor = cc

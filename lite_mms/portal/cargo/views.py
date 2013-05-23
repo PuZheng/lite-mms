@@ -3,7 +3,7 @@ import re
 import json
 
 from flask import request, abort, url_for, render_template, flash, g
-from sqlalchemy import exists
+from sqlalchemy import exists, and_
 from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.action import DeleteAction, BaseAction, ReadOnlyAction
 from flask.ext.databrowser.column_spec import (InputColumnSpec, ColumnSpec,
@@ -156,7 +156,8 @@ class UnloadSessionModelView(ModelView):
     def get_create_columns(self):
         def filter_plate(q):
             return q.filter(
-                ~exists().where(UnloadSession.plate == Plate.name).where(DeliverySession.plate == Plate.name))
+                and_(~exists().where(UnloadSession.plate == Plate.name).where(UnloadSession.finish_time == None),
+                     ~exists().where(DeliverySession.finish_time == None).where(DeliverySession.plate == Plate.name)))
 
         return [InputColumnSpec("plate_",filter_=filter_plate),
                 InputColumnSpec("with_person", label=u"驾驶室是否有人"),

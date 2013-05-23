@@ -1,0 +1,24 @@
+language: python
+python:
+  - "2.7"
+
+branch:
+    only:
+        - master
+# command to install dependencies
+install: "pip install -r requirements.txt"
+# command to run tests
+script:
+    - py.test
+
+notifications:
+    email:
+      recipients:
+        - abc549825@163.com
+        - xiechao06@gmail.com
+
+    webhooks:
+        urls:
+        - http://42.121.6.193:10001/deployed
+        on_success: always # default: always
+        on_failure: nerver

@@ -55,8 +55,8 @@ class OpenAction(ReadOnlyAction):
 class CreateReceiptAction(ReadOnlyAction):
 
     def test_enabled(self, model):
-        if model.goods_receipt_list and all(
-                not gr.stale for gr in model.goods_receipt_list):
+        if model.goods_receipt_list and all(not gr.stale for gr in model.goods_receipt_list) and len(
+                model.goods_receipt_list) == len(model.customer_list):
             return -2
         elif not model.task_list:
             return -3

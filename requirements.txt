@@ -2,7 +2,7 @@ Babel==0.9.6
 Fabric==1.5.1
 Flask==0.9
 Flask-Babel==0.8
--e git+https://github.com/xiechao06/Flask-DataBrowser.git@641d27c044b2ef260d0c4aa4534ea243850022d5#egg=Flask_DataBrowser-dev
+-e git+https://github.com/xiechao06/Flask-DataBrowser.git@ef956492b03c8a67bb1f964be7fc38f277c9007f#egg=Flask_DataBrowser-dev
 Flask-DebugToolbar==0.8.0
 Flask-Login==0.1.3
 -e git+https://github.com/xiechao06/Flask-NavBar.git@c60db5d#egg=Flask_NavBar-dev

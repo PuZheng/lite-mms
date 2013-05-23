@@ -155,11 +155,13 @@ class UnloadSessionModelView(ModelView):
     def get_create_columns(self):
         from lite_mms import apis
 
-        plates = set(
-            apis.plate.get_plate_list("unloading") + apis.plate.get_plate_list(
-                "delivering"))
+        def opt_filter(obj):
+            plates = set(
+                apis.plate.get_plate_list("unloading") + apis.plate.get_plate_list(
+                    "delivering"))
+            return obj.name not in plates
         return [InputColumnSpec("plate_",
-                                opt_filter=lambda obj: obj.name not in plates),
+                                opt_filter=opt_filter),
                 InputColumnSpec("with_person", label=u"驾驶室是否有人"),
                 "gross_weight"]
 

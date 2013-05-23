@@ -2,4 +2,5 @@ recursive-include lite_mms/templates *
 recursive-include lite_mms/static *
 recursive-include lite_mms/data *
 recursive-include lite_mms/tools *
+recursive-include lite_mms/translations *
 

@@ -458,8 +458,12 @@ class StoreBillWrapper(ModelWrapper):
 
     @classmethod
     def customer_bill_list(cls):
+        from sqlalchemy.sql.expression import func, literal_column
+
         customer_list = models.Customer.query.join(models.StoreBill).filter(
-            models.StoreBill.delivery_session_id == None).distinct()
+            models.StoreBill.delivery_session_id == None).order_by(
+            func.convert(literal_column("name using gbk"))).distinct()
+
         cst_l = []
         for customer in customer_list:
             customer.bill_list = get_store_bill_list(customer_id=customer.id)[

@@ -98,7 +98,9 @@
           });
         }
         var e = $('header a[href="/todo/todo-list"]');
-        e.html(e.html().replace(/待办事项(\(\d+\))?/, "待办事项(" + data["total_cnt"] + ")"));
+        if (e.html() != undefined) {
+          e.html(e.html().replace(/待办事项(\(\d+\))?/, "待办事项(" + data["total_cnt"] + ")"));
+        }
         setTimeout(f, 30000);
       })
     };

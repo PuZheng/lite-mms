@@ -18,14 +18,45 @@
         $(this).collapse({toggle: false});
       });
       $("#customer").change(function () {
-        $(".collapse").each(
-            function () {
-              $(this).collapse("hide");
-            }
-        );
-        if ($(this).val != 0) {
-          $("#customer" + $(this).val()).collapse("show");
+        var current_id = $(this).val();
+        if (current_id != 0) {
+          $(".collapse").each(
+              function () {
+                var e = $(this).parent("div.accordion-group");
+                if( $(this).attr("id") != "customer" + current_id){
+                  e.hide();
+                }else{
+                  e.show();
+                  $(this).collapse("show");
+                }
+              }
+          );
+        }else{
+          $(".collapse").each(
+              function () {
+                $(this).parent("div.accordion-group").show();
+              }
+          );
         }
+      });
+      $("[type=checkbox]").click(function(){
+        var text="";
+        $(".accordion-group").each(function(){
+          var head = $(this).find("a").text();
+          var checkbox = $(this).find("[name=store_bill_id]:checked");
+          if(checkbox.length != 0) {
+            text += head + ":";
+            checkbox.each(function (inx) {
+              text += $(this).val();
+              if (inx != checkbox.length -1){
+                text += ",";
+              }else{
+                text += "; ";
+              }
+            })
+          }
+        });
+        $(".text-success").text(text);
       });
     })
   </script>
@@ -40,6 +71,10 @@
         返回
       </a>
     {% else %}
+      <p>
+      已选择的仓单：
+      <span class="text-success"></span>
+      </p>
       <div class="form-inline">
         <label class="padding" for="customer">客户</label>
         <select name="customer" id="customer">
@@ -60,7 +95,7 @@
           {% for customer in customer_list %}
             <div class="accordion-group">
               <div class="accordion-heading">
-                <a class="accordion-toggle" href="#customer{{ customer.id }}" data-toggle="collapse" data-parent="#accordion-div">
+                <a class="accordion-toggle" href="#customer{{ customer.id }}" data-toggle="collapse">
                   {{ customer.name }}
                 </a>
               </div>

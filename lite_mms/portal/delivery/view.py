@@ -115,7 +115,7 @@ class DeliverySessionModelView(ModelView):
                                 opt_filter=lambda obj: obj.name not in plates),
                 InputColumnSpec("with_person", label=u"驾驶室是否有人"),
                 "tare"]
-        columns[u"仓单列表"] = [PlaceHolderColumnSpec("id", label="", template_fname="store/store-bill-list-e.html", as_input=True)]
+        columns[u"仓单列表"] = [PlaceHolderColumnSpec("store_bill_list", label="", template_fname="store/store-bill-list-e.html", as_input=True)]
         return columns
 
     def get_customized_actions(self, model_list=None):

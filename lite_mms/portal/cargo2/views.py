@@ -32,7 +32,6 @@ class UnloadSessionModelView(ModelView):
 
     list_template = "cargo2/unload-session-list.html"
 
-    as_radio_group = True
     can_batchly_edit = False
 
     __list_columns__ = ["id", "plate", "create_time", "finish_time", "with_person", "status", "goods_receipt_list"]

@@ -3,6 +3,7 @@ from collections import OrderedDict
 from flask import request, abort, redirect, url_for, render_template
 from flask.ext.login import current_user
 from flask.ext.principal import PermissionDenied
+from sqlalchemy import exists
 from flask.ext.databrowser import ModelView, filters
 from flask.ext.databrowser.column_spec import ColumnSpec, ListColumnSpec, PlaceHolderColumnSpec, TableColumnSpec, \
     InputColumnSpec
@@ -17,6 +18,7 @@ _with_out_person = u'<span class="icon-stack" title="空"><i class="icon-check-e
 
 
 class DeliverySessionModelView(ModelView):
+    can_batchly_edit = False
     column_hide_backrefs = False
     edit_template = "delivery/delivery-session.html"
 
@@ -105,17 +107,18 @@ class DeliverySessionModelView(ModelView):
                 "class": "alert alert-warning"}
 
     def get_create_columns(self):
-        from lite_mms import apis
 
-        plates = set(
-            apis.plate.get_plate_list("unloading") + apis.plate.get_plate_list(
-                "delivering"))
+
+        def filter_plate(q):
+            return q.filter(~exists().where(models.UnloadSession.plate == models.Plate.name).where(
+                models.DeliverySession.plate == models.Plate.name))
+
         columns = OrderedDict()
-        columns[u"基本信息"] = [InputColumnSpec("plate_",
-                                opt_filter=lambda obj: obj.name not in plates),
-                InputColumnSpec("with_person", label=u"驾驶室是否有人"),
-                "tare"]
-        columns[u"仓单列表"] = [PlaceHolderColumnSpec("store_bill_list", label="", template_fname="store/store-bill-list-e.html", as_input=True)]
+        columns[u"基本信息"] = [InputColumnSpec("plate_", filter_=filter_plate),
+                            InputColumnSpec("with_person", label=u"驾驶室是否有人"), "tare"]
+        columns[u"已选择仓单列表"] = [
+            PlaceHolderColumnSpec("store_bill_list", label="", template_fname="delivery/store-bill-list-snippet.html",
+                                  as_input=True)]
         return columns
 
     def get_customized_actions(self, model_list=None):

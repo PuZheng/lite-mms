@@ -21,12 +21,12 @@ data_browser.register_model_view(store_bill_view, store_bill_page,
                                                "form_view": {"nav_bar": nav_bar, "titlename": u"编辑仓单"}})
 
 @store_bill_page.route("/to_delivery_list", methods=["GET", "POST"])
-@nav_bar_set
 def to_delivery_list():
     if request.method == "GET":
         from lite_mms.apis.delivery import get_store_bill_customer_list
         list_ = get_store_bill_customer_list()
-        return render_template("delivery/store-bill-list.html", customer_list=list_, titlename=u"仓单列表")
+        return render_template("delivery/store-bill-list.html", customer_list=list_, titlename=u"仓单列表",
+                               nav_bar=nav_bar)
     else:
         pass
 

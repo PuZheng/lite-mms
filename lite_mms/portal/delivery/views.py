@@ -32,7 +32,7 @@ def store_bill_add(delivery_session_id=None):
     import lite_mms.apis as apis
 
     if request.method == 'POST':
-        store_bill_id_list = request.form.getlist('store_bill_id', type=int)
+        store_bill_id_list = request.form.getlist('store_bill_list', type=int)
         if delivery_session_id:
             delivery_session = apis.delivery.get_delivery_session(
                 delivery_session_id)

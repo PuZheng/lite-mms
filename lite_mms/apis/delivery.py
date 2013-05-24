@@ -13,6 +13,7 @@ import lite_mms.apis.customer
 from lite_mms.apis import ModelWrapper
 from lite_mms.utilities import do_commit
 
+
 class DeliverySessionWrapper(ModelWrapper):
     @property
     def deleteable(self):
@@ -42,7 +43,7 @@ class DeliverySessionWrapper(ModelWrapper):
             self.store_bill_list))
 
     def __repr__(self):
-        return u"<DeliverySession id:(%d) plate:(%r) tare:(%d) create_time:("\
+        return u"<DeliverySession id:(%d) plate:(%r) tare:(%d) create_time:(" \
                u"%s) finish_time:(%s)>" % (
                    self.id, self.plate, self.tare,
                    self.create_time.strftime("%Y-%m-%d[%H:%M:%S]"),
@@ -156,7 +157,7 @@ class DeliveryTaskWrapper(ModelWrapper):
                                   unfinished_store_bill.quantity - remain)
             new_sb.weight = int(
                 unfinished_store_bill.unit_weight * new_sb.quantity)
-            new_sb.delivery_session =  unfinished_store_bill.delivery_session
+            new_sb.delivery_session = unfinished_store_bill.delivery_session
             new_sb.printed = True
             finished_store_bills.append(new_sb)
             # 重新计算未完成仓单的数量，重量, 并且加入到已有的完成仓单列表中
@@ -237,7 +238,7 @@ class DeliveryTaskWrapper(ModelWrapper):
 
         elif kwargs.get("returned_weight"):
             self.model.returned_weight = kwargs["returned_weight"]
-                # 这也说明，若是计件类型的仓单，数量不会根据称重进行调整
+            # 这也说明，若是计件类型的仓单，数量不会根据称重进行调整
         elif kwargs.get("is_last"):
             self.model.is_last = kwargs["is_last"]
         do_commit(self.model)
@@ -270,8 +271,8 @@ class DeliveryTaskWrapper(ModelWrapper):
 
     @property
     def spec_type_list(self):
-          return ["-".join((sub_order.spec, sub_order.type)) for sub_order in
-               self.sub_order_list if sub_order.spec or sub_order.type]
+        return ["-".join((sub_order.spec, sub_order.type)) for sub_order in
+                self.sub_order_list if sub_order.spec or sub_order.type]
 
     @property
     def unit(self):
@@ -285,6 +286,7 @@ class DeliveryTaskWrapper(ModelWrapper):
         ds = self.delivery_session
         do_commit(self.model, "delete")
         from lite_mms.portal.cargo.fsm import fsm
+
         fsm.reset_obj(ds)
         from flask.ext.login import current_user
         from lite_mms.basemain import timeline_logger
@@ -300,6 +302,7 @@ class DeliveryTaskWrapper(ModelWrapper):
         # delete todo
         todo.remove_todo(todo.WEIGH_DELIVERY_TASK, self.id)
         return True
+
 
 class ConsignmentWrapper(ModelWrapper):
     @classmethod
@@ -352,7 +355,7 @@ class ConsignmentWrapper(ModelWrapper):
         if not delivery_session:
             raise ValueError(u'没有此发货会话%d' % delivery_session_id)
         if customer not in set(task.customer for task in
-            delivery_session.delivery_task_list):
+                               delivery_session.delivery_task_list):
             raise ValueError("delivery session %d has no customer %s" % (
                 delivery_session_id,
                 customer.name))
@@ -369,7 +372,7 @@ class ConsignmentWrapper(ModelWrapper):
                 p.returned_weight = t.returned_weight
                 if not t.quantity:
                     t.quantity = sum(store_bill.quantity for store_bill in
-                        t.store_bill_list)
+                                     t.store_bill_list)
                 p.quantity = t.quantity
                 if t.sub_order_list:
                     sb = t.sub_order_list[0]
@@ -400,11 +403,13 @@ class ConsignmentWrapper(ModelWrapper):
     @classmethod
     def get_customer_list(cls):
         from lite_mms import apis
+
         return apis.customer.CustomerWrapper.get_customer_list(models.Consignment)
 
     @cached_property
     def stale(self):
         return False
+
 
 class ConsignmentProductWrapper(ModelWrapper):
     @classmethod
@@ -433,6 +438,7 @@ class StoreBillWrapper(ModelWrapper):
             return url_for("serv_pic", filename=self.qir.pic_path)
         else:
             return ""
+
     @cached_property
     def product(self):
         return self.sub_order.product
@@ -450,26 +456,25 @@ class StoreBillWrapper(ModelWrapper):
         if not store_bill_id:
             return None
         try:
-            return StoreBillWrapper(
-                models.StoreBill.query.filter_by(
-                    id=store_bill_id).one())
+            return StoreBillWrapper(models.StoreBill.query.filter_by(id=store_bill_id).one())
         except NoResultFound:
             return None
 
     @classmethod
     def customer_bill_list(cls):
-        from sqlalchemy.sql.expression import func, literal_column
+        store_bill_list = get_store_bill_list()[0]
 
-        customer_list = models.Customer.query.join(models.StoreBill).filter(
-            models.StoreBill.delivery_session_id == None).order_by(
-            func.convert(literal_column("name using gbk"))).distinct()
+        from itertools import groupby
+        from operator import attrgetter
+        getter = attrgetter("customer.name")
 
-        cst_l = []
-        for customer in customer_list:
-            customer.bill_list = get_store_bill_list(customer_id=customer.id)[
-                                 0]
-            cst_l.append(customer)
-        return cst_l
+        customer_list = []
+        for k, g in groupby(sorted(store_bill_list, key=lambda x: getter(x).encode("gbk")),
+                            lambda x: getattr(x, "customer")):
+            k.store_bill_list = list(g)
+            customer_list.append(k)
+
+        return customer_list
 
     @classmethod
     def update_store_bill(cls, store_bill_id, **kwargs):
@@ -499,6 +504,7 @@ class StoreBillWrapper(ModelWrapper):
 
         return StoreBillWrapper(do_commit(store_bill))
 
+
 def get_delivery_session_list(idx=0, cnt=sys.maxint, unfinished_only=False,
                               keywords=None):
     q = models.DeliverySession.query.filter(
@@ -516,6 +522,7 @@ def get_delivery_session_list(idx=0, cnt=sys.maxint, unfinished_only=False,
             q.order_by(models.DeliverySession.create_time.desc()).offset(
                 idx).limit(cnt).all()], total_cnt
 
+
 def get_delivery_session(session_id):
     if not session_id:
         return None
@@ -525,14 +532,16 @@ def get_delivery_session(session_id):
     except NoResultFound:
         return None
 
+
 def get_delivery_task_list(ds_id):
     return [DeliveryTaskWrapper(dt) for dt in
             models.DeliveryTask.query.filter_by(
                 delivery_session_id=ds_id).all()]
 
+
 def get_store_bill_list(idx=0, cnt=sys.maxint, unlocked_only=True, qir_id=None,
                         customer_id="", delivery_session_id=None,
-                        printed_only=False,unprinted_only=False,
+                        printed_only=False, unprinted_only=False,
                         should_after=None):
     # TODO 没有彻底测试
     q = models.StoreBill.query
@@ -563,6 +572,7 @@ def fake_delivery_task():
     fake_delivery_session.finish_time = datetime.now()
     return do_commit(models.DeliveryTask(fake_delivery_session, None))
 
+
 new_delivery_session = DeliverySessionWrapper.new_delivery_session
 get_consignment_list = ConsignmentWrapper.get_list
 get_consignment = ConsignmentWrapper.get_consignment
@@ -572,8 +582,6 @@ get_delivery_task = DeliveryTaskWrapper.get_delivery_task
 get_store_bill = StoreBillWrapper.get_store_bill
 get_store_bill_customer_list = StoreBillWrapper.customer_bill_list
 update_store_bill = StoreBillWrapper.update_store_bill
-
-
 
 if __name__ == "__main__":
     pass

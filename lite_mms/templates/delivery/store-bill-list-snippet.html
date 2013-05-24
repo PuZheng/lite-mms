@@ -13,7 +13,9 @@
     <tbody>
     {% for store_bill in field_value %}
       <tr>
-        <td><a href="{{ url_for("store_bill.store_bill", id_=store_bill.id, url=request.url) }}">{{ store_bill.id }}</a></td>
+        <td>
+          <a href="{{ url_for("store_bill.store_bill", id_=store_bill.id, url=request.url) }}">{{ store_bill.id }}</a>
+        </td>
         <td>{{ store_bill.harbor.name }}</td>
         <td>{{ store_bill.product_name }}</td>
         <td>{{ store_bill.customer.name }}</td>
@@ -34,6 +36,27 @@
 {% else %}
   <span class="text-error">无</span>
 {% endif %}
-<a class="btn btn-large btn-primary" href="{{ url_for("delivery.store_bill_add", url=request.url, delivery_session_id=obj.id) }}">
-  <i class="icon-link"></i>&nbsp;添加仓单
-</a>
+{% if obj %}
+  <a class="btn btn-primary" href="{{ url_for("delivery.store_bill_add", url=request.url, delivery_session_id=obj.id) }}">
+    <i class="icon-plus"></i>&nbsp;添加仓单
+  </a>
+{% else %}
+  <button class="btn btn-primary" id="add-store-bill" type="button">
+    <i class="icon-plus"></i>&nbsp;添加仓单
+  </button>
+  <script type="text/javascript">
+    $("#add-store-bill").click(function () {
+      var url = "{{ url_for("store_bill.to_delivery_list", url=request.path if not request.args.get("url") else request.path +"?url="+request.args.get("url")) }}&plate_=" + $("[name=plate_]").val() + "&tare=" + $("[name=tare]").val()
+      if ($("[name=with_person]").is(":checked")) {
+        url += "&with_person=on"
+      }
+      {% if request.args.get("store_bill_list") %}
+        var id_list = {{ request.args.getlist("store_bill_list")|tojson|safe }};
+        $.each(id_list, function (idx, value) {
+          url += "&store_bill_list=" + value;
+        });
+      {% endif %}
+      location.href = url
+    });
+  </script>
+{% endif %}

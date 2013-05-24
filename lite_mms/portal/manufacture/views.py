@@ -12,17 +12,21 @@ from lite_mms.apis.manufacture import get_wc_status_list, get_status_list, get_h
 class WorkCommandView(ModelView):
     __list_columns__ = ["id", "sub_order.order.customer_order_number", "department", "team", "org_weight", "org_cnt",
                         "sub_order.unit", "urgent", "sub_order.returned", "tech_req", "handle_type", "status",
-                        "procedure", "previous_procedure"]
+                        "procedure", "previous_procedure", "order.goods_receipt.customer"]
 
     __column_labels__ = {"id": u"编号", "department": u"车间", "team": u"班组", "sub_order.unit": u"单位",
                          "sub_order.returned": u"退镀", "urgent": u"加急", "org_weight": u"重量（公斤）", "org_cnt": u"数量",
                          "handle_type": u"处理类型", "tech_req": u"技术要求", "status": u"状态", "procedure": u"工序",
                          "previous_procedure": u"上道工序", "sub_order.order.customer_order_number": u"订单编号",
-                         "sub_order": u"子订单编号"}
+                         "sub_order": u"子订单编号", "order.goods_receipt.customer": u"客户"}
 
     __default_order__ = ("id", "desc")
 
     __sortable_columns__ = ["sub_order.order.customer_order_number", "urgent", "sub_order.returned"]
+
+    def preprocess(self, obj):
+        from lite_mms import apis
+        return apis.WorkCommandWrapper(obj)
 
     def patch_row_attr(self, idx, row):
         if row.status != constants.work_command.STATUS_FINISHED and (row.urgent or row.sub_order.returned):
@@ -60,6 +64,16 @@ class WorkCommandView(ModelView):
         "previous_procedure": lambda v, model: v if v else "",
         "handle_type": lambda v, model: get_handle_type_list().get(v, u"未知")
     }
+    
+    def repr_obj(self, obj):
+        return u"""
+        <span>
+        %(wc)s - <small>%(customer)s</small>
+        <small class='pull-right muted'>
+        %(datetime)s 
+        </small>
+        </span> 
+        """ % {"wc": unicode(obj), "customer": obj.order.goods_receipt.customer, "datetime": obj.create_time.strftime("%m-%d %H:%M")}
 
     def try_create(self):
         raise PermissionDenied
@@ -87,6 +101,8 @@ class WorkCommandView(ModelView):
         elif self.__column_filters__[0].value == unicode(_get_status_filter(u"生产中")) or (
                 processed_objs and all(retrieve_action.test_enabled(obj) == 0 for obj in processed_objs)):
             return [retrieve_action]
+        elif self.__column_filters__[0].has_value:
+            return [schedule_action, retrieve_action]
         else:
             return []
 

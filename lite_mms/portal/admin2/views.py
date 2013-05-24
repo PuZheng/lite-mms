@@ -23,7 +23,6 @@ from lite_mms.basemain import nav_bar
 from lite_mms.utilities.decorators import templated
 
 class AdminModelView(ModelView):
-    as_radio_group = True
     can_batchly_edit = False
     list_template = "admin2/list.html"
     create_template = edit_template = "admin2/object.html"
@@ -190,7 +189,6 @@ class ProductModelView(AdminModelView):
     """
     产品的管理类
     """
-    as_radio_group = False
     can_batchly_edit = True
     __list_columns__ = ["id", "MSSQL_ID", "name", "product_type", "enabled"]
     __column_labels__ = {"id": u"产品编号", "MSSQL_ID": u"在mssql的编号",

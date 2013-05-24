@@ -39,7 +39,6 @@ class UnloadSessionModelView(ModelView):
     list_template = "cargo/unload-session-list.html"
     edit_template = "cargo/unload-session.html"
 
-    as_radio_group = True
     can_batchly_edit = False
 
     def try_edit(self, objs=None):
@@ -322,7 +321,7 @@ class GoodsReceiptModelView(ModelView):
 
     edit_template = "cargo/goods-receipt.html"
 
-    as_radio_group = False
+    can_batchly_edit = True
 
     def try_create(self):
         raise PermissionDenied

@@ -343,7 +343,7 @@ class ConsignmentModelView(ModelView):
     def try_create(self):
         raise PermissionDenied
 
-    as_radio_group = True
+    can_batchly_edit = False
 
     def get_customized_actions(self, processed_objs=None):
         ret = [PreviewConsignment(u"打印预览")]

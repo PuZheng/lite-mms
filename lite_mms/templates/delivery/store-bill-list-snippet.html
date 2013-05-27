@@ -33,6 +33,10 @@
     {% endfor %}
     </tbody>
   </table>
+  {% for store_bill in field_value %}
+    <input type="hidden" name="store_bill_list" value="{{ store_bill.id }}"/>
+  {% endfor %}
+
 {% else %}
   <span class="text-error">无</span>
 {% endif %}

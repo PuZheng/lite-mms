@@ -19,7 +19,7 @@ class DispatchAction(BaseAction):
             -3: u"订单[%s]没有完善，请先完善"
         }
     
-    def try_(self):
+    def try_(self, preprocessed_objs):
         from lite_mms.permissions import CargoClerkPermission,AdminPermission
         from flask.ext.principal import Permission
         Permission.union(CargoClerkPermission, AdminPermission).test()
@@ -38,7 +38,8 @@ class AccountAction(BaseAction):
             finish_time=datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"))
 
-    def try_(self):
+
+    def try_(self, preprocessed_objs):
         from lite_mms.permissions import CargoClerkPermission,AdminPermission
         from flask.ext.principal import Permission
         Permission.union(CargoClerkPermission, AdminPermission).test()
@@ -69,7 +70,7 @@ class MarkRefinedAction(BaseAction):
             -3: u"请先完善订单[%s]内容（添加子订单或者填写子订单的产品信息，完成时间），才能标记为完善",
         }
 
-    def try_(self):
+    def try_(self, preprocessed_objs):
         from lite_mms.permissions import CargoClerkPermission,AdminPermission
         from flask.ext.principal import Permission
         Permission.union(CargoClerkPermission, AdminPermission).test()

@@ -322,7 +322,7 @@ def index():
 from flask.ext.principal import PermissionDenied
 from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.column_spec import ColumnSpec, InputColumnSpec, LinkColumnSpec, TableColumnSpec
-from flask.ext.databrowser.action import BaseAction, ReadOnlyAction
+from flask.ext.databrowser.action import BaseAction
 from flask.ext.databrowser import filters
 from lite_mms.models import Consignment, ConsignmentProduct, Product
 
@@ -332,7 +332,7 @@ class PayAction(BaseAction):
         obj.is_paid = True
         db.session.commit()
 
-class PreviewConsignment(ReadOnlyAction):
+class PreviewConsignment(BaseAction):
     
     def op_upon_list(self, objs, model_view):
         return redirect(url_for("delivery.consignment_preview", id_=objs[0].id, url=request.url))

@@ -5,7 +5,7 @@ import json
 from flask import request, abort, url_for, render_template, flash, g
 from sqlalchemy import exists, and_
 from flask.ext.databrowser import ModelView
-from flask.ext.databrowser.action import DeleteAction, BaseAction, ReadOnlyAction
+from flask.ext.databrowser.action import DeleteAction, BaseAction
 from flask.ext.databrowser.column_spec import (InputColumnSpec, ColumnSpec,
                                                PlaceHolderColumnSpec, ListColumnSpec,
                                                TableColumnSpec, ImageColumnSpec)
@@ -128,15 +128,17 @@ class UnloadSessionModelView(ModelView):
         return apis.cargo.UnloadSessionWrapper(model)
 
     def get_customized_actions(self, model_list=None):
-        from lite_mms.portal.cargo.actions import CloseAction, OpenAction, CreateReceiptAction
-        class _PrintGoodsReceipt(ReadOnlyAction):
+        from lite_mms.portal.cargo.actions import (CloseAction, OpenAction, 
+                                                   CreateReceiptAction, 
+                                                   DeleteGoodsReceiptAction)
+        class _PrintGoodsReceipt(BaseAction):
             def op_upon_list(self, objs, model_list):
                 obj = objs[0]
                 return redirect(url_for("goods_receipt.goods_receipts_batch_print", id_=",".join([str(gr.id) for gr in obj.goods_receipt_list]), url=request.url))
 
         action_list = []
         if model_list is None: # for list
-            action_list.extend([CloseAction(u"关闭"), OpenAction(u"打开"), CreateReceiptAction(u"生成收货单")])
+            action_list.extend([CloseAction(u"关闭"), OpenAction(u"打开"), CreateReceiptAction(u"生成收货单"), DeleteGoodsReceiptAction(u"删除", None)])
         else:
             if len(model_list) ==1:
                 if model_list[0].status in [cargo_const.STATUS_CLOSED, cargo_const.STATUS_DISMISSED]:

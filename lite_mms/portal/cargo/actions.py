@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 from flask import url_for, redirect, request
-from flask.ext.databrowser.action import DeleteAction, BaseAction, ReadOnlyAction
+from flask.ext.databrowser.action import DeleteAction, BaseAction
 from flask.ext.login import current_user
 from lite_mms import constants
 from lite_mms.constants import cargo as cargo_const
 
-
-class MyDeleteAction(DeleteAction):
+class DeleteGoodsReceiptAction(DeleteAction):
 
     def test_enabled(self, model):
         if model.goods_receipt_list:
@@ -36,7 +35,7 @@ class CloseAction(BaseAction):
         return {-2: u"收货会话%s已经被关闭", 
                 -3: u"收货会话%s有卸货任务没有称重，请确保所有的卸货任务都已经称重！"}
 
-class OpenAction(ReadOnlyAction):
+class OpenAction(BaseAction):
 
     def test_enabled(self, model):
         if model.status != cargo_const.STATUS_CLOSED:
@@ -52,7 +51,7 @@ class OpenAction(ReadOnlyAction):
     def get_forbidden_msg_formats(self):
         return {-2: u"收货会话%s处在打开状态, 只有已经关闭的会话才能被打开"}
 
-class CreateReceiptAction(ReadOnlyAction):
+class CreateReceiptAction(BaseAction):
 
     def test_enabled(self, model):
         if model.goods_receipt_list and all(not gr.stale for gr in model.goods_receipt_list) and len(
@@ -74,15 +73,14 @@ class PrintGoodsReceipt(BaseAction):
         model_view.do_update_log(objs[0], self.name)
         return redirect(url_for("cargo.goods_receipt_preview", id_=objs[0].id, url=request.url))
 
-class BatchPrintGoodsReceipt(ReadOnlyAction):
+class BatchPrintGoodsReceipt(BaseAction):
 
     def op_upon_list(self, objs, model_view):
         for obj in objs:
             model_view.do_update_log(obj, self.name)
         return redirect(url_for("goods_receipt.goods_receipts_batch_print", id_=",".join([str(obj.id) for obj in objs]), url=request.url))
 
-
-class CreateOrderAction(ReadOnlyAction):
+class CreateOrderAction(BaseAction):
 
     def test_enabled(self, model):
         if model.order:
@@ -96,8 +94,7 @@ class CreateOrderAction(ReadOnlyAction):
     def get_forbidden_msg_formats(self):
         return {-2: u"已生成订单"}
 
-
-class CreateExtraOrderAction(ReadOnlyAction):
+class CreateExtraOrderAction(BaseAction):
 
     def test_enabled(self, model):
         if model.order:
@@ -111,8 +108,7 @@ class CreateExtraOrderAction(ReadOnlyAction):
     def get_forbidden_msg_formats(self):
         return {-2: u"已生成订单"}
 
-
-class ViewOrderAction(ReadOnlyAction):
+class ViewOrderAction(BaseAction):
 
     def test_enabled(self, model):
         if model.order:

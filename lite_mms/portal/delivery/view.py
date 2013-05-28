@@ -70,9 +70,8 @@ class DeliverySessionModelView(ModelView):
         __form_columns__ = OrderedDict()
 
         __form_columns__[u"发货会话详情"] = [ColumnSpec("id"), "plate_", "tare", "with_person", ColumnSpec("create_time"),
-                                       ColumnSpec("finish_time")]
-        __form_columns__[u"日志"] = [
-            PlaceHolderColumnSpec(col_name="", label=u"日志", template_fname="cargo/us-log-snippet.html", as_input=True)]
+                                       ColumnSpec("finish_time"),
+                                       PlaceHolderColumnSpec(col_name="log_list", label=u"日志", template_fname="delivery/log-snippet.html")]
         __form_columns__[u"发货任务列表"] = [
             PlaceHolderColumnSpec("delivery_task_list", label="", template_fname="delivery/delivery-task-list-snippet.html")]
 
@@ -217,7 +216,9 @@ class DeliveryTaskModelView(ModelView):
                         ListColumnSpec("store_bill_list", label=u"仓单列表"),
                         ListColumnSpec("spec_type_list", label=u"规格-型号列表"),
                         ListColumnSpec("pic_url_list", label=u"图片", formatter=lambda v, obj: None if not v else v,
-                                       item_col_spec=ImageColumnSpec("", css_class="img-polaroid"))]
+                                       item_col_spec=ImageColumnSpec("", css_class="img-polaroid")),
+                        PlaceHolderColumnSpec("log_list", label=u"日志", template_fname="delivery/log-snippet.html")
+    ]
 
     def preprocess(self, obj):
         from lite_mms.apis.delivery import DeliveryTaskWrapper

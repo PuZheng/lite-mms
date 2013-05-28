@@ -140,7 +140,7 @@ class DeliverySessionWrapper(ModelWrapper):
             Log.obj_cls == self.model.__class__.__name__).all()
         for task in self.delivery_task_list:
             ret.extend(task.log_list)
-        return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time))
+        return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time), reverse=True)
 
 class DeliveryTaskWrapper(ModelWrapper):
     @classmethod
@@ -222,6 +222,14 @@ class DeliveryTaskWrapper(ModelWrapper):
     @property
     def store_bill_id_list(self):
         return [sb.id for sb in self.store_bill_list]
+
+    @property
+    def log_list(self):
+        from lite_mms.models import Log
+
+        ret = Log.query.filter(Log.obj_pk == str(self.id)).filter(
+            Log.obj_cls == self.model.__class__.__name__).all()
+        return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time), reverse=True)
 
     @property
     def pic_url_list(self):

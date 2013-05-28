@@ -22,57 +22,27 @@ import lite_mms.apis as apis
 def index():
     return redirect(url_for("delivery.delivery_session_list"))
 
-@delivery_page.route("/store-bill-list/", methods=['POST', 'GET'])
-@delivery_page.route("/store-bill-list/<int:delivery_session_id>",
-                     methods=['POST', 'GET'])
+
+@delivery_page.route("/store-bill-list/<int:delivery_session_id>", methods=['POST', 'GET'])
 @CargoClerkPermission.require()
 @decorators.templated("/delivery/store-bill-list.html")
 @decorators.nav_bar_set
-def store_bill_add(delivery_session_id=None):
+def store_bill_add(delivery_session_id):
     import lite_mms.apis as apis
 
     if request.method == 'POST':
         store_bill_id_list = request.form.getlist('store_bill_list', type=int)
-        if delivery_session_id:
-            delivery_session = apis.delivery.get_delivery_session(
-                delivery_session_id)
-            delivery_session.add_store_bill_list(store_bill_id_list)
-            return redirect(
-                request.form.get("url") or url_for('delivery.delivery_session',
-                                                   id_=delivery_session_id))
-        else:
-            return redirect(url_for('delivery.delivery_session',
-                                    store_bill_id=store_bill_id_list))
+        delivery_session = apis.delivery.get_delivery_session(
+            delivery_session_id)
+        delivery_session.add_store_bill_list(store_bill_id_list)
+        return redirect(
+            request.form.get("url") or url_for('delivery.delivery_session',
+                                               id_=delivery_session_id))
     else:
         customers = apis.delivery.get_store_bill_customer_list()
         d = dict(titlename=u'选择仓单', customer_list=customers)
-        if delivery_session_id:
-            d["delivery_session_id"] = delivery_session_id
+        d["delivery_session_id"] = delivery_session_id
         return d
-
-
-@delivery_page.route("/delivery-task/<int:id_>", methods=['GET', 'POST'])
-@CargoClerkPermission.require()
-@decorators.templated("/delivery/delivery-task.html")
-@decorators.nav_bar_set
-def delivery_task(id_):
-    import lite_mms.apis as apis
-
-    task = apis.delivery.get_delivery_task(id_)
-    if not task:
-        abort(404)
-    if request.method == "GET":
-        return dict(task=task, titlename=u'装货任务详情')
-    else:
-        current_weight = request.form.get('weight', type=int)
-        weight = current_weight - task.last_weight
-        result = task.update(weight=weight)
-        if not result:
-            abort(500)
-        return redirect(
-            request.form.get("url") or url_for("delivery.delivery_session",
-                                               id_=task.delivery_session_id))
-
 
 @delivery_page.route("/consignment/", methods=["POST"])
 @delivery_page.route("/consignment/<int:id_>", methods=["GET", "POST"])
@@ -113,25 +83,7 @@ def consignment(id_=None):
                     flash(u"支付成功")
             return redirect(url_for("delivery.consignment", id_=id_,
                                     url=request.form.get("url")))
-        else:
-            class _ValidationForm(Form):
-                customer = IntegerField('customer', [validators.required()])
-                pay_mod = IntegerField('pay_mod', [validators.required()])
-                delivery_session_id = IntegerField('delivery_session_id',
-                                                   [validators.required()])
-                url = HiddenField("url")
 
-            form = _ValidationForm(request.form)
-            delivery_session_id = form.delivery_session_id.data
-            customer_id = form.customer.data
-            pay_in_cash = True if form.pay_mod.data else False
-            cons = apis.delivery.new_consignment(
-                customer_id=customer_id,
-                delivery_session_id=delivery_session_id,
-                pay_in_cash=pay_in_cash)
-
-            return redirect(url_for("delivery.consignment", id_=cons.id,
-                                    url=form.url.data))
 
 
 @delivery_page.route("/consignment_preview/<int:id_>", methods=["GET"])
@@ -148,8 +100,9 @@ def consignment_preview(id_):
     if not cons:
         abort(404)
     else:
-        PER_PAGE  = apis.config.get("print_count_per_page", 5.0, type=float)
+        PER_PAGE = apis.config.get("print_count_per_page", 5.0, type=float)
         import math
+
         pages = int(math.ceil(len(cons.product_list) / PER_PAGE))
         return dict(plate=cons.plate, consignment=cons, titlename=u'发货单详情',
                     pages=pages, per_page=PER_PAGE)
@@ -187,9 +140,8 @@ def consignment_list():
                                                          is_paid=is_paid,
                                                          customer_id=customer_id,
                                                          idx=(
-                                                             page - 1) * page_size,
+                                                                 page - 1) * page_size,
                                                          cnt=page_size)
-
 
     pagination = Pagination(page, constants.DELIVERY_SESSION_PER_PAGE,
                             total_cnt)
@@ -197,6 +149,7 @@ def consignment_list():
                 customer_list=apis.delivery.ConsignmentWrapper
                 .get_customer_list(),
                 customer=customer, pagination=pagination)
+
 
 @delivery_page.route("/product/<int:id_>", methods=["POST", "GET"])
 @decorators.templated("delivery/consignment-product.html")

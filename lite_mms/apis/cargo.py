@@ -131,7 +131,7 @@ class UnloadSessionWrapper(ModelWrapper):
 
         self.gc_goods_receipts()
 
-    @property
+    @cached_property
     def goods_receipt_stale(self):
         return any(gr.stale for gr in self.goods_receipt_list)
 

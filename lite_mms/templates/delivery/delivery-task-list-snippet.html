@@ -46,14 +46,16 @@
         </td>
         <td>{{ row.spec_type_list|join("<br>")|safe }}</td>
         <td>
-          {% if row.pic_path %}
-            <ul class="thumbnails">
-              <li class="span2">
-                <a class="fancybox thumbnail" href="{{ row.pic_url }}" rel="group" title="{{ row.product.name }}">
-                  <img class="bordered" src="{{ row.pic_url }}" alt="{{ row.product.name }}" />
-                </a>
-              </li>
-            </ul>
+          {% if row.pic_url_list %}
+            {% for pic_url in row.pic_url_list if pic_url%}
+              <ul class="thumbnails">
+                <li class="span2">
+                  <a class="fancybox thumbnail" href="{{ pic_url }}" rel="group" title="{{ row.product.name }}">
+                    <img class="bordered" src="{{ pic_url }}" alt="{{ row.product.name }}"/>
+                  </a>
+                </li>
+              </ul>
+            {% endfor %}
           {% endif %}
         </td>
       </tr>

@@ -115,3 +115,8 @@ header li.dropdown>a.dropdown-toggle {
     vertical-align: middle;
     height: 100%;
 }
+
+
+.controls ul .control-text{
+    float:none;
+}

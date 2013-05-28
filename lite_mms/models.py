@@ -694,7 +694,7 @@ class Consignment(db.Model):
     is_paid = db.Column(db.Boolean, default=False)
     notes = db.Column(db.String(256))
     MSSQL_ID = db.Column(db.Integer)
-
+    stale = db.Column(db.Boolean, default=False)
 
     def __init__(self, customer, delivery_session, pay_in_cash,
                  create_time=None):
@@ -772,7 +772,7 @@ class ConsignmentProduct(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     consignment_id = db.Column(db.Integer, db.ForeignKey("TB_CONSIGNMENT.id"),
                                nullable=False)
-    consignment = db.relationship("Consignment", backref="product_list")
+    consignment = db.relationship("Consignment", backref=db.backref("product_list", cascade="all, delete-orphan"))
     product_id = db.Column(db.Integer, db.ForeignKey("TB_PRODUCT.id"),
                            nullable=False)
     product = db.relationship("Product")

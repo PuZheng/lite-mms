@@ -32,6 +32,10 @@ class DeliverySessionWrapper(ModelWrapper):
     def customer_list(self):
         return list(set([task.customer for task in self.delivery_task_list]))
 
+    @cached_property
+    def customer_id_list(self):
+        return list(set([task.customer.id for task in self.delivery_task_list]))
+
     @property
     def with_person_des(self):
         return u'是' if self.with_person else u'否'
@@ -115,6 +119,28 @@ class DeliverySessionWrapper(ModelWrapper):
             return True
         return False
 
+    @cached_property
+    def stale(self):
+        return len(self.consignment_list) != len(self.customer_list) or any(cn.stale for cn in self.consignment_list)
+
+    def gc_consignment_list(self):
+        """
+        delete the consignment which has not entry converted from current
+        delivery_session's delivery_task
+        """
+        for cn in self.consignment_list:
+            if cn.customer.id not in self.customer_id_list:
+                do_commit(cn.model, "delete")
+
+    @property
+    def log_list(self):
+        from lite_mms.models import Log
+
+        ret = Log.query.filter(Log.obj_pk == str(self.id)).filter(
+            Log.obj_cls == self.model.__class__.__name__).all()
+        for task in self.delivery_task_list:
+            ret.extend(task.log_list)
+        return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time))
 
 class DeliveryTaskWrapper(ModelWrapper):
     @classmethod
@@ -188,8 +214,10 @@ class DeliveryTaskWrapper(ModelWrapper):
 
         for to in get_user_list(constants.groups.CARGO_CLERK):
             new_todo(to, WEIGH_DELIVERY_TASK, dt)
-
-        return DeliveryTaskWrapper(dt)
+        dt = DeliveryTaskWrapper(dt)
+        if dt.consignment:
+            dt.consignment.staled()
+        return dt
 
     @property
     def store_bill_id_list(self):
@@ -197,8 +225,7 @@ class DeliveryTaskWrapper(ModelWrapper):
 
     @property
     def pic_url_list(self):
-        return [store_bill.pic_url for store_bill in
-                self.store_bill_list]
+        return [store_bill.pic_url for store_bill in self.store_bill_list if store_bill.pic_url]
 
     @cached_property
     def last_weight(self):
@@ -235,9 +262,12 @@ class DeliveryTaskWrapper(ModelWrapper):
 
                 if sb.sub_order.order_type == constants.STANDARD_ORDER_TYPE:
                     sb.model.quantity = sb.model.weight
-
+            if self.consignment:
+                self.consignment.staled()
         elif kwargs.get("returned_weight"):
             self.model.returned_weight = kwargs["returned_weight"]
+            if self.consignment:
+                self.consignment.staled()
             # 这也说明，若是计件类型的仓单，数量不会根据称重进行调整
         elif kwargs.get("is_last"):
             self.model.is_last = kwargs["is_last"]
@@ -346,6 +376,44 @@ class ConsignmentWrapper(ModelWrapper):
             return None
 
     @classmethod
+    def create_or_update_consignment(cls, customer_id, delivery_session_id, pay_in_cash):
+        try:
+            consignment = ConsignmentWrapper(models.Consignment.query.filter(models.Consignment.customer_id == customer_id).filter(
+                models.Consignment.delivery_session_id == delivery_session_id).one())
+            if consignment.stale:
+                consignment.add_product_entries()
+        except NoResultFound:
+            return new_consignment(customer_id, delivery_session_id, pay_in_cash=pay_in_cash)
+
+    def add_product_entries(self):
+        for product in self.product_list:
+            do_commit(product, "delete")
+        for t in self.delivery_session.delivery_task_list:
+            if t.customer.id == self.customer_id:
+                self.add_product_entry(t)
+
+    def add_product_entry(self, delivery_task):
+        p = models.ConsignmentProduct(delivery_task.product, delivery_task, self)
+        if delivery_task.team_list:
+            p.team = delivery_task.team_list[0]
+        p.weight = delivery_task.weight
+        p.returned_weight = delivery_task.returned_weight
+        if not delivery_task.quantity:
+            delivery_task.quantity = sum(store_bill.quantity for store_bill in
+                                         delivery_task.store_bill_list)
+        p.quantity = delivery_task.quantity
+        if delivery_task.sub_order_list:
+            sb = delivery_task.sub_order_list[0]
+            p.unit = sb.unit
+            p.spec = sb.spec
+            p.type = sb.type
+        do_commit(p)
+
+    def staled(self):
+        self.stale = True
+        do_commit(self.model)
+
+    @classmethod
     def new_consignment(cls, customer_id, delivery_session_id, pay_in_cash):
         customer = lite_mms.apis.customer.get_customer(customer_id)
         if not customer:
@@ -354,33 +422,12 @@ class ConsignmentWrapper(ModelWrapper):
             delivery_session_id)
         if not delivery_session:
             raise ValueError(u'没有此发货会话%d' % delivery_session_id)
-        if customer not in set(task.customer for task in
-                               delivery_session.delivery_task_list):
-            raise ValueError("delivery session %d has no customer %s" % (
-                delivery_session_id,
-                customer.name))
-        consignment = models.Consignment(customer, delivery_session,
-                                         pay_in_cash)
-        from lite_mms.utilities.functions import deduplicate
+        if customer not in set(task.customer for task in delivery_session.delivery_task_list):
+            raise ValueError("delivery session %d has no customer %s" % (delivery_session_id, customer.name))
+        consignment = ConsignmentWrapper(do_commit(models.Consignment(customer, delivery_session, pay_in_cash)))
+        consignment.add_product_entries()
+        return consignment
 
-        for t in delivery_session.delivery_task_list:
-            if t.customer.id == customer_id:
-                p = models.ConsignmentProduct(t.product, t, consignment)
-                if t.team_list:
-                    p.team = t.team_list[0]
-                p.weight = t.weight
-                p.returned_weight = t.returned_weight
-                if not t.quantity:
-                    t.quantity = sum(store_bill.quantity for store_bill in
-                                     t.store_bill_list)
-                p.quantity = t.quantity
-                if t.sub_order_list:
-                    sb = t.sub_order_list[0]
-                    p.unit = sb.unit
-                    p.spec = sb.spec
-                    p.type = sb.type
-                do_commit(p)
-        return ConsignmentWrapper(do_commit(consignment))
 
     @property
     def plate(self):
@@ -407,8 +454,12 @@ class ConsignmentWrapper(ModelWrapper):
         return apis.customer.CustomerWrapper.get_customer_list(models.Consignment)
 
     @cached_property
-    def stale(self):
-        return False
+    def delivery_task_list(self):
+        task_list = []
+        for task in self.delivery_session.delivery_task_list:
+            if task.customer.id == self.customer.id:
+                task_list.append(task)
+        return task_list
 
 
 class ConsignmentProductWrapper(ModelWrapper):
@@ -466,6 +517,7 @@ class StoreBillWrapper(ModelWrapper):
 
         from itertools import groupby
         from operator import attrgetter
+
         getter = attrgetter("customer.name")
 
         customer_list = []
@@ -537,6 +589,21 @@ def get_delivery_task_list(ds_id):
     return [DeliveryTaskWrapper(dt) for dt in
             models.DeliveryTask.query.filter_by(
                 delivery_session_id=ds_id).all()]
+
+
+def create_or_update_consignment(customer_id, delivery_session_id, pay_in_cash):
+    try:
+        cn = ConsignmentWrapper(models.Consignment.query.filter(
+            models.Consignment.customer_id == customer_id).filter(
+            models.Consignment.delivery_session_id == delivery_session_id).one())
+        cn.pay_in_cash = pay_in_cash
+        if cn.stale:
+            cn.add_product_entries()
+            cn.stale = False
+        do_commit(cn)
+        return cn
+    except NoResultFound:
+        return new_consignment(customer_id, delivery_session_id, pay_in_cash=pay_in_cash)
 
 
 def get_store_bill_list(idx=0, cnt=sys.maxint, unlocked_only=True, qir_id=None,

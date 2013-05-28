@@ -1,63 +1,78 @@
-{% extends "layout.html" %}
-{% block body %}
-  <div class="container">
-    <legend>
-      发货会话列表&nbsp;
-      <a href="{{ url_for('delivery.delivery_session', url=request.url) }}" class="btn btn-primary">
-        <i class="icon-plus icon-white"></i>&nbsp;{{ _("创建会话") }}
-      </a>
-      <a href="{{ url_for('delivery.store_bill_add', url=request.url) }}" class="btn btn-success">
-        <i class="icon-th-list icon-white"></i>&nbsp;{{ _("查看仓单") }}
-      </a>
-    </legend>
-
-    <table class="table table-striped table-bordered table-condensed">
-      <thead>
-      <tr>
-        <th>&nbsp;</th>
-        <th>{{ _("编号") }}</th>
-        <th>{{ _("车牌号") }}</th>
-        <th>{{ _("创建时间") }}</th>
-        <th>{{ _("结束时间") }}</th>
-        <th>{{ _("状态") }}</th>
-      </tr>
-      </thead>
-      <tbody>
-      {% for session in sessions %}
-        <tr>
-          <td><input type="radio" value="{{ session.id }}"
-                     name="session_group"
-              {% if loop.first %} checked=true {% endif %}/>
-          </td>
-          <td>
-            <a href="{{ url_for('delivery.delivery_session', id_=session.id, url=request.url) }}">{{ session.id }}</a>
-          </td>
-          <td>{{ session.plate }}</td>
-          <td>{{ session.create_time }}</td>
-          <td>{{ session.finish_time|default("----", true) }}</td>
-          <td>
-            {{ session.status }}
-          </td>
-        </tr>
-      {% endfor %}
-      <tbody>
-    </table>
-    <div class="btn-toolbar">
-      <div class="btn-group">
-        <button class="btn btn-info" id="new-consignment" data-toggle="modal" data-target="#new-consignment-dialog">
-          <i class="icon-white icon-edit"></i>&nbsp;{{ _("创建发货单") }}
-        </button>
-      </div>
-      <div class="btn-group">
-        <button class="btn btn-info" id="view-consignment" data-toggle="modal" data-target="#view-consignments-dialog">
-          <i class="icon-eye-open icon-white"></i>&nbsp;{{ _("查看发货单") }}
-        </button>
-      </div>
-    </div>
-    {% from "pagination.html" import render_pagination %}
-    {{ render_pagination(pagination) }}
-
-  </div>
-  {% include "delivery/consignment-add.html" %}
-  {% include "delivery/view-consignments-dialog.html" %}
+{% extends "__data_browser__/list.html" %}
+{% block __data_browser__customized_head_block %}
+  {{ super() }}
 {% endblock %}
+{% block body %}
+  {{ super() }}
+  <script type="text/javascript">
+    $(function () {
+      $('[name=__action__][value="生成发货单"]').click(function () {
+        var delivery_session_id = $("input[type=radio]:checked").val();
+        if (delivery_session_id != undefined) {
+          $("#" + delivery_session_id + "-dialog").modal('show');
+        } else {
+          alert("请选择发货会话");
+        }
+        return false;
+      });
+      $("button[name=consignment-button]").click(function () {
+        var delivery_session = $(this).attr("data-delivery");
+        var data = {};
+        $("[name=pay_mod][data-delivery=" + delivery_session + "]").each(function () {
+          data[$(this).attr("data-customer")] = $(this).val()
+        });
+        if (data != {}) {
+          $("[name=customer-pay_mod][data-delivery=" + delivery_session + "]").val(JSON.stringify(data));
+          $("form[data-delivery=" + delivery_session + "]").submit();
+        }
+      });
+    });
+  </script>
+  {% for field in __data__ %}
+    <div>{{ consignment_gene(field.obj) }}</div>
+  {% endfor %}
+{% endblock %}
+
+{% macro consignment_gene(delivery_session) %}
+  {% if delivery_session.customer_list %}
+    <div id="{{ delivery_session.id }}-dialog" class="modal hide fade" tabindex="-1">
+      <div class="modal-header">
+        <a class="close" data-dismiss="modal">&times;</a>
+
+        <h3>{{ _("请选择支付类型") }}</h3>
+      </div>
+      <form class="modal-form form-horizontal" action="{{ url_for("delivery.create_consignment_list", id_=delivery_session.id) }}" method="POST" data-delivery="{{ delivery_session.id }}">
+        <input type="hidden" name="delivery_session_id" value="{{ delivery_session.id }}"/>
+        <input type="hidden" name="customer-pay_mod" value="" data-delivery="{{ delivery_session.id }}"/>
+        <input type="hidden" name="url" value="{{ request.url }}"/>
+        <div class="modal-body" id="new-consignment-content">
+          <fieldset>
+            {% for customer in delivery_session.customer_list %}
+
+              <div class="control-group">
+                <label for="pay_mode" class="control-label">
+                  <span>{{ customer.name }}</span>
+                </label>
+
+                <div class="controls">
+                  <select name="pay_mod" id="pay_mode" required="required" class="input-medium"
+                          data-customer="{{ customer.id }}" data-delivery="{{ delivery_session.id }}">
+                    <option value="0">月结</option>
+                    <option value="1">现金支付</option>
+                  </select></div>
+              </div>
+            {% endfor %}
+          </fieldset>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" name="consignment-button" type="button" data-delivery="{{ delivery_session.id }}">
+            提交
+          </button>
+          <a class="btn" data-dismiss="modal">
+            返回
+          </a>
+        </div>
+      </form>
+    </div>
+  {% endif %}
+{% endmacro %}

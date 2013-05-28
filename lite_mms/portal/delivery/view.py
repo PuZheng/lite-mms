@@ -1,12 +1,12 @@
 #-*- coding:utf-8 -*-
 from collections import OrderedDict
-from flask import request, abort, redirect, url_for, render_template
+from flask import request, abort, redirect, url_for, render_template, flash
 from flask.ext.login import current_user
 from flask.ext.principal import PermissionDenied
 from sqlalchemy import exists
 from flask.ext.databrowser import ModelView, filters
 from flask.ext.databrowser.column_spec import ColumnSpec, ListColumnSpec, PlaceHolderColumnSpec, TableColumnSpec, \
-    InputColumnSpec
+    InputColumnSpec, ImageColumnSpec
 from lite_mms import models, constants
 from lite_mms.apis.delivery import ConsignmentWrapper, DeliverySessionWrapper
 from lite_mms.portal.delivery import delivery_page
@@ -21,12 +21,14 @@ class DeliverySessionModelView(ModelView):
     can_batchly_edit = False
     column_hide_backrefs = False
     edit_template = "delivery/delivery-session.html"
+    list_template = "delivery/delivery-session-list.html"
 
     def get_list_columns(self):
         def gr_item_formatter(v, obj):
             # 格式化每个发货单，未打印或者过期，需要提示出来
             ret = unicode(v)
-            v = ConsignmentWrapper(v)
+            if v.pay_in_cash and not v.is_paid:
+                ret +=u'<small class="text-error"> (未支付)</small>'
             if not v.MSSQL_ID:
                 ret += u'<small class="text-error"> (未导入)</small>'
             if v.stale:
@@ -67,8 +69,10 @@ class DeliverySessionModelView(ModelView):
     def get_form_columns(self, obj=None):
         __form_columns__ = OrderedDict()
 
-        __form_columns__[u"发货会话详情"] = [ColumnSpec("id"), "plate_", "tare", "with_person", ColumnSpec("create_time")]
-
+        __form_columns__[u"发货会话详情"] = [ColumnSpec("id"), "plate_", "tare", "with_person", ColumnSpec("create_time"),
+                                       ColumnSpec("finish_time")]
+        __form_columns__[u"日志"] = [
+            PlaceHolderColumnSpec(col_name="", label=u"日志", template_fname="cargo/us-log-snippet.html", as_input=True)]
         __form_columns__[u"发货任务列表"] = [
             PlaceHolderColumnSpec("delivery_task_list", label="", template_fname="delivery/delivery-task-list-snippet.html")]
 
@@ -122,20 +126,22 @@ class DeliverySessionModelView(ModelView):
         return columns
 
     def get_customized_actions(self, model_list=None):
-        from lite_mms.portal.delivery.actions import CloseAction, OpenAction, CreateConsignmentAction, PrintConsignment
+        from lite_mms.portal.delivery.actions import CloseAction, OpenAction, CreateConsignmentAction, BatchPrintConsignment
 
         action_list = []
         if model_list is None: # for list
-            action_list.extend([CloseAction(u"关闭"), OpenAction(u"打开"), CreateConsignmentAction(u"生成发货单")])
+            action_list.extend([CloseAction(u"关闭"), OpenAction(u"打开"), CreateConsignmentAction(u"生成发货单"),
+                                BatchPrintConsignment(u"打印发货单")])
         else:
             if len(model_list) ==1:
                 if model_list[0].status in [constants.delivery.STATUS_CLOSED, constants.delivery.STATUS_DISMISSED]:
                     action_list.append(OpenAction(u"打开"))
                 else:
                     action_list.append(CloseAction(u"关闭"))
-                action_list.append(CreateConsignmentAction(u"生成发货单"))
+                if model_list[0].stale:
+                    action_list.append(CreateConsignmentAction(u"生成发货单"))
                 if model_list[0].consignment_list:
-                    action_list.append(PrintConsignment(u"打印发货单"))
+                    action_list.append(BatchPrintConsignment(u"打印发货单"))
         return action_list
 
     def try_edit(self, processed_objs=None):
@@ -179,13 +185,77 @@ def weigh_delivery_task(id_):
         from lite_mms.basemain import nav_bar
         return render_template("delivery/delivery-task.html", titlename=u"发货任务称重", task=task, nav_bar=nav_bar)
 
+@delivery_page.route("/create-consignment-list/<int:id_>", methods=["POST"])
+def create_consignment_list(id_):
+    from lite_mms.apis.delivery import get_delivery_session, create_or_update_consignment
+    delivery_session = get_delivery_session(id_)
+    if not delivery_session:
+        abort(404)
+
+    data = request.form.get("customer-pay_mod")
+    from flask import json
+
+    dict_ = json.loads(data)
+    delivery_session_id = request.form.get("delivery_session_id", type=int)
+    for k, v in dict_.items():
+        try:
+            create_or_update_consignment(customer_id=int(k), delivery_session_id=delivery_session_id,
+                                         pay_in_cash=int(v))
+        except ValueError, e:
+            flash(u"发货会话%s生成发货单失败，原因：%s" % (delivery_session_id, unicode(e)), "error")
+            break
+    else:
+        delivery_session.gc_consignment_list()
+        flash(u"发货会话%s生成发货单成功！" % delivery_session_id)
+    return redirect(request.form.get("url", url_for("delivery.delivery_session_list")))
+
 
 class DeliveryTaskModelView(ModelView):
-    pass
+    __form_columns__ = [ColumnSpec("id", label=u"编号"), InputColumnSpec("weight", label=u"重量"),
+                        InputColumnSpec("quantity", label=u"数量"),
+                        ColumnSpec("unit", label=u"单位"),
+                        ListColumnSpec("store_bill_list", label=u"仓单列表"),
+                        ListColumnSpec("spec_type_list", label=u"规格-型号列表"),
+                        ListColumnSpec("pic_url_list", label=u"图片", formatter=lambda v, obj: None if not v else v,
+                                       item_col_spec=ImageColumnSpec("", css_class="img-polaroid"))]
+
+    def preprocess(self, obj):
+        from lite_mms.apis.delivery import DeliveryTaskWrapper
+        return DeliveryTaskWrapper(obj)
+
+    def try_edit(self, objs=None):
+        if any(obj.delivery_session.status in [constants.delivery.STATUS_CLOSED, constants.delivery.STATUS_DISMISSED]
+               for obj in objs):
+            raise PermissionDenied
+
+    def edit_hint_message(self, objs, read_only=False):
+        if read_only:
+            return u"发货会话已经关闭，所以不能修改发货任务"
+        return super(DeliveryTaskModelView, self).edit_hint_message(objs, read_only)
+
+    def on_model_change(self, form, model):
+        obj = self.preprocess(model)
+        if obj.consignment:
+            obj.consignment.staled()
 
 class ConsignmentModelView(ModelView):
     def try_create(self):
         raise PermissionDenied
+
+    def try_edit(self, processed_objs=None):
+        if any(processed_obj.MSSQL_ID is not None for processed_obj in processed_objs) or any(
+                processed_obj.stale for processed_obj in processed_objs):
+            raise PermissionDenied
+
+    def edit_hint_message(self, obj, read_only=False):
+        if read_only:
+            if obj.MSSQL_ID:
+                return u"发货单%s已插入MSSQL，不能修改" % obj.consignment_id
+            else:
+                return u"发货单%s已过时" % obj.consignment_id
+        else:
+            return super(ConsignmentModelView, self).edit_hint_message(obj, read_only)
+
 
     can_batchly_edit = False
 
@@ -206,6 +276,8 @@ class ConsignmentModelView(ModelView):
         if AccountantPermission.can():
             return [filters.EqualTo("pay_in_cash", value=True)]
         return []
+
+    __sortable_columns__ = ("create_time", "customer", "is_paid")
 
     def get_list_columns(self):
         return ["id", "consignment_id", "delivery_session", "actor", "create_time", "customer", "pay_in_cash",
@@ -233,15 +305,10 @@ class ConsignmentModelView(ModelView):
 
     def get_form_columns(self, obj=None):
         self.__form_columns__ = OrderedDict()
-        self.__form_columns__[u"发货单详情"] = [
-            ColumnSpec("consignment_id"),
-            ColumnSpec("actor"),
-            ColumnSpec("create_time"),
-            ColumnSpec("customer"),
-            ColumnSpec("delivery_session"),
-            ColumnSpec("notes", trunc=24),
-            ColumnSpec("is_paid", formatter=lambda v, obj: u"是" if v else u"否"),
-        ]
+        self.__form_columns__[u"发货单详情"] = [ColumnSpec("consignment_id"), ColumnSpec("actor"),
+                                           ColumnSpec("create_time"), ColumnSpec("customer"),
+                                           ColumnSpec("delivery_session"), ColumnSpec("notes", trunc=24),
+                                           ColumnSpec("is_paid", formatter=lambda v, obj: u"是" if v else u"否")]
         if obj and self.preprocess(obj).measured_by_weight:
             col_specs = ["id", ColumnSpec("product", label=u"产品",
                                           formatter=lambda v, obj: unicode(v.product_type) + "-" + unicode(v)),
@@ -281,7 +348,7 @@ class ConsignmentProductModelView(ModelView):
         from lite_mms import permissions
 
         permissions.CargoClerkPermission.test()
-        if processed_objs[0].consignment.MSSQL_ID is not None:
+        if processed_objs[0].consignment.MSSQL_ID is not None or processed_objs[0].consignment.stale:
             raise PermissionDenied
 
     def edit_hint_message(self, obj, read_only=False):
@@ -294,14 +361,12 @@ class ConsignmentProductModelView(ModelView):
         return super(ConsignmentProductModelView, self).edit_hint_message(obj, read_only)
 
     def get_form_columns(self, obj=None):
-    #if obj and apis.delivery.ConsignmentWrapper(obj.consignment).measured_by_weight:
-    #return [InputColumnSpec("product", group_by=Product.product_type), "weight", "returned_weight", "team"]
-    #else:
-    #return [InputColumnSpec("product", group_by=Product.product_type), "weight", "quantity", "unit", "spec",
-    #"type", "returned_weight", "team"]
-        return ['unit']
-        #return [InputColumnSpec("product", group_by=Product.product_type), "weight", "quantity", "unit", "spec",
-        #"type", "returned_weight", "team"]
+        if obj and ConsignmentWrapper(obj.consignment).measured_by_weight:
+            return [InputColumnSpec("product", group_by=models.Product.product_type), "weight", "returned_weight",
+                    "team"]
+        else:
+            return [InputColumnSpec("product", group_by=models.Product.product_type), "weight", "quantity", "unit",
+                    "spec", "type", "returned_weight", "team"]
 
 
 delivery_session_view = DeliverySessionModelView(models.DeliverySession, u"发货会话")

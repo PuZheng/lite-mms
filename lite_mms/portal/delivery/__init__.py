@@ -1,7 +1,8 @@
 # -*- coding: UTF-8 -*-
 
-from flask import Blueprint, redirect
+from flask import Blueprint, redirect, request, abort
 from flask.ext.login import login_required
+from lite_mms.utilities.decorators import templated
 
 delivery_page = Blueprint("delivery", __name__, static_folder="static", template_folder="templates")
 
@@ -50,10 +51,39 @@ def index():
 
 @consignment_page.before_request
 @login_required
-def _():
+def _default():
     pass
+
+@consignment_page.route("/batch-print/")
+@templated("delivery/batch-print-consignment.html")
+def batch_print_consignment():
+    from lite_mms import apis
+    from flask import json
+    from socket import error
+
+    delivery_session_id_list = request.args.getlist("delivery_session_id", type=int)
+    if not delivery_session_id_list:
+        abort(404)
+    error_message = ""
+    consignment_list = []
+
+    per_page = apis.config.get("print_count_per_page", 5, type=int)
+    for delivery_session in [apis.delivery.get_delivery_session(id_) for id_ in delivery_session_id_list]:
+
+        for cn in delivery_session.consignment_list:
+            if not cn.MSSQL_ID:
+                try:
+                    MSSQL_ID = json.loads(apis.broker.export_consignment(cn))
+                except error:
+                    error_message += u"发货单%s，" % cn.id
+            consignment_list.append(cn)
+
+    error_message += u"插入MSSQL_ID，请手工插入"
+    return {"consignment_list": consignment_list, "error_message": error_message,
+            "per_page": per_page, "nav_bar":nav_bar, "url": request.args.get("url"), "titlename":u"批量打印"}
 
 @delivery_page.before_request
 @login_required
-def _():
+def _default():
     pass
+

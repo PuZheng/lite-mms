@@ -1,6 +1,6 @@
 #-*- coding:utf-8 -*-
 from lite_sm import StateMachine, RuleSpecState, State, InvalidAction
-from basemain import timeline_logger
+from lite_mms.basemain import timeline_logger
 from lite_mms.constants import delivery
 from lite_mms.permissions import CargoClerkPermission
 from lite_mms.utilities.decorators import committed

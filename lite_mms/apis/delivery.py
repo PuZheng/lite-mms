@@ -395,8 +395,8 @@ class ConsignmentWrapper(ModelWrapper):
             return new_consignment(customer_id, delivery_session_id, pay_in_cash=pay_in_cash)
 
     def add_product_entries(self):
-        for product in self.product_list:
-            do_commit(product, "delete")
+        self.product_list = []
+        do_commit(self)
         for t in self.delivery_session.delivery_task_list:
             if t.customer.id == self.customer_id:
                 self.add_product_entry(t)

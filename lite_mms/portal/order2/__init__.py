@@ -79,6 +79,7 @@ class OrderModelView(ModelView):
         else:
             return url_for("order2.order")
 
+    __default_order__ = ("id", "desc")
     # =================== FORM PARTS ===================================
 
     from flask.ext.databrowser.column_spec import (InputColumnSpec, 

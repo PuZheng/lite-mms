@@ -42,7 +42,6 @@
         <h3>{{ _("请选择支付类型") }}</h3>
       </div>
       <form class="modal-form form-horizontal" action="{{ url_for("delivery.create_consignment_list", id_=delivery_session.id) }}" method="POST" data-delivery="{{ delivery_session.id }}">
-        <input type="hidden" name="delivery_session_id" value="{{ delivery_session.id }}"/>
         <input type="hidden" name="customer-pay_mod" value="" data-delivery="{{ delivery_session.id }}"/>
         <input type="hidden" name="url" value="{{ request.url }}"/>
         <div class="modal-body" id="new-consignment-content">

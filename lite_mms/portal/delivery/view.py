@@ -195,13 +195,12 @@ def create_consignment_list(id_):
     from flask import json
 
     dict_ = json.loads(data)
-    delivery_session_id = request.form.get("delivery_session_id", type=int)
     for k, v in dict_.items():
         try:
-            create_or_update_consignment(customer_id=int(k), delivery_session_id=delivery_session_id,
+            create_or_update_consignment(customer_id=int(k), delivery_session_id=id_,
                                          pay_in_cash=int(v))
         except ValueError, e:
-            flash(u"发货会话%s生成发货单失败，原因：%s" % (delivery_session_id, unicode(e)), "error")
+            flash(u"发货会话%s生成发货单失败，原因：%s" % (id_, unicode(e)), "error")
             break
     else:
         delivery_session.gc_consignment_list()

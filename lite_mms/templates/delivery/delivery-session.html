@@ -20,6 +20,13 @@
           $("form[name=consignment-form]").submit();
         }
       });
+      $(".collapse[data-role=cn-entries]").on('shown',function (event) {
+        event.stopPropagation();
+        $(this).prev().attr("class", "icon-chevron-up");
+      }).on('hidden', function (event) {
+            event.stopPropagation();
+            $(this).prev().attr("class", "icon-chevron-down");
+          });
     });
   </script>
   <div>{{ consignment_gene(obj) }}</div>

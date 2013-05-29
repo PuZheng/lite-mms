@@ -265,6 +265,10 @@ class ConsignmentModelView(ModelView):
 
     can_batchly_edit = False
 
+    def patch_row_attr(self, idx, row):
+        if row.stale:
+            return {"class": u"alert alert-error", "title": u"发货单已过时，请重新生成"}
+
     def get_customized_actions(self, processed_objs=None):
         from .actions import PayAction, PreviewConsignment
 
@@ -311,7 +315,7 @@ class ConsignmentModelView(ModelView):
 
     def get_form_columns(self, obj=None):
         self.__form_columns__ = OrderedDict()
-        self.__form_columns__[u"发货单详情"] = [ColumnSpec("consignment_id"), ColumnSpec("actor"),
+        self.__form_columns__[u"发货单详情"] = [ColumnSpec("consignment_id"),ColumnSpec("actor"),
                                            ColumnSpec("create_time"), ColumnSpec("customer"),
                                            ColumnSpec("delivery_session")]
         from lite_mms.permissions.roles import CargoClerkPermission

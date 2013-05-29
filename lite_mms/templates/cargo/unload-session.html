@@ -9,9 +9,11 @@
   <script type="text/javascript">
     $(function () {
       $(".fancybox").fancybox();
-      $(".collapse[data-role=gr-entries]").on('shown',function () {
+      $(".collapse[data-role=gr-entries]").on('shown',function (event) {
+        event.stopPropagation();
         $(this).prev().attr("class", "icon-chevron-up");
-      }).on('hidden', function () {
+      }).on('hidden', function (event) {
+            event.stopPropagation();
             $(this).prev().attr("class", "icon-chevron-down");
           });
       $("#log-accordion").find("a").click(function () {

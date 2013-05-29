@@ -81,7 +81,11 @@ def _(step, delivery_session, store_bill):
             rv = c.post("/delivery_ws/delivery-task?sid=%s&is_finished=1&remain=0&actor_id=1" % delivery_session.id,
                         data=json.dumps([{"store_bill_id": store_bill.id, "is_finished": 1}]))
             assert 200 == rv.status_code
-
+            delivery_task = models.DeliveryTask.query.filter(
+                models.DeliveryTask.delivery_session == delivery_session).order_by(
+                models.DeliveryTask.id.desc()).first()
+            rv = c.post("/delivery/weigh-delivery-task/%d" % delivery_task.id, data={"weight":6500})
+            assert 302 == rv.status_code
 
 @step(u"收发员生成发货单")
 def _(step, delivery_session):
@@ -92,3 +96,11 @@ def _(step, delivery_session):
                                                    DeliverySessionWrapper(delivery_session).customer_list})})
 
             assert 302 == rv.status_code
+
+
+    return models.Consignment.query.order_by(models.Consignment.id.desc()).first()
+
+@step(u"发货单产品与仓单相同")
+def _(step, consignment, store_bill):
+    assert len(consignment.product_list) ==1 and consignment.product_list[0].product == store_bill.sub_order.product and \
+           consignment.product_list[0].weight == store_bill.weight and consignment.product_list[0].quantity == store_bill.quantity

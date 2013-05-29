@@ -204,7 +204,7 @@ def create_consignment_list(id_):
             break
     else:
         delivery_session.gc_consignment_list()
-        flash(u"发货会话%s生成发货单成功！" % delivery_session_id)
+        flash(u"发货会话%s生成发货单成功！" % id_)
     return redirect(request.form.get("url", url_for("delivery.delivery_session_list")))
 
 

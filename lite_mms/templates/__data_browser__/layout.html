@@ -84,7 +84,14 @@
       function display(message) {
         var ret = message["msg"];
         if (message.context_url.length > 0) {
-          ret += sprintf('<a href="%s">开始&gt;&gt;</a>', message.context_url)
+          var url = message.context_url;
+          if (url.indexof("?") == -1) {
+            url += url + "?url=" + "{{ request.url }}";
+          } else {
+            url += url + "&url=" + "{{ request.url }}";
+          }
+
+          ret += sprintf('<a href="%s">开始&gt;&gt;</a>', url)
         }
         return ret;
       }

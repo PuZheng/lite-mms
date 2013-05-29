@@ -390,6 +390,7 @@ class ConsignmentWrapper(ModelWrapper):
                 models.Consignment.delivery_session_id == delivery_session_id).one())
             if consignment.stale:
                 consignment.add_product_entries()
+                consignment.add_todo()
         except NoResultFound:
             return new_consignment(customer_id, delivery_session_id, pay_in_cash=pay_in_cash)
 
@@ -433,9 +434,18 @@ class ConsignmentWrapper(ModelWrapper):
         if customer not in set(task.customer for task in delivery_session.delivery_task_list):
             raise ValueError("delivery session %d has no customer %s" % (delivery_session_id, customer.name))
         consignment = ConsignmentWrapper(do_commit(models.Consignment(customer, delivery_session, pay_in_cash)))
+        from flask.ext.login import current_user
+        if current_user.is_authenticated():
+            consignment.actor = current_user
         consignment.add_product_entries()
+        consignment.add_todo()
         return consignment
 
+    def add_todo(self):
+        lite_mms.apis.todo.remove_todo(lite_mms.apis.todo.PAY_CONSIGNMENT, self.id)
+        if self.pay_in_cash and not self.is_paid:
+            for to in lite_mms.apis.auth.get_user_list(constants.groups.ACCOUNTANT):
+                lite_mms.apis.todo.new_todo(to, lite_mms.apis.todo.PAY_CONSIGNMENT, self)
 
     @property
     def plate(self):
@@ -448,7 +458,11 @@ class ConsignmentWrapper(ModelWrapper):
             raise ValueError(u"已导入原系统的发货单不能再修改")
         for k, v in kwargs.items():
             if hasattr(consignment, k):
-                setattr(consignment, k, v)
+                if k == "pay_in_cash" and v and not consignment.pay_in_cash:
+                    setattr(consignment, k, v)
+                    consignment.add_todo()
+                else:
+                    setattr(consignment, k, v)
         return ConsignmentWrapper(do_commit(consignment))
 
     def paid(self):

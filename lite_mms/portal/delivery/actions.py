@@ -57,6 +57,8 @@ class CreateConsignmentAction(DirectAction):
                 return -2
             if any(cn.MSSQL_ID for cn in model.consignment_list):
                 return -3
+            if any(cn.pay_in_cash and cn.is_paid for cn in model.consignment_list):
+                return -5
         elif not model.delivery_task_list:
             return -4
         return 0
@@ -64,7 +66,8 @@ class CreateConsignmentAction(DirectAction):
     def get_forbidden_msg_formats(self):
         return {-2: u"发货会话%s已生成发货单",
                 -3: u"发货会话%s存在已导入旧系统的发货单，无法重新生成",
-                -4: u"发货会话%s没有发货任务，请先生成发货任务"}
+                -4: u"发货会话%s没有发货任务，请先生成发货任务",
+                -5: u"发货会话%s的发货单已支付"}
 
 
 class BatchPrintConsignment(DirectAction):
@@ -84,6 +87,14 @@ class BatchPrintConsignment(DirectAction):
         return {-2: u"发货会话%s未生成发货单", -3: u"发货会话%s有未支付的发货单"}
 
 class PayAction(BaseAction):
+    def test_enabled(self, model):
+        if model.stale:
+            return -2
+        return 0
+
+    def get_forbidden_msg_formats(self):
+        return {-2:u"发货单%s已过时，请联系收发员重新生成"}
+
     @committed
     def op(self, obj):
         obj.is_paid = True

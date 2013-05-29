@@ -244,6 +244,9 @@ class ConsignmentModelView(ModelView):
         raise PermissionDenied
 
     def try_edit(self, processed_objs=None):
+        from lite_mms.permissions.roles import CargoClerkPermission
+        if not CargoClerkPermission.can():
+            raise PermissionDenied
         if any(processed_obj.MSSQL_ID is not None for processed_obj in processed_objs) or any(
                 processed_obj.stale for processed_obj in processed_objs):
             raise PermissionDenied
@@ -252,8 +255,10 @@ class ConsignmentModelView(ModelView):
         if read_only:
             if obj.MSSQL_ID:
                 return u"发货单%s已插入MSSQL，不能修改" % obj.consignment_id
+            elif obj.stale:
+                return u"发货单%s已过时，需要重新生成" % obj.consignment_id
             else:
-                return u"发货单%s已过时" % obj.consignment_id
+                return u"您没有修改发货单%s的权限" % obj.consignment_id
         else:
             return super(ConsignmentModelView, self).edit_hint_message(obj, read_only)
 
@@ -308,8 +313,16 @@ class ConsignmentModelView(ModelView):
         self.__form_columns__ = OrderedDict()
         self.__form_columns__[u"发货单详情"] = [ColumnSpec("consignment_id"), ColumnSpec("actor"),
                                            ColumnSpec("create_time"), ColumnSpec("customer"),
-                                           ColumnSpec("delivery_session"), ColumnSpec("notes", trunc=24),
-                                           ColumnSpec("is_paid", formatter=lambda v, obj: u"是" if v else u"否")]
+                                           ColumnSpec("delivery_session")]
+        from lite_mms.permissions.roles import CargoClerkPermission
+        if CargoClerkPermission.can():
+            self.__form_columns__[u"发货单详情"].extend(("notes", InputColumnSpec("pay_in_cash", label=u"现金支付")))
+        else:
+            self.__form_columns__[u"发货单详情"].extend(
+                (ColumnSpec("notes"), ColumnSpec("pay_in_cash", formatter=lambda v, obj: u"现金支付" if v else u"月结")))
+        if obj and obj.pay_in_cash:
+            self.__form_columns__[u"发货单详情"].append(ColumnSpec("is_paid", formatter=lambda v, obj: u"是" if v else u"否"))
+
         if obj and self.preprocess(obj).measured_by_weight:
             col_specs = ["id", ColumnSpec("product", label=u"产品",
                                           formatter=lambda v, obj: unicode(v.product_type) + "-" + unicode(v)),
@@ -340,6 +353,8 @@ class ConsignmentModelView(ModelView):
     def preprocess(self, obj):
         return ConsignmentWrapper(obj)
 
+    def on_model_change(self, form, model):
+        self.preprocess(model).add_todo()
 
 class ConsignmentProductModelView(ModelView):
     __column_labels__ = {"product": u"产品", "weight": u"净重", "returned_weight": u"退镀重量", "team": u"班组",

@@ -1,9 +1,9 @@
 #-*- coding:utf-8 -*-
 from lite_sm import StateMachine, RuleSpecState, State, InvalidAction
 from basemain import timeline_logger
-from constants import delivery
-from permissions import CargoClerkPermission
-from utilities.decorators import committed
+from lite_mms.constants import delivery
+from lite_mms.permissions import CargoClerkPermission
+from lite_mms.utilities.decorators import committed
 
 
 class DeliverySessionFSM(StateMachine):

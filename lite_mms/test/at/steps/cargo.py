@@ -67,7 +67,7 @@ def _(step, us):
 def _(step, us):
     with app.test_request_context():
         with app.test_client() as c:
-            rv = c.post("/cargo/unload-session/%d" % us.id, data={"action": u"生成收货单"})
+            rv = c.post("/cargo/unload-session/%d" % us.id, data={"__action__": u"生成收货单"})
             assert 302 == rv.status_code
             return db.session.query(models.GoodsReceipt).filter(models.GoodsReceipt.unload_session_id == us.id).all()
 
@@ -130,7 +130,7 @@ def _(step, plate_name, us):
     plate_ = do_commit(models.Plate(name=plate_name))
     with app.test_request_context():
         with app.test_client() as c:
-            rv = c.post(u"/cargo/unload-session/%d" % us.id, data={"action": u"提交", "plate_": plate_name})
+            rv = c.post(u"/cargo/unload-session/%d" % us.id, data={"__action__": u"提交", "plate_": plate_name})
             assert 302 == rv.status_code
 
 
@@ -138,7 +138,7 @@ def _(step, plate_name, us):
 def _(step, weight, us):
     with app.test_request_context():
         with app.test_client() as c:
-            rv = c.post(u"/cargo/unload-session/%d" % us.id, data={"action": u"提交", "gross_weight": int(weight)})
+            rv = c.post(u"/cargo/unload-session/%d" % us.id, data={"__action__": u"提交", "gross_weight": int(weight)})
             assert 302 == rv.status_code
 
 
@@ -158,7 +158,7 @@ def _(step, weight, us):
 def _(step, weight, ut):
     with app.test_request_context():
         with app.test_client() as c:
-            rv = c.post(u"/cargo/unload-task/%d" % ut.id, data={"action": u"提交", "weight": weight})
+            rv = c.post(u"/cargo/unload-task/%d" % ut.id, data={"__action__": u"提交", "weight": weight})
             assert 302 == rv.status_code
 
 
@@ -172,7 +172,7 @@ def _(step, weight, ut):
 def _(step, us):
     with app.test_request_context():
         with app.test_client() as c:
-            rv = c.post("/cargo/unload-session/%d" % us.id, data={"action": u"关闭"})
+            rv = c.post("/cargo/unload-session/%d" % us.id, data={"__action__": u"关闭"})
             assert 302 == rv.status_code
 
 
@@ -180,7 +180,7 @@ def _(step, us):
 def _(step, us):
     with app.test_request_context():
         with app.test_client() as c:
-            rv = c.post(u"/cargo/unload-session/%d" % us.id, data={"action": u"提交", "gross_weight": 123123})
+            rv = c.post(u"/cargo/unload-session/%d" % us.id, data={"__action__": u"提交", "gross_weight": 123123})
             assert 403 == rv.status_code
 
 
@@ -188,7 +188,7 @@ def _(step, us):
 def _(step, ut):
     with app.test_request_context():
         with app.test_client() as c:
-            rv = c.post(u"/cargo/unload-task/%d" % ut.id, data={"action": u"提交", "weight": 12312})
+            rv = c.post(u"/cargo/unload-task/%d" % ut.id, data={"__action__": u"提交", "weight": 12312})
             assert 403 == rv.status_code
 
 
@@ -228,7 +228,7 @@ def _(step, us, customer, harbor, product):
 def _(step, ut):
     with app.test_request_context():
         with app.test_client() as c:
-            rv = c.post("/cargo/ajax/unload-task/%d" % ut.id, data={"action": u"delete"})
+            rv = c.post("/cargo/ajax/unload-task/%d" % ut.id, data={"__action__": u"delete"})
             return rv.status_code
 
 
@@ -263,7 +263,7 @@ def _(step, customer, harbor, product):
 def _(step, us):
     with app.test_request_context():
         with app.test_client() as c:
-            rv = c.post("/cargo/unload-session/%d" % us.id, data={"action": u"关闭"})
+            rv = c.post("/cargo/unload-session/%d" % us.id, data={"__action__": u"关闭"})
             return rv.status_code
 
 
@@ -329,7 +329,7 @@ def _(step, customer, harbor, plate, product):
 def _(step, us):
     with app.test_request_context():
         with app.test_client() as c:
-            rv = c.post("/cargo/unload-session/%d" % us.id, data={"action": u"打开"})
+            rv = c.post("/cargo/unload-session/%d" % us.id, data={"__action__": u"打开"})
             assert 302 == rv.status_code
 
 
@@ -337,14 +337,14 @@ def _(step, us):
 def _(step, weight, us):
     with app.test_request_context():
         with app.test_client() as c:
-            rv = c.post("/cargo/unload-task/%d" % us.task_list[0].id, data={"action": u"提交", "weight": weight})
+            rv = c.post("/cargo/unload-task/%d" % us.task_list[0].id, data={"__action__": u"提交", "weight": weight})
             assert 302 == rv.status_code
 
 @step(u"生成收货单。其产品重量为(\d+)KG")
 def _(step, weight, us):
     with app.test_request_context():
         with app.test_client() as c:
-            rv = c.post("/cargo/unload-session/%d" % us.id, data={"action":u"生成收货单"})
+            rv = c.post("/cargo/unload-session/%d" % us.id, data={"__action__":u"生成收货单"})
             assert 302 == rv.status_code
             gr = models.GoodsReceipt.query.order_by(models.GoodsReceipt.id.desc()).first()
             assert int(weight) == sum(i.weight for i in gr.goods_receipt_entries)
@@ -374,14 +374,14 @@ def _(step, gr):
 def _(step, gr):
     with app.test_request_context():
         with app.test_client() as c:
-            rv = c.post("/goods_receipt/goods-receipt/%d" % gr.id, data={"action": u"提交"})
+            rv = c.post("/goods_receipt/goods-receipt/%d" % gr.id, data={"__action__": u"提交"})
             assert 403 == rv.status_code
 
 @step(u"重新生成收货单")
 def _(step, us):
     with app.test_request_context():
         with app.test_client() as c:
-            rv = c.post("/cargo/unload-session/%d" % us.id, data={"action":u"生成收货单"})
+            rv = c.post("/cargo/unload-session/%d" % us.id, data={"__action__":u"生成收货单"})
             assert 302 == rv.status_code
             return models.GoodsReceipt.query.filter(models.GoodsReceipt.unload_session_id==us.id).all()
 
@@ -389,5 +389,5 @@ def _(step, us):
 def _(step, gr):
     with app.test_request_context():
         with app.test_client() as c:
-            rv = c.post("/goods_receipt/goods-receipt/%d" %gr.id, data={"action":u"生成计重类型订单"})
+            rv = c.post("/goods_receipt/goods-receipt/%d" %gr.id, data={"__action__":u"生成计重类型订单"})
             assert 302 == rv.status_code

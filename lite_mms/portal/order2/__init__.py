@@ -25,6 +25,9 @@ class OrderModelView(ModelView):
                         PlaceHolderColumnSpec(col_name="to_deliver_store_bill_list", label=u"待发货重量", template_fname="order/store-bill-list-snippet.html"),
                         "delivered_weight", "create_time", "goods_receipt", "urgent", "refined"]
 
+    def repr_obj(self, obj):
+        return unicode(obj) + "<br /><p class='text-center'><small class='muted'>" + unicode(obj.goods_receipt.customer) + "</small></p>"
+
     __sortable_columns__ = ["id", "customer_order_number", "goods_receipt.customer", "create_time", "goods_receipt"]
 
     __column_labels__ = {"customer_order_number": u"订单号", "goods_receipt.customer": u"客户", "create_time": u"创建时间",
@@ -78,6 +81,7 @@ class OrderModelView(ModelView):
             return url_for("order.order", id_=model.id, **kwargs)
         else:
             return url_for("order2.order")
+
 
     # =================== FORM PARTS ===================================
 

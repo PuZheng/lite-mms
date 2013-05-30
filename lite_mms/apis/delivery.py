@@ -323,7 +323,7 @@ class DeliveryTaskWrapper(ModelWrapper):
     def delete(self):
         ds = self.delivery_session
         do_commit(self.model, "delete")
-        from lite_mms.portal.cargo.fsm import fsm
+        from lite_mms.portal.delivery.fsm import fsm
 
         fsm.reset_obj(ds)
         from flask.ext.login import current_user

@@ -66,12 +66,12 @@
     $(function () {
       $("a.del-ut").click(function () {
         if (confirm("您确认要删除发货任务" + $(this).attr("data-pk") + "?")) {
-          $.post("/delivery/ajax/delivery-task/" + $(this).attr("data-pk"), {"action": "delete"},
+          $.post("/delivery/ajax/delivery-task/" + $(this).attr("data-pk"), {"action": "delete"}).success(
               function () {
                 window.location.reload(false);
               });
         }
-      });
+      }).error(function(){alert("删除失败")});
     });
   </script>
 {% else %}

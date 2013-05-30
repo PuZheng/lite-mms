@@ -54,7 +54,7 @@ class StateWeighing(State):
     def next(self, action):
         CargoClerkPermission.test()
         if action == cargo_const.ACT_WEIGHT:
-            if self.obj.task_list[-1].is_last:
+            if self.obj.task_list and self.obj.task_list[-1].is_last:
                 return state_closed
             return state_loading
         else:

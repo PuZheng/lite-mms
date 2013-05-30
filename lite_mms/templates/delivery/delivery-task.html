@@ -6,6 +6,12 @@
     $(function () {
       $(".fancybox").fancybox();
     });
+    $("#delete-button").click(function () {
+      if (confirm("确定删除该卸货任务？")) {
+        $("input[type=hidden][name=method]").val("delete");
+        $(this).parents("form").submit();
+      }
+    });
   </script>
 {% endblock %}
 {% block body %}
@@ -19,9 +25,11 @@
       <strong>{{ task.customer.name }}</strong>
       的装货任务
     </div>
-    <legend>发货任务详情</legend>
     <form class="form-horizontal" method="POST">
-
+      <legend>发货任务详情&nbsp;
+        <button class="btn btn-danger" id="delete-button" type="button"><i class="icon-remove"></i>&nbsp;删除</button>
+      </legend>
+      <input type="hidden" name="method"/>
       <div class="control-group">
         <label class="control-label"><strong>产品名称</strong></label>
 
@@ -75,7 +83,7 @@
           <input type="hidden" name="url" value="{{ request.args.get("url") or url_for("delivery.delivery_session", id_=task.delivery_session.id) }}">
           <button class="btn btn-primary btn-large"><i class="icon-ok icon-white"></i>&nbsp;保存</button>
           <a class="btn btn-large" href="{{ request.args.get("url") or url_for("delivery.delivery_session", id_=task.delivery_session.id) }}">
-              <i class="icon-backward"></i>&nbsp;返回
+            <i class="icon-backward"></i>&nbsp;返回
           </a>
         </div>
       </div>

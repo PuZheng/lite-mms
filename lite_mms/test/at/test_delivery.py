@@ -42,32 +42,33 @@ def test():
             then(u"发货单产品与仓单相同", consignment, store_bill1)
 
         with Scenario(u"修改发货会话"):
-            delivery_session = given(u"已关闭的发货会话")
-            when(u"修改发货会话", delivery_session)
-            then(u"无法修改发货会话", delivery_session)
-            when(u"重新打开", delivery_session)
-            then(u"可以修改发货会话", delivery_session)
+            delivery_session = given(u"已关闭的发货会话", plate, tare=1000)
+            status_code = when(u"修改发货会话", delivery_session)
+            then(u"无法修改", status_code)
+            when(u"重新打开发货会话", delivery_session)
+            status_code = and_(u"修改发货会话", delivery_session)
+            then(u"修改成功", status_code)
 
         with Scenario(u"修改发货任务"):
-            delivery_session = given(u"已关闭的发货会话")
-            delivery_task = and_(u"发货任务")
-            when(u"修改发货任务", delivery_task)
-            then(u"无法修改发货任务", delivery_task)
+            delivery_session = given(u"已关闭的发货会话", plate, tare=1000)
+            delivery_task = and_(u"发货任务", delivery_session)
+            status_code = when(u"修改发货任务", delivery_task)
+            then(u"无法修改", status_code)
             when(u"重新打开发货会话", delivery_session)
-            and_(u"修改发货任务", delivery_task)
-            then(u"可以修改发货任务", delivery_task)
+            status_code = and_(u"修改发货任务", delivery_task)
+            then(u"修改成功", status_code)
 
         with Scenario(u"修改发货单"):
-            consignment = given(u"未打印的发货单")
-            when(u"修改发货单的产品", consignment)
-            then(u"修改成功")
+            consignment = given(u"未打印的发货单", customer, delivery_session, store_bill1.sub_order.product)
+            status_code = when(u"修改发货单的产品", consignment)
+            then(u"修改成功", status_code)
             when(u"打印发货单", consignment)
-            and_(u"修改发货单的产品", consignment)
-            then(u"无法修改")
+            status_code = and_(u"修改发货单的产品", consignment)
+            then(u"无法修改", status_code)
 
         with Scenario(u"对已生成发货单的发货会话，新增发货任务"):
-            delivery_session = given(u"已生成发货单的发货会话")
-            then(u"重新打开", delivery_session)
-            when(u"新增发货任务")
+            delivery_session = given(u"已生成发货单的发货会话", plate, 1000, customer, store_bill1.sub_order.product)
+            then(u"重新打开发货会话", delivery_session)
+            when(u"新增发货任务", delivery_session, store_bill2)
             then(u"提示需要重新生成发货单", delivery_session)
 

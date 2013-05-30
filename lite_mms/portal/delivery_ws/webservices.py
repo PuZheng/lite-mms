@@ -79,17 +79,27 @@ def delivery_task():
     if unfinished_sb_list:
         if not remain:
             return _(u"需要remain字段"), 403
-
+    delivery_session_id = request.args.get("sid", type=int)
     import lite_mms.apis as apis
+    delivery_session = apis.delivery.get_delivery_session(delivery_session_id)
+    if not delivery_session:
+        return _(u"需要发货会话字段"), 403
+    id_list = [store_bill.id for store_bill in delivery_session.store_bill_list]
+    for id_ in finished_sb_list + unfinished_sb_list:
+        if id_ not in id_list:
+            return _(u"仓单%d未关联到发货会话%d" % (id_, delivery_session_id))
     actor = apis.auth.get_user(actor_id)
     from lite_mms.portal.delivery.fsm import fsm
     from lite_mms import constants
     try:
-        dt = apis.delivery.new_delivery_task(actor.id, finished_sb_list,
-                                             unfinished_sb_list[0] if unfinished_sb_list else None, remain)
-        fsm.reset_obj(dt.delivery_session)
+        fsm.reset_obj(delivery_session)
         fsm.next(constants.delivery.ACT_LOAD, actor)
-    except Exception, e:
+        dt = apis.delivery.new_delivery_task(actor.id, finished_sb_list,
+                                             unfinished_sb_list[0] if unfinished_sb_list else None,
+                                             remain)
+    except KeyError:
+        return _(u"不能添加发货任务"), 403
+    except ValueError as e:
         return unicode(e), 403
 
 

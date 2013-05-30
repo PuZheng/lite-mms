@@ -11,6 +11,8 @@ timeline_logger.handlers = []
 
 user = None
 
+app.config["CSRF_ENABLED"] = False
+
 
 def generate(times=1):
     from random import choice
@@ -84,8 +86,9 @@ def _(step, delivery_session, store_bill):
             delivery_task = models.DeliveryTask.query.filter(
                 models.DeliveryTask.delivery_session == delivery_session).order_by(
                 models.DeliveryTask.id.desc()).first()
-            rv = c.post("/delivery/weigh-delivery-task/%d" % delivery_task.id, data={"weight":6500})
+            rv = c.post("/delivery/weigh-delivery-task/%d" % delivery_task.id, data={"weight": 6500})
             assert 302 == rv.status_code
+
 
 @step(u"收发员生成发货单")
 def _(step, delivery_session):
@@ -93,14 +96,115 @@ def _(step, delivery_session):
         with app.test_client() as c:
             rv = c.post("/delivery/create-consignment-list/%s" % delivery_session.id,
                         data={"customer-pay_mod": json.dumps({customer.id: 0 for customer in
-                                                   DeliverySessionWrapper(delivery_session).customer_list})})
+                                                              DeliverySessionWrapper(
+                                                                  delivery_session).customer_list})})
 
             assert 302 == rv.status_code
 
-
     return models.Consignment.query.order_by(models.Consignment.id.desc()).first()
+
 
 @step(u"发货单产品与仓单相同")
 def _(step, consignment, store_bill):
-    assert len(consignment.product_list) ==1 and consignment.product_list[0].product == store_bill.sub_order.product and \
-           consignment.product_list[0].weight == store_bill.weight and consignment.product_list[0].quantity == store_bill.quantity
+    assert len(consignment.product_list) == 1 and consignment.product_list[
+        0].product == store_bill.sub_order.product and \
+           consignment.product_list[0].weight == store_bill.weight and consignment.product_list[
+        0].quantity == store_bill.quantity
+
+
+@step(u"已关闭的发货会话")
+def _(step, plate, tare):
+    delivery_session = do_commit(
+        models.DeliverySession(plate_=plate, tare=tare, status=constants.delivery.STATUS_CLOSED))
+    return delivery_session
+
+@step(u"修改发货会话")
+def _(step, delivery_session):
+    with app.test_request_context():
+        with app.test_client() as c:
+            rv = c.post("/delivery/delivery-session/%d" % delivery_session.id)
+            return rv.status_code
+
+@step(u"重新打开发货会话")
+def _(step, delivery_session):
+    with app.test_request_context():
+        with app.test_client() as c:
+            rv = c.post("/delivery/delivery-session/%d" % delivery_session.id, data={"__action__": u"打开"})
+            assert 302 == rv.status_code
+
+
+@step(u"可以修改发货会话")
+def _(step, delivery_session):
+    with app.test_request_context():
+        with app.test_client() as c:
+            rv = c.post("/delivery/delivery-session/%d" % delivery_session.id)
+            assert 302 == rv.status_code
+
+
+@step(u"发货任务")
+def _(step, delivery_session):
+    return do_commit(models.DeliveryTask(actor_id=None, delivery_session=delivery_session))
+
+
+@step(u"修改发货任务")
+def _(step, delivery_task):
+    with app.test_request_context():
+        with app.test_client() as c:
+            rv = c.post("/delivery/delivery-task/%d" % delivery_task.id)
+            return rv.status_code
+
+
+@step(u"无法修改")
+def _(step, status_code):
+    assert 403 == status_code
+
+
+@step(u"修改成功")
+def _(step, status_code):
+    assert 302 == status_code
+
+
+@step(u"未打印的发货单")
+def _(step, customer, delivery_session, product):
+    con = do_commit(models.Consignment(customer=customer, delivery_session=delivery_session, pay_in_cash=True))
+    do_commit(models.ConsignmentProduct(consignment=con, delivery_task=delivery_session.delivery_task_list[0],
+                                        product=product))
+    return con
+
+
+@step(u"修改发货单的产品")
+def _(step, consignment):
+    with app.test_request_context():
+        with app.test_client() as c:
+            rv = c.post("/consignment/consignment-product/%d" % consignment.product_list[0].id)
+            return rv.status_code
+        
+@step(u"打印发货单")
+def _(step, consignment):
+    consignment.MSSQL_ID = 50123
+    do_commit(consignment)
+    
+@step(u"已生成发货单的发货会话")
+def _(step,plate,tare, customer, product):
+    delivery_session = do_commit(
+        models.DeliverySession(plate_=plate, tare=tare, status=constants.delivery.STATUS_CLOSED))
+    delivery_task = do_commit(models.DeliveryTask(actor_id=None,delivery_session=delivery_session))
+    con = do_commit((models.Consignment(customer=customer, delivery_session=delivery_session, pay_in_cash=True)))
+    do_commit(models.ConsignmentProduct(consignment=con, delivery_task=delivery_session.delivery_task_list[0],
+                                        product=product))
+    return delivery_session
+
+@step(u"新增发货任务")
+def _(step, delivery_session, store_bill):
+    with app.test_request_context():
+        with app.test_client() as c:
+            rv = c.post("/delivery/store-bill-list/%d" % delivery_session.id, data={"store_bill_list": store_bill.id})
+            assert 302 == rv.status_code
+            rv = c.post("/delivery_ws/delivery-task?sid=%s&is_finished=1&remain=0&actor_id=1" % delivery_session.id,
+                        data=json.dumps([{"store_bill_id": store_bill.id, "is_finished": 1}]))
+            assert 200 == rv.status_code
+
+@step(u"提示需要重新生成发货单")
+def _(step, delivery_session):
+    ds = DeliverySessionWrapper(delivery_session)
+    assert ds.stale

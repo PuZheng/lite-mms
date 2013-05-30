@@ -108,7 +108,6 @@ def test_cargo():
             gr_list = and_(u'收发员生成收货单', us)
             when(u"收发员重新打开卸货会话", us)
             and_(u'又新增一卸货任务',us)
-            and_(u"收发员关闭卸货会话", us)
             then(u'收货单过时', gr_list[0])
             and_(u'不能修改收货单', gr_list[0])
 

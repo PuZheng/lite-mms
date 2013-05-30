@@ -6,7 +6,7 @@ from lite_mms import constants
 from lite_mms.apis import wraps
 
 
-class ScheduleAction(action.ReadOnlyAction):
+class ScheduleAction(action.BaseAction):
 
     def op_upon_list(self, objs, model_view):
         return redirect(
@@ -22,7 +22,7 @@ class ScheduleAction(action.ReadOnlyAction):
         return {-2: u"只有状态为待排产或者车间主任打回的工单才能排产"}
 
 
-class RetrieveAction(action.ReadOnlyAction):
+class RetrieveAction(action.BaseAction):
 
     def op(self, obj):
         wraps(obj).go(actor_id=current_user.id, action=constants.work_command.ACT_RETRIEVAL)

@@ -17,7 +17,7 @@ def new_todo(whom, action, obj=None, msg="", sender=None, **kwargs):
     告诉"whom"对"obj"执行"action" 
     :param whom: who should be responsible for this todo
     :type whom: models.User
-    :param str action: what should do
+    :param unicode action: what should do
     :param obj: action should be performed upon which
     :param msg: supplementary message
     :param sender: who send this message, if not specified, we regard SYSTEM
@@ -58,6 +58,9 @@ def get_all_notify(user_id):
     return []
 
 WEIGH_UNLOAD_TASK = u"weigh_unload_task"
+WEIGH_DELIVERY_TASK = u"weigh_delivery_task"
+PAY_CONSIGNMENT = U"pay_consignment"
+
 
 @todo_factory.upon(WEIGH_UNLOAD_TASK)
 def weigh_unload_task(whom, action, obj, msg, sender, **kwargs):
@@ -69,4 +72,26 @@ def weigh_unload_task(whom, action, obj, msg, sender, **kwargs):
     return models.TODO(user=whom, action=action, obj_pk=obj.id, actor=sender, 
                 msg=msg, 
                 context_url=data_browser.get_form_url(obj.unload_session))
-    
+
+@todo_factory.upon(WEIGH_DELIVERY_TASK)
+def weigh_delivery_task(whom, action, obj, msg, sender, **kwargs):
+    """
+    称重任务
+    """
+    from lite_mms.basemain import data_browser
+    msg = u'装卸工%s完成了一次来自%s(车牌号"%s")发货任务，请称重！' % (obj.actor.username, obj.customer.name, obj.delivery_session.plate) + (msg and " - " + msg)
+    return models.TODO(user=whom, action=action, obj_pk=obj.id, actor=sender,
+                       msg=msg,
+                       context_url=data_browser.get_form_url(obj.delivery_session))
+
+@todo_factory.upon(PAY_CONSIGNMENT)
+def pay_consignment(whom, action, obj, msg, sender, **kwargs):
+    """
+    收款任务
+    """
+    from lite_mms.basemain import data_browser
+
+    msg = u'收发员%s创建了一张来自%s(车牌号%s)的发货单，请收款！' % (
+    obj.actor.username if obj.actor else "", obj.customer.name, obj.delivery_session.plate) + (msg and " - " + msg)
+    return models.TODO(user=whom, action=action, obj_pk=obj.id, actor=sender, msg=msg,
+                       context_url=data_browser.get_form_url(obj))

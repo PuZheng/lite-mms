@@ -3,8 +3,9 @@ import re
 import json
 
 from flask import request, abort, url_for, render_template, flash, g
+from sqlalchemy import exists, and_
 from flask.ext.databrowser import ModelView
-from flask.ext.databrowser.action import DeleteAction, BaseAction, ReadOnlyAction
+from flask.ext.databrowser.action import DeleteAction, BaseAction
 from flask.ext.databrowser.column_spec import (InputColumnSpec, ColumnSpec,
                                                PlaceHolderColumnSpec, ListColumnSpec,
                                                TableColumnSpec, ImageColumnSpec)
@@ -22,7 +23,7 @@ from lite_mms.apis import wraps
 import lite_mms.constants.cargo as cargo_const
 from lite_mms.database import db
 from lite_mms.models import (UnloadSession, Plate, GoodsReceipt,
-                             GoodsReceiptEntry, Product, UnloadTask)
+                             GoodsReceiptEntry, Product, UnloadTask, DeliverySession)
 
 @cargo_page.route('/')
 def index():
@@ -38,7 +39,6 @@ class UnloadSessionModelView(ModelView):
     list_template = "cargo/unload-session-list.html"
     edit_template = "cargo/unload-session.html"
 
-    as_radio_group = True
     can_batchly_edit = False
 
     def try_edit(self, objs=None):
@@ -54,7 +54,7 @@ class UnloadSessionModelView(ModelView):
             _try_edit(objs)
 
     def repr_obj(self, obj):
-        return unicode(obj) + "(" + cargo_const.desc_status(obj.status) + ")"
+        return unicode(obj) + "(" + cargo_const.desc_status(obj.status) + ")" + "<br /><p class='text-center'><small class='muted'>" + '&nbsp;' + ",".join([unicode(customer) for customer in obj.customer_list]) + "</small></p>"
 
     def get_list_columns(self):
         def gr_item_formatter(v, obj):
@@ -128,15 +128,17 @@ class UnloadSessionModelView(ModelView):
         return apis.cargo.UnloadSessionWrapper(model)
 
     def get_customized_actions(self, model_list=None):
-        from lite_mms.portal.cargo.actions import CloseAction, OpenAction, CreateReceiptAction
-        class _PrintGoodsReceipt(ReadOnlyAction):
+        from lite_mms.portal.cargo.actions import (CloseAction, OpenAction, 
+                                                   CreateReceiptAction, 
+                                                   DeleteGoodsReceiptAction)
+        class _PrintGoodsReceipt(BaseAction):
             def op_upon_list(self, objs, model_list):
                 obj = objs[0]
                 return redirect(url_for("goods_receipt.goods_receipts_batch_print", id_=",".join([str(gr.id) for gr in obj.goods_receipt_list]), url=request.url))
 
         action_list = []
         if model_list is None: # for list
-            action_list.extend([CloseAction(u"关闭"), OpenAction(u"打开"), CreateReceiptAction(u"生成收货单")])
+            action_list.extend([CloseAction(u"关闭"), OpenAction(u"打开"), CreateReceiptAction(u"生成收货单"), DeleteGoodsReceiptAction(u"删除", None)])
         else:
             if len(model_list) ==1:
                 if model_list[0].status in [cargo_const.STATUS_CLOSED, cargo_const.STATUS_DISMISSED]:
@@ -153,13 +155,12 @@ class UnloadSessionModelView(ModelView):
 
     # ================= FORM PART ============================
     def get_create_columns(self):
-        from lite_mms import apis
+        def filter_plate(q):
+            return q.filter(
+                and_(~exists().where(UnloadSession.plate == Plate.name).where(UnloadSession.finish_time == None),
+                     ~exists().where(DeliverySession.finish_time == None).where(DeliverySession.plate == Plate.name)))
 
-        plates = set(
-            apis.plate.get_plate_list("unloading") + apis.plate.get_plate_list(
-                "delivering"))
-        return [InputColumnSpec("plate_",
-                                opt_filter=lambda obj: obj.name not in plates),
+        return [InputColumnSpec("plate_",filter_=filter_plate),
                 InputColumnSpec("with_person", label=u"驾驶室是否有人"),
                 "gross_weight"]
 
@@ -322,7 +323,7 @@ class GoodsReceiptModelView(ModelView):
 
     edit_template = "cargo/goods-receipt.html"
 
-    as_radio_group = False
+    can_batchly_edit = True
 
     def try_create(self):
         raise PermissionDenied
@@ -444,7 +445,7 @@ def goods_receipt_preview(id_):
     receipt = apis.cargo.get_goods_receipt(id_)
     PER_PAGE  = apis.config.get("print_count_per_page", 5.0, type=float)
     import math
-    pages = int(math.ceil(len(receipt.unload_task_list) / PER_PAGE))
+    pages = int(math.ceil(len(receipt.goods_receipt_entries) / PER_PAGE))
     if not receipt:
         abort(404)
     return {"receipt": receipt, "titlename": u"收货单打印预览", "pages": pages,

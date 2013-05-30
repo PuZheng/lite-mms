@@ -144,7 +144,7 @@ nav_bar.register(manufacture_page, name=u"质检管理",
                  default_url="/manufacture/qir-list",
                  permissions=[DepartmentLeaderPermission])
 nav_bar.register(store_bill_page, name=u"仓单管理",
-                 default_url="/store/store-bill-list-view",
+                 default_url="/store/store-bill-list",
                  permissions=[QualityInspectorPermission])
 nav_bar.register(deduction_page, name=u"扣重管理", default_url="/deduction/",
                  permissions=[QualityInspectorPermission])
@@ -212,18 +212,18 @@ if not app.config["DEBUG"]:
                                back_url=request.args.get("back_url", "/"),
                                nav_bar=nav_bar), 403
 
-#设置无权限处理器
-@app.errorhandler(PermissionDenied)
-@app.errorhandler(401)
-def permission_denied(error):
+    #设置无权限处理器
+    @app.errorhandler(PermissionDenied)
+    @app.errorhandler(401)
+    def permission_denied(error):
 
-    #如果用户已登录则显示无权限页面
-    from flask import redirect, url_for
-    if not current_user.is_anonymous():
-        return redirect(url_for("error", msg=u'请联系管理员获得访问权限!',
-                                back_url=request.args.get("url")))
-        #如果用户还未登录则转向到登录面
-    return render_template("auth/login.html",
-                           error=gettext(u"请登录"), next_url=request.url, titlename=u"请登录")
+        #如果用户已登录则显示无权限页面
+        from flask import redirect, url_for
+        if not current_user.is_anonymous():
+            return redirect(url_for("error", msg=u'请联系管理员获得访问权限!',
+                                    back_url=request.args.get("url")))
+            #如果用户还未登录则转向到登录面
+        return render_template("auth/login.html",
+                               error=gettext(u"请登录"), next_url=request.url, titlename=u"请登录")
 
 

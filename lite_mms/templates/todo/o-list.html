@@ -47,7 +47,11 @@
                 </span>
                 {{todo.msg}}
                 {% if todo.context_url %}
-                  <a href="{{todo.context_url}}">开始&gt;&gt;</a>
+                  {% if "?" in todo.context_url %}
+                    <a href="{{ todo.context_url + "&url=" + request.url|urlencode }}">开始&gt;&gt;</a>
+                  {% else %}
+                    <a href="{{ todo.context_url + "?url=" + request.url|urlencode }}">开始&gt;&gt;</a>
+                  {% endif %}
                 {% endif %}
               </blockquote>
               {% endfor %}

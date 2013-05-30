@@ -118,6 +118,8 @@ class OrderView(ModelView):
                                order=self.preprocess(order),
                                nav_bar=nav_bar)
 
+    def repr_obj(self, obj):
+        return unicode(obj) + "<br /><p class='text-center'><small class='muted'>" + unicode(obj.goods_receipt.customer) + "</small></p>"
 
 from lite_mms.models import Order, Customer
 

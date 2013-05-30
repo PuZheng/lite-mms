@@ -2,8 +2,6 @@
 {% extends "layout.html" %}
 {% block __data_browser__custom_external_block %}
   {{ super() }}
-  <link rel="stylesheet" href="{{ url_for('static', filename="css/customer.css") }}" media="print">
-
   <script src="{{ url_for("static", filename="js/jquery-printarea.js") }}" type="text/javascript"></script>
   <script type="text/javascript" src="{{ url_for("static",filename="js/jquery-barcode-2.0.2.min.js") }}"></script>
   <script type="text/javascript">

@@ -14,7 +14,7 @@ ACT_DISMISS = 5
 
 def desc_action(action):
     if action == ACT_LOAD:
-        return u"卸货"
+        return u"装货"
     elif action == ACT_WEIGHT:
         return u"称重"
     elif action == ACT_CLOSE:
@@ -24,7 +24,7 @@ def desc_action(action):
     return "未知"
 
 g_status_desc = {
-    STATUS_LOADING: u"正在卸货",
+    STATUS_LOADING: u"正在装货",
     STATUS_WEIGHING: u"等待称重",
     STATUS_CLOSED: u"关闭",
     STATUS_DISMISSED: u"取消",

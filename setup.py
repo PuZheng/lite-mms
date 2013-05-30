@@ -37,7 +37,6 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    install_requires=open("requirements.txt").readlines(),
     scripts=['lite_mms/bin/lite-mms-admin.py'],
     data_files=[(os.path.join(sys.prefix, "share/lite-mms"),
                  ['lite_mms/data/readme.txt', 'lite_mms/data/config.py.sample',

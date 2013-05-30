@@ -1,6 +1,6 @@
 #-*- coding:utf-8 -*-
 from lite_mms import constants
-from pyfeature import Feature, Scenario, given, when, and_, then, flask_sqlalchemy_setup
+from pyfeature import Feature, Scenario, given, when, and_, then, flask_sqlalchemy_setup, clear_hooks
 
 from lite_mms.basemain import app
 from lite_mms.database import db
@@ -72,3 +72,4 @@ def test():
             when(u"新增发货任务", delivery_session, store_bill2)
             then(u"提示需要重新生成发货单", delivery_session)
 
+    clear_hooks()

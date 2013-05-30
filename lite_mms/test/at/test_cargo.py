@@ -1,6 +1,6 @@
 
 # -*- coding: UTF-8 -*-
-from pyfeature import Feature, Scenario, given, and_, when, then
+from pyfeature import Feature, Scenario, given, and_, when, then, clear_hooks
 from lite_mms.basemain import app
 from lite_mms.database import db
 
@@ -114,6 +114,8 @@ def test_cargo():
             gr_list = when(u'重新生成收货单', us)
             and_(u'生成订单',gr_list[0])
             then(u'不能修改收货单',gr_list[0])
+    
+    clear_hooks()
 
 
 if __name__ == "__main__":

@@ -144,7 +144,7 @@ nav_bar.register(manufacture_page, name=u"质检管理",
                  default_url="/manufacture/qir-list",
                  permissions=[DepartmentLeaderPermission])
 nav_bar.register(store_bill_page, name=u"仓单管理",
-                 default_url="/store/store-bill-list-view",
+                 default_url="/store/store-bill-list",
                  permissions=[QualityInspectorPermission])
 nav_bar.register(deduction_page, name=u"扣重管理", default_url="/deduction/",
                  permissions=[QualityInspectorPermission])

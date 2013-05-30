@@ -3,30 +3,72 @@
   <script type="text/javascript">
     $(function () {
       $("input:checkbox[name='check_all']").click(function () {
-        val = 'table' + $(this).val().match(/\d+/);
-        $("#" + val + " input:checkbox[name='store_bill_id']").attr("checked", this.checked);
+        var val = 'table' + $(this).val().match(/\d+/);
+        $("#" + val + " input:checkbox[name='store_bill_list']").attr("checked", this.checked);
       });
-      $("#select").click(function () {
-        if ($("input:checkbox[name='store_bill_id']:checked").val() == undefined) {
-          alert("请选择仓单");
-          return false;
-        } else {
-          return true;
-        }
-      });
+      {% if request.args.get("delivery_session_id") %}
+        $("#select").click(function () {
+          if ($("input:checkbox[name='store_bill_list']:checked").val() == undefined) {
+            alert("请选择仓单");
+            return false;
+          } else {
+            return true;
+          }
+        });
+      {% else %}
+        var id_list = {{ request.args.getlist("store_bill_list")|tojson|safe }};
+          $("[name=store_bill_list]").each(function(){
+            if($.inArray($(this).val(), id_list) > -1){
+              $(this).attr("checked", true);
+            }
+          });
+      {% endif %}
       $(".collapse").each(function () {
         $(this).collapse({toggle: false});
       });
       $("#customer").change(function () {
-        $(".collapse").each(
-            function () {
-              $(this).collapse("hide");
-            }
-        );
-        if ($(this).val != 0) {
-          $("#customer" + $(this).val()).collapse("show");
+        var current_id = $(this).val();
+        if (current_id != 0) {
+          $(".collapse").each(
+              function () {
+                var e = $(this).parent("div.accordion-group");
+                if( $(this).attr("id") != "customer" + current_id){
+                  e.hide();
+                }else{
+                  e.show();
+                  $(this).collapse("show");
+                }
+              }
+          );
+        }else{
+          $(".collapse").each(
+              function () {
+                $(this).parent("div.accordion-group").show();
+              }
+          );
         }
       });
+      function genatext(){
+        var text="";
+        $(".accordion-group").each(function(){
+          var head = $(this).find("a").text();
+          var checkbox = $(this).find("[name=store_bill_list]:checked");
+          if(checkbox.length != 0) {
+            text += head + ":";
+            checkbox.each(function (inx) {
+              text += $(this).val();
+              if (inx != checkbox.length -1){
+                text += ",";
+              }else{
+                text += "; ";
+              }
+            })
+          }
+        });
+        $(".text-success").text(text);
+      }
+      genatext();
+      $("[type=checkbox]").click(genatext);
     })
   </script>
 {% endblock %}
@@ -40,6 +82,10 @@
         返回
       </a>
     {% else %}
+      <p>
+      已选择的仓单：
+      <span class="text-success"></span>
+      </p>
       <div class="form-inline">
         <label class="padding" for="customer">客户</label>
         <select name="customer" id="customer">
@@ -50,17 +96,22 @@
         </select>
       </div>
 
-      <form class="form-horizontal" method="POST"
+      <form class="form-horizontal"
           {% if delivery_session_id %}
-            action="{{ url_for('delivery.store_bill_add', delivery_session_id=delivery_session_id) }}"
+            method="POST" action="{{ url_for('delivery.store_bill_add', delivery_session_id=delivery_session_id) }}"
           {% else %}
-            action="{{ url_for('delivery.store_bill_add') }}"
+            action="{{ request.args.get("url", url_for("delivery.delivery_session")) }}"
           {% endif %} >
+        {% for keyword in ["plate_", "tare", "with_person"] %}
+          {% if request.args.get(keyword) %}
+            <input type="hidden" name="{{ keyword }}" value="{{ request.args.get(keyword) }}"/>
+          {% endif %}
+        {% endfor %}
         <div id="accordion-div" class="accordion">
           {% for customer in customer_list %}
             <div class="accordion-group">
               <div class="accordion-heading">
-                <a class="accordion-toggle" href="#customer{{ customer.id }}" data-toggle="collapse" data-parent="#accordion-div">
+                <a class="accordion-toggle" href="#customer{{ customer.id }}" data-toggle="collapse">
                   {{ customer.name }}
                 </a>
               </div>
@@ -83,7 +134,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    {% for store_bill in customer.bill_list %}
+                    {% for store_bill in customer.store_bill_list %}
                       <tr {% if not store_bill.printed %}
                         class="warning" title="未打印">
                         <td></td>
@@ -93,7 +144,7 @@
                           <div class="ym-fbox-check">
                             <input type="checkbox"
                                    value="{{ store_bill.id }}"
-                                   name="store_bill_id"/>
+                                   name="store_bill_list"/>
                           </div>
                         </td>
                       {% endif %}

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
-from lite_mms.constants import STANDARD_ORDER_TYPE
-from lite_mms.constants.work_command import STATUS_DISPATCHING, HT_NORMAL
-import lite_mms.constants.cargo as cargo_const
+from lite_mms import constants
 from lite_mms.database import db
 
 permission_and_group_table = db.Table("TB_PERMISSION_AND_GROUP",
@@ -92,8 +90,7 @@ class UnloadSession(db.Model):
     plate_ = db.relationship("Plate")
     gross_weight = db.Column(db.Integer, nullable=False)
     with_person = db.Column(db.Boolean, default=False)
-    status = db.Column(db.Integer, default=cargo_const.STATUS_LOADING,
-                       nullable=False)
+    status = db.Column(db.Integer, default=constants.cargo.STATUS_LOADING, nullable=False)
     create_time = db.Column(db.DateTime, default=datetime.now)
     finish_time = db.Column(db.DateTime)
     goods_receipt_list = db.relationship(
@@ -395,7 +392,7 @@ class SubOrder(db.Model):
             return 0
 
     def __init__(self, product, weight, harbor, order,
-                 quantity, unit, order_type=STANDARD_ORDER_TYPE,
+                 quantity, unit, order_type=constants.STANDARD_ORDER_TYPE,
                  create_time=None, finish_time=None, urgent=False,
                  returned=False, pic_path="", tech_req="", due_time=None,
                  spec="", type="", default_harbor=None):
@@ -479,12 +476,12 @@ class WorkCommand(db.Model):
             return 0
 
     def __init__(self, sub_order, org_weight, procedure, urgent=False,
-                 status=STATUS_DISPATCHING, department=None,
+                 status=constants.work_command.STATUS_DISPATCHING, department=None,
                  create_time=None,
                  last_mod=datetime.now(),
                  processed_weight=0, team=None, previous_procedure=None,
                  tag="", tech_req="", org_cnt=0, processed_cnt=0, pic_path="",
-                 handle_type=HT_NORMAL):
+                 handle_type=constants.work_command.HT_NORMAL):
         self.sub_order = sub_order
         self.urgent = urgent
         self.org_weight = org_weight
@@ -560,8 +557,9 @@ class DeliverySession(db.Model):
     __tablename__ = "TB_DELIVERY_SESSION"
 
     id = db.Column(db.Integer, primary_key=True)
-    plate = db.Column(db.String(32), db.ForeignKey("TB_PLATE.name"))
-    tare = db.Column(db.Integer)
+    plate = db.Column(db.String(32), db.ForeignKey("TB_PLATE.name"), nullable=False)
+    plate_ = db.relationship("Plate")
+    tare = db.Column(db.Integer, nullable=False)
     create_time = db.Column(db.DateTime, default=datetime.now)
     finish_time = db.Column(db.DateTime)
     with_person = db.Column(db.Boolean, default=False)
@@ -569,14 +567,7 @@ class DeliverySession(db.Model):
                                          backref=db.backref("delivery_session",
                                                             uselist=False),
                                          cascade="all, delete-orphan")
-
-    def __init__(self, plate, tare, with_person=False, create_time=None,
-                 finish_time=None):
-        self.with_person = with_person
-        self.plate = plate
-        self.tare = tare
-        self.create_time = create_time or datetime.now()
-        self.finish_time = finish_time
+    status = db.Column(db.Integer, default=constants.delivery.STATUS_LOADING, nullable=False)
 
     def __unicode__(self):
         return self.plate
@@ -649,10 +640,12 @@ class DeliveryTask(db.Model):
     delivery_session_id = db.Column(db.Integer,
                                     db.ForeignKey("TB_DELIVERY_SESSION.id"))
     actor_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
+    actor = db.relationship("User")
     create_time = db.Column(db.DateTime, default=datetime.now)
     quantity = db.Column(db.Integer)
     weight = db.Column(db.Integer, default=0)
     returned_weight = db.Column(db.Integer, default=0)
+    is_last = db.Column(db.Boolean, default=False)
 
     def __init__(self, delivery_session, actor_id,
                  create_time=None):
@@ -701,7 +694,7 @@ class Consignment(db.Model):
     is_paid = db.Column(db.Boolean, default=False)
     notes = db.Column(db.String(256))
     MSSQL_ID = db.Column(db.Integer)
-
+    stale = db.Column(db.Boolean, default=False)
 
     def __init__(self, customer, delivery_session, pay_in_cash,
                  create_time=None):
@@ -779,7 +772,7 @@ class ConsignmentProduct(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     consignment_id = db.Column(db.Integer, db.ForeignKey("TB_CONSIGNMENT.id"),
                                nullable=False)
-    consignment = db.relationship("Consignment", backref="product_list")
+    consignment = db.relationship("Consignment", backref=db.backref("product_list", cascade="all, delete-orphan"))
     product_id = db.Column(db.Integer, db.ForeignKey("TB_PRODUCT.id"),
                            nullable=False)
     product = db.relationship("Product")

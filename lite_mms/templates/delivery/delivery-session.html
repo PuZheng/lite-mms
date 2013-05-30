@@ -1,216 +1,76 @@
-{% extends "layout.html" %}
-{% block __data_browser__custom_external_block %}
+{% extends "__data_browser__/form.html" %}
+{% block __data_browser__customized_head_block %}
+  {{ super() }}
   <link rel="stylesheet" href="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.css") }}" type="text/css" media="screen">
   <script type="text/javascript" src="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.pack.js") }}"></script>
   <script type="text/javascript">
     $(function () {
       $(".fancybox").fancybox();
-      $("#finish-button").click(function () {
-        if (confirm("确认结束会话吗？")) {
-          $("#delivery-form input[name=method]").val("finish");
-          $("#delivery-form").submit();
+      $('[name=__action__][value="生成发货单"]').click(function () {
+        $("#" + {{ obj.id|tojson|safe }} +"-dialog").modal('show');
+        return false;
+      });
+      $("button[name=consignment-button]").click(function () {
+        var data = {};
+        $("[name=pay_mod]").each(function () {
+          data[$(this).attr("data-customer")] = $(this).val()
+        });
+        if (data != {}) {
+          $("[name=customer-pay_mod]").val(JSON.stringify(data));
+          $("form[name=consignment-form]").submit();
         }
       });
-      $("#reopen-button").click(function () {
-        if (confirm("确认重新打开会话吗？")) {
-          $("#delivery-form input[name=method]").val("reopen");
-          $("#delivery-form").submit();
-        }
-      });
-      $("#delete-button").click(function () {
-        if (confirm("确认删除会话吗？")) {
-          $("#delivery-form input[name=method]").val("delete");
-          $("#delivery-form").submit();
-        }
-      });
-      {% if delivery_session.need_store_bill %}
-        if (confirm("是否增加仓单？")) {
-          window.location.href = "{{ url_for('delivery.store_bill_add', delivery_session_id=delivery_session.id, url=request.url) }}";
-        }
-      {% endif %}
+      $(".collapse[data-role=cn-entries]").on('shown',function (event) {
+        event.stopPropagation();
+        $(this).prev().attr("class", "icon-chevron-up");
+      }).on('hidden', function (event) {
+            event.stopPropagation();
+            $(this).prev().attr("class", "icon-chevron-down");
+          });
     });
   </script>
+  <div>{{ consignment_gene(obj) }}</div>
 {% endblock %}
+{% macro consignment_gene(delivery_session) %}
+  {% if delivery_session.customer_list %}
+    <div id="{{ delivery_session.id }}-dialog" class="modal hide fade" tabindex="-1">
+      <div class="modal-header">
+        <a class="close" data-dismiss="modal">&times;</a>
 
-{% block body %}
-  <div class="container">
-    <form class="form-horizontal" action="{{ url_for("delivery.delivery_session", id_=delivery_session.id) }}" method="POST" id="delivery-form">
-      <input type="hidden" name="method" value="">
-      <input type="hidden" name="url" value="{{ request.args.get("url") or url_for('delivery.session_list') }}">
-      <legend>发货会话详情
-        {% if delivery_session.deleteable %}
-          <button class="btn btn-danger" type="button" id="delete-button" title="删除发货会话">
-            <i class="icon-remove icon-white"></i>&nbsp;删除会话
-          </button>
-        {% endif %}
-      </legend>
-      <div class="control-group">
-        <label class="control-label"><strong>车辆车牌号</strong></label>
-
-        <div class="controls">
-          <p class="padding">{{ delivery_session.plate }}</p>
-        </div>
+        <h3>{{ _("请选择支付类型") }}</h3>
       </div>
-      <div class="control-group">
-        <label class="control-label"><strong>车辆皮重(KG)</strong></label>
+      <form class="modal-form form-horizontal" action="{{ url_for("delivery.create_consignment_list", id_=obj.id) }}" method="POST" name="consignment-form">
+        <input type="hidden" name="customer-pay_mod" value=""/>
+        <input type="hidden" name="url" value="{{ request.url }}"/>
 
-        <div class="controls">
-          <p class="padding">{{ delivery_session.tare }}</p>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label"><strong>上次称重时车上有人</strong></label>
+        <div class="modal-body" id="new-consignment-content">
+          <fieldset>
+            {% for customer in delivery_session.customer_list %}
 
-        <div class="controls">
-          <p class="padding">{{ delivery_session.with_person_des }}</p>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label"><strong>会话完成时间</strong></label>
+              <div class="control-group">
+                <label for="pay_mode" class="control-label">
+                  <span>{{ customer.name }}</span>
+                </label>
 
-        <div class="controls">
-          {% if delivery_session.finish_time %}
-            <span class="padding">{{ delivery_session.finish_time }}</span>
-            <button class="btn btn-warning" type="button" id="reopen-button">
-              <i class="icon-repeat icon-white"></i>&nbsp;重新打开会话
-            </button>
-          {% elif delivery_session.can_finish %}
-            <button class="btn btn-warning" type="button" id="finish-button">
-              <i class="icon-ok icon-white"></i>&nbsp;结束会话
-            </button>
-          {% endif %}
-        </div>
-      </div>
-
-      <legend>发货任务列表
-        <button class="btn btn-info" type="button" onclick="window.location.reload(true)">
-          <i class="icon-refresh icon-white"></i>&nbsp;刷新
-        </button>
-      </legend>
-
-
-      <table class="table table-striped table-bordered table-condensed">
-        <thead>
-        <tr>
-          <th>任务ID</th>
-          <th>产品名称</th>
-          <th>对应的仓单</th>
-          <th>重量(KG)</th>
-          <th>规格-型号</th>
-          <th>是否已生成发货单</th>
-          <th>图片</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for task in delivery_session.delivery_task_list %}
-          <tr>
-            <td>{{ task.id }}</td>
-            <td>{{ task.product.name }}</td>
-            <td>[{% for sb in task.store_bill_list %}
-              <a href="{{ url_for('delivery.store_bill', id_=sb.id, url=request.url) }}">{{ sb.id }}</a>
-              {% if not loop.last %},
-              {% endif %}
-            {% endfor %}]
-            </td>
-            <td>
-              {% if task.weight %}
-                <a href="{{ url_for('delivery.delivery_task', id_=task.id, url=request.url) }}">
-                <i class="icon-edit"></i>&nbsp;{{ task.weight }}
-              {% else %}
-                <a href="{{ url_for('delivery.delivery_task', id_=task.id, url=request.url) }}" class="btn">
-                {{ "称重" }}
-              {% endif %}
-              </a>
-            </td>
-            <th>
-              {{ task.spec_type_list|join("<br>")|safe }}
-            </th>
-            <td>{% if task.consignment %}是{% else %}否{% endif %} </td>
-            <td>
-              <ul class="thumbnails">
-                {% for pic_url in task.pic_url_list %}
-                  {% if pic_url %}
-                    <li class="span2">
-                      <a href="{{ pic_url }}" class="fancybox thumbnail" rel="group" title="{{ task.product.name }}">
-                        <img src="{{ pic_url }}" class="bordered" alt="{{ task.product.name }}"/>
-                      </a>
-                    </li>
-                  {% endif %}
-                {% endfor %}
-              </ul>
-            </td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-      <p class="text-success">
-        <em>总发货重量：</em>{{ delivery_session.delivery_task_list|sum("weight") }}(KG)
-      </p>
-
-      {% if not delivery_session.finish_time %}
-        <div class="ym-fbox-button">
-          <legend>已选择仓单列表
-            <a class="btn btn-primary" href="{{ url_for('delivery.store_bill_add', delivery_session_id=delivery_session.id, url=request.url) }}"><i class="icon-plus icon-wight"></i>&nbsp;增加仓单</a>
-          </legend>
-
-          <table class="table table-striped table-bordered table-condensed">
-            <thead>
-            <tr>
-              <th>仓单号</th>
-              <th>存放点</th>
-              <th>产品名称</th>
-              <th>公司名称</th>
-              <th>大约净重(KG)</th>
-              <th>产品图片</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for store_bill in delivery_session.store_bill_list %}
-              <tr>
-                <td>{{ store_bill.id }}</td>
-                <td>{{ store_bill.harbor.name }}</td>
-                <td>{{ store_bill.product_name }}</td>
-                <td>{{ store_bill.customer.name }}</td>
-                <td>{{ store_bill.weight }}</td>
-                <td>{% if store_bill.pic_url %}
-                  <ul class="thumbnails">
-                    <li class="span2">
-                      <a href="{{ store_bill.pic_url }}" class="fancybox thumbnail" rel="group" title="{{ store_bill.product.name }}">
-                        <img src="{{ store_bill.pic_url }}" class="bordered" alt="{{ store_bill.product.name }}"/>
-                      </a>
-                    </li>
-                  </ul>
-                {% endif %}</td>
-              </tr>
+                <div class="controls">
+                  <select name="pay_mod" id="pay_mode" required="required" class="input-medium"
+                          data-customer="{{ customer.id }}">
+                    <option value="0">月结</option>
+                    <option value="1">现金支付</option>
+                  </select></div>
+              </div>
             {% endfor %}
-            </tbody>
-          </table>
+          </fieldset>
         </div>
-      {% endif %}
-
-      <div class="control-group">
-
-        <div class="controls">
-          <div class="btn-group">
-            <button class="btn btn-info btn-large" id="new-consignment" data-toggle="modal" data-target="#new-consignment-dialog">
-              <i class="icon-white icon-edit"></i>&nbsp;{{ _("创建发货单") }}
-            </button>
-          </div>
-          <div class="btn-group">
-            <button class="btn btn-info btn-large" id="view-consignment" data-toggle="modal" data-target="#view-consignments-dialog">
-              <i class="icon-eye-open icon-white"></i>&nbsp;{{ _("查看发货单") }}
-            </button>
-          </div>
-          <div class="btn-group">
-            <a class="btn btn-large" href="{{ request.args.get("url") or url_for('delivery.session_list') }}">
-              <i class="icon-backward"></i>&nbsp;返回
-            </a>
-          </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" name="consignment-button" type="button">
+            提交
+          </button>
+          <a class="btn" data-dismiss="modal">
+            返回
+          </a>
         </div>
-      </div>
-    </form>
-    {% include "delivery/consignment-add.html" %}
-    {% include "delivery/view-consignments-dialog.html" %}
-  </div>
-
-{% endblock %}
+      </form>
+    </div>
+  {% endif %}
+{% endmacro %}

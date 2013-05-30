@@ -36,22 +36,24 @@ class Test(BaseTest):
                 app.preprocess_request()
                 rv = c.post(url_for('auth.login'),
                             data=dict(username="cc", password="cc1"))
-                assert 200 == rv.status_code
-                soup = BeautifulSoup(rv.data)
-                assert u"用户名或者密码错误" in [div.string for div in soup.find_all("div")]
+                assert 403 == rv.status_code
+
                 rv = c.post(url_for("auth.login"),
                             data=dict(username="cc", password="cc"))
                 assert 302 == rv.status_code
+
                 plate = u'测试车辆'
+                rv = c.post(url_for("cargo.plate"), data={"name": plate})
+                assert 302 == rv.status_code
+
                 rv = c.post(url_for('cargo.unload_session'),
-                            data={'plateNumber': plate, 'grossWeight': 5000})
+                            data={'plate_': plate, 'gross_weight': 5000, "action": u"提交"})
                 assert 302 == rv.status_code
                 from lite_mms import apis
 
                 assert plate in apis.plate.get_plate_list("unloading")
 
-                unloadSession =\
-                apis.cargo.get_unload_session_list(unfinished_only=True)[0][0]
+                unloadSession = apis.cargo.get_unload_session_list(unfinished_only=True)[0][0]
                 customer = apis.customer.get_customer_list()[0]
                 harbor = apis.harbor.get_harbor_list()[0]
                 a = "/cargo_ws/unload-task?actor_id=1&customer_id=%d&harbour"\

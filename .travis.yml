@@ -10,7 +10,7 @@ install: "pip install -r requirements.txt"
 # command to run tests
 script:
 #    - py.test
-    - py.test test/at/
+    - py.test lite_mms/test/at/
 notifications:
     email:
       recipients:

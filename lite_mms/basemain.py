@@ -18,11 +18,6 @@ from flask.ext.principal import Principal
 
 principal = Principal(app)
 
-app.config["DEBUG_TB_PROFILER_ENABLED"] = True
-
-from flask_debugtoolbar import DebugToolbarExtension
-#toolbar = DebugToolbarExtension(app)
-
 import logging
 import logging.handlers
 

@@ -32,6 +32,7 @@ class DeliverySessionModelView(ModelView):
     edit_template = "delivery/delivery-session.html"
     list_template = "delivery/delivery-session-list.html"
 
+    __sortable_columns__ = ("create_time", "finish_time")
     def get_list_columns(self):
         def gr_item_formatter(v, obj):
             # 格式化每个发货单，未打印或者过期，需要提示出来
@@ -55,9 +56,11 @@ class DeliverySessionModelView(ModelView):
     __column_labels__ = {"id": u"编号", "plate_": u"车辆", "create_time": u"创建时间", "tare": u"净重（公斤）",
                          "with_person": u"驾驶室", "finish_time": u"结束时间", "status": u"状态"}
 
-    __column_formatters__ = {"with_person": lambda v, obj: _with_person if v else _with_out_person,
-                             "status": lambda v, obj: constants.delivery.desc_status(v),
-                             "finish_time": lambda v, obj: v if v else ""
+    __column_formatters__ = {
+        "status": lambda v, obj: constants.delivery.desc_status(v),
+        "create_time": lambda v, obj: v.strftime("%m月%d日 %H点").decode("utf-8"),
+        "finish_time": lambda v, obj: v.strftime("%m月%d日 %H点").decode("utf-8") if v else "--",
+        "with_person": lambda v, obj: u'有人' if v else u'无人',
     }
 
     from datetime import datetime, timedelta
@@ -137,12 +140,12 @@ class DeliverySessionModelView(ModelView):
         return columns
 
     def get_customized_actions(self, model_list=None):
-        from lite_mms.portal.delivery.actions import CloseAction, OpenAction, CreateConsignmentAction, BatchPrintConsignment
+        from lite_mms.portal.delivery.actions import CloseAction, OpenAction, CreateConsignmentAction, BatchPrintConsignment, DeleteDeliverySession
 
         action_list = []
         if model_list is None: # for list
             action_list.extend([CloseAction(u"关闭"), OpenAction(u"打开"), CreateConsignmentAction(u"生成发货单"),
-                                BatchPrintConsignment(u"打印发货单")])
+                                BatchPrintConsignment(u"打印发货单"), DeleteDeliverySession(u"删除")])
         else:
             if len(model_list) == 1:
                 if model_list[0].status in [constants.delivery.STATUS_CLOSED, constants.delivery.STATUS_DISMISSED]:
@@ -172,6 +175,12 @@ class DeliverySessionModelView(ModelView):
             return u"发货会话%s已关闭，不能修改" % obj.id
         else:
             return super(DeliverySessionModelView, self).edit_hint_message(obj, read_only)
+
+    def get_edit_help(self, objs):
+        return render_template("delivery/ds-edit-help.html")
+
+    def get_list_help(self):
+        return render_template("delivery/ds-list-help.html")
 
 
 @delivery_page.route("/weigh-delivery-task/<int:id_>", methods=["GET", "POST"])
@@ -298,9 +307,11 @@ class ConsignmentModelView(ModelView):
             return {"class": u"alert alert-error", "title": u"发货单已过时，请重新生成"}
 
     def get_customized_actions(self, processed_objs=None):
-        from .actions import PayAction, PreviewConsignment
+        from .actions import PayAction, PreviewConsignment, DeleteConsignment
 
         ret = [PreviewConsignment(u"打印预览")]
+        if not processed_objs:
+            ret.append(DeleteConsignment(u"删除"))
         from lite_mms.permissions.roles import AccountantPermission
 
         if AccountantPermission.can() and isinstance(processed_objs, (list, tuple)):
@@ -319,15 +330,17 @@ class ConsignmentModelView(ModelView):
 
     def get_list_columns(self):
         return ["id", "consignment_id", "delivery_session", "actor", "create_time", "customer", "pay_in_cash",
-                ColumnSpec("is_paid", formatter=lambda v, obj: u"是" if v else u"否"), ColumnSpec("notes", trunc=8)]
+                ColumnSpec("is_paid", formatter=lambda v, obj: u"是" if v else u"否"), ColumnSpec("notes", trunc=8), "MSSQL_ID"]
 
 
     __column_labels__ = {"consignment_id": u"发货单编号", "customer": u"客户", "delivery_session": u"车牌号",
                          "actor": u"发起人", "delivery_session.id": u"发货会话", "create_time": u"创建时间", "is_paid": u"是否支付",
-                         "pay_in_cash": u"支付方式", "notes": u"备注"}
+                         "pay_in_cash": u"支付方式", "notes": u"备注", "MSSQL_ID":u"MSSQL编号"}
 
     __column_formatters__ = {"actor": lambda v, obj: u"--" if v is None else v,
-                             "pay_in_cash": lambda v, obj: u"现金支付" if v else u"月结"}
+                             "pay_in_cash": lambda v, obj: u"现金支付" if v else u"月结",
+                             "MSSQL_ID": lambda v, obj: v if v is not None else u"<span class='text-error'>未导入</span>"
+                             }
 
     def get_column_filters(self):
         from lite_mms.permissions.roles import AccountantPermission

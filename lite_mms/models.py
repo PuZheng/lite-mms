@@ -710,7 +710,7 @@ class Consignment(db.Model):
                str((self.delivery_session.id + self.customer.id) % 100)[0]
 
     def __unicode__(self):
-        return unicode(self.id)
+        return unicode(self.consignment_id)
 
     def __repr__(self):
         return "<Consignment %d>" % self.id

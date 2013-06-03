@@ -1,6 +1,6 @@
 #-*- coding:utf-8 -*-
 from flask import redirect, url_for, request
-from flask.ext.databrowser.action import BaseAction, DirectAction
+from flask.ext.databrowser.action import BaseAction, DirectAction, DeleteAction
 
 from lite_mms.utilities.decorators import committed
 from lite_mms import constants
@@ -86,6 +86,7 @@ class BatchPrintConsignment(DirectAction):
     def get_forbidden_msg_formats(self):
         return {-2: u"发货会话%s未生成发货单", -3: u"发货会话%s有未支付的发货单"}
 
+
 class PayAction(BaseAction):
     def test_enabled(self, model):
         if model.stale:
@@ -103,3 +104,25 @@ class PayAction(BaseAction):
 class PreviewConsignment(DirectAction):
     def op_upon_list(self, objs, model_view):
         return redirect(url_for("delivery.consignment_preview", id_=objs[0].id, url=request.url))
+
+
+class DeleteDeliverySession(DeleteAction):
+
+    def test_enabled(self, model):
+        if model.consignment_list:
+            return -2
+        return 0
+
+    def get_forbidden_msg_formats(self):
+        return {-2: u"发货会话%s已经生成了发货单，请先删除对应发货单以后再删除此发货会话!"}
+
+
+class DeleteConsignment(DeleteAction):
+
+    def test_enabled(self, model):
+        if model.MSSQL_ID:
+            return -2
+        return 0
+
+    def get_forbidden_msg_formats(self):
+        return {-2: u"已导入到MSSQL的发货单不能删除"}

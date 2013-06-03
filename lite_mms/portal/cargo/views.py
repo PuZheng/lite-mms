@@ -19,11 +19,11 @@ from lite_mms.portal.cargo import cargo_page, fsm, gr_page
 from lite_mms.utilities import decorators, get_or_404
 from lite_mms.permissions import CargoClerkPermission,AdminPermission
 from lite_mms.basemain import nav_bar
-from lite_mms.apis import wraps
 import lite_mms.constants.cargo as cargo_const
 from lite_mms.database import db
 from lite_mms.models import (UnloadSession, Plate, GoodsReceipt,
                              GoodsReceiptEntry, Product, UnloadTask, DeliverySession)
+from lite_mms.apis.cargo import UnloadSessionWrapper, UnloadTaskWrapper, GoodsReceiptWrapper, GoodsReceiptEntryWrapper
 
 @cargo_page.route('/')
 def index():
@@ -58,9 +58,9 @@ class UnloadSessionModelView(ModelView):
 
     def get_list_columns(self):
         def gr_item_formatter(v, obj):
-            # 格式化每个仓单，未打印或者过期，需要提示出来
+            # 格式化每个收货单，未打印或者过期，需要提示出来
             ret = unicode(v)
-            v = wraps(v)
+            v = GoodsReceiptWrapper(v)
             if not v.printed:
                 ret += u'<small class="text-error"> (未打印)</small>'
             if v.stale:
@@ -226,14 +226,14 @@ class GoodsReceiptEntryModelView(ModelView):
         ImageColumnSpec("pic_url", label=u"图片")]
 
     def preprocess(self, obj):
-        return wraps(obj)
+        return GoodsReceiptEntryWrapper(obj)
 
     def try_edit(self, objs=None):
         # 若收货单已经生成了订单，或者收货单已经过时，那么不能进行修改
         def _try_edit(obj):
             if obj:
                 if isinstance(obj, self.data_browser.db.Model):
-                    obj = wraps(obj)
+                    obj = GoodsReceiptEntryWrapper(obj)
                 if obj.goods_receipt.stale or obj.goods_receipt.order:
                     raise PermissionDenied
 
@@ -306,7 +306,7 @@ class UnloadTaskModelView(ModelView):
         ImageColumnSpec("pic_url", label=u"图片")]
 
     def preprocess(self, obj):
-        return wraps(obj)
+        return UnloadTaskWrapper(obj)
 
     def try_edit(self, objs=None):
         if any(obj.unload_session.status==cargo_const.STATUS_CLOSED for obj in objs):
@@ -323,14 +323,14 @@ class GoodsReceiptModelView(ModelView):
 
     edit_template = "cargo/goods-receipt.html"
 
-    can_batchly_edit = True
+    can_batchly_edit = False
 
     __default_order__ = ("create_time", "desc")
     def try_create(self):
         raise PermissionDenied
 
     def preprocess(self, obj):
-        return wraps(obj)
+        return GoodsReceiptWrapper(obj)
 
     __sortable_columns__ = ["id", "create_time"]
 
@@ -384,7 +384,7 @@ class GoodsReceiptModelView(ModelView):
                             ColumnSpec("product.product_type", label=u"产品类型"),
                             ColumnSpec("weight", label=u"净重(KG)"),
                             PlaceHolderColumnSpec(col_name="pic_url", label=u"图片", template_fname="cargo/pic-snippet.html")],
-                        preprocess=lambda obj: wraps(obj))
+                        preprocess=lambda obj: GoodsReceiptWrapper(obj))
     ]
     __column_labels__ = {"receipt_id": u'编 号', "customer": u'客 户', "unload_session.plate": u"车牌号",
                          "printed": u'是否打印', "stale": u"是否过时", "create_time": u"创建时间", "order": u"订 单"}
@@ -420,7 +420,7 @@ class GoodsReceiptModelView(ModelView):
         def _try_edit(obj):
             if obj:
                 if isinstance(obj, self.data_browser.db.Model):
-                    obj = wraps(obj)
+                    obj = self.preprocess(obj)
                 if obj.stale or obj.order:
                     raise PermissionDenied
 

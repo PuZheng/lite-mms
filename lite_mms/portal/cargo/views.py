@@ -323,7 +323,7 @@ class GoodsReceiptModelView(ModelView):
 
     edit_template = "cargo/goods-receipt.html"
 
-    can_batchly_edit = False
+    can_batchly_edit = True
 
     __default_order__ = ("create_time", "desc")
     def try_create(self):
@@ -378,7 +378,7 @@ class GoodsReceiptModelView(ModelView):
         PlaceHolderColumnSpec("id", label=u"日志", template_fname="cargo/gr-logs-snippet.html")
     ]
     __form_columns__[u"产品列表"] = [
-        TableColumnSpec("goods_receipt_entries_unwrapped", label="",
+        TableColumnSpec("goods_receipt_entries", label="",
                         col_specs=[
                             "id", ColumnSpec("product", label=u"产品"),
                             ColumnSpec("product.product_type", label=u"产品类型"),
@@ -431,9 +431,28 @@ class GoodsReceiptModelView(ModelView):
 
     def edit_hint_message(self,obj, read_only=False):
         if read_only:
-            return u"已生成订单的收货单不能修改"
+            if obj.order:
+                return u"已生成订单的收货单不能修改"
+            else:
+                return u"已过时的收货单不能修改"
         else:
             return super(GoodsReceiptModelView, self).edit_hint_message(obj, read_only)
+
+    def batch_edit_hint_message(self, objs, read_only=False):
+        if read_only:
+            obj_ids = ",".join([obj.receipt_id for obj in objs])
+            for obj in objs:
+                if obj.order:
+                    return u"收货单%s已生成订单，不能批量修改%s" % (obj.receipt_id, obj_ids)
+                elif obj.stale:
+                    return u"收货单%s已过时，不能批量修改%s" % (obj.receipt_id, obj_ids)
+            else:
+                return u"存在不能修改的收货单"
+        else:
+            return super(GoodsReceiptModelView, self).edit_hint_message(objs, read_only)
+
+    def get_batch_form_columns(self, preprocessed_objs=None):
+        return ["customer", "receipt_id", "create_time", "printed"]
 
 goods_receipt_model_view = GoodsReceiptModelView(GoodsReceipt, u"收货单")
 

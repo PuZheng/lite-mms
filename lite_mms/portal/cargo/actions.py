@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from flask import url_for, redirect, request
-from flask.ext.databrowser.action import DeleteAction, BaseAction
+from flask.ext.databrowser.action import DeleteAction, BaseAction, DirectAction
 from flask.ext.login import current_user
 from lite_mms import constants
 from lite_mms.constants import cargo as cargo_const
@@ -67,13 +67,13 @@ class CreateReceiptAction(BaseAction):
     def get_forbidden_msg_formats(self):
         return {-2: u"卸货会话%s已生成收货单", -3: u"卸货会话%s没有卸货任务，请先生成卸货任务"}
 
-class PrintGoodsReceipt(BaseAction):
+class PrintGoodsReceipt(DirectAction):
 
     def op_upon_list(self, objs, model_view):
         model_view.do_update_log(objs[0], self.name)
         return redirect(url_for("cargo.goods_receipt_preview", id_=objs[0].id, url=request.url))
 
-class BatchPrintGoodsReceipt(BaseAction):
+class BatchPrintGoodsReceipt(DirectAction):
 
     def op_upon_list(self, objs, model_view):
         for obj in objs:
@@ -108,7 +108,7 @@ class CreateExtraOrderAction(BaseAction):
     def get_forbidden_msg_formats(self):
         return {-2: u"已生成订单"}
 
-class ViewOrderAction(BaseAction):
+class ViewOrderAction(DirectAction):
 
     def test_enabled(self, model):
         if model.order:

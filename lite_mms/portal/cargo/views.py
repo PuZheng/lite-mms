@@ -325,6 +325,7 @@ class GoodsReceiptModelView(ModelView):
 
     can_batchly_edit = True
 
+    __default_order__ = ("create_time", "desc")
     def try_create(self):
         raise PermissionDenied
 

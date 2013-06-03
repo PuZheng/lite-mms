@@ -6,7 +6,7 @@ from lite_mms import constants
 from lite_mms.apis import wraps
 
 
-class ScheduleAction(action.BaseAction):
+class ScheduleAction(action.DirectAction):
 
     def op_upon_list(self, objs, model_view):
         return redirect(

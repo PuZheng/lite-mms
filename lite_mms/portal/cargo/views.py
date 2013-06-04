@@ -8,7 +8,7 @@ from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.action import DeleteAction, BaseAction
 from flask.ext.databrowser.column_spec import (InputColumnSpec, ColumnSpec,
                                                PlaceHolderColumnSpec, ListColumnSpec,
-                                               TableColumnSpec, ImageColumnSpec)
+                                               TableColumnSpec, ImageColumnSpec, LinkColumnSpec)
 
 from flask.ext.principal import PermissionDenied
 from werkzeug.utils import redirect
@@ -380,10 +380,13 @@ class GoodsReceiptModelView(ModelView):
     __form_columns__[u"产品列表"] = [
         TableColumnSpec("goods_receipt_entries", label="",
                         col_specs=[
-                            "id", ColumnSpec("product", label=u"产品"),
+                            LinkColumnSpec("id", formatter=lambda v, obj: goods_receipt_entry_view.url_for_object(obj,
+                                                                                                                  url=request.url), anchor=lambda v:v),
+                            ColumnSpec("product", label=u"产品"),
                             ColumnSpec("product.product_type", label=u"产品类型"),
                             ColumnSpec("weight", label=u"净重(KG)"),
-                            PlaceHolderColumnSpec(col_name="pic_url", label=u"图片", template_fname="cargo/pic-snippet.html")],
+                            PlaceHolderColumnSpec(col_name="pic_url", label=u"图片",
+                                                  template_fname="cargo/pic-snippet.html")],
                         preprocess=lambda obj: GoodsReceiptWrapper(obj))
     ]
     __column_labels__ = {"receipt_id": u'编 号', "customer": u'客 户', "unload_session.plate": u"车牌号",

@@ -7,7 +7,7 @@ from flask.ext.nav_bar import FlaskNavBar
 
 app = Flask(__name__, instance_relative_config=True)
 app.config.from_object("lite_mms.default_settings")
-if os.environ.has_key("LITE_MMS_HOME"):
+if "LITE_MMS_HOME" in os.environ:
     app.config.from_pyfile(
         os.path.join(os.environ["LITE_MMS_HOME"], "config.py"), silent=True)
 app.config.from_pyfile(os.path.join(os.getcwd(), "config.py"), silent=True)

@@ -71,8 +71,6 @@ if serve_web:
     app.register_blueprint(order_page, url_prefix="/order")
     from lite_mms.portal.order2 import order2_page
     app.register_blueprint(order2_page, url_prefix="/order2")
-    # from lite_mms.portal.cargo2 import cargo2_page
-    # app.register_blueprint(cargo2_page, url_prefix="/cargo2")
     from lite_mms.portal.schedule import schedule_page
     app.register_blueprint(schedule_page, url_prefix="/schedule")
     from lite_mms.portal.schedule.schedule2 import schedule_page2

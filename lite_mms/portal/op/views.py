@@ -3,7 +3,7 @@ import codecs
 import csv
 import cStringIO
 from datetime import datetime
-from flask import request, redirect, url_for, Response, stream_with_context
+from flask import request
 from lite_mms.portal.op import op_page
 import lite_mms.constants as constants
 from lite_mms.utilities import decorators, _
@@ -98,7 +98,7 @@ def export2csv():
             # write to the target stream
             self.stream.write(data)
             # empty queue
-            self.queue.truncate(0)
+            self.queue.truncate()
 
         def writerows(self, rows):
             for row in rows:

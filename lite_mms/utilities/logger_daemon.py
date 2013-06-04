@@ -11,7 +11,7 @@ import logging.handlers
 import daemon
 
 class FileLikeLogger:
-    "wraps a logging.Logger into a file like object"
+    """wraps a logging.Logger into a file like object"""
 
     def __init__(self, logger):
         self.logger = logger
@@ -79,7 +79,7 @@ def openFilesFromLoggers(loggers):
 
 class LoggingDaemonContext(daemon.DaemonContext):
     def _addLoggerFiles(self):
-        "adds all files related to loggers_preserve to files_preserve"
+        """adds all files related to loggers_preserve to files_preserve"""
         for logger in [self.stdout_logger, self.stderr_logger]:
             if logger:
                 self.loggers_preserve.append(logger)

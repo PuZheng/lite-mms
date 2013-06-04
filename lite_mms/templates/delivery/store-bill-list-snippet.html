@@ -50,9 +50,9 @@
   </button>
   <script type="text/javascript">
     $("#add-store-bill").click(function () {
-      var url = "{{ url_for("store_bill.to_delivery_list", url=request.path if not request.args.get("url") else request.path +"?url="+request.args.get("url")) }}&plate_=" + $("[name=plate_]").val() + "&tare=" + $("[name=tare]").val()
+      var url = "{{ url_for("store_bill.to_delivery_list", url=request.path if not request.args.get("url") else request.path +"?url="+request.args.get("url")) }}&plate_=" + $("[name=plate_]").val() + "&tare=" + $("[name=tare]").val();
       if ($("[name=with_person]").is(":checked")) {
-        url += "&with_person=on"
+        url += "&with_person=on";
       }
       {% if request.args.get("store_bill_list") %}
         var id_list = {{ request.args.getlist("store_bill_list")|tojson|safe }};

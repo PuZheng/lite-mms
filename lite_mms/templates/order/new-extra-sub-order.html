@@ -65,7 +65,7 @@
 
     <form class="form-horizontal" action="{{ url_for('order.new_sub_order') }}" method="POST">
       <div class="control-group">
-        <label class="control-label"><strong>产品类型</strong></label>
+        <label class="control-label" for="product_type"><strong>产品类型</strong></label>
 
         <div class="controls">
           <select id="product_type" name="product_type" required="required">
@@ -77,7 +77,7 @@
         </div>
       </div>
       <div class="control-group">
-        <label class="control-label"><strong>产品名称</strong></label>
+        <label class="control-label" for="product"><strong>产品名称</strong></label>
 
         <div class="controls">
           <select name="product" id="product" required="required">
@@ -85,10 +85,10 @@
         </div>
       </div>
       <div class="control-group">
-        <label class="control-label"><strong>技术要求</strong></label>
+        <label class="control-label" for="tech_req"><strong>技术要求</strong></label>
 
         <div class="controls">
-          <input name="tech_req" size="10" type="text"/>
+          <input name="tech_req" size="10" type="text" id="tech_req"/>
         </div>
       </div>
       <div class="control-group">

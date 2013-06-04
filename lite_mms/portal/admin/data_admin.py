@@ -131,7 +131,7 @@ class DataAdminView(BaseView):
                     # write to the target stream
                     self.stream.write(data)
                     # empty queue
-                    self.queue.truncate(0)
+                    self.queue.truncate()
 
                 def writerows(self, rows):
                     for row in rows:

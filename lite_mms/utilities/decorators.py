@@ -2,17 +2,11 @@
 """
 handy decorators
 """
-from flask import redirect, url_for, request
-from flask.ext.login import current_user
+from flask import request, abort
 from flask.templating import render_template, TemplateNotFound
 from functools import wraps
-from werkzeug.exceptions import abort
-from lite_mms.utilities import _
 import types
-import lite_mms.constants.groups as groups
-from lite_mms.permissions import CargoClerkPermission,\
-    SchedulerPermission, QualityInspectorPermission, AccountantPermission,\
-    DepartmentLeaderPermission, AdminPermission
+
 
 def templated(template):
     """This is a method to put a named arguments into the template file
@@ -87,8 +81,8 @@ def webservice_call(response_format):
     def decorator(f):
         def innerfunc(*args, **kwargs):
             rv = f(*args, **kwargs)
-            if isinstance(rv, types.TupleType) or\
-               isinstance(rv, types.ListType):
+            if isinstance(rv, types.TupleType) or \
+                    isinstance(rv, types.ListType):
                 response = rv[0]
                 code = rv[1]
                 headers = rv[2] if len(rv) == 3 else {}
@@ -114,6 +108,7 @@ def nav_bar_set(f):
         rv = f(*args, **kwargs)
         if isinstance(rv, dict):
             from lite_mms.basemain import nav_bar
+
             rv.update({'nav_bar': nav_bar})
         else:
             pass
@@ -121,17 +116,22 @@ def nav_bar_set(f):
 
     return decorator
 
+
 def committed(f):
     def _f(*args, **kwargs):
         ret = f(*args, **kwargs)
         from lite_mms.database import db
+
         if isinstance(ret, db.Model):
             from lite_mms.utilities import do_commit
+
             do_commit(ret)
         return ret
+
     return _f
 
-def permission_required(permission, methods=["GET",]):
+
+def permission_required(permission, methods=("GET",)):
     def decorator(f):
         def _f(*args, **kwargs):
             if request.method in methods:

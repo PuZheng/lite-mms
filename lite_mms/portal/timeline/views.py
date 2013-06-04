@@ -42,7 +42,7 @@ class MyBetween(Between):
 
     @property
     def input_type(self):
-        return ("date", "date")
+        return "date", "date"
 
 my_between = MyBetween("create_time", u"从", sep=u"到", 
                           default_value=[datetime.now().strftime(MyBetween.format), 
@@ -75,11 +75,9 @@ class TimeLineModelView(ModelView):
 
     __column_labels__ = {"actor": u"操作员", "create_time": u"创建时间"}
 
-    def try_view(self):
+    def try_view(self, processed_obj=None):
         if current_user.is_anonymous():
-            raise PermissionDenied()
-       
-
+            raise PermissionDenied
 
     def get_column_filters(self):
         return [EqualTo("actor", u"是", default_value=current_user.id), 

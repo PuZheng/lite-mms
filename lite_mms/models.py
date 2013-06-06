@@ -375,7 +375,7 @@ class SubOrder(db.Model):
     finish_time = db.Column(db.DateTime)
     quantity = db.Column(db.Integer, default=0)
     unit = db.Column(db.String(16), default=u'')
-    due_time = db.Column(db.DateTime)
+    due_time = db.Column(db.Date)
     order_type = db.Column(db.Integer)
     remaining_quantity = db.Column(db.Integer)
     work_command_list = db.relationship("WorkCommand",

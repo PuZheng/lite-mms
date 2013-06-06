@@ -124,8 +124,7 @@ class UnloadSessionModelView(ModelView):
         Permission.union(CargoClerkPermission, AdminPermission).test()
 
     def preprocess(self, model):
-        from lite_mms import apis
-        return apis.cargo.UnloadSessionWrapper(model)
+        return UnloadSessionWrapper(model)
 
     def get_customized_actions(self, model_list=None):
         from lite_mms.portal.cargo.actions import (CloseAction, OpenAction, 
@@ -281,7 +280,6 @@ def weigh_unload_task(id_):
             from flask.ext.login import current_user
             fsm.fsm.reset_obj(task.unload_session)
             fsm.fsm.next(cargo_const.ACT_WEIGHT, current_user)
-            # delete todo
             todo.remove_todo(todo.WEIGH_UNLOAD_TASK, id_)
             return redirect(
                 request.form.get("url", unload_session_model_view.url_for_object(model=task.unload_session.model)))

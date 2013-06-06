@@ -270,6 +270,10 @@ class OrderWrapper(ModelWrapper):
         import itertools
         return list(itertools.chain.from_iterable(sub_order.qi_work_command_list for sub_order in self.sub_order_list))
 
+    @cached_property
+    def work_command_list(self):
+        import itertools
+        return list(itertools.chain.from_iterable(sub_order.work_command_list for sub_order in self.sub_order_list))
 
 
 class SubOrderWrapper(ModelWrapper):

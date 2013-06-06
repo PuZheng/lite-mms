@@ -7,6 +7,7 @@ from lite_mms import constants
 
 from lite_mms.models import WorkCommand, Order, SubOrder
 from lite_mms.apis.manufacture import get_wc_status_list, get_status_list, get_handle_type_list
+from lite_mms.permissions import SchedulerPermission
 
 
 class WorkCommandView(ModelView):
@@ -26,7 +27,7 @@ class WorkCommandView(ModelView):
 
     def preprocess(self, obj):
         from lite_mms import apis
-        return apis.WorkCommandWrapper(obj)
+        return apis.manufacture.WorkCommandWrapper(obj)
 
     def patch_row_attr(self, idx, row):
         if row.status != constants.work_command.STATUS_FINISHED and (row.urgent or row.sub_order.returned):
@@ -83,7 +84,17 @@ class WorkCommandView(ModelView):
         pass
 
     def try_edit(self, processed_objs=None):
-        raise PermissionDenied
+        if SchedulerPermission.can() and processed_objs and processed_objs[0].status == constants.work_command.STATUS_DISPATCHING:
+            return True
+        else:
+            raise PermissionDenied
+
+
+    def edit_hint_message(self,obj, read_only=False):
+        if read_only:
+            return u"工单%d不能修改" % obj.id
+        else:
+            return super(WorkCommandView, self).edit_hint_message(obj, read_only)
 
     def get_customized_actions(self, processed_objs=None):
         from .actions import schedule_action, retrieve_action
@@ -106,11 +117,16 @@ class WorkCommandView(ModelView):
         else:
             return []
 
-    __form_columns__ = ["id", "sub_order", "sub_order.order.customer_order_number", "department", "team", "org_weight",
-                        "org_cnt", "sub_order.unit", "procedure", "previous_procedure",
-                        column_spec.ColumnSpec("urgent", formatter=lambda v, obj: u"是" if v else u'否',label=u"加急"),
-                        "sub_order.returned", "tech_req", "status",
-                        column_spec.ColumnSpec("handle_type", label=u"处理类型", formatter=lambda v, obj: get_handle_type_list().get(v, u"未知"))]
+    __form_columns__ = [column_spec.ColumnSpec("id"), column_spec.ColumnSpec("sub_order"),
+                        column_spec.ColumnSpec("sub_order.order", label=u"订单号"), column_spec.ColumnSpec("department"),
+                        column_spec.ColumnSpec("team"), column_spec.ColumnSpec("org_weight"),
+                        column_spec.ColumnSpec("org_cnt"), column_spec.ColumnSpec("sub_order.unit"), "procedure",
+                        column_spec.ColumnSpec("previous_procedure"),
+                        column_spec.ColumnSpec("processed_weight", label=u"工序后重量"),
+                        column_spec.ColumnSpec("processed_cnt", label=u"工序后数量"), "urgent", "sub_order.returned",
+                        "tech_req", column_spec.ColumnSpec("status_name", label=u"状态"),
+                        column_spec.ColumnSpec("handle_type", label=u"处理类型",
+                                               formatter=lambda v, obj: get_handle_type_list().get(v, u"未知"))]
 
 work_command_view = WorkCommandView(WorkCommand)
 # from flask import (request, abort, redirect, url_for, render_template, json,

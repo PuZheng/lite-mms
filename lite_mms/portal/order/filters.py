@@ -47,6 +47,18 @@ class CategoryFilter(filters.BaseFilter):
 
         return query
 
+class UnfinishedFilter(filters.BaseFilter):
+        def set_sa_criterion(self, query):
+            from sqlalchemy import or_
+            from lite_mms import constants, models
+            return query.filter(
+                models.Order.sub_order_list.any(
+                    or_(models.SubOrder.remaining_quantity > 0,
+                        models.SubOrder.work_command_list.any(
+                            models.WorkCommand.status != constants.work_command.STATUS_FINISHED))))
+
+unfinished_filter = UnfinishedFilter("default")
+
 category_filter = CategoryFilter("category", name=u"是", options=[(CategoryFilter.UNDISPATCHED_ONLY, u"仅展示待下发订单"), 
         (CategoryFilter.DELIVERABLE_ONLY, u"仅展示可发货订单"), (CategoryFilter.ACCOUNTABLE_ONLY, u"仅展示可盘点订单")],
         hidden=True)

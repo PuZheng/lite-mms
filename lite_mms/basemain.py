@@ -116,14 +116,12 @@ nav_bar.register(cargo_page, name=u"卸货会话", permissions=[CargoClerkPermis
 nav_bar.register(gr_page, name=u"收货单", permissions=[CargoClerkPermission], group=u"卸货管理")
 nav_bar.register(order_page, default_url='/order/order-list', name=u"订单管理",
                  permissions=[view_order])
+nav_bar.register(order_page, default_url='/order/order-list', name=u"订单管理",
+                 permissions=[schedule_order])
 nav_bar.register(delivery_page, name=u'发货会话',
                  permissions=[CargoClerkPermission], group=u"发货管理")
 nav_bar.register(consignment_page, name=u'发货单',
                  permissions=[CargoClerkPermission.union(AccountantPermission)], group=u"发货管理")
-nav_bar.register(schedule_page, name=u"订单管理", permissions=[schedule_order])
-nav_bar.register(schedule_page2, name=u"订单管理(beta)",
-                 permissions=[schedule_order],
-                 default_url="/schedule2/order-list")
 nav_bar.register(manufacture_page, name=u"工单管理",
                  permissions=[view_work_command])
 #nav_bar.register(delivery_page, name=u"发货单管理",

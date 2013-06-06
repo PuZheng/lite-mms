@@ -4,7 +4,7 @@
 """
 from datetime import date
 from flask import request, url_for, render_template, abort, flash, redirect, json
-from wtforms import Form, TextField, IntegerField, validators, BooleanField, DateField
+from wtforms import Form, TextField, IntegerField, validators, BooleanField, DateField, HiddenField
 from lite_mms.portal.order import order_page
 from lite_mms.utilities import decorators
 
@@ -74,3 +74,62 @@ def new_sub_order():
         except ValueError, e:
             flash(unicode(e), "error")
         return redirect(url_for('order.order', id_=order_id))
+
+
+@order_page.route('/work-command', methods=['GET', 'POST'])
+@decorators.templated("order/work-command.html")
+@decorators.nav_bar_set
+def work_command():
+    """
+    生成一个新的工单
+    """
+    if request.method == "GET":
+        from lite_mms import apis
+
+        sub_order = apis.order.SubOrderWrapper.get_sub_order(
+            request.args.get("sub_order_id", type=int))
+        if not sub_order:
+            abort(404)
+        try:
+            dep = apis.harbor.get_harbor_model(sub_order.harbor.name).department
+            return dict(sub_order=sub_order, procedure_list=dep.procedure_list, department=dep, titlename=u"预排产")
+        except AttributeError:
+            abort(404)
+    else:
+        from lite_mms.apis import manufacture, order
+
+        class PreScheduleForm(Form):
+            sub_order_id = HiddenField('sub_order_id', [validators.required()])
+            schedule_weight = IntegerField('schedule_weight',
+                                           [validators.required()])
+            procedure = IntegerField('procedure')
+            tech_req = TextField('tech_req')
+            schedule_count = IntegerField('schedule_count')
+            urgent = BooleanField('urgent')
+            url = HiddenField("url")
+
+        form = PreScheduleForm(request.form)
+        sub_order = order.get_sub_order(form.sub_order_id.data)
+        if not sub_order:
+            abort(404)
+        if form.validate():
+            try:
+                inst = manufacture.new_work_command(
+                    sub_order_id=sub_order.id,
+                    org_weight=form.schedule_weight.data,
+                    procedure_id=form.procedure.data,
+                    org_cnt=form.schedule_count.data,
+                    urgent=form.urgent.data,
+                    tech_req=form.tech_req.data)
+                if inst:
+                    if inst.sub_order.returned:
+                        flash(u"成功创建工单（编号%d），请提醒质检员赶快处理" % inst.id)
+                    else:
+                        flash(u"成功创建工单（编号%d）" % inst.id)
+            except ValueError as a:
+                return render_template("error.html", msg=a.message,
+                                       back_url=form.url.data or url_for('order.order', id_=sub_order.order.id)), 403
+            return redirect(form.url.data or url_for('order.order', id_=sub_order.order.id))
+        else:
+            return render_template("error.html", msg=form.errors,
+                                   back_url=url_for('order.order', id_=sub_order.order.id)), 403

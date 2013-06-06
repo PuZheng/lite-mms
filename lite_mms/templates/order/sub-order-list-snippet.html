@@ -34,7 +34,7 @@
         {% if permissions.SchedulerPermission.can() %}
           <td>
             {% if sub_order.remaining_quantity|int > 0 and obj.refined and obj.dispatched %}
-              <a class="btn btn-primary" name="{{ sub_order.id }}" href="{{ url_for('schedule.work_command',sub_order_id=sub_order.id,url=request.url) }}">
+              <a class="btn btn-primary" name="{{ sub_order.id }}" href="{{ url_for('order.work_command',sub_order_id=sub_order.id,url=request.url) }}">
                 <i class="icon-wrench icon-white"></i>&nbsp;{{ "质检检货" if sub_order.returned else "预排产" }}
               </a>
             {% elif not obj.refined or not obj.dispatched %}

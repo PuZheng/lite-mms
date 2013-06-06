@@ -140,9 +140,9 @@ class OrderModelView(ModelView):
                 ColumnSpec("sub_order.returned", label=u"退镀", formatter=lambda v,obj: u"<span class='text-error'>是</span>" if v else u"否"),
                 ColumnSpec("org_weight", label=u"工序前重量"), ColumnSpec("org_cnt", label=u"工序前数量"),
                 ColumnSpec("unit", label=u"单位"), ColumnSpec("processed_weight", label=u"工序后重量"),
-                ColumnSpec("processed_cnt", label=u"工序后数量"), ColumnSpec("department", label=u"车间"),
-                ColumnSpec("team", label=u"班组"), ColumnSpec("qi", label=u"质检员"),
-                ColumnSpec("status_name", label=u"状态")])]
+                ColumnSpec("processed_cnt", label=u"工序后数量"),ColumnSpec("tech_req", label=u"技术要求"),
+                ColumnSpec("department", label=u"车间"), ColumnSpec("team", label=u"班组"),
+                ColumnSpec("qi", label=u"质检员"), ColumnSpec("status_name", label=u"状态")])]
         return form_columns
 
 

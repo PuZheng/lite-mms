@@ -191,18 +191,19 @@ if not app.config["DEBUG"]:
                                back_url=request.args.get("back_url", "/"),
                                nav_bar=nav_bar), 403
 
-    #设置无权限处理器
-    @app.errorhandler(PermissionDenied)
-    @app.errorhandler(401)
-    def permission_denied(error):
 
-        #如果用户已登录则显示无权限页面
-        from flask import redirect, url_for
-        if not current_user.is_anonymous():
-            return redirect(url_for("error", msg=u'请联系管理员获得访问权限!',
-                                    back_url=request.args.get("url")))
-            #如果用户还未登录则转向到登录面
-        return render_template("auth/login.html",
-                               error=gettext(u"请登录"), next_url=request.url, titlename=u"请登录")
+#设置无权限处理器
+@app.errorhandler(PermissionDenied)
+@app.errorhandler(401)
+def permission_denied(error):
+
+    #如果用户已登录则显示无权限页面
+    from flask import redirect, url_for
+    if not current_user.is_anonymous():
+        return redirect(url_for("error", msg=u'请联系管理员获得访问权限!',
+                                back_url=request.args.get("url")))
+        #如果用户还未登录则转向到登录面
+    return render_template("auth/login.html",
+                           error=gettext(u"请登录"), next_url=request.url, titlename=u"请登录")
 
 

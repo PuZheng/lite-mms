@@ -73,9 +73,11 @@
           <td
               {% if not sub_order.remaining_quantity %} class="text-error" {% endif %} >
             {{ sub_order.remaining_quantity }}({{ sub_order.unit }})
-          </td>{% else %}
+          </td>
+        {% else %}
           <td>{{ sub_order.delivered_weight }}</td>
-          <td>{{ sub_order.to_deliver_weight }}</td>{% endif %}
+          <td>{{ sub_order.to_deliver_weight }}</td>
+        {% endif %}
         <td>
           {% if sub_order.pic_path %}
             <ul class="thumbnails">
@@ -89,6 +91,29 @@
         </td>
       </tr>
     {% endfor %}
+    <tr>
+      <th>总计</th>
+      {% if permissions.SchedulerPermission.can() %}
+        <td></td>
+      {% endif %}
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>{{ field_value|sum("weight") }}</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      {% if permissions.SchedulerPermission.can() %}
+        <td></td>
+        <td>
+          {{ field_value|sum("remaining_quantity") }}
+        </td>
+      {% else %}
+        <td>{{ field_value|sum("delivered_weight") }}</td>
+        <td>{{ field_value|sum("to_deliver_weight") }}</td>
+      {% endif %}
+      <td></td>
+    </tr>
     <tbody>
   </table>
 {% endif %}

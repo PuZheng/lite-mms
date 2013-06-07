@@ -280,6 +280,16 @@ class OrderWrapper(ModelWrapper):
         for to in auth.get_user_list(constants.groups.SCHEDULER):
             todo.new_todo(to, todo.DISPATCH_ORDER, self)
 
+    @property
+    def log_list(self):
+        from lite_mms.models import Log
+
+        ret = Log.query.filter(Log.obj_pk == str(self.id)).filter(
+            Log.obj_cls == self.model.__class__.__name__).all()
+        for sub_order in self.sub_order_list:
+            ret.extend(sub_order.log_list)
+        return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time), reverse=True)
+
 
 class SubOrderWrapper(ModelWrapper):
 
@@ -434,6 +444,14 @@ class SubOrderWrapper(ModelWrapper):
     @cached_property
     def to_deliver_store_bill_list(self):
         return [store_bill for store_bill in self.store_bill_list if not store_bill.delivery_task_id]
+
+    @property
+    def log_list(self):
+        from lite_mms.models import Log
+
+        ret = Log.query.filter(Log.obj_pk == str(self.id)).filter(
+            Log.obj_cls == self.model.__class__.__name__).all()
+        return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time), reverse=True)
 
 
 def get_order_type_list():

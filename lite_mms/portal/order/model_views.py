@@ -127,7 +127,8 @@ class OrderModelView(ModelView):
         form_columns = OrderedDict()
         form_columns[u"订单详情"] = ["customer_order_number", ColumnSpec("goods_receipt.customer"),
                                  ColumnSpec("goods_receipt", css_class="control-text", label=u"收货单"), "net_weight",
-                                 ColumnSpec("create_time")]
+                                 ColumnSpec("create_time"),
+                                 PlaceHolderColumnSpec("log_list", label=u"日志", template_fname="logs-snippet.html")]
         form_columns[u"子订单列表"] = [PlaceHolderColumnSpec("sub_order_list", template_fname="order/sub-order-list-snippet.html", label="")]
         if SchedulerPermission.can():
             from lite_mms.portal.manufacture.views import work_command_view
@@ -190,7 +191,8 @@ class SubOrderModelView(ModelView):
                         InputColumnSpec("product", group_by=Product.product_type),
                         "weight", ColumnSpec("harbor"), "urgent", "returned", "tech_req",
                         InputColumnSpec("due_time", validators=[validators.Required(message=u"该字段不能为空")]),
-                        ColumnSpec("create_time"), ImageColumnSpec("pic_url", label=u"图片")]
+                        ColumnSpec("create_time"), ImageColumnSpec("pic_url", label=u"图片"),
+                        PlaceHolderColumnSpec("log_list", label=u"日志", template_fname="logs-snippet.html")]
         if obj and obj.order_type == constants.EXTRA_ORDER_TYPE:
             form_columns.extend(["spec", "type", "quantity", "unit"])
         return form_columns

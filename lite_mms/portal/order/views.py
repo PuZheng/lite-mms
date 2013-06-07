@@ -4,6 +4,7 @@
 """
 from datetime import date
 from flask import request, url_for, render_template, abort, flash, redirect, json
+from flask.ext.login import current_user
 from wtforms import Form, TextField, IntegerField, validators, BooleanField, DateField, HiddenField
 from lite_mms.portal.order import order_page
 from lite_mms.utilities import decorators
@@ -126,8 +127,11 @@ def work_command():
 
                     remove_todo(DISPATCH_ORDER, sub_order.order.id)
 
-                    from lite_mms.apis.work_command_state import work_command_sm
-                    work_command_sm.do_log(u"新建")
+                    from lite_mms.basemain import timeline_logger
+                    timeline_logger.info(u"新建",
+                                         extra={"obj": inst,
+                                                "actor": current_user if current_user.is_authenticated() else None,
+                                                "action": u"新建", "obj_pk": inst.id})
 
                     if inst.sub_order.returned:
                         flash(u"成功创建工单（编号%d），请提醒质检员赶快处理" % inst.id)

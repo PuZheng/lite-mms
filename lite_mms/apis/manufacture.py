@@ -267,8 +267,9 @@ class WorkCommandWrapper(ModelWrapper):
         if not form.validate():
             raise ValueError(form.errors)
         from .work_command_state import work_command_sm
-        from lite_mms.basemain import timeline_logger
-        work_command_sm.logger = timeline_logger
+        if not work_command_sm.logger:
+            from lite_mms.basemain import timeline_logger
+            work_command_sm.logger = timeline_logger
         try:
             work_command_sm.reset_obj(work_command=self.model)
             work_command_sm.next(actor=models.User.query.get(actor_id),

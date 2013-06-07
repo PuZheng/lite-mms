@@ -101,11 +101,8 @@ if serve_ws:
     app.register_blueprint(manufacture_ws, url_prefix="/manufacture_ws")
 
 # ====================== REGISTER NAV BAR ===================================
-from lite_mms.permissions.roles import (CargoClerkPermission,
-                                        AccountantPermission,
-                                        QualityInspectorPermission,
-                                        DepartmentLeaderPermission,
-                                       AdminPermission)
+from lite_mms.permissions.roles import (CargoClerkPermission, AccountantPermission, QualityInspectorPermission,
+                                        DepartmentLeaderPermission, AdminPermission)
 from lite_mms.permissions.order import view_order, schedule_order
 from lite_mms.permissions.work_command import view_work_command
 nav_bar.register(cargo_page, name=u"卸货会话", permissions=[CargoClerkPermission], group=u"卸货管理")

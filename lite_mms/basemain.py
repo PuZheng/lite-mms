@@ -143,8 +143,7 @@ app.jinja_env.globals['permissions'] = permissions
 app.jinja_env.filters['_datetimeformat'] = datetimeformat
 app.jinja_env.add_extension("jinja2.ext.loopcontrols")
 
-from flask.ext.principal import (identity_loaded, RoleNeed, UserNeed,
-                                 PermissionDenied, Permission)
+from flask.ext.principal import (identity_loaded, RoleNeed, UserNeed, PermissionDenied)
 
 @login_manager.user_loader
 def load_user(user_id):

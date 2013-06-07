@@ -275,6 +275,11 @@ class OrderWrapper(ModelWrapper):
         import itertools
         return list(itertools.chain.from_iterable(sub_order.work_command_list for sub_order in self.sub_order_list))
 
+    def add_todo(self):
+        from lite_mms.apis import auth, todo
+        for to in auth.get_user_list(constants.groups.SCHEDULER):
+            todo.new_todo(to, todo.DISPATCH_ORDER, self)
+
 
 class SubOrderWrapper(ModelWrapper):
 
@@ -429,6 +434,7 @@ class SubOrderWrapper(ModelWrapper):
     @cached_property
     def to_deliver_store_bill_list(self):
         return [store_bill for store_bill in self.store_bill_list if not store_bill.delivery_task_id]
+
 
 def get_order_type_list():
     t1 = dict(id=constants.STANDARD_ORDER_TYPE,

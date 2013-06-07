@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-from flask import Blueprint
+from flask import Blueprint, redirect, url_for
 from flask.ext.login import login_required
 from lite_mms.basemain import data_browser, nav_bar
 
@@ -10,6 +10,11 @@ order_page = Blueprint("order", __name__, static_folder="static", template_folde
 @login_required
 def _():
     pass
+
+
+@order_page.route("/")
+def index():
+    return redirect(url_for("order.order_list"))
 
 
 from lite_mms.portal.order import ajax, views, filters, model_views

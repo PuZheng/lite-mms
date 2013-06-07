@@ -122,6 +122,10 @@ def work_command():
                     urgent=form.urgent.data,
                     tech_req=form.tech_req.data)
                 if inst:
+                    from lite_mms.apis.todo import remove_todo, DISPATCH_ORDER
+
+                    remove_todo(DISPATCH_ORDER, sub_order.order.id)
+
                     if inst.sub_order.returned:
                         flash(u"成功创建工单（编号%d），请提醒质检员赶快处理" % inst.id)
                     else:

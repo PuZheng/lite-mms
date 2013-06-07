@@ -8,6 +8,8 @@ class DispatchAction(BaseAction):
     
     def op(self, model):
         model.update(dispatched=True)
+        model.add_todo()
+
 
     def test_enabled(self, model):
         if model.dispatched:

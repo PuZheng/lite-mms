@@ -24,16 +24,4 @@ admin.add_view(
 data_admin = DataAdminView(name=u"数据管理", endpoint="data")
 
 
-class WorkCommandView(DataModelView):
-    __list_columns__ = ["id", "team", "department", "processed_weight",
-                        "deduction_list"]
-    __column_labels__ = {"id": u"编号", "team": u"班组", "department": u"车间",
-                         "processed_weight": u"工序后重量", "deduction_list": u"扣重"}
-    form_formatters = {"department": lambda x: x.name}
-    __list_formatters__ = {"team": lambda model, v: v.name if v else "",
-                           "department": lambda model, v: v.name if v else "",
-                           "deduction_list": lambda model, v: sum(i.weight for i in v)}
-
-data_browser.register_model_view(WorkCommandView(WorkCommand),
-                                 data_admin.create_blueprint(admin))
 admin.add_view(data_admin)

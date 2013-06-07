@@ -143,7 +143,7 @@ class OrderWrapper(ModelWrapper):
         """
         即收货重量
         """
-        return sum(int(sub_order.weight) for sub_order in self.sub_order_list)
+        return sum(entry.weight for entry in self.goods_receipt.goods_receipt_entries)
 
     @cached_property
     def remaining_weight(self):

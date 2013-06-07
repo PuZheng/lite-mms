@@ -11,6 +11,8 @@
       {% if not obj.measured_by_weight %}
         <th>数量</th>
         <th>数量单位</th>
+        <th>规格</th>
+        <th>型号</th>
       {% endif %}
       <th>交货日期</th>
       <th>净重(KG)</th>
@@ -54,6 +56,8 @@
         {% if not obj.measured_by_weight %}
           <td>{{ sub_order.quantity }}</td>
           <td>{{ sub_order.unit }}</td>
+          <td>{{ sub_order.spec }}</td>
+          <td>{{ sub_order.type }}</td>
         {% endif %}
         <td>{% if sub_order.due_time %}
           {{ sub_order.due_time }}{% else %}
@@ -100,6 +104,8 @@
       <td></td>
       {% if not obj.measured_by_weight %}
         <td>{{ field_value|sum("quantity") }}</td>
+        <td></td>
+        <td></td>
         <td></td>
       {% endif %}
       <td></td>

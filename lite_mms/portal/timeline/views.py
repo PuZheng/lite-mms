@@ -34,7 +34,7 @@ class ObjClsFilter(filters.BaseFilter):
         elif self.value == self.WORK_COMMAND:
             obj_cls = "WorkCommand"
         if obj_cls:
-            query = query.filter(Log.obj_cls==obj_cls)
+            query = query.filter(Log.obj_cls == obj_cls)
         return query
 
 class MyBetween(Between):

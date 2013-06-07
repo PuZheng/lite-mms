@@ -126,6 +126,9 @@ def work_command():
 
                     remove_todo(DISPATCH_ORDER, sub_order.order.id)
 
+                    from lite_mms.apis.work_command_state import work_command_sm
+                    work_command_sm.do_log(u"新建")
+
                     if inst.sub_order.returned:
                         flash(u"成功创建工单（编号%d），请提醒质检员赶快处理" % inst.id)
                     else:

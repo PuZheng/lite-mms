@@ -84,7 +84,8 @@ class WorkCommandView(ModelView):
         pass
 
     def try_edit(self, processed_objs=None):
-        if SchedulerPermission.can() and processed_objs and processed_objs[0].status == constants.work_command.STATUS_DISPATCHING:
+        if SchedulerPermission.can() and processed_objs and processed_objs[
+            0].status == constants.work_command.STATUS_DISPATCHING:
             return True
         else:
             raise PermissionDenied
@@ -126,7 +127,8 @@ class WorkCommandView(ModelView):
                         column_spec.ColumnSpec("processed_cnt", label=u"工序后数量"), "urgent", "sub_order.returned",
                         "tech_req", column_spec.ColumnSpec("status_name", label=u"状态"),
                         column_spec.ColumnSpec("handle_type", label=u"处理类型",
-                                               formatter=lambda v, obj: get_handle_type_list().get(v, u"未知"))]
+                                               formatter=lambda v, obj: get_handle_type_list().get(v, u"未知")),
+                        column_spec.PlaceHolderColumnSpec("log_list", label=u"日志", template_fname="logs-snippet.html")]
 
 work_command_view = WorkCommandView(WorkCommand)
 # from flask import (request, abort, redirect, url_for, render_template, json,

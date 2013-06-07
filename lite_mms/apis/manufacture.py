@@ -310,6 +310,13 @@ class WorkCommandWrapper(ModelWrapper):
         else:
             return ""
 
+    @property
+    def log_list(self):
+        from lite_mms.models import Log
+
+        ret = Log.query.filter(Log.obj_pk == str(self.id)).filter(
+            Log.obj_cls == self.model.__class__.__name__).all()
+        return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time), reverse=True)
 
 class DepartmentWrapper(ModelWrapper):
     @classmethod

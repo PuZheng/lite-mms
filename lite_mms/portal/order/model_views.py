@@ -205,6 +205,11 @@ class SubOrderModelView(ModelView):
         from lite_mms.apis.order import SubOrderWrapper
         return SubOrderWrapper(obj)
 
+    def on_model_change(self, form, model):
+        if model.order_type == constants.STANDARD_ORDER_TYPE:
+            model.quantity = model.weight
+        model.remaining_quantity = model.quantity
+
 from nav_bar import NavBar
 
 order_model_view = OrderModelView(Order, u"订单")

@@ -187,7 +187,7 @@ class SubOrderModelView(ModelView):
 
     def get_form_columns(self, obj=None):
 
-        form_columns = [ColumnSpec("id"),
+        form_columns = [ColumnSpec("id", label=u"编号"),
                         InputColumnSpec("product", group_by=Product.product_type),
                         "weight", ColumnSpec("harbor"), "urgent", "returned", "tech_req",
                         InputColumnSpec("due_time", validators=[validators.Required(message=u"该字段不能为空")])]

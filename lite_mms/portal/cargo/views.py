@@ -129,7 +129,7 @@ class UnloadSessionModelView(ModelView):
     def get_customized_actions(self, model_list=None):
         from lite_mms.portal.cargo.actions import (CloseAction, OpenAction, 
                                                    CreateReceiptAction, 
-                                                   DeleteGoodsReceiptAction)
+                                                   DeleteUnloadSessionAction)
         class _PrintGoodsReceipt(BaseAction):
             def op_upon_list(self, objs, model_list):
                 obj = objs[0]
@@ -137,7 +137,7 @@ class UnloadSessionModelView(ModelView):
 
         action_list = []
         if model_list is None: # for list
-            action_list.extend([CloseAction(u"关闭"), OpenAction(u"打开"), CreateReceiptAction(u"生成收货单"), DeleteGoodsReceiptAction(u"删除", None)])
+            action_list.extend([CloseAction(u"关闭"), OpenAction(u"打开"), CreateReceiptAction(u"生成收货单"), DeleteUnloadSessionAction(u"删除", None)])
         else:
             if len(model_list) ==1:
                 if model_list[0].status in [cargo_const.STATUS_CLOSED, cargo_const.STATUS_DISMISSED]:

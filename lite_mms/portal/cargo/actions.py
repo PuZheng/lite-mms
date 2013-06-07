@@ -5,7 +5,7 @@ from flask.ext.login import current_user
 from lite_mms import constants
 from lite_mms.constants import cargo as cargo_const
 
-class DeleteGoodsReceiptAction(DeleteAction):
+class DeleteUnloadSessionAction(DeleteAction):
 
     def test_enabled(self, model):
         if model.goods_receipt_list:

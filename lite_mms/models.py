@@ -110,7 +110,7 @@ class UnloadTask(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     session_id = db.Column(db.Integer, db.ForeignKey('TB_UNLOAD_SESSION.id'))
-    unload_session = db.relationship("UnloadSession", backref="task_list")
+    unload_session = db.relationship("UnloadSession", backref=db.backref("task_list", cascade="all, delete-orphan"))
     harbor_name = db.Column(db.String(32), db.ForeignKey('TB_HABOR.name'))
     harbor = db.relationship("Harbor")
     customer_id = db.Column(db.Integer, db.ForeignKey('TB_CUSTOMER.id'))

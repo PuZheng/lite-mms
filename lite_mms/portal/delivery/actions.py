@@ -116,6 +116,11 @@ class DeleteDeliverySession(DeleteAction):
     def get_forbidden_msg_formats(self):
         return {-2: u"发货会话%s已经生成了发货单，请先删除对应发货单以后再删除此发货会话!"}
 
+    def op(self, obj):
+        from lite_mms.apis.todo import remove_todo, WEIGH_DELIVERY_TASK
+        for task in obj.delivery_task_list:
+            remove_todo(WEIGH_DELIVERY_TASK, task.id)
+        super(DeleteDeliverySession, self).op(obj)
 
 class DeleteConsignment(DeleteAction):
 

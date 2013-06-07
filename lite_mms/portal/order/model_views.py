@@ -190,11 +190,11 @@ class SubOrderModelView(ModelView):
         form_columns = [ColumnSpec("id"),
                         InputColumnSpec("product", group_by=Product.product_type),
                         "weight", ColumnSpec("harbor"), "urgent", "returned", "tech_req",
-                        InputColumnSpec("due_time", validators=[validators.Required(message=u"该字段不能为空")]),
-                        ColumnSpec("create_time"), ImageColumnSpec("pic_url", label=u"图片"),
-                        PlaceHolderColumnSpec("log_list", label=u"日志", template_fname="logs-snippet.html")]
+                        InputColumnSpec("due_time", validators=[validators.Required(message=u"该字段不能为空")])]
         if obj and obj.order_type == constants.EXTRA_ORDER_TYPE:
             form_columns.extend(["spec", "type", "quantity", "unit"])
+        form_columns.extend([ColumnSpec("create_time"), ImageColumnSpec("pic_url", label=u"图片"),
+                        PlaceHolderColumnSpec("log_list", label=u"日志", template_fname="logs-snippet.html")])
         return form_columns
 
     __column_labels__ = {"product": u"产品", "weight": u"重量", "harbor": u"卸货点", "urgent": u"加急", "returned": u"退镀",

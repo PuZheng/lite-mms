@@ -98,6 +98,10 @@
       {% endif %}
       <td></td>
       <td></td>
+      {% if not obj.measured_by_weight %}
+        <td>{{ field_value|sum("quantity") }}</td>
+        <td></td>
+      {% endif %}
       <td></td>
       <td>{{ field_value|sum("weight") }}</td>
       <td></td>

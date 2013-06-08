@@ -3,6 +3,7 @@ import re
 import json
 
 from flask import request, abort, url_for, render_template, flash, g
+from flask.ext.login import login_required
 from sqlalchemy import exists, and_
 from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.action import DeleteAction, BaseAction
@@ -42,7 +43,8 @@ class UnloadSessionModelView(ModelView):
     can_batchly_edit = False
 
     def try_edit(self, objs=None):
-        
+        CargoClerkPermission.test()
+
         def _try_edit(obj_):
             if obj_ and obj_.finish_time:
                 raise PermissionDenied
@@ -216,6 +218,10 @@ plate_model_view = plateModelView(Plate, u"车辆")
 
 class GoodsReceiptEntryModelView(ModelView):
 
+    @login_required
+    def try_view(self, processed_objs=None):
+        pass
+
     __form_columns__ = [
         InputColumnSpec("product", group_by=Product.product_type, label=u"产品",
                         filter_=lambda q: q.filter(Product.enabled==True)),
@@ -235,6 +241,7 @@ class GoodsReceiptEntryModelView(ModelView):
                     obj = GoodsReceiptEntryWrapper(obj)
                 if obj.goods_receipt.stale or obj.goods_receipt.order:
                     raise PermissionDenied
+        CargoClerkPermission.test()
 
         if isinstance(objs, list) or isinstance(objs, tuple):
             return any(_try_edit(obj) for obj in objs)
@@ -307,6 +314,8 @@ class UnloadTaskModelView(ModelView):
         return UnloadTaskWrapper(obj)
 
     def try_edit(self, objs=None):
+        CargoClerkPermission.test()
+
         if any(obj.unload_session.status==cargo_const.STATUS_CLOSED for obj in objs):
             raise PermissionDenied
 
@@ -314,6 +323,10 @@ class UnloadTaskModelView(ModelView):
         if read_only:
             return u"本卸货会话已经关闭，所以不能修改卸货任务"
         return super(UnloadTaskModelView, self).edit_hint_message(objs, read_only)
+
+    @login_required
+    def try_view(self, processed_objs=None):
+        pass
 
 unload_task_model_view = UnloadTaskModelView(UnloadTask, u"卸货任务")
 
@@ -329,6 +342,10 @@ class GoodsReceiptModelView(ModelView):
 
     def preprocess(self, obj):
         return GoodsReceiptWrapper(obj)
+
+    @login_required
+    def try_view(self, processed_objs=None):
+        pass
 
     __sortable_columns__ = ["id", "create_time"]
 
@@ -430,6 +447,7 @@ class GoodsReceiptModelView(ModelView):
                     obj = self.preprocess(obj)
                 if obj.stale or obj.order:
                     raise PermissionDenied
+        CargoClerkPermission.test()
 
         if isinstance(objs, list) or isinstance(objs, tuple):
             return any(_try_edit(obj) for obj in objs)

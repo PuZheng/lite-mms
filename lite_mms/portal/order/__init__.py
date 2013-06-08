@@ -5,13 +5,6 @@ from lite_mms.basemain import data_browser, nav_bar
 
 order_page = Blueprint("order", __name__, static_folder="static", template_folder="templates")
 
-
-@order_page.before_request
-@login_required
-def _():
-    pass
-
-
 @order_page.route("/")
 def index():
     return redirect(url_for("order.order_list"))

@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 from collections import OrderedDict
 from flask import url_for, request
+from flask.ext.login import login_required
 from flask.ext.principal import PermissionDenied, Permission
 from flask.ext.databrowser import ModelView, filters
 from flask.ext.databrowser.column_spec import (InputColumnSpec, LinkColumnSpec, ColumnSpec, TableColumnSpec, ImageColumnSpec, PlaceHolderColumnSpec)
@@ -20,6 +21,10 @@ class OrderModelView(ModelView):
         raise PermissionDenied
 
     can_batchly_edit = False
+
+    @login_required
+    def try_view(self, processed_objs=None):
+        pass
 
 
     def __list_filters__(self):
@@ -173,9 +178,16 @@ class SubOrderModelView(ModelView):
 
     edit_template = "order/sub-order.html"
     def  try_edit(self, processed_objs=None):
+        Permission.union(SchedulerPermission, CargoClerkPermission).test()
+
         if processed_objs:
             if processed_objs[0].order.refined or processed_objs[0].order.dispatched:
                 raise PermissionDenied
+
+    @login_required
+    def try_view(self, processed_objs=None):
+        pass
+
     def edit_hint_message(self,obj, read_only=False):
         if read_only:
             if obj.order.refined:

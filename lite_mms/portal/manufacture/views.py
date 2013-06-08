@@ -84,7 +84,8 @@ class WorkCommandView(ModelView):
         pass
 
     def try_edit(self, processed_objs=None):
-        if SchedulerPermission.can() and processed_objs and processed_objs[
+        SchedulerPermission.test()
+        if processed_objs and processed_objs[
             0].status == constants.work_command.STATUS_DISPATCHING:
             return True
         else:

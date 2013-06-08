@@ -1,13 +1,16 @@
 #-*- coding:utf-8 -*-
+from flask.ext.login import login_required
 from werkzeug.utils import cached_property
 from flask.ext.databrowser import ModelView, filters
 from flask.ext.databrowser.column_spec import ColumnSpec, InputColumnSpec, ImageColumnSpec
 from flask.ext.principal import PermissionDenied
 from lite_mms import models
 from lite_mms.apis.delivery import StoreBillWrapper
+from lite_mms.permissions import SchedulerPermission
 
 _printed = u"<i class='icon-ticket' title='已打印'></i>"
 _unprinted = u"<i class='icon-check-empty' title='未打印'></i>"
+
 
 class StoreBillModelView(ModelView):
     __list_columns__ = ["id", "customer", "product", "weight", "quantity", "sub_order.order.customer_order_number",
@@ -56,6 +59,7 @@ class StoreBillModelView(ModelView):
         def _try_edit(obj):
             if obj and obj.delivery_session and obj.delivery_task:
                 raise PermissionDenied
+        SchedulerPermission.test()
         if isinstance(processed_objs, (list, tuple)):
             for obj in processed_objs:
                 _try_edit(obj)
@@ -78,4 +82,7 @@ class StoreBillModelView(ModelView):
         from .actions import PreviewPrintAction
         return [PreviewPrintAction(u"打印预览")]
 
+    @login_required
+    def try_view(self, processed_objs=None):
+        pass
 store_bill_view = StoreBillModelView(models.StoreBill, u"仓单")

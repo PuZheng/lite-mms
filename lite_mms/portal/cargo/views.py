@@ -129,8 +129,8 @@ class UnloadSessionModelView(ModelView):
         return UnloadSessionWrapper(model)
 
     def get_customized_actions(self, model_list=None):
-        from lite_mms.portal.cargo.actions import (CloseAction, OpenAction, 
-                                                   CreateReceiptAction, 
+        from lite_mms.portal.cargo.actions import (CloseAction, OpenAction,
+                                                   CreateReceiptAction,
                                                    DeleteUnloadSessionAction)
         class _PrintGoodsReceipt(BaseAction):
             def op_upon_list(self, objs, model_list):
@@ -415,18 +415,22 @@ class GoodsReceiptModelView(ModelView):
 
     def get_customized_actions(self, objs=None):
         from lite_mms.portal.cargo.actions import PrintGoodsReceipt, BatchPrintGoodsReceipt, CreateOrderAction, \
-            CreateExtraOrderAction, ViewOrderAction
+            CreateExtraOrderAction, ViewOrderAction, DeleteGoodsReceiptAction
+        delete_goods_receipt_action = DeleteGoodsReceiptAction(u"删除")
         if not objs:
             if g.request_from_mobile:
-                return [DeleteAction(u"删除")]
+                return [delete_goods_receipt_action]
             else:
-                return [BatchPrintGoodsReceipt(u"批量打印"), DeleteAction(u"删除")]
+                return [BatchPrintGoodsReceipt(u"批量打印"), delete_goods_receipt_action]
         else:
             def _l(obj):
                 if obj.order:
                     return [ViewOrderAction(u"查看订单")]
                 else:
-                    return [CreateOrderAction(u"生成计重类型订单"), CreateExtraOrderAction(u"生成计件类型订单")]
+                    l = [CreateOrderAction(u"生成计重类型订单"), CreateExtraOrderAction(u"生成计件类型订单")]
+                    if not obj.printed:
+                        l.append(delete_goods_receipt_action)
+                    return l
 
             if isinstance(objs, (list, tuple)):
                 if len(objs) == 1:
@@ -435,7 +439,6 @@ class GoodsReceiptModelView(ModelView):
                     l = []
             else:
                 l = _l(objs)
-            l.append(DeleteAction(u"删除"))
             if not g.request_from_mobile:
                 l.append(PrintGoodsReceipt(u"打印"))
             return l

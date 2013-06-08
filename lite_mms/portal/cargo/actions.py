@@ -130,3 +130,15 @@ class ViewOrderAction(DirectAction):
 
     def op_upon_list(self, objs, model_view):
         return redirect(url_for("order.order", id_=objs[0].order.id, url=request.url))
+
+
+class DeleteGoodsReceiptAction(DeleteAction):
+    def test_enabled(self, model):
+        if model.order:
+            return -2
+        if model.printed:
+            return -3
+        return 0
+
+    def get_forbidden_msg_formats(self):
+        return {-2: u"已生成订单的收货单不能删除", -3: u"已经打印的收货单不能删除"}

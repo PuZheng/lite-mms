@@ -377,13 +377,16 @@ class GoodsReceiptModelView(ModelView):
 
     class NoneOrder(filters.Only):
         def set_sa_criterion(self, q):
-            return q.filter(GoodsReceipt.order == None)
+            if self.value:
+                return q.filter(GoodsReceipt.order == None)
+            else:
+                return q
 
     __column_filters__ = [filters.BiggerThan("create_time", name=u"在", default_value=str(yesterday),
                                              options=[(yesterday, u'一天内'), (week_ago, u'一周内'), (_30days_ago, u'30天内')]),
                           filters.EqualTo("customer", name=u"是"),
                           filters.Only("printed", display_col_name=u"仅展示未打印收货单", test=lambda col: ~col, notation="__only_unprinted"),
-                          NoneOrder("order", display_col_name=u"仅展示未生成订单",test=lambda col: col is None, notation="__none")
+                          NoneOrder("order", display_col_name=u"仅展示未生成订单", test=None, notation="__none")
                          ]
 
     __form_columns__ = OrderedMultiDict()

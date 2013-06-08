@@ -319,7 +319,6 @@ class ConsignmentModelView(ModelView):
         ret = [PreviewConsignment(u"打印预览")]
         if not processed_objs:
             ret.append(DeleteConsignment(u"删除"))
-        from lite_mms.permissions.roles import AccountantPermission
 
         if AccountantPermission.can() and isinstance(processed_objs, (list, tuple)):
             if any(obj.pay_in_cash and not obj.is_paid for obj in processed_objs):
@@ -327,7 +326,6 @@ class ConsignmentModelView(ModelView):
         return ret
 
     def __list_filters__(self):
-        from lite_mms.permissions.roles import AccountantPermission
 
         if AccountantPermission.can():
             return [filters.EqualTo("pay_in_cash", value=True)]
@@ -350,7 +348,6 @@ class ConsignmentModelView(ModelView):
                              }
 
     def get_column_filters(self):
-        from lite_mms.permissions.roles import AccountantPermission
 
         not_paid_default = AccountantPermission.can()
         return [

@@ -528,6 +528,6 @@ def goods_receipts_batch_print(id_):
         import math
         pages += int(math.ceil(len(gr.unload_task_list) / per_page))
     db.session.commit()
-    return {"gr_list": gr_list,
+    return {"gr_list": gr_list, "titlename":u"批量打印",
             "per_page": per_page, "pages": pages, "back_url": request.args.get("url", "/")}
 

@@ -61,7 +61,7 @@ class StoreBillModelView(ModelView):
         def _try_edit(obj):
             if obj and obj.delivery_session and obj.delivery_task:
                 raise PermissionDenied
-        Permission.union(SchedulerPermission, QualityInspectorPermission).test()
+        QualityInspectorPermission.test()
         if isinstance(processed_objs, (list, tuple)):
             for obj in processed_objs:
                 _try_edit(obj)
@@ -82,8 +82,11 @@ class StoreBillModelView(ModelView):
                         ImageColumnSpec("pic_url", label=u"图片")]
 
     def get_customized_actions(self, processed_objs=None):
-        from .actions import PreviewPrintAction
-        return [PreviewPrintAction(u"打印预览")]
+        if QualityInspectorPermission.can():
+            from .actions import PreviewPrintAction
+            return [PreviewPrintAction(u"打印预览")]
+        else:
+            return []
 
     @login_required
     def try_view(self, processed_objs=None):

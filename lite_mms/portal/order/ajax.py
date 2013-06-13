@@ -6,6 +6,7 @@ from lite_mms.portal.order import order_page
 from lite_mms.utilities import decorators
 from lite_mms.utilities.decorators import ajax_call
 
+
 @order_page.route("/ajax/customer-list")
 @ajax_call
 def customer_list():
@@ -18,6 +19,7 @@ def customer_list():
     if unload_session_id:
         unload_session_id = int(unload_session_id)
         from lite_mms import apis
+
         unload_session = apis.cargo.get_unload_session(unload_session_id)
         if not unload_session.finish_time:
             return _(u"卸货会话尚未结束"), 403
@@ -36,11 +38,12 @@ def customer_list():
 @ajax_call
 def order_modify():
     from lite_mms import apis
+
     order = apis.order.get_order(request.form["order_id"])
     if not order:
         return _(u"不存在订单ID为%s的订单" % request.form["order_id"]), 403
     if any(
-        sub_order.work_command_list for sub_order in order.sub_order_list):
+            sub_order.work_command_list for sub_order in order.sub_order_list):
         return _(u"该订单已排产，请勿修改"), 500
     try:
         order.update(customer_order_number=request.form["customer_order_number"])
@@ -56,6 +59,7 @@ def ajax_sub_order():
     if not sub_order_id:
         return _(u"不存在该订单"), 404
     from lite_mms import apis
+
     inst = apis.order.get_sub_order(sub_order_id)
     if not inst:
         return "no sub order with id " + str(sub_order_id), 404
@@ -72,3 +76,48 @@ def ajax_sub_order():
         purl = url_for("order.order_list")
     param_dict.update(purl=purl)
     return render_template("order/sub-order.html", **param_dict)
+
+
+@order_page.route("/ajax/team-work-reports", methods=["GET"])
+@ajax_call
+def team_work_reports():
+    ret = {}
+    from lite_mms.apis.order import get_order
+
+    order = get_order(request.args.get("order_id", type=int))
+    for wc in order.done_work_command_list:
+        try:
+            ret[wc.team.name] += wc.processed_weight
+        except KeyError:
+            ret[wc.team.name] = wc.processed_weight
+    return json.dumps(ret.items())
+
+
+@order_page.route("/ajax/team-manufacturing-reports", methods=["GET"])
+@ajax_call
+def team_manufacturing_reports():
+    from lite_mms.apis.order import get_order
+
+    order = get_order(request.args.get("order_id", type=int))
+    d = {}
+    for so in order.sub_order_list:
+        for wc in so.manufacturing_work_command_list:
+            team_name = wc.department.name + u"车间:" + (wc.team.name if wc.team else u"尚未分配") + u"班组"
+            try:
+                d[team_name] += wc.org_weight
+            except KeyError:
+                d[team_name] = wc.org_weight
+    return json.dumps(sorted([dict(team=k, weight=v) for k, v in d.items()], key=lambda v: v["team"]))
+
+
+@order_page.route("/ajax/store-bill-list", methods=["GET"])
+@ajax_call
+def store_bill_list():
+    from lite_mms.apis.order import get_order
+
+    order = get_order(request.args.get("order_id", type=int))
+    ret = []
+    for so in order.sub_order_list:
+        for sb in so.store_bill_list:
+            ret.append(dict(id=sb.id, product=so.product.name, spec=so.spec, type=so.type, weight=sb.weight))
+    return json.dumps(ret)

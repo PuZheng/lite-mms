@@ -411,7 +411,7 @@ class WorkCommandSM(StateMachine):
         if self.logger:
             self.do_log(action, actor)
 
-    def do_log(self, action, actor):
+    def do_log(self, action, actor=None):
         if not actor:
             from flask.ext.login import current_user
             if current_user.is_authenticated():

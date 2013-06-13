@@ -50,4 +50,3 @@ class LogWrapper(ModelWrapper):
 
         if self.obj_cls:
             yield self.obj_pk, _obj_wrap(self.obj_cls, self.obj_pk)
-

@@ -11,7 +11,7 @@ from lite_mms.portal.delivery import delivery_page
 from lite_mms.permissions import CargoClerkPermission, AccountantPermission
 from lite_mms.utilities import decorators, Pagination
 
-from flask.ext.login import current_user
+from flask.ext.login import current_user, login_required
 from flask.ext.principal import PermissionDenied
 from sqlalchemy import exists
 from flask.ext.databrowser import ModelView, filters
@@ -52,6 +52,10 @@ class DeliverySessionModelView(ModelView):
                                compressed=True,
                                item_col_spec=ColumnSpec("", formatter=gr_item_formatter))
         ]
+
+    @login_required
+    def try_view(self, processed_objs=None):
+        pass
 
     __column_labels__ = {"id": u"编号", "plate_": u"车辆", "create_time": u"创建时间", "tare": u"净重（公斤）",
                          "with_person": u"驾驶室", "finish_time": u"结束时间", "status": u"状态"}
@@ -271,6 +275,9 @@ class DeliveryTaskModelView(ModelView):
         if obj.consignment:
             obj.consignment.staled()
 
+    @login_required
+    def try_view(self, processed_objs=None):
+        pass
 
 class ConsignmentModelView(ModelView):
 
@@ -312,7 +319,6 @@ class ConsignmentModelView(ModelView):
         ret = [PreviewConsignment(u"打印预览")]
         if not processed_objs:
             ret.append(DeleteConsignment(u"删除"))
-        from lite_mms.permissions.roles import AccountantPermission
 
         if AccountantPermission.can() and isinstance(processed_objs, (list, tuple)):
             if any(obj.pay_in_cash and not obj.is_paid for obj in processed_objs):
@@ -320,7 +326,6 @@ class ConsignmentModelView(ModelView):
         return ret
 
     def __list_filters__(self):
-        from lite_mms.permissions.roles import AccountantPermission
 
         if AccountantPermission.can():
             return [filters.EqualTo("pay_in_cash", value=True)]
@@ -343,7 +348,6 @@ class ConsignmentModelView(ModelView):
                              }
 
     def get_column_filters(self):
-        from lite_mms.permissions.roles import AccountantPermission
 
         not_paid_default = AccountantPermission.can()
         return [
@@ -402,6 +406,9 @@ class ConsignmentModelView(ModelView):
     def on_model_change(self, form, model):
         self.preprocess(model).add_todo()
 
+    @login_required
+    def try_view(self, processed_objs=None):
+        pass
 
 class ConsignmentProductModelView(ModelView):
     __column_labels__ = {"product": u"产品", "weight": u"净重", "returned_weight": u"退镀重量", "team": u"班组",
@@ -430,6 +437,10 @@ class ConsignmentProductModelView(ModelView):
         else:
             return [InputColumnSpec("product", group_by=models.Product.product_type), "weight", "quantity", "unit",
                     "spec", "type", "returned_weight", "team"]
+
+    @login_required
+    def try_view(self, processed_objs=None):
+        pass
 
 
 delivery_session_view = DeliverySessionModelView(models.DeliverySession, u"发货会话")

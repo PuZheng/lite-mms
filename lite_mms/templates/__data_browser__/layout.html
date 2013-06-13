@@ -85,10 +85,10 @@
         var ret = message["msg"];
         if (message.context_url.length > 0) {
           var url = message.context_url;
-          if (url.indexof("?") == -1) {
-            url += url + "?url=" + "{{ request.url }}";
+          if (url.indexOf("?") == -1) {
+            url += "?url=" + "{{ request.url|urlencode }}";
           } else {
-            url += url + "&url=" + "{{ request.url }}";
+            url += "&url=" + "{{ request.url|urlencode }}";
           }
 
           ret += sprintf('<a href="%s">开始&gt;&gt;</a>', url)

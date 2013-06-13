@@ -69,12 +69,6 @@ if serve_web:
     app.register_blueprint(manufacture_page, url_prefix="/manufacture")
     from lite_mms.portal.order import order_page
     app.register_blueprint(order_page, url_prefix="/order")
-    from lite_mms.portal.order2 import order2_page
-    app.register_blueprint(order2_page, url_prefix="/order2")
-    from lite_mms.portal.schedule import schedule_page
-    app.register_blueprint(schedule_page, url_prefix="/schedule")
-    from lite_mms.portal.schedule.schedule2 import schedule_page2
-    app.register_blueprint(schedule_page2, url_prefix="/schedule2")
     from lite_mms.portal.op import op_page
     app.register_blueprint(op_page, url_prefix="/op")
     from lite_mms.portal.store import store_bill_page
@@ -107,27 +101,20 @@ if serve_ws:
     app.register_blueprint(manufacture_ws, url_prefix="/manufacture_ws")
 
 # ====================== REGISTER NAV BAR ===================================
-from lite_mms.permissions.roles import (CargoClerkPermission,
-                                        AccountantPermission,
-                                        QualityInspectorPermission,
-                                        DepartmentLeaderPermission,
-                                       AdminPermission)
+from lite_mms.permissions.roles import (CargoClerkPermission, AccountantPermission, QualityInspectorPermission,
+                                        DepartmentLeaderPermission, AdminPermission)
 from lite_mms.permissions.order import view_order, schedule_order
 from lite_mms.permissions.work_command import view_work_command
 nav_bar.register(cargo_page, name=u"卸货会话", permissions=[CargoClerkPermission], group=u"卸货管理")
 nav_bar.register(gr_page, name=u"收货单", permissions=[CargoClerkPermission], group=u"卸货管理")
-#nav_bar.register(order_page, default_url='/order/order-list', name=u"订单管理",
-                 #permissions=[view_order])
-nav_bar.register(order2_page, default_url='/order2/order-list?order_by=id&desc=1', name=u"订单管理(beta)",
+nav_bar.register(order_page, default_url='/order/order-list', name=u"订单管理",
                  permissions=[view_order])
+nav_bar.register(order_page, default_url='/order/order-list', name=u"订单管理",
+                 permissions=[schedule_order])
 nav_bar.register(delivery_page, name=u'发货会话',
                  permissions=[CargoClerkPermission], group=u"发货管理")
 nav_bar.register(consignment_page, name=u'发货单',
                  permissions=[CargoClerkPermission.union(AccountantPermission)], group=u"发货管理")
-nav_bar.register(schedule_page, name=u"订单管理", permissions=[schedule_order])
-nav_bar.register(schedule_page2, name=u"订单管理(beta)",
-                 permissions=[schedule_order],
-                 default_url="/schedule2/order-list")
 nav_bar.register(manufacture_page, name=u"工单管理",
                  permissions=[view_work_command])
 #nav_bar.register(delivery_page, name=u"发货单管理",
@@ -156,8 +143,7 @@ app.jinja_env.globals['permissions'] = permissions
 app.jinja_env.filters['_datetimeformat'] = datetimeformat
 app.jinja_env.add_extension("jinja2.ext.loopcontrols")
 
-from flask.ext.principal import (identity_loaded, RoleNeed, UserNeed,
-                                 PermissionDenied, Permission)
+from flask.ext.principal import (identity_loaded, RoleNeed, UserNeed, PermissionDenied)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -205,18 +191,19 @@ if not app.config["DEBUG"]:
                                back_url=request.args.get("back_url", "/"),
                                nav_bar=nav_bar), 403
 
-    #设置无权限处理器
-    @app.errorhandler(PermissionDenied)
-    @app.errorhandler(401)
-    def permission_denied(error):
 
-        #如果用户已登录则显示无权限页面
-        from flask import redirect, url_for
-        if not current_user.is_anonymous():
-            return redirect(url_for("error", msg=u'请联系管理员获得访问权限!',
-                                    back_url=request.args.get("url")))
-            #如果用户还未登录则转向到登录面
-        return render_template("auth/login.html",
-                               error=gettext(u"请登录"), next_url=request.url, titlename=u"请登录")
+#设置无权限处理器
+@app.errorhandler(PermissionDenied)
+@app.errorhandler(401)
+def permission_denied(error):
+
+    #如果用户已登录则显示无权限页面
+    from flask import redirect, url_for
+    if not current_user.is_anonymous():
+        return redirect(url_for("error", msg=u'请联系管理员获得访问权限!',
+                                back_url=request.args.get("url")))
+        #如果用户还未登录则转向到登录面
+    return render_template("auth/login.html",
+                           error=gettext(u"请登录"), next_url=request.url, titlename=u"请登录")
 
 

@@ -3,6 +3,7 @@ import re
 import json
 
 from flask import request, abort, url_for, render_template, flash, g
+from flask.ext.login import login_required
 from sqlalchemy import exists, and_
 from flask.ext.databrowser import ModelView
 from flask.ext.databrowser.action import DeleteAction, BaseAction
@@ -42,7 +43,8 @@ class UnloadSessionModelView(ModelView):
     can_batchly_edit = False
 
     def try_edit(self, objs=None):
-        
+        CargoClerkPermission.test()
+
         def _try_edit(obj_):
             if obj_ and obj_.finish_time:
                 raise PermissionDenied
@@ -124,13 +126,12 @@ class UnloadSessionModelView(ModelView):
         Permission.union(CargoClerkPermission, AdminPermission).test()
 
     def preprocess(self, model):
-        from lite_mms import apis
-        return apis.cargo.UnloadSessionWrapper(model)
+        return UnloadSessionWrapper(model)
 
     def get_customized_actions(self, model_list=None):
-        from lite_mms.portal.cargo.actions import (CloseAction, OpenAction, 
-                                                   CreateReceiptAction, 
-                                                   DeleteGoodsReceiptAction)
+        from lite_mms.portal.cargo.actions import (CloseAction, OpenAction,
+                                                   CreateReceiptAction,
+                                                   DeleteUnloadSessionAction)
         class _PrintGoodsReceipt(BaseAction):
             def op_upon_list(self, objs, model_list):
                 obj = objs[0]
@@ -138,7 +139,7 @@ class UnloadSessionModelView(ModelView):
 
         action_list = []
         if model_list is None: # for list
-            action_list.extend([CloseAction(u"关闭"), OpenAction(u"打开"), CreateReceiptAction(u"生成收货单"), DeleteGoodsReceiptAction(u"删除", None)])
+            action_list.extend([CloseAction(u"关闭"), OpenAction(u"打开"), CreateReceiptAction(u"生成收货单"), DeleteUnloadSessionAction(u"删除", None)])
         else:
             if len(model_list) ==1:
                 if model_list[0].status in [cargo_const.STATUS_CLOSED, cargo_const.STATUS_DISMISSED]:
@@ -217,6 +218,10 @@ plate_model_view = plateModelView(Plate, u"车辆")
 
 class GoodsReceiptEntryModelView(ModelView):
 
+    @login_required
+    def try_view(self, processed_objs=None):
+        pass
+
     __form_columns__ = [
         InputColumnSpec("product", group_by=Product.product_type, label=u"产品",
                         filter_=lambda q: q.filter(Product.enabled==True)),
@@ -236,6 +241,7 @@ class GoodsReceiptEntryModelView(ModelView):
                     obj = GoodsReceiptEntryWrapper(obj)
                 if obj.goods_receipt.stale or obj.goods_receipt.order:
                     raise PermissionDenied
+        CargoClerkPermission.test()
 
         if isinstance(objs, list) or isinstance(objs, tuple):
             return any(_try_edit(obj) for obj in objs)
@@ -281,7 +287,6 @@ def weigh_unload_task(id_):
             from flask.ext.login import current_user
             fsm.fsm.reset_obj(task.unload_session)
             fsm.fsm.next(cargo_const.ACT_WEIGHT, current_user)
-            # delete todo
             todo.remove_todo(todo.WEIGH_UNLOAD_TASK, id_)
             return redirect(
                 request.form.get("url", unload_session_model_view.url_for_object(model=task.unload_session.model)))
@@ -309,6 +314,8 @@ class UnloadTaskModelView(ModelView):
         return UnloadTaskWrapper(obj)
 
     def try_edit(self, objs=None):
+        CargoClerkPermission.test()
+
         if any(obj.unload_session.status==cargo_const.STATUS_CLOSED for obj in objs):
             raise PermissionDenied
 
@@ -316,6 +323,10 @@ class UnloadTaskModelView(ModelView):
         if read_only:
             return u"本卸货会话已经关闭，所以不能修改卸货任务"
         return super(UnloadTaskModelView, self).edit_hint_message(objs, read_only)
+
+    @login_required
+    def try_view(self, processed_objs=None):
+        pass
 
 unload_task_model_view = UnloadTaskModelView(UnloadTask, u"卸货任务")
 
@@ -331,6 +342,10 @@ class GoodsReceiptModelView(ModelView):
 
     def preprocess(self, obj):
         return GoodsReceiptWrapper(obj)
+
+    @login_required
+    def try_view(self, processed_objs=None):
+        pass
 
     __sortable_columns__ = ["id", "create_time"]
 
@@ -362,13 +377,16 @@ class GoodsReceiptModelView(ModelView):
 
     class NoneOrder(filters.Only):
         def set_sa_criterion(self, q):
-            return q.filter(GoodsReceipt.order == None)
+            if self.value:
+                return q.filter(GoodsReceipt.order == None)
+            else:
+                return q
 
     __column_filters__ = [filters.BiggerThan("create_time", name=u"在", default_value=str(yesterday),
                                              options=[(yesterday, u'一天内'), (week_ago, u'一周内'), (_30days_ago, u'30天内')]),
                           filters.EqualTo("customer", name=u"是"),
                           filters.Only("printed", display_col_name=u"仅展示未打印收货单", test=lambda col: ~col, notation="__only_unprinted"),
-                          NoneOrder("order", display_col_name=u"仅展示未生成订单",test=lambda col: col is None, notation="__none")
+                          NoneOrder("order", display_col_name=u"仅展示未生成订单", test=None, notation="__none")
                          ]
 
     __form_columns__ = OrderedMultiDict()
@@ -400,18 +418,22 @@ class GoodsReceiptModelView(ModelView):
 
     def get_customized_actions(self, objs=None):
         from lite_mms.portal.cargo.actions import PrintGoodsReceipt, BatchPrintGoodsReceipt, CreateOrderAction, \
-            CreateExtraOrderAction, ViewOrderAction
+            CreateExtraOrderAction, ViewOrderAction, DeleteGoodsReceiptAction
+        delete_goods_receipt_action = DeleteGoodsReceiptAction(u"删除")
         if not objs:
             if g.request_from_mobile:
-                return [DeleteAction(u"删除")]
+                return [delete_goods_receipt_action]
             else:
-                return [BatchPrintGoodsReceipt(u"批量打印"), DeleteAction(u"删除")]
+                return [BatchPrintGoodsReceipt(u"批量打印"), delete_goods_receipt_action]
         else:
             def _l(obj):
                 if obj.order:
                     return [ViewOrderAction(u"查看订单")]
                 else:
-                    return [CreateOrderAction(u"生成计重类型订单"), CreateExtraOrderAction(u"生成计件类型订单")]
+                    l = [CreateOrderAction(u"生成计重类型订单"), CreateExtraOrderAction(u"生成计件类型订单")]
+                    if not obj.printed:
+                        l.append(delete_goods_receipt_action)
+                    return l
 
             if isinstance(objs, (list, tuple)):
                 if len(objs) == 1:
@@ -420,7 +442,6 @@ class GoodsReceiptModelView(ModelView):
                     l = []
             else:
                 l = _l(objs)
-            l.append(DeleteAction(u"删除"))
             if not g.request_from_mobile:
                 l.append(PrintGoodsReceipt(u"打印"))
             return l
@@ -432,6 +453,7 @@ class GoodsReceiptModelView(ModelView):
                     obj = self.preprocess(obj)
                 if obj.stale or obj.order:
                     raise PermissionDenied
+        CargoClerkPermission.test()
 
         if isinstance(objs, list) or isinstance(objs, tuple):
             return any(_try_edit(obj) for obj in objs)
@@ -506,6 +528,6 @@ def goods_receipts_batch_print(id_):
         import math
         pages += int(math.ceil(len(gr.unload_task_list) / per_page))
     db.session.commit()
-    return {"gr_list": gr_list,
+    return {"gr_list": gr_list, "titlename":u"批量打印",
             "per_page": per_page, "pages": pages, "back_url": request.args.get("url", "/")}
 

@@ -110,7 +110,7 @@ class UnloadTask(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     session_id = db.Column(db.Integer, db.ForeignKey('TB_UNLOAD_SESSION.id'))
-    unload_session = db.relationship("UnloadSession", backref="task_list")
+    unload_session = db.relationship("UnloadSession", backref=db.backref("task_list", cascade="all, delete-orphan"))
     harbor_name = db.Column(db.String(32), db.ForeignKey('TB_HABOR.name'))
     harbor = db.relationship("Harbor")
     customer_id = db.Column(db.Integer, db.ForeignKey('TB_CUSTOMER.id'))
@@ -375,7 +375,7 @@ class SubOrder(db.Model):
     finish_time = db.Column(db.DateTime)
     quantity = db.Column(db.Integer, default=0)
     unit = db.Column(db.String(16), default=u'')
-    due_time = db.Column(db.DateTime)
+    due_time = db.Column(db.Date)
     order_type = db.Column(db.Integer)
     remaining_quantity = db.Column(db.Integer)
     work_command_list = db.relationship("WorkCommand",

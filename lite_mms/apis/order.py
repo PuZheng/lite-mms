@@ -143,7 +143,7 @@ class OrderWrapper(ModelWrapper):
         """
         即收货重量
         """
-        return sum(int(sub_order.weight) for sub_order in self.sub_order_list)
+        return sum(entry.weight for entry in self.goods_receipt.goods_receipt_entries)
 
     @cached_property
     def remaining_weight(self):
@@ -270,6 +270,25 @@ class OrderWrapper(ModelWrapper):
         import itertools
         return list(itertools.chain.from_iterable(sub_order.qi_work_command_list for sub_order in self.sub_order_list))
 
+    @cached_property
+    def work_command_list(self):
+        import itertools
+        return list(itertools.chain.from_iterable(sub_order.work_command_list for sub_order in self.sub_order_list))
+
+    def add_todo(self):
+        from lite_mms.apis import auth, todo
+        for to in auth.get_user_list(constants.groups.SCHEDULER):
+            todo.new_todo(to, todo.DISPATCH_ORDER, self)
+
+    @property
+    def log_list(self):
+        from lite_mms.models import Log
+
+        ret = Log.query.filter(Log.obj_pk == str(self.id)).filter(
+            Log.obj_cls == self.model.__class__.__name__).all()
+        for sub_order in self.sub_order_list:
+            ret.extend(sub_order.log_list)
+        return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time), reverse=True)
 
 
 class SubOrderWrapper(ModelWrapper):
@@ -425,6 +444,15 @@ class SubOrderWrapper(ModelWrapper):
     @cached_property
     def to_deliver_store_bill_list(self):
         return [store_bill for store_bill in self.store_bill_list if not store_bill.delivery_task_id]
+
+    @property
+    def log_list(self):
+        from lite_mms.models import Log
+
+        ret = Log.query.filter(Log.obj_pk == str(self.id)).filter(
+            Log.obj_cls == self.model.__class__.__name__).all()
+        return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time), reverse=True)
+
 
 def get_order_type_list():
     t1 = dict(id=constants.STANDARD_ORDER_TYPE,

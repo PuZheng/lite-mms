@@ -2,178 +2,12 @@
 """
 @author: Yangminghua
 """
-from datetime import datetime, date
-import json
-from flask import request, url_for, render_template, abort, flash
-from sqlalchemy.orm.exc import NoResultFound
-from werkzeug.utils import redirect
-from wtforms import Form, TextField, IntegerField, validators, BooleanField,\
-    DateField, HiddenField
-from lite_mms import constants
-from lite_mms.exceptions import PropertyError
+from datetime import date
+from flask import request, url_for, render_template, abort, flash, redirect, json
+from flask.ext.login import current_user
+from wtforms import Form, TextField, IntegerField, validators, BooleanField, DateField, HiddenField
 from lite_mms.portal.order import order_page
-from lite_mms.utilities import decorators, _
-from lite_mms.utilities.pagination import Pagination
-
-@order_page.route('/')
-@order_page.route("/order-list", methods=["POST", "GET"])
-@decorators.templated("/order/order-list.html")
-@decorators.nav_bar_set
-def order_list():
-    from lite_mms import apis
-
-    if request.method == "GET":
-        page = request.args.get("page", 1, type=int)
-        category = request.args.get("category", default="undispatched")
-        time_span = request.args.get("time_span", "unlimited").lower()
-        customer_id = request.args.get("customer_id", 0, type=int)
-
-        def check_category(category):
-            return category in ["all",
-                                "accountable",
-                                "undispatched",
-                                "deliverable"]
-
-        if not check_category(category):
-            return _(u"参数category错误"), 403
-
-        accountable_only = False
-        undispatched_only = False
-        deliverable_only = False
-        desc = False
-        if category == "accountable":
-            accountable_only = True
-        elif category == "undispatched":
-            undispatched_only = True
-        elif category == "deliverable":
-            deliverable_only = True
-        else:
-            desc = True
-        orders, total_cnt = apis.order.OrderWrapper.get_list(
-            (page - 1) * constants.ORDER_PER_PAGE,
-            constants.ORDER_PER_PAGE,
-            after=apis.order.get_should_after_date(time_span),
-            customer_id=customer_id,
-            accountable_only=accountable_only,
-            undispatched_only=undispatched_only,
-            deliverable_only=deliverable_only,
-            desc=desc)
-
-        # 获取在时间段内，有订单的客户
-        customer_list = apis.order.get_customer_list(time_span)
-
-        pagination = Pagination(page, constants.ORDER_PER_PAGE, total_cnt)
-        return {'titlename': u'订单列表',
-                'order_list': orders,
-                'pagination': pagination,
-                "customer_list": customer_list, "category": category,
-                'time_span': time_span}
-    else: # POST
-        order_id_list = request.form.getlist('order_id')
-        act = request.form.get("act")
-        category = request.args.get("category", default="undispatched")
-        customer = request.args.get("customer", "").lower()
-        time_span = request.args.get("time_span", "day").lower()
-        if act not in ["dispatch", "account"]:
-            return _(u"act参数错误"), 403
-
-        if act == "dispatch":
-            dispatched_orders = []
-            for order_id in order_id_list:
-                try:
-                    order = apis.order.get_order(order_id)
-                    order.update(dispatched=True)
-                    dispatched_orders.append(order)
-                except (PropertyError, NoResultFound) as e:
-                    return e.description, 403
-            message = _(u"订单%(order_list)s已经被下发" % {"order_list": ",".join(
-                order.customer_order_number for order in dispatched_orders)})
-        else:
-            accounted_orders = []
-            for order_id in order_id_list:
-                try:
-                    order = apis.order.get_order(order_id)
-                    for sub_order in order.sub_order_list:
-                        for store_bill in sub_order.store_bill_list:
-                            fake_delivery_task = apis.delivery.fake_delivery_task()
-                            if not store_bill.delivery_task:
-                                apis.delivery.update_store_bill(store_bill.id,
-                                                                delivery_session_id=fake_delivery_task.delivery_session.id,
-                                                                delivery_task_id=fake_delivery_task.id)
-                        sub_order.end()
-                    order.update(
-                        finish_time=datetime.now().strftime(
-                            "%Y-%m-%d %H:%M:%S"))
-                    accounted_orders.append(order)
-                except (PropertyError, NoResultFound) as e:
-                    return e.description, 403
-            message = _(u"订单%s已经被盘点" % ",".join(
-                order.customer_order_number for order in accounted_orders))
-
-        flash(message)
-        return redirect(url_for('order.order_list', customer=customer,
-                                category=category, time_span=time_span,
-                                message=message))
-
-
-@order_page.route("/order/<int:id_>", methods=("GET", "POST"))
-@decorators.templated("/order/order.html")
-@decorators.nav_bar_set
-def order(id_):
-    from lite_mms import apis
-
-    inst = apis.order.get_order(id_)
-    if not inst:
-        abort(404)
-    if request.method == "GET":
-        url = request.args.get("url")
-        return {'titlename': u'订单详情', 'order': inst, 'url': url}
-    else:
-        method = request.form.get("method", "save")
-        if "save" == method:
-            inst.update(customer_order_number=request.form["customer_order_number"])
-            flash(u"订单修改订单编号成功!")
-        else:
-            inst.update(refined=True)
-        url = request.form.get("url")
-        return redirect(url_for("order.order", id_=id_, _method="GET", url=url))
-
-@order_page.route("/sub-order/<int:id_>", methods=["GET","POST"])
-@decorators.templated("order/sub-order.html")
-@decorators.nav_bar_set
-def sub_order(id_):
-    from lite_mms import apis
-
-    inst = apis.order.SubOrderWrapper.get_sub_order(id_)
-    if not inst:
-        abort(404)
-    if request.method == "GET":
-
-        from lite_mms.constants import DEFAULT_PRODUCT_NAME
-
-        param_dict = {'titlename': u'子订单详情', 'sub_order': inst,
-                      'DEFAULT_PRODUCT_NAME': DEFAULT_PRODUCT_NAME}
-        param_dict.update(product_types=apis.product.get_product_types())
-        param_dict.update(products=json.dumps(apis.product.get_products()))
-        param_dict.update(harbor_list=apis.harbor.get_harbor_list())
-        return param_dict
-    else:
-        #sub_order的get由ajax实现
-        frm = SubOrderForm(request.form)
-        if frm.validate():
-            inst.update(product_id=frm.product.data, tech_req=frm.tech_req.data,
-                        spec=frm.spec.data, type=frm.type.data,
-                        due_time=str(frm.due_time.data), urgent=frm.urgent.data,
-                        weight=frm.weight.data, harbor_name=frm.harbor.data,
-                        returned=frm.returned.data, unit=frm.unit.data,
-                        quantity=frm.weight.data if inst.order_type == constants
-                        .STANDARD_ORDER_TYPE else frm.quantity.data)
-            flash(u"修改成功！")
-            return redirect(
-                frm.url.data or url_for('order.order', id_=inst.order_id,
-                                        url=frm.url.data))
-        else:
-            return str(frm.errors), 403
+from lite_mms.utilities import decorators
 
 
 @order_page.route("/new-sub-order", methods=["GET", "POST"])
@@ -184,15 +18,16 @@ def new_sub_order():
     创建新的计件类型的子订单（只有计件类型的订单能够增加子订单）
     """
     from lite_mms import apis
+
     if request.method == "GET":
         from lite_mms import apis
 
         order = apis.order.get_order(request.args.get("order_id", type=int))
         if not order:
             abort(404)
-        if order.dispatched:
+        if order.dispatched or order.refined:
             return render_template("result.html",
-                                   error_content=u"已下发的订单不能新增子订单",
+                                   error_content=u"已下发或已标记完善的订单不能新增子订单",
                                    back_url=url_for("order.order",
                                                     id=order.id))
         from lite_mms.constants import DEFAULT_PRODUCT_NAME
@@ -228,34 +63,84 @@ def new_sub_order():
                                    back_url=url_for("order.order",
                                                     id_=order_id))
         from lite_mms import apis
+
         try:
-            sb = apis.order.SubOrderWrapper.new_sub_order(order_id=order_id,
-                                                     product_id=form.product.data,
-                                                     spec=form.spec.data,
-                                                     type=form.type.data,
-                                                     tech_req=form.tech_req.data,
-                                                     due_time=str(due_time),
-                                                     urgent=form.urgent.data,
-                                                     weight=form.weight.data,
-                                                     harbor_name=form.harbor.data,
-                                                     returned=form.returned.data,
-                                                     unit=form.unit.data,
-                                                     quantity=form.quantity.data)
+            sb = apis.order.SubOrderWrapper.new_sub_order(order_id=order_id, product_id=form.product.data,
+                                                          spec=form.spec.data, type=form.type.data,
+                                                          tech_req=form.tech_req.data, due_time=str(due_time),
+                                                          urgent=form.urgent.data, weight=form.weight.data,
+                                                          harbor_name=form.harbor.data, returned=form.returned.data,
+                                                          unit=form.unit.data, quantity=form.quantity.data)
             flash(u"新建成功！")
         except ValueError, e:
             flash(unicode(e), "error")
         return redirect(url_for('order.order', id_=order_id))
 
-class SubOrderForm(Form):
-    product = IntegerField('product', [validators.required()])
-    spec = TextField('spec')
-    type = TextField('type')
-    tech_req = TextField('tech_req')
-    due_time = DateField('due_time', [validators.required()])
-    urgent = BooleanField('urgent')
-    returned = BooleanField('returned')
-    unit = TextField('unit')
-    quantity = IntegerField('quantity')
-    weight = IntegerField('weight', [validators.required()])
-    harbor = TextField('harbor', [validators.required()])
-    url = HiddenField("purl")
+
+@order_page.route('/work-command', methods=['GET', 'POST'])
+@decorators.templated("order/work-command.html")
+@decorators.nav_bar_set
+def work_command():
+    """
+    生成一个新的工单
+    """
+    if request.method == "GET":
+        from lite_mms import apis
+
+        sub_order = apis.order.SubOrderWrapper.get_sub_order(
+            request.args.get("sub_order_id", type=int))
+        if not sub_order:
+            abort(404)
+        try:
+            dep = apis.harbor.get_harbor_model(sub_order.harbor.name).department
+            return dict(sub_order=sub_order, procedure_list=dep.procedure_list, department=dep, titlename=u"预排产")
+        except AttributeError:
+            abort(404)
+    else:
+        from lite_mms.apis import manufacture, order
+
+        class PreScheduleForm(Form):
+            sub_order_id = HiddenField('sub_order_id', [validators.required()])
+            schedule_weight = IntegerField('schedule_weight',
+                                           [validators.required()])
+            procedure = IntegerField('procedure')
+            tech_req = TextField('tech_req')
+            schedule_count = IntegerField('schedule_count')
+            urgent = BooleanField('urgent')
+            url = HiddenField("url")
+
+        form = PreScheduleForm(request.form)
+        sub_order = order.get_sub_order(form.sub_order_id.data)
+        if not sub_order:
+            abort(404)
+        if form.validate():
+            try:
+                inst = manufacture.new_work_command(
+                    sub_order_id=sub_order.id,
+                    org_weight=form.schedule_weight.data,
+                    procedure_id=form.procedure.data,
+                    org_cnt=form.schedule_count.data,
+                    urgent=form.urgent.data,
+                    tech_req=form.tech_req.data)
+                if inst:
+                    from lite_mms.apis.todo import remove_todo, DISPATCH_ORDER
+
+                    remove_todo(DISPATCH_ORDER, sub_order.order.id)
+
+                    from lite_mms.basemain import timeline_logger
+                    timeline_logger.info(u"新建",
+                                         extra={"obj": inst,
+                                                "actor": current_user if current_user.is_authenticated() else None,
+                                                "action": u"新建", "obj_pk": inst.id})
+
+                    if inst.sub_order.returned:
+                        flash(u"成功创建工单（编号%d），请提醒质检员赶快处理" % inst.id)
+                    else:
+                        flash(u"成功创建工单（编号%d）" % inst.id)
+            except ValueError as a:
+                return render_template("error.html", msg=a.message,
+                                       back_url=form.url.data or url_for('order.order', id_=sub_order.order.id)), 403
+            return redirect(form.url.data or url_for('order.order', id_=sub_order.order.id))
+        else:
+            return render_template("error.html", msg=form.errors,
+                                   back_url=url_for('order.order', id_=sub_order.order.id)), 403

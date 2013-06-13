@@ -55,7 +55,7 @@ thead th {
 }
 
 .required {
-    color: #800;
+    color: #ff0000;
 }
 
 @media print {

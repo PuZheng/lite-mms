@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
-from flask.ext.databrowser.action import BaseAction
+from datetime import datetime
+from flask.ext.databrowser.action import BaseAction, DirectAction
+from flask import redirect, request, url_for
+
 
 class DispatchAction(BaseAction):
     
     def op(self, model):
         model.update(dispatched=True)
+        model.add_todo()
+
 
     def test_enabled(self, model):
         if model.dispatched:
@@ -26,6 +31,7 @@ class DispatchAction(BaseAction):
     
 class AccountAction(BaseAction):
     def op(self, order):
+        from lite_mms import apis
         for sub_order in order.sub_order_list:
             for store_bill in sub_order.store_bill_list:
                 fake_delivery_task = apis.delivery.fake_delivery_task()
@@ -75,6 +81,26 @@ class MarkRefinedAction(BaseAction):
         from flask.ext.principal import Permission
         Permission.union(CargoClerkPermission, AdminPermission).test()
 
+
+class NewExtraOrder(DirectAction):
+    def op_upon_list(self, objs, model_view):
+        return redirect(url_for("order.new_sub_order", url=request.url, _method="GET", order_id=objs[0].id))
+
+    def test_enabled(self, model):
+        from lite_mms.apis.order import OrderWrapper
+        order = OrderWrapper(model)
+        if order.measured_by_weight:
+            return -2
+        if order.dispatched:
+            return -3
+        if order.refined:
+            return -4
+        return 0
+
+    def get_forbidden_msg_formats(self):
+        return {-2: u"只有计件类型的订单才能添加子订单", -3: u"订单%s已下发，不能添加子订单", -4: u"订单%s已完善，不能添加子订单"}
+
 dispatch_action = DispatchAction(u"下发")
 account_action = AccountAction(u"盘点")
 mark_refined_action = MarkRefinedAction(u"标记为完善")
+new_extra_order_action = NewExtraOrder(u"添加计件类型子订单")

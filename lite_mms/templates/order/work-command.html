@@ -21,7 +21,7 @@
 {% endblock %}
 {% block body %}
   <div class="container">
-    <form class="form-horizontal" action="{{ url_for('schedule.work_command') }}" method="POST">
+    <form class="form-horizontal" action="{{ url_for('order.work_command') }}" method="POST">
       <div class="control-group">
         <label class="control-label"><strong>默认车间</strong></label>
 
@@ -84,13 +84,13 @@
         </div>
       </div>
       <input type="hidden" name="sub_order_id" value="{{ sub_order.id }}"/>
-      <input type="hidden" name="url" value="{{ request.args.get("url") or url_for("schedule.order", id_=sub_order.order.id) }}">
+      <input type="hidden" name="url" value="{{ request.args.get("url") or url_for("order.order", id_=sub_order.order.id) }}">
       <div class="control-group">
         <div class="controls">
           <button class="btn btn-large btn-primary">
               <i class="icon-ok icon-white"></i>&nbsp;保存
           </button>
-          <a class="btn btn-large" href="{{ request.args.get("url") or url_for("schedule.order", id_=sub_order.order.id) }}">
+          <a class="btn btn-large" href="{{ request.args.get("url") or url_for("order.order", id_=sub_order.order.id) }}">
               <i class="icon-backward"></i>&nbsp;返回
           </a>
         </div>

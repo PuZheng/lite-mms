@@ -17,7 +17,7 @@
           <a href="{{ url_for("store_bill.store_bill", id_=store_bill.id, url=request.url) }}">{{ store_bill.id }}</a>
         </td>
         <td>{{ store_bill.harbor.name }}</td>
-        <td>{{ store_bill.product_name }}</td>
+        <td>{{ store_bill.sub_order.product.name }}</td>
         <td>{{ store_bill.customer.name }}</td>
         <td>{{ store_bill.weight }}</td>
         <td>{% if store_bill.pic_url %}

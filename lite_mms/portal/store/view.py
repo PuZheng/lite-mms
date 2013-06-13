@@ -3,16 +3,18 @@ from flask.ext.login import login_required
 from werkzeug.utils import cached_property
 from flask.ext.databrowser import ModelView, filters
 from flask.ext.databrowser.column_spec import ColumnSpec, InputColumnSpec, ImageColumnSpec
-from flask.ext.principal import PermissionDenied
+from flask.ext.principal import PermissionDenied, Permission
+from wtforms.validators import Required
 from lite_mms import models
 from lite_mms.apis.delivery import StoreBillWrapper
-from lite_mms.permissions import SchedulerPermission
+from lite_mms.permissions import SchedulerPermission, QualityInspectorPermission
 
 _printed = u"<i class='icon-ticket' title='已打印'></i>"
 _unprinted = u"<i class='icon-check-empty' title='未打印'></i>"
 
 
 class StoreBillModelView(ModelView):
+
     __list_columns__ = ["id", "customer", "product", "weight", "quantity", "sub_order.order.customer_order_number",
                         "qir.actor", "printed", "create_time", "qir.work_command.id", "harbor"]
 
@@ -59,7 +61,7 @@ class StoreBillModelView(ModelView):
         def _try_edit(obj):
             if obj and obj.delivery_session and obj.delivery_task:
                 raise PermissionDenied
-        SchedulerPermission.test()
+        Permission.union(SchedulerPermission, QualityInspectorPermission).test()
         if isinstance(processed_objs, (list, tuple)):
             for obj in processed_objs:
                 _try_edit(obj)
@@ -72,7 +74,8 @@ class StoreBillModelView(ModelView):
         else:
             return super(StoreBillModelView, self).edit_hint_message(obj, read_only)
 
-    __form_columns__ = [ColumnSpec("id"), "qir.work_command.id", "customer", "product", "harbor", "weight", "quantity",
+    __form_columns__ = [ColumnSpec("id"), "qir.work_command.id", "customer", "product",
+                        InputColumnSpec("harbor", validators=[Required(u"不能为空")]), "weight", "quantity",
                         ColumnSpec("unit", label=u"单位"), ColumnSpec("sub_order.spec", label=u"型号"),
                         ColumnSpec("sub_order.type", label=u"规格"), ColumnSpec("create_time"),
                         ColumnSpec("sub_order.id", label=u"子订单号"), "sub_order.order.customer_order_number",

@@ -41,7 +41,7 @@ def ajax_consignment():
         elif not cons.MSSQL_ID:
             try:
                 MSSQL_ID = json.loads(apis.broker.export_consignment(cons))
-            except error:
+            except (ValueError, error):
                 return _(u"插入MS SQL失败，请手工插入"), 403
             try:
                 apis.delivery.ConsignmentWrapper.update(consignment_id, MSSQL_ID=MSSQL_ID["id"])

@@ -13,7 +13,7 @@ from lite_mms.utilities import decorators, Pagination
 
 from flask.ext.login import current_user, login_required
 from flask.ext.principal import PermissionDenied
-from sqlalchemy import exists
+from sqlalchemy import exists, and_
 from flask.ext.databrowser import ModelView, filters
 from flask.ext.databrowser.column_spec import ColumnSpec, ListColumnSpec, PlaceHolderColumnSpec, TableColumnSpec, \
     InputColumnSpec, ImageColumnSpec
@@ -132,8 +132,10 @@ class DeliverySessionModelView(ModelView):
 
 
         def filter_plate(q):
-            return q.filter(~exists().where(models.UnloadSession.plate == models.Plate.name).where(
-                models.DeliverySession.plate == models.Plate.name))
+            return q.filter(and_(~exists().where(models.UnloadSession.plate == models.Plate.name).where(
+                models.UnloadSession.finish_time == None),
+                                 ~exists().where(models.DeliverySession.finish_time == None).where(
+                                     models.DeliverySession.plate == models.Plate.name)))
 
         columns = OrderedDict()
         columns[u"基本信息"] = [InputColumnSpec("plate_", filter_=filter_plate),

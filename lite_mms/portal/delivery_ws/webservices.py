@@ -6,8 +6,9 @@ from lite_mms.utilities import _
 from werkzeug.exceptions import BadRequest
 from lite_mms.portal.delivery_ws import delivery_ws
 from lite_mms.utilities import to_timestamp
-from lite_mms.utilities.decorators import webservice_call 
+from lite_mms.utilities.decorators import webservice_call
 from lite_mms.apis.delivery import DeliverySessionWrapper
+
 
 @delivery_ws.route("/delivery-session-list", methods=["GET"])
 @webservice_call("json")
@@ -16,13 +17,15 @@ def delivery_session_list():
     get **unfinished** delivery sessions from database, accept no arguments
     """
     import lite_mms.apis as apis
+
     try:
         delivery_sessions, total_cnt = apis.delivery.get_delivery_session_list(unfinished_only=True)
     except BadRequest as inst:
-        return str(inst), 403 
-    data = [{'plateNumber': ds.plate, 'sessionID': ds.id, 'isLocked': int(ds.is_locked)} for ds in 
-        delivery_sessions]
+        return str(inst), 403
+    data = [{'plateNumber': ds.plate, 'sessionID': ds.id, 'isLocked': int(ds.is_locked)} for ds in
+            delivery_sessions]
     return json.dumps(data)
+
 
 @delivery_ws.route("/delivery-session", methods=["GET"])
 @webservice_call("json")
@@ -34,6 +37,7 @@ def delivery_session():
     if not _id:
         return _(u"需要id字段"), 403
     import lite_mms.apis as apis
+
     ds = apis.delivery.get_delivery_session(_id)
     if not ds:
         return _(u"没有如下发货会话") + str(_id), 404
@@ -54,6 +58,7 @@ def delivery_session():
     ret.update(store_bills=store_bills)
     return json.dumps(ret)
 
+
 @delivery_ws.route("/delivery-task", methods=["POST"])
 @webservice_call("json")
 def delivery_task():
@@ -63,17 +68,23 @@ def delivery_task():
 
     if not actor_id:
         return _(u"需要actor_id字段"), 403
-    
+
     json_sb_list = json.loads(request.data)
     if len(json_sb_list) == 0:
         return _(u"至少需要一个仓单"), 403
     finished_sb_list = []
-    unfinished_sb_list = [] 
+    unfinished_sb_list = []
     for json_sb in json_sb_list:
         if json_sb["is_finished"]:
-            finished_sb_list.append(json_sb["store_bill_id"])
+            try:
+                finished_sb_list.append(int(json_sb["store_bill_id"]))
+            except ValueError:
+                return _(u"仓单id只能为非整数"), 403
         else:
-            unfinished_sb_list.append(json_sb["store_bill_id"])
+            try:
+                unfinished_sb_list.append(int(json_sb["store_bill_id"]))
+            except ValueError:
+                return _(u"仓单id只能为非整数"), 403
     if len(unfinished_sb_list) > 1:
         return _(u"最多只有一个仓单可以部分完成"), 403
     if unfinished_sb_list:
@@ -81,16 +92,18 @@ def delivery_task():
             return _(u"需要remain字段"), 403
     delivery_session_id = request.args.get("sid", type=int)
     import lite_mms.apis as apis
+
     delivery_session = apis.delivery.get_delivery_session(delivery_session_id)
     if not delivery_session:
         return _(u"需要发货会话字段"), 403
     id_list = [store_bill.id for store_bill in delivery_session.store_bill_list]
     for id_ in finished_sb_list + unfinished_sb_list:
-        if int(id_) not in id_list:
+        if id_ not in id_list:
             return _(u"仓单%s未关联到发货会话%s" % (id_, delivery_session_id)), 403
     actor = apis.auth.get_user(actor_id)
     from lite_mms.portal.delivery.fsm import fsm
     from lite_mms import constants
+
     try:
         fsm.reset_obj(delivery_session)
         fsm.next(constants.delivery.ACT_LOAD, actor)
@@ -102,13 +115,12 @@ def delivery_task():
     except ValueError as e:
         return unicode(e), 403
 
-
     if is_finished: # 发货会话结束
         dt.update(is_last=True)
         dt.delivery_session.update(finish_time=to_timestamp(datetime.now()))
 
     ret = dict(id=dt.actor_id, actor_id=dt.actor_id,
-            store_bill_id_list=dt.store_bill_id_list)
+               store_bill_id_list=dt.store_bill_id_list)
     return json.dumps(ret)
         
 

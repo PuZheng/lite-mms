@@ -87,7 +87,7 @@ def delivery_task():
     id_list = [store_bill.id for store_bill in delivery_session.store_bill_list]
     for id_ in finished_sb_list + unfinished_sb_list:
         if id_ not in id_list:
-            return _(u"仓单%d未关联到发货会话%d" % (id_, delivery_session_id))
+            return _(u"仓单%s未关联到发货会话%s" % (id_, delivery_session_id)), 403
     actor = apis.auth.get_user(actor_id)
     from lite_mms.portal.delivery.fsm import fsm
     from lite_mms import constants

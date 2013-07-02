@@ -1,90 +1,106 @@
-# -*- coding: UTF-8 -*-
-"""
-@author: Yangminghua
-@version: $
-"""
-from flask import request, redirect, url_for, flash
-from wtforms import TextField, Form, validators, IntegerField
-from lite_mms import constants
+#-*- coding:utf-8 -*-
+from flask import request, redirect, url_for
+from flask.ext.login import login_required
+from werkzeug.utils import cached_property
+from flask.ext.databrowser import ModelView, filters
+from flask.ext.databrowser.column_spec import ColumnSpec, InputColumnSpec, ImageColumnSpec
+from flask.ext.principal import PermissionDenied
+from wtforms.validators import Required
+from lite_mms import models
+from lite_mms.apis.delivery import StoreBillWrapper
+from lite_mms.permissions import QualityInspectorPermission
 from lite_mms.portal.store import store_bill_page
-from lite_mms.utilities import decorators, Pagination
-from lite_mms.utilities import _
-from datetime import date, timedelta
+from lite_mms.utilities import decorators, _
+
+_printed = u"<i class='icon-ticket' title='已打印'></i>"
+_unprinted = u"<i class='icon-check-empty' title='未打印'></i>"
+
+
+class StoreBillModelView(ModelView):
+
+    __list_columns__ = ["id", "customer", "product", "weight", "quantity", "sub_order.order.customer_order_number",
+                        "qir.actor", "printed", "create_time", "qir.work_command.id", "harbor"]
+
+    __column_labels__ = {"id": u"仓单号",
+                         "customer": u"客户",
+                         "product": u"产品",
+                         "weight": u"重量",
+                         "quantity": u"数量",
+                         "sub_order.order.customer_order_number": u"订单号",
+                         "qir.actor": u"质检员",
+                         "create_time": u"创建时间",
+                         "qir.work_command.id": u"工单号",
+                         "printed":u"打印",
+                         "harbor": u"存放点",
+                         "pic_url": u"图片"}
+
+    __column_formatters__ = {"printed": lambda v, obj: _printed if v else _unprinted}
+
+    def preprocess(self, obj):
+        return StoreBillWrapper(obj)
+
+    def try_create(self):
+        raise PermissionDenied
+
+    class Undeliveried(filters.Only):
+        def set_sa_criterion(self, q):
+            if self.value:
+                return q.filter(models.StoreBill.delivery_session == None).filter(models.StoreBill.delivery_task == None)
+            else:
+                return q
+
+        @cached_property
+        def attr(self):
+            return self.col_name
+
+    __column_filters__ = [filters.EqualTo("customer", u"是"),
+                          filters.Only("printed", display_col_name=u"只展示未打印", test=lambda v: v == False,
+                                       notation="__only_printed"),
+                          Undeliveried("undeliveried", display_col_name=u"只展示未发货", test=None,
+                                       notation="__undeliveried")
+                          ]
+
+    def try_edit(self, processed_objs=None):
+        def _try_edit(obj):
+            if obj and obj.delivery_session and obj.delivery_task:
+                raise PermissionDenied
+        QualityInspectorPermission.test()
+        if isinstance(processed_objs, (list, tuple)):
+            for obj in processed_objs:
+                _try_edit(obj)
+        else:
+            _try_edit(processed_objs)
+
+    def edit_hint_message(self, obj, read_only=False):
+        if read_only:
+            return u"仓单-%s已发货，不能编辑" % obj.id
+        else:
+            return super(StoreBillModelView, self).edit_hint_message(obj, read_only)
+
+    __form_columns__ = [ColumnSpec("id"), "qir.work_command.id", "customer", "product",
+                        InputColumnSpec("harbor", validators=[Required(u"不能为空")]), "weight", "quantity",
+                        ColumnSpec("unit", label=u"单位"), ColumnSpec("sub_order.spec", label=u"型号"),
+                        ColumnSpec("sub_order.type", label=u"规格"), ColumnSpec("create_time"),
+                        ColumnSpec("sub_order.id", label=u"子订单号"), "sub_order.order.customer_order_number",
+                        ImageColumnSpec("pic_url", label=u"图片")]
+
+    def get_customized_actions(self, processed_objs=None):
+        if QualityInspectorPermission.can():
+            from .actions import PreviewPrintAction
+            return [PreviewPrintAction(u"打印预览")]
+        else:
+            return []
+
+    @login_required
+    def try_view(self, processed_objs=None):
+        pass
+store_bill_view = StoreBillModelView(models.StoreBill, u"仓单")
+
 
 
 @store_bill_page.route('/')
 def index():
     return redirect(url_for("store_bill.store_bill_list"))
-
-
-@store_bill_page.route("/store-bill/<int:id_>", methods=["GET", "POST"])
-@decorators.templated("/store/store-bill.html")
-@decorators.nav_bar_set
-def store_bill(id_):
-    import lite_mms.apis as apis
-
-    store_bill = apis.delivery.get_store_bill(id_)
-    if store_bill:
-        if request.method == "GET":
-            return dict(titlename=u'仓单详情', store_bill=store_bill,
-                        harbors=apis.harbor.get_harbor_list())
-        else:
-            class StoreBillForm(Form):
-                harbor = TextField("harbor", [validators.required()])
-                weight = IntegerField("weight", [validators.required()])
-                quantity = IntegerField("quantity")
-
-            form = StoreBillForm(request.form)
-            if form.validate():
-                kwargs = dict(printed=True, weight=form.weight.data,
-                              harbor=form.harbor.data)
-                if form.quantity.data:
-                    kwargs["quantity"] = form.quantity.data
-                try:
-                    apis.delivery.update_store_bill(store_bill.id, **kwargs)
-                    flash(u"修改仓单%d成功" % id_)
-                    return redirect(url_for("store_bill.store_bill", id_=id_,
-                                            url=request.form.get("url")))
-                except ValueError, e:
-                    return unicode(e), 403
-            else:
-                return form.errors, 403
-    else:
-        return _("没有此仓单%(id)d" % {"id": id_}), 404
-
-
-@store_bill_page.route("/store-bill-list")
-@decorators.templated("/store/store-bill-list.html")
-@decorators.nav_bar_set
-def store_bill_list():
-    import lite_mms.apis as apis
-
-    time_span = request.args.get("time_span", "week")
-    customer_id = request.args.get("customer_id", 0, type=int)
-    unprinted_only = request.args.get("printed_plan", 1, type=int)
-    if time_span not in ["unlimited", "week", "month"]:
-        return "参数time_span非法", 403
-    customer = apis.customer.get_customer(customer_id) if customer_id else None
-    page = request.args.get("page", 1, type=int)
-    page_size = constants.STORE_BILL_PER_PAGE
-    if time_span == "week":
-        should_after = date.today() - timedelta(7)
-    elif time_span == "month":
-        should_after = date.today() - timedelta(30)
-    else:
-        should_after = None
-    store_bills, total_cnt = apis.delivery.get_store_bill_list(
-        (page - 1) * page_size,
-        page_size, unlocked_only=False, should_after=should_after,
-        customer_id=customer.id if customer else None,
-        unprinted_only=unprinted_only)
-    pagination = Pagination(page, constants.STORE_BILL_PER_PAGE, total_cnt)
-    customer_list = apis.store.get_customer_list(time_span)
-    return dict(titlename=u"仓单列表", store_bills=store_bills,
-                time_span=time_span, customer_list=customer_list,
-                printed_plan=unprinted_only,
-                pagination=pagination)
-
 
 @store_bill_page.route("/store-bill-preview/<int:id_>",
                        methods=["GET", "POST"])

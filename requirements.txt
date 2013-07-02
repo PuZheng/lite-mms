@@ -1,6 +1,6 @@
 Babel==0.9.6
 Fabric==1.5.1
--e git+https://github.com/xiechao06/Flask-Report.git@bcb457c592d6afc3dfbcb69841e58ea90baffacf#egg=Flask-dev
+-e git+https://github.com/xiechao06/Flask-Report.git@091c7e54ac177fdf8448eb3ce33c1ca5ec417013#egg=Flask-dev
 Flask-Admin==1.0.4
 Flask-Babel==0.8
 -e git+https://github.com/xiechao06/Flask-DataBrowser.git@3100613ea94bf521caf2c26c7edad8257f6d3c5a#egg=Flask_DataBrowser-dev
@@ -8,9 +8,11 @@ Flask-DebugToolbar==0.8.0
 Flask-Login==0.2.4
 -e git+https://github.com/xiechao06/Flask-NavBar.git@c60db5d47aa315f1da20791ea2e5c3aaec28944e#egg=Flask_NavBar-dev
 Flask-Principal==0.3.3
--e git+https://github.com/xiechao06/Flask-Report.git@bcb457c592d6afc3dfbcb69841e58ea90baffacf#egg=Flask_Report-dev
+-e git+https://github.com/xiechao06/Flask-Report.git@091c7e54ac177fdf8448eb3ce33c1ca5ec417013#egg=Flask_Report-dev
 Flask-SQLAlchemy==0.16
 Flask-WTF==0.8.3
+Geraldo==0.4.17
+Hamlish-Jinja==0.3.0
 Jinja2==2.7
 Mako==0.8.1
 MarkupSafe==0.18
@@ -23,6 +25,7 @@ WTForms==1.0.2
 Werkzeug==0.9.1
 alembic==0.5.0
 argparse==1.2.1
+beautifulsoup4==4.1.3
 blinker==1.2
 colorama==0.2.4
 cssselect==0.7.1
@@ -46,6 +49,7 @@ pycrypto==2.6
 pyflakes==0.7.2
 pytest==2.3.4
 pytz==2013b
+reportlab==2.7
 speaklater==1.3
 transaction==1.3.0
 twill==0.9

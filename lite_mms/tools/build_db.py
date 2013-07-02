@@ -49,7 +49,7 @@ def build_db():
             models.Permission.name.like("%view_order%")).all()
         cargo_clerk = do_commit(cargo_clerk)
         #   - 调度员
-        scheduler = models.Group(id=groups.SCHEDULER, name=u"调度员", default_url=url_for("schedule.index"))
+        scheduler = models.Group(id=groups.SCHEDULER, name=u"调度员", default_url=url_for("order.index"))
         scheduler.permissions = models.Permission.query.filter(
             models.Permission.name.like(
                 "%schedule_order%")).all() + models.Permission.query.filter(

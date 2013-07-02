@@ -5,7 +5,7 @@
 
 from hashlib import md5
 from random import randint
-from datetime import datetime
+from datetime import datetime, date
 from flask import url_for
 from lite_mms.basemain import app
 from lite_mms.permissions import permissions
@@ -148,10 +148,10 @@ class InitializeTestDB(Command):
         #     - 生成计重类型的子订单, 还有50公斤没有分配出去
         sub_order1 = do_commit(
             SubOrder(product1, 300, harbor1, order1, 300, "KG",
-                     due_time=datetime.today(), default_harbor=harbor1, returned=True))
+                     due_time=date.today(), default_harbor=harbor1, returned=True))
         sub_order2 = do_commit(
             SubOrder(product2, 1000, harbor2, order1, 1000, "KG",
-                     due_time=datetime.today(), default_harbor=harbor2, returned=True))
+                     due_time=date.today(), default_harbor=harbor2, returned=True))
 
         # 生成工单
         #     - DISPATCHING STATUS
@@ -188,9 +188,10 @@ class InitializeTestDB(Command):
                                               urgent=False, org_cnt=50,
                                               pic_path="1.png",
                                               status=wc_const.STATUS_QUALITY_INSPECTING,
-                                              department=department1))
+                                              department=department1,
+                                              team=team1))
         #     - FINISHED STATUS
-        work_command4 = do_commit(WorkCommand(sub_order=sub_order1,
+        work_command4 = WorkCommand(sub_order=sub_order1,
                                               org_weight=50,
                                               processed_weight=50,
                                               procedure=procedure2,
@@ -199,7 +200,10 @@ class InitializeTestDB(Command):
                                               processed_cnt=50,
                                               pic_path="1.png",
                                               status=wc_const.STATUS_FINISHED,
-                                              department=department1))
+                                              department=department1, 
+                                              team=team1)
+        work_command4.completed_time = datetime.now()
+        do_commit(work_command4)
 
         qir1 = do_commit(QIReport(work_command4, 20, 20,
                                   quality_inspection.FINISHED, qi.id))

@@ -53,6 +53,22 @@ serve_ws = app.config["SERVE_TYPE"] in ["both", "ws"]
 
 
 if serve_web:
+
+    from lite_mms.portal.report import report_page
+    from flask.ext.report import FlaskReport
+    from flask.ext.report.utils import collect_models
+    from lite_mms import models
+    FlaskReport(db, collect_models(models), app, report_page, {
+        'report_list': {
+            'nav_bar': nav_bar,    
+        },
+        'report': {
+            'nav_bar': nav_bar,    
+        }
+    })
+    app.register_blueprint(report_page, url_prefix="/report")
+    from lite_mms.portal.store import store_bill_page
+    app.register_blueprint(store_bill_page, url_prefix="/store")
     from lite_mms.portal.deduction import deduction_page
     app.register_blueprint(deduction_page, url_prefix="/deduction")
     from lite_mms.portal.auth import auth
@@ -71,8 +87,6 @@ if serve_web:
     app.register_blueprint(order_page, url_prefix="/order")
     from lite_mms.portal.op import op_page
     app.register_blueprint(op_page, url_prefix="/op")
-    from lite_mms.portal.store import store_bill_page
-    app.register_blueprint(store_bill_page, url_prefix="/store")
     from lite_mms.portal.admin2 import admin2_page
     app.register_blueprint(admin2_page, url_prefix="/admin2")
     
@@ -88,6 +102,7 @@ if serve_web:
     app.register_blueprint(to_do_page, url_prefix="/todo")
 
     import lite_mms.portal.admin
+
 if serve_ws:
     from lite_mms.portal.auth_ws import auth_ws
     app.register_blueprint(auth_ws, url_prefix="/auth_ws")
@@ -133,6 +148,8 @@ nav_bar.register(time_line_page, name=u"时间线", default_url="/timeline/log-l
 nav_bar.register(search_page, name=u"搜索", default_url="/search/search")
 nav_bar.register(admin2_page, name=u"管理中心", default_url="/admin2/user-list", permissions=[AdminPermission])
 nav_bar.register(to_do_page, name=u"待办事项", default_url="/todo/todo-list")
+nav_bar.register(report_page, name=u"报表", default_url="/report/report-list", permissions=[AdminPermission])
+
 
 #install jinja utilities
 from lite_mms.utilities import url_for_other_page, datetimeformat
@@ -148,7 +165,6 @@ from flask.ext.principal import (identity_loaded, RoleNeed, UserNeed, Permission
 @login_manager.user_loader
 def load_user(user_id):
     from lite_mms.apis import auth
-
     return auth.get_user(user_id)
 
 

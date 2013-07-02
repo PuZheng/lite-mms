@@ -1,32 +1,36 @@
 Babel==0.9.6
 Fabric==1.5.1
-Flask==0.9
+-e git+https://github.com/xiechao06/Flask-Report.git@bcb457c592d6afc3dfbcb69841e58ea90baffacf#egg=Flask-dev
+Flask-Admin==1.0.4
 Flask-Babel==0.8
--e git+https://github.com/xiechao06/Flask-DataBrowser.git@14dd0df9c61611cd59f64f6b9d5f31175afb4a4e#egg=Flask_DataBrowser-dev
+-e git+https://github.com/xiechao06/Flask-DataBrowser.git@3100613ea94bf521caf2c26c7edad8257f6d3c5a#egg=Flask_DataBrowser-dev
 Flask-DebugToolbar==0.8.0
-Flask-Login==0.1.3
--e git+https://github.com/xiechao06/Flask-NavBar.git@c60db5d#egg=Flask_NavBar-dev
+Flask-Login==0.2.4
+-e git+https://github.com/xiechao06/Flask-NavBar.git@c60db5d47aa315f1da20791ea2e5c3aaec28944e#egg=Flask_NavBar-dev
 Flask-Principal==0.3.3
+-e git+https://github.com/xiechao06/Flask-Report.git@bcb457c592d6afc3dfbcb69841e58ea90baffacf#egg=Flask_Report-dev
 Flask-SQLAlchemy==0.16
-Flask-WTF==0.8.2
-Hamlish-Jinja==0.3.0
-Jinja2==2.6
-MarkupSafe==0.15
+Flask-WTF==0.8.3
+Jinja2==2.7
+Mako==0.8.1
+MarkupSafe==0.18
 MySQL-python==1.2.3
 PyYAML==3.10
 Pygments==1.6
-SQLAlchemy==0.7.9
+SQLAlchemy==0.8.1
 Tempita==0.5.1
 WTForms==1.0.2
-Werkzeug==0.8.3
-alembic>=0.5
+Werkzeug==0.9.1
+alembic==0.5.0
 argparse==1.2.1
-beautifulsoup4==4.1.3
 blinker==1.2
 colorama==0.2.4
 cssselect==0.7.1
 decorator==3.4.0
+distribute==0.6.24
 docutils==0.9.1
+import-file==1.11
+itsdangerous==0.21
 -e git+https://github.com/xiechao06/lite-sm.git@9204dcaba550ab8da9450576ba95c54c93259406#egg=lite_sm-dev
 lockfile==0.9.1
 logilab-astng==0.24.1
@@ -39,10 +43,11 @@ path.py==3.0.1
 py==1.4.12
 pycrypto==2.6
 -e git+https://github.com/xiechao06/pyfeature.git@39da1369c5254da572505e0c9ad495905ca5d4cf#egg=pyfeature-dev
+pyflakes==0.7.2
 pytest==2.3.4
-pytz==2012g
-## FIXME: could not find svn URL in dependency_links for this package:
+pytz==2013b
 speaklater==1.3
 transaction==1.3.0
 twill==0.9
-Flask-Admin==1.0.4
+wsgiref==0.1.2
+zope.interface==4.0.5

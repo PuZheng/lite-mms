@@ -10,9 +10,8 @@ from lite_mms.utilities.decorators import nav_bar_set
 store_bill_page = Blueprint("store_bill", __name__, static_folder="static",
                             template_folder="templates")
 
-from . import views, ajax
-
-from .view import store_bill_view
+from . import ajax
+from .views import store_bill_view
 
 from lite_mms.basemain import data_browser,nav_bar
 

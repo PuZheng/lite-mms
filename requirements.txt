@@ -7,7 +7,7 @@ Flask-DebugToolbar==0.8.0
 Flask-Login==0.2.4
 -e git+https://github.com/xiechao06/Flask-NavBar.git@c60db5d47aa315f1da20791ea2e5c3aaec28944e#egg=Flask_NavBar-dev
 Flask-Principal==0.3.3
--e git+https://github.com/xiechao06/Flask-Report.git@ba8e1fcb4161d35d991175cf89bc0a75f203944a#egg=Flask_Report-dev
+-e git+https://github.com/xiechao06/Flask-Report.git@9317b376dc0c6a48a1c91ced0e6b2f4c4e4e858f#egg=Flask_Report-dev
 Flask-SQLAlchemy==0.16
 Flask-WTF==0.8.3
 Geraldo==0.4.17

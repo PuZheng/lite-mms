@@ -632,7 +632,6 @@ class StoreBill(db.Model):
     def __repr__(self):
         return "<StoreBill %d>" % self.id
 
-
 class DeliveryTask(db.Model):
     __modelname__ = u"发货任务"
     __tablename__ = "TB_DELIVERY_TASK"

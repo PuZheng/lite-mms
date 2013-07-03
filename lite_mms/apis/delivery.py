@@ -341,7 +341,6 @@ class DeliveryTaskWrapper(ModelWrapper):
         todo.remove_todo(todo.WEIGH_DELIVERY_TASK, self.id)
         return True
 
-
 class ConsignmentWrapper(ModelWrapper):
     @classmethod
     def get_list(cls, delivery_session_id=None, is_paid=None,
@@ -483,7 +482,6 @@ class ConsignmentWrapper(ModelWrapper):
                 task_list.append(task)
         return task_list
 
-
 class ConsignmentProductWrapper(ModelWrapper):
     @classmethod
     def get_product(cls, id_):
@@ -498,7 +496,6 @@ class ConsignmentProductWrapper(ModelWrapper):
             if hasattr(self.model, k):
                 setattr(self.model, k, v)
         do_commit(self.model)
-
 
 class StoreBillWrapper(ModelWrapper):
     @property
@@ -578,7 +575,6 @@ class StoreBillWrapper(ModelWrapper):
 
         return StoreBillWrapper(do_commit(store_bill))
 
-
 def get_delivery_session_list(idx=0, cnt=sys.maxint, unfinished_only=False,
                               keywords=None):
     q = models.DeliverySession.query.filter(
@@ -596,7 +592,6 @@ def get_delivery_session_list(idx=0, cnt=sys.maxint, unfinished_only=False,
             q.order_by(models.DeliverySession.create_time.desc()).offset(
                 idx).limit(cnt).all()], total_cnt
 
-
 def get_delivery_session(session_id):
     if not session_id:
         return None
@@ -606,12 +601,10 @@ def get_delivery_session(session_id):
     except NoResultFound:
         return None
 
-
 def get_delivery_task_list(ds_id):
     return [DeliveryTaskWrapper(dt) for dt in
             models.DeliveryTask.query.filter_by(
                 delivery_session_id=ds_id).all()]
-
 
 def create_or_update_consignment(customer_id, delivery_session_id, pay_in_cash):
     try:
@@ -626,7 +619,6 @@ def create_or_update_consignment(customer_id, delivery_session_id, pay_in_cash):
         return cn
     except NoResultFound:
         return new_consignment(customer_id, delivery_session_id, pay_in_cash=pay_in_cash)
-
 
 def get_store_bill_list(idx=0, cnt=sys.maxint, unlocked_only=True, qir_id=None,
                         customer_id="", delivery_session_id=None,
@@ -655,12 +647,10 @@ def get_store_bill_list(idx=0, cnt=sys.maxint, unlocked_only=True, qir_id=None,
     q = q.order_by(models.StoreBill.id.desc()).offset(idx).limit(cnt)
     return [StoreBillWrapper(sb) for sb in q.all()], total_cnt
 
-
 def fake_delivery_task():
     fake_delivery_session = do_commit(models.DeliverySession(u"foo", 0))
     fake_delivery_session.finish_time = datetime.now()
     return do_commit(models.DeliveryTask(fake_delivery_session, None))
-
 
 new_delivery_session = DeliverySessionWrapper.new_delivery_session
 get_consignment_list = ConsignmentWrapper.get_list

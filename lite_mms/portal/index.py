@@ -16,7 +16,8 @@ def index():
 
 @app.route("/error")
 def error():
-    return render_template("error.html", msg=request.args["msg"], back_url=request.args["back_url"], nav_bar=nav_bar)
+    return render_template("error.html", msg=request.args["msg"], back_url=request.args.get("back_url", "/"),
+                           nav_bar=nav_bar, titlename=u"错误")
 
 @app.route("/index")
 @decorators.templated("index.html")

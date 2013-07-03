@@ -58,7 +58,14 @@ if serve_web:
     from flask.ext.report import FlaskReport
     from flask.ext.report.utils import collect_models
     from lite_mms import models
-    FlaskReport(db, collect_models(models), app, report_page)
+    FlaskReport(db, collect_models(models), app, report_page, {
+        'report_list': {
+            'nav_bar': nav_bar,    
+        },
+        'report': {
+            'nav_bar': nav_bar,    
+        }
+    })
     app.register_blueprint(report_page, url_prefix="/report")
     from lite_mms.portal.store import store_bill_page
     app.register_blueprint(store_bill_page, url_prefix="/store")
@@ -141,7 +148,7 @@ nav_bar.register(time_line_page, name=u"时间线", default_url="/timeline/log-l
 nav_bar.register(search_page, name=u"搜索", default_url="/search/search")
 nav_bar.register(admin2_page, name=u"管理中心", default_url="/admin2/user-list", permissions=[AdminPermission])
 nav_bar.register(to_do_page, name=u"待办事项", default_url="/todo/todo-list")
-nav_bar.register(report_page, name=u"报表", default_url="/report/rerpot-list", permissions=[AdminPermission])
+nav_bar.register(report_page, name=u"报表", default_url="/report/report-list", permissions=[AdminPermission])
 
 
 #install jinja utilities

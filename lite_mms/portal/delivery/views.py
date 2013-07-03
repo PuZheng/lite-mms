@@ -57,7 +57,7 @@ class DeliverySessionModelView(ModelView):
     def try_view(self, processed_objs=None):
         pass
 
-    __column_labels__ = {"id": u"编号", "plate_": u"车辆", "create_time": u"创建时间", "tare": u"净重（公斤）",
+    __column_labels__ = {"id": u"编号", "plate_": u"车辆", "create_time": u"创建时间", "tare": u"皮重（公斤）",
                          "with_person": u"驾驶室", "finish_time": u"结束时间", "status": u"状态"}
 
     __column_formatters__ = {

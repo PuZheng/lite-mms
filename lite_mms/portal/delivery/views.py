@@ -356,7 +356,7 @@ class ConsignmentModelView(ModelView):
             filters.EqualTo("customer", name=u"是"),
             filters.Only("is_paid", display_col_name=u"只展示未付款发货单", test=lambda col: col == False,
                          notation=u"is_paid", default_value=not_paid_default),
-            filters.Only("MSSQL_ID", display_col_name=u"只展示未导出发货单", test=lambda col: col is None,
+            filters.Only("MSSQL_ID", display_col_name=u"只展示未导出发货单", test=lambda col: col == None,
                          notation="is_export", default_value=False)
         ]
 

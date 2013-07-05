@@ -11,7 +11,7 @@ from wtforms import validators
 from lite_mms import constants
 from lite_mms.permissions import SchedulerPermission, CargoClerkPermission
 from lite_mms.models import Order, SubOrder, Product
-from lite_mms.portal.order.filters import category_filter, unfinished_filter
+from lite_mms.portal.order.filters import category_filter, only_unfinished_filter
 
 
 class OrderModelView(ModelView):
@@ -86,7 +86,8 @@ class OrderModelView(ModelView):
                           filters.BiggerThan("create_time", name=u"在",
                                              options=[(yesterday, u'一天内'), (week_ago, u'一周内'),
                                                       (_30days_ago, u'30天内')]),
-                          category_filter]
+                          category_filter, 
+                          only_unfinished_filter]
 
     def preprocess(self, model):
         from lite_mms.apis.order import OrderWrapper

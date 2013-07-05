@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import numbers
+from sqlalchemy import or_
 from flask.ext.databrowser import filters
+from lite_mms.models import Order, WorkCommand, SubOrder
+from lite_mms import constants
 
 class CategoryFilter(filters.BaseFilter):
     
@@ -62,3 +65,13 @@ unfinished_filter = UnfinishedFilter("default")
 category_filter = CategoryFilter("category", name=u"是", options=[(CategoryFilter.UNDISPATCHED_ONLY, u"仅展示待下发订单"), 
         (CategoryFilter.DELIVERABLE_ONLY, u"仅展示可发货订单"), (CategoryFilter.ACCOUNTABLE_ONLY, u"仅展示可盘点订单")],
         hidden=True)
+
+
+def only_finished_filter_test(col):
+    manufacturing_status_set = {constants.work_command.STATUS_ASSIGNING,
+                                constants.work_command.STATUS_ENDING,
+                                constants.work_command.STATUS_LOCKED}
+    return col.any(or_(SubOrder.work_command_list.any(WorkCommand.status.in_(manufacturing_status_set)), SubOrder.remaining_quantity>0))
+
+only_unfinished_filter = filters.Only('sub_order_list', display_col_name=u'仅展示未生产完毕订单', test=only_finished_filter_test, notation='__unfinished_only')
+

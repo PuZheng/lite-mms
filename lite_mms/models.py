@@ -150,7 +150,9 @@ class Customer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(32), nullable=False, unique=True)
     abbr = db.Column(db.String(32))
+    enabled = db.Column(db.Boolean, default=True)
     MSSQL_ID = db.Column(db.Integer, default=0, nullable=False)
+
 
     def __init__(self, name, abbr, MSSQL_ID=0):
         self.name = name

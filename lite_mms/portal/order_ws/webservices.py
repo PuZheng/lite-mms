@@ -7,4 +7,4 @@ import json
 def customer_list():
     import lite_mms.apis as apis
     customers = apis.customer.get_customer_list()
-    return json.dumps([{"id": c.id, "name": c.name, "abbr": c.abbr} for c in customers])
+    return json.dumps([{"id": c.id, "name": c.name, "abbr": c.abbr} for c in customers if c.enabled])

@@ -77,6 +77,11 @@ class CustomerModelView(AdminModelView):
     def try_view(self, objs=None):
         Permission.union(AdminPermission, CargoClerkPermission).test()
 
+    __column_labels__ = {"id": u"编号", "name": u"名称", "abbr": u"拼音首字母简写", "enabled": u"是否激活", "MSSQL_ID": u"MsSQL数据库对应ID"}
+    __column_formatters__ = {"enabled": lambda v, obj: u"是" if v else u"否"}
+    __form_columns__ = [column_spec.InputColumnSpec('id', read_only=True), 'name', 'abbr', 'enabled', column_spec.InputColumnSpec('MSSQL_ID', read_only=True)]
+    __batch_form_columns__ = ['enabled']
+    can_batchly_edit = True
 
 customer_model_view = CustomerModelView(Customer, u"客户")
 

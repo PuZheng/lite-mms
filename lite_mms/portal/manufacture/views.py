@@ -52,7 +52,8 @@ class WorkCommandView(ModelView):
         filters.Contains("sub_order.order.customer_order_number", name=u"包含", display_col_name=u"订单编号"),
         filters.EqualTo("sub_order.order.id", name="", hidden=True),
         filters.Only("urgent", display_col_name=u"只展示加急", test=lambda v: v == True, notation="__urgent"),
-        filters.Only("sub_order.returned", display_col_name=u"只展示退镀", test=lambda v: v == True, notation="__returned")
+        filters.Only("sub_order.returned", display_col_name=u"只展示退镀", test=lambda v: v == True, notation="__returned"),
+        filters.EqualTo("department", u"是")
     ]
 
     __column_formatters__ = {

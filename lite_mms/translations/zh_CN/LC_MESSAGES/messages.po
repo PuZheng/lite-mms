@@ -5,6 +5,7 @@
 #
 msgid ""
 msgstr ""
+"#-#-#-#-#  messages.po (PROJECT VERSION)  #-#-#-#-#\n"
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2013-05-13 18:59+0800\n"
@@ -16,12 +17,23 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 0.9.6\n"
+"#-#-#-#-#  messages.po (PROJECT VERSION)  #-#-#-#-#\n"
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2013-07-08 10:41+0800\n"
+"PO-Revision-Date: 2013-07-01 14:56+0800\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 0.9.6\n"
 
 #: action.py:40
 #, python-format
 msgid ""
-"operation %(action)s applied upon %(model_name)s - [%(models)s] "
-"successfully"
+"operation %(action)s applied upon %(model_name)s - [%(models)s] successfully"
 msgstr "%(model_name)s[%(models)s]被成功%(action)s"
 
 #: action.py:48
@@ -82,8 +94,7 @@ msgstr "新建"
 #: base.py:420 base.py:431
 #, python-format
 msgid ""
-"you are viewing %(model_name)s-%(obj)s, since you have only read "
-"permission"
+"you are viewing %(model_name)s-%(obj)s, since you have only read permission"
 msgstr "您正在查看%(model_name)s-%(obj)s, 因为您只有只读权限"
 
 #: base.py:424
@@ -211,12 +222,12 @@ msgstr "关闭"
 #: templates/__data_browser__/form.html:62
 #, python-format
 msgid "Are you sure to %%s these items?"
-msgstr '您确认要这些记录执行操作(%%s)?'
+msgstr "您确认要这些记录执行操作(%%s)?"
 
 #: templates/__data_browser__/form.html:64
 #, python-format
 msgid "Are you sure to %%s this item?"
-msgstr '您确认要对这条记录执行操作(%%s)?'
+msgstr "您确认要对这条记录执行操作(%%s)?"
 
 #: templates/__data_browser__/form_mob.html:79
 #: templates/__data_browser__/macro.html:191
@@ -267,7 +278,7 @@ msgstr "批量修改"
 #: templates/__data_browser__/list.html:135
 #, python-format
 msgid "Are you sure to %%s selected item(s)?"
-msgstr '您确认要对选中的记录执行操作(%%s)?'
+msgstr "您确认要对选中的记录执行操作(%%s)?"
 
 #: templates/__data_browser__/list.html:138
 msgid "Attention!"
@@ -385,6 +396,11 @@ msgstr "您成功的创建了%(model_cls)s\"%(obj)s\""
 msgid "I see"
 msgstr "我知道了"
 
+#: templates/report____/default_html_report.html:11
+#, python-format
+msgid "search %(col_name)s"
+msgstr "搜索%(col_name)s"
+
 #: templates/report____/report-list.html:4
 #: templates/report____/report-list.html:18
 msgid "report list"
@@ -430,57 +446,67 @@ msgstr "首页"
 msgid "Last"
 msgstr "末页"
 
-#: templates/report____/report.html:35
+#: templates/report____/report.html:36
 msgid "hide detail"
 msgstr "隐藏详情"
 
-#: templates/report____/report.html:38 templates/report____/report.html:51
+#: templates/report____/report.html:39 templates/report____/report.html:93
 msgid "show detail"
 msgstr "显示详情"
 
-#: templates/report____/report.html:56
-#, fuzzy, python-format
-msgid ""
-"created by \"%(creator)s\" at %(create_time)s, using data set <span "
-"title=\"%(data_set_description)s\">\"%(data_set)s\"</span>, "
-msgstr "由用户\"%(creator)s\"在%(create_time)s创建, 使用的数据集和是\"%(data_set)s\", "
+#: templates/report____/report.html:76
+#, python-format
+msgid "detail of %%s"
+msgstr "%%s详情"
 
-#: templates/report____/report.html:61
+#: templates/report____/report.html:98
+msgid ""
+"created by \"%(creator)s\" at %(create_time)s, using data set <span title="
+"\"%(data_set_description)s\">\"%(data_set)s\"</span>, "
+msgstr ""
+"由用户\"%(creator)s\"在%(create_time)s创建, 使用的数据集和是\"%(data_set)s"
+"\", "
+
+#: templates/report____/report.html:103
 #, python-format
 msgid "order by \"%(order_by)s\" %(order)s"
 msgstr "按字段\"%(order_by)s\"进行%(order)s排列"
 
-#: templates/report____/report.html:63
+#: templates/report____/report.html:105
 msgid "descendingly"
 msgstr "降序"
 
-#: templates/report____/report.html:63
+#: templates/report____/report.html:105
 msgid "ascendingly"
 msgstr "升序"
 
-#: templates/report____/report.html:66
+#: templates/report____/report.html:108
 msgid "filter conditions are: "
 msgstr "过滤条件如下:"
 
-#: templates/report____/report.html:81
+#: templates/report____/report.html:123
 msgid "the customized filter condition is: "
 msgstr "定制的过滤条件如下:"
 
-#: templates/report____/report.html:97
+#: templates/report____/report.html:139
 msgid "download as: "
 msgstr "以下列格式下载: "
 
-#: templates/report____/report.html:105
+#: templates/report____/report.html:147
 msgid "BACK"
 msgstr "返回"
 
-#: templates/report____/report.html:106
+#: templates/report____/report.html:148
 msgid "EDIT"
 msgstr "编辑"
 
-#: templates/report____/report.html:107
+#: templates/report____/report.html:149
 msgid "REFRESH"
 msgstr "刷新"
+
+#: templates/report____/report.html:162
+msgid "Close"
+msgstr ""
 
 #: templates/report____/report_short_description.html:1
 msgid "creator"
@@ -501,4 +527,3 @@ msgstr "数据集和"
 #: templates/report____/report_short_description.html:5
 msgid "data set description"
 msgstr "数据集合描述"
-

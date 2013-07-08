@@ -58,6 +58,15 @@ if serve_web:
     from flask.ext.report import FlaskReport
     from flask.ext.report.utils import collect_models
     from lite_mms import models
+
+    def collect_model_names():
+        ret = {}
+
+        for k, v in models.__dict__.items():
+            if hasattr(v, '_sa_class_manager'):
+                ret[v.__tablename__] = v.__modelname__
+        return ret
+
     FlaskReport(db, collect_models(models), app, report_page, {
         'report_list': {
             'nav_bar': nav_bar,    
@@ -65,7 +74,8 @@ if serve_web:
         'report': {
             'nav_bar': nav_bar,    
         }
-    })
+    }, 
+    collect_model_names())
     app.register_blueprint(report_page, url_prefix="/report")
     from lite_mms.portal.store import store_bill_page
     app.register_blueprint(store_bill_page, url_prefix="/store")

@@ -17,13 +17,11 @@ def ajax_store_bill():
     * delivery_session_id
     """
     store_bill_id = request.form["id"]
-    harbor = request.form["harbor"]
     if store_bill_id is not None:
         from lite_mms import apis
 
         try:
-            apis.delivery.update_store_bill(int(store_bill_id), printed=True,
-                                            harbor=harbor)
+            apis.delivery.update_store_bill(int(store_bill_id), printed=True)
             return ""
         except ValueError, e:
             return unicode(e), 403

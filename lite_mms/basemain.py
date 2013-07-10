@@ -73,6 +73,12 @@ if serve_web:
         },
         'report': {
             'nav_bar': nav_bar,    
+        },
+        'data_set': {
+            'nav_bar': nav_bar,    
+        },
+        'data_sets': {
+            'nav_bar': nav_bar,    
         }
     }, 
     collect_model_names())
@@ -158,8 +164,10 @@ nav_bar.register(time_line_page, name=u"时间线", default_url="/timeline/log-l
 nav_bar.register(search_page, name=u"搜索", default_url="/search/search")
 nav_bar.register(admin2_page, name=u"管理中心", default_url="/admin2/user-list", permissions=[AdminPermission])
 nav_bar.register(to_do_page, name=u"待办事项", default_url="/todo/todo-list")
-nav_bar.register(report_page, name=u"报表列表", default_url="/report/report-list", permissions=[AdminPermission], group=u'报表')
-nav_bar.register(report_page, name=u"数据集合列表", default_url="/report/data-sets", permissions=[AdminPermission], group=u'报表')
+nav_bar.register(report_page, name=u"报表列表", default_url="/report/report-list", permissions=[AdminPermission], group=u'报表', 
+                 enabler=lambda nav: request.path.startswith('/report/report'))
+nav_bar.register(report_page, name=u"数据集合列表", default_url="/report/data-sets", permissions=[AdminPermission], group=u'报表', 
+                 enabler=lambda nav: request.path.startswith('/report/data-set'))
 
 
 #install jinja utilities

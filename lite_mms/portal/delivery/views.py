@@ -222,7 +222,6 @@ def weigh_delivery_task(id_):
 
         return render_template("delivery/delivery-task.html", titlename=u"发货任务称重", task=task, nav_bar=nav_bar)
 
-
 @delivery_page.route("/create-consignment-list/<int:id_>", methods=["POST"])
 def create_consignment_list(id_):
     from lite_mms.apis.delivery import get_delivery_session, create_or_update_consignment
@@ -244,7 +243,6 @@ def create_consignment_list(id_):
         delivery_session.gc_consignment_list()
         flash(u"发货会话%s生成发货单成功！" % id_)
     return redirect(request.form.get("url", url_for("delivery.delivery_session_list")))
-
 
 class DeliveryTaskModelView(ModelView):
     __form_columns__ = [ColumnSpec("id", label=u"编号"), InputColumnSpec("weight", label=u"重量"),

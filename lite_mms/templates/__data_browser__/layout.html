@@ -181,7 +181,15 @@
                 <mark><strong>{{ current_user.username }}</strong>
                 </mark>
                 您是
-                <strong>{{ current_user.group_name }}</strong>
+                <strong>
+                  {% if current_user.groups|length > 1 %}
+                  <a href="#switch-group-modal" data-role="switch-group" data-toggle="modal">
+                  {% endif %}
+                    {{ current_user.group_name }}
+                  {% if current_user.groups|length > 1 %}
+                  </a>
+                  {% endif %}
+                </strong>
                 <a href="{{ url_for('auth.logout') }}">退出</a>
               </bold>
             </nav>
@@ -190,6 +198,30 @@
       </div>
     </div>
   </header>
+  <div id="switch-group-modal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+      <h3 id="myModalLabel">切换角色</h3>
+    </div>
+    <div class="modal-body">
+      <ul class="nav nav-pills nav-stacked">
+        {% for group in current_user.groups %}
+          {% if group.id == current_user.group.id %}
+          <li class='active pagination-centered'>
+            <a href='#'><b>{{ group.name }} (当前角色)</b></a>
+          </li>
+          {% else %}
+          <li class='pagination-centered'>
+            <a href="{{ url_for('auth.switch_group', id_=group.id, next=request.url) }}"><b>{{ group.name }}</b></a>
+          </li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-dismiss="modal" aria-hidden="true">关闭</button>
+    </div>
+  </div>
 {% endblock %}
 
 {% block __data_browser__footer_block %}

@@ -3,7 +3,7 @@
 用户类
 """
 from hashlib import md5
-from flask import session
+from flask import session, g
 import flask.ext.login as login
 from sqlalchemy.orm.exc import NoResultFound
 from lite_mms.exceptions import AuthenticateFailure
@@ -28,14 +28,18 @@ class UserWrapper(login.UserMixin, ModelWrapper):
         return ret
 
     @property
+    def group(self):
+        for group in self.groups:
+            if group.id == int(session['current_group_id']):
+                return group
+        return self.groups[0]
+
+    @property
     def group_name(self):
         """
         get the group name of the **FIRST** group that user belongs
         """
-        try:
-            return self.groups[0].name
-        except IndexError:
-            return "-"
+        return self.group.name
 
     def __eq__(self, other):
         """

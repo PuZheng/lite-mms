@@ -1,9 +1,10 @@
 # -*- coding: UTF-8 -*-
-from flask import request, render_template, redirect, url_for, current_app, \
-    session
+from flask import (request, render_template, redirect, url_for, current_app,
+    session, session)
 from lite_mms.portal.auth import auth
 from flask.ext.principal import identity_changed, Identity, AnonymousIdentity
 from lite_mms.utilities import _
+from lite_mms.utilities.decorators import after_this_request 
 from wtforms import PasswordField, TextField, Form, HiddenField
 from flask.ext.login import login_user, logout_user, login_required, \
     current_user
@@ -57,4 +58,16 @@ def logout():
     next_url = request.args.get("next", "/")
     return redirect(next_url)
 
+
+
+@auth.route("/switch-group/<int:id_>")
+def switch_group(id_):
+    # let it happen at once
+    session['current_group_id'] = id_
+    @after_this_request
+    def set_group_id(response):
+        response.set_cookie('current_group_id', str(id_))
+        return response
+    next_url = request.args.get("next", "/")
+    return redirect(next_url)
 

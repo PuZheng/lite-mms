@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-from flask import redirect, send_from_directory, url_for, abort, render_template, request, json
+from flask import (redirect, send_from_directory, url_for, abort, render_template, request, json, g)
 from flask.ext.login import current_user, login_required
 from lite_mms.basemain import app, nav_bar
 from lite_mms.utilities import decorators
@@ -46,3 +46,4 @@ def ajax_new_message():
         for todo in get_all_notify(current_user.id)
     ]
     return json.dumps({"total_cnt": TODO.query.filter(TODO.user_id==current_user.id).count(), "messages": messages})
+

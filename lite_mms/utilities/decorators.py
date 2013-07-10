@@ -2,7 +2,7 @@
 """
 handy decorators
 """
-from flask import request, abort
+from flask import request, abort, g
 from flask.templating import render_template, TemplateNotFound
 from functools import wraps
 import types
@@ -141,3 +141,9 @@ def permission_required(permission, methods=("GET",)):
         return _f
 
     return decorator
+
+def after_this_request(f):
+    if not hasattr(g, 'after_request_callbacks'):
+        g.after_request_callbacks = []
+    g.after_request_callbacks.append(f)
+    return f

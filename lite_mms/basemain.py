@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 import os
 from sqlalchemy.exc import SQLAlchemyError
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session, g
 from flask.ext.babel import Babel, gettext
 from flask.ext.nav_bar import FlaskNavBar
 
@@ -133,7 +133,7 @@ if serve_ws:
 
 # ====================== REGISTER NAV BAR ===================================
 from lite_mms.permissions.roles import (CargoClerkPermission, AccountantPermission, QualityInspectorPermission,
-                                        DepartmentLeaderPermission, AdminPermission)
+                                        DepartmentLeaderPermission, AdminPermission, SchedulerPermission)
 from lite_mms.permissions.order import view_order, schedule_order
 from lite_mms.permissions.work_command import view_work_command
 nav_bar.register(cargo_page, name=u"卸货会话", permissions=[CargoClerkPermission], group=u"卸货管理")
@@ -147,7 +147,7 @@ nav_bar.register(delivery_page, name=u'发货会话',
 nav_bar.register(consignment_page, name=u'发货单',
                  permissions=[CargoClerkPermission.union(AccountantPermission)], group=u"发货管理")
 nav_bar.register(manufacture_page, name=u"工单管理",
-                 permissions=[view_work_command])
+                 permissions=[SchedulerPermission])
 #nav_bar.register(delivery_page, name=u"发货单管理",
                  #default_url="/delivery/consignment-list",
                  #permissions=[AccountantPermission])
@@ -172,6 +172,7 @@ nav_bar.register(report_page, name=u"数据集合列表", default_url="/report/d
 
 #install jinja utilities
 from lite_mms.utilities import url_for_other_page, datetimeformat
+from lite_mms.utilities.decorators import after_this_request 
 from lite_mms import permissions
 
 app.jinja_env.globals['url_for_other_page'] = url_for_other_page
@@ -198,8 +199,28 @@ def permission_handler(sender, identity):
         identity.provides.add(UserNeed(unicode(identity.user.id)))
 
     if hasattr(identity.user, 'groups'):
-        for group in identity.user.groups:
-            identity.provides.add(RoleNeed(unicode(group.id)))
+        current_group_id = session.get('current_group_id')
+        if current_group_id is None:
+            current_group_id = request.cookies.get('current_group_id')
+        if current_group_id is None:
+            group = identity.user.groups[0]
+            @after_this_request
+            def set_group_id(response):
+                response.set_cookie('current_group_id', str(group.id))
+                return response
+        else:
+            for group_ in identity.user.groups:
+                if group_.id == current_group_id:
+                    group = group_
+                    break
+            else:
+                group = identity.user.groups[0]
+                @after_this_request
+                def set_group_id(response):
+                    response.set_cookie('current_group_id', str(group.id))
+                    return response
+        session['current_group_id'] = str(group.id)
+        identity.provides.add(RoleNeed(unicode(group.id)))
 
     if hasattr(identity.user, 'permissions'):
         for perm in identity.user.permissions:
@@ -239,3 +260,9 @@ if not app.config["DEBUG"]:
         return render_template("result.html", error_content=u"系统异常!",
                                back_url=request.args.get("back_url", "/"),
                                nav_bar=nav_bar), 403
+
+@app.after_request
+def call_after_request_callbacks(response):
+    for callback in getattr(g, 'after_request_callbacks', ()):
+        response = callback(response)
+    return response

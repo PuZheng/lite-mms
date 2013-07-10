@@ -11,7 +11,7 @@ from wtforms import validators
 from lite_mms import constants
 from lite_mms.permissions import SchedulerPermission, CargoClerkPermission
 from lite_mms.models import Order, SubOrder, Product
-from lite_mms.portal.order.filters import category_filter, unfinished_filter
+from lite_mms.portal.order.filters import category_filter, only_unfinished_filter
 
 
 class OrderModelView(ModelView):
@@ -32,7 +32,7 @@ class OrderModelView(ModelView):
             return [filters.EqualTo("finish_time", value=None),
                     filters.EqualTo("refined", value=True),
                     filters.EqualTo("dispatched", value=True),
-                    unfinished_filter
+                    only_unfinished_filter
                     ]
         else:
             return []
@@ -75,18 +75,18 @@ class OrderModelView(ModelView):
                              "create_time": lambda v, obj: v.strftime("%m-%d %H") + u"点",
     }
 
-    from datetime import datetime, timedelta
-
-    today = datetime.today()
-    yesterday = today.date()
-    week_ago = (today - timedelta(days=7)).date()
-    _30days_ago = (today - timedelta(days=30)).date()
-
-    __column_filters__ = [filters.EqualTo("goods_receipt.customer", name=u"是"),
-                          filters.BiggerThan("create_time", name=u"在",
-                                             options=[(yesterday, u'一天内'), (week_ago, u'一周内'),
-                                                      (_30days_ago, u'30天内')]),
-                          category_filter]
+    def get_column_filters(self):
+        from datetime import datetime, timedelta
+        today = datetime.today()
+        yesterday = today.date()
+        week_ago = (today - timedelta(days=7)).date()
+        _30days_ago = (today - timedelta(days=30)).date()
+        ret =  [filters.EqualTo("goods_receipt.customer", name=u"是"), filters.BiggerThan("create_time", name=u"在",
+                        options=[(yesterday, u'一天内'), (week_ago, u'一周内'),
+                        (_30days_ago, u'30天内')]), category_filter]
+        if not SchedulerPermission.can():
+            ret.append(only_unfinished_filter)
+        return ret
 
     def preprocess(self, model):
         from lite_mms.apis.order import OrderWrapper

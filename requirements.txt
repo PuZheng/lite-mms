@@ -5,7 +5,7 @@ Flask-Babel==0.8
 -e git+https://github.com/xiechao06/Flask-DataBrowser.git#egg=Flask_DataBrowser-dev
 Flask-DebugToolbar==0.8.0
 Flask-Login==0.2.4
--e git+https://github.com/xiechao06/Flask-NavBar.git@c60db5d47aa315f1da20791ea2e5c3aaec28944e#egg=Flask_NavBar-dev
+-e git+https://github.com/xiechao06/Flask-NavBar.git@429776dc277936c04160dc323d49cbc5db83c638#egg=Flask_NavBar-dev
 Flask-Principal==0.3.3
 -e git+https://github.com/xiechao06/Flask-Report.git#egg=Flask_Report-dev
 Flask-SQLAlchemy==0.16

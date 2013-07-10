@@ -7,7 +7,18 @@
   <script type="text/javascript">
     $(function () {
       $("#print").click(function () {
-        $("#printArea").printArea();
+        {% if not store_bill.printed %}
+          $.ajax({
+            type: 'PUT',
+            url: "/store/ajax/store-bill",
+            data: {id:{{ store_bill.id }}},
+          }).done(function () {
+                $("#printArea").printArea();
+              });
+        {% else %}
+          $("#printArea").printArea();
+        {% endif %}
+
       });
       $("#bcTarget").barcode("{{ store_bill.create_time.strftime("%Y%m%d%H%M%S") + store_bill.id|string }}", "code128", {barWidth: 3});
     });

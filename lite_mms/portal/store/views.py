@@ -18,6 +18,8 @@ _unprinted = u"<i class='icon-check-empty' title='未打印'></i>"
 
 class StoreBillModelView(ModelView):
 
+    __default_order__ = ("id", "desc")
+
     __list_columns__ = ["id", "customer", "product", "weight", "quantity", "sub_order.order.customer_order_number",
                         "qir.actor", "printed", "create_time", "qir.work_command.id", "harbor"]
 
@@ -30,7 +32,7 @@ class StoreBillModelView(ModelView):
                          "qir.actor": u"质检员",
                          "create_time": u"创建时间",
                          "qir.work_command.id": u"工单号",
-                         "printed":u"打印",
+                         "printed": u"打印",
                          "harbor": u"存放点",
                          "pic_url": u"图片"}
 
@@ -81,8 +83,9 @@ class StoreBillModelView(ModelView):
                         InputColumnSpec("harbor", validators=[Required(u"不能为空")]), "weight", "quantity",
                         ColumnSpec("unit", label=u"单位"), ColumnSpec("sub_order.spec", label=u"型号"),
                         ColumnSpec("sub_order.type", label=u"规格"), ColumnSpec("create_time"),
+                        ColumnSpec("printed", label=u"是否打印", formatter=lambda v, obj: u"是" if v else u"否"),
                         ColumnSpec("sub_order.id", label=u"子订单号"), "sub_order.order.customer_order_number",
-                        ImageColumnSpec("pic_url", label=u"图片")]
+                        ImageColumnSpec("pic_url", label=u"图片"),]
 
     def get_customized_actions(self, processed_objs=None):
         if QualityInspectorPermission.can():
@@ -102,8 +105,7 @@ store_bill_view = StoreBillModelView(models.StoreBill, u"仓单")
 def index():
     return redirect(url_for("store_bill.store_bill_list"))
 
-@store_bill_page.route("/store-bill-preview/<int:id_>",
-                       methods=["GET", "POST"])
+@store_bill_page.route("/store-bill-preview/<int:id_>", methods=["GET", "POST"])
 @decorators.templated("/store/store-bill-preview.html")
 @decorators.nav_bar_set
 def store_bill_preview(id_):
@@ -112,7 +114,6 @@ def store_bill_preview(id_):
     store_bill = apis.delivery.get_store_bill(id_)
     if store_bill:
         if request.method == "GET":
-            return dict(titlename=u'仓单详情', store_bill=store_bill,
-                        harbors=apis.harbor.get_harbor_list())
+            return dict(titlename=u'仓单详情', store_bill=store_bill)
     else:
         return _("没有此仓单%(id)d" % {"id": id_}), 404

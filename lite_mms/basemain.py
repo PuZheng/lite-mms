@@ -190,6 +190,7 @@ def load_user(user_id):
 
 @identity_loaded.connect_via(app)
 def permission_handler(sender, identity):
+    
     from flask.ext import login
 
     identity.user = login.current_user
@@ -204,10 +205,6 @@ def permission_handler(sender, identity):
             current_group_id = request.cookies.get('current_group_id')
         if current_group_id is None:
             group = identity.user.groups[0]
-            @after_this_request
-            def set_group_id(response):
-                response.set_cookie('current_group_id', str(group.id))
-                return response
         else:
             for group_ in identity.user.groups:
                 if group_.id == current_group_id:
@@ -215,11 +212,6 @@ def permission_handler(sender, identity):
                     break
             else:
                 group = identity.user.groups[0]
-                @after_this_request
-                def set_group_id(response):
-                    response.set_cookie('current_group_id', str(group.id))
-                    return response
-        session['current_group_id'] = str(group.id)
         identity.provides.add(RoleNeed(unicode(group.id)))
 
     if hasattr(identity.user, 'permissions'):

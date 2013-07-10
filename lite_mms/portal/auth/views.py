@@ -1,6 +1,9 @@
 # -*- coding: UTF-8 -*-
 from flask import (request, render_template, redirect, url_for, current_app,
     session, session)
+from flask.ext.principal import (Principal, Identity, AnonymousIdentity, 
+     identity_changed)
+from flask.ext.login import current_user
 from lite_mms.portal.auth import auth
 from flask.ext.principal import identity_changed, Identity, AnonymousIdentity
 from lite_mms.utilities import _

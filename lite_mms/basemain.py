@@ -212,6 +212,7 @@ def permission_handler(sender, identity):
                     break
             else:
                 group = identity.user.groups[0]
+        session['current_group_id'] = group.id
         identity.provides.add(RoleNeed(unicode(group.id)))
 
     if hasattr(identity.user, 'permissions'):

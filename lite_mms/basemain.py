@@ -254,8 +254,19 @@ if not app.config["DEBUG"]:
                                back_url=request.args.get("back_url", "/"),
                                nav_bar=nav_bar), 403
 
+
 @app.after_request
 def call_after_request_callbacks(response):
     for callback in getattr(g, 'after_request_callbacks', ()):
         response = callback(response)
     return response
+
+
+@babel.localeselector
+def get_locale():
+    return "zh_CN"
+
+
+@app.before_request
+def _():
+    g.locale = get_locale()

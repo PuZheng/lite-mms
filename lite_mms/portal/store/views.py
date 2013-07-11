@@ -75,7 +75,10 @@ class StoreBillModelView(ModelView):
 
     def edit_hint_message(self, obj, read_only=False):
         if read_only:
-            return u"仓单-%s已发货，不能编辑" % obj.id
+            if QualityInspectorPermission.can():
+                return u"仓单-%s已发货，不能编辑" % obj.id
+            else:
+                return u"您没有修改的权限"
         else:
             return super(StoreBillModelView, self).edit_hint_message(obj, read_only)
 

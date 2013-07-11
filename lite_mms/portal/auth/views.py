@@ -71,6 +71,5 @@ def switch_group(id_):
     def set_group_id(response):
         response.set_cookie('current_group_id', str(id_))
         return response
-    next_url = request.args.get("next", "/")
-    return redirect(next_url)
+    return redirect("/")
 

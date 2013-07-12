@@ -74,6 +74,7 @@ class User(db.Model):
     groups = db.relationship("Group", secondary=user_and_group_table,
                              backref="users")
     tag = db.Column(db.String(32), nullable=True)
+    enabled = db.Column(db.Boolean, default=True)
 
     def __unicode__(self):
         return self.username

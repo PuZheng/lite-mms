@@ -212,7 +212,7 @@
           </li>
           {% else %}
           <li class='pagination-centered'>
-            <a href="{{ url_for('auth.switch_group', id_=group.id, next=request.url) }}"><b>{{ group.name }}</b></a>
+            <a href="{{ url_for('auth.switch_group', id_=group.id) }}"><b>{{ group.name }}</b></a>
           </li>
           {% endif %}
         {% endfor %}

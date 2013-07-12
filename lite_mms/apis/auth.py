@@ -17,7 +17,7 @@ class UserWrapper(login.UserMixin, ModelWrapper):
 
     @property
     def default_url(self):
-        return self.groups[0].default_url
+        return self.group.default_url
 
     @property
     def permissions(self):

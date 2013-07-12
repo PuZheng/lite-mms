@@ -36,6 +36,8 @@ def login():
                 user = apis.auth.authenticate(username, password)
             except AuthenticateFailure:
                 return render_template("auth/login.html", error=_(u"用户名或者密码错误"), titlename=u"请登录"), 403
+            if not user.enabled:
+                return render_template("auth/login.html", error=_(u"该账户已禁用, 请使用其它账户"), titlename=u"请登录"), 403
             if not login_user(user):
                 return render_template("auth/login.html", error=_(u"登陆失败"), titlename=u"请登录"), 403
 
@@ -43,7 +45,6 @@ def login():
             return redirect(form.next_url.data or "/")
         else:
             return render_template("auth/login.html", error=_(u"请输入用户名及密码"), titlename=u"请登录"), 403
-
 
 @auth.route("/logout")
 @login_required
@@ -61,8 +62,6 @@ def logout():
     next_url = request.args.get("next", "/")
     return redirect(next_url)
 
-
-
 @auth.route("/switch-group/<int:id_>")
 def switch_group(id_):
     # let it happen at once
@@ -71,6 +70,5 @@ def switch_group(id_):
     def set_group_id(response):
         response.set_cookie('current_group_id', str(id_))
         return response
-    next_url = request.args.get("next", "/")
-    return redirect(next_url)
+    return redirect("/")
 

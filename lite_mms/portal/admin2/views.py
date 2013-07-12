@@ -10,7 +10,7 @@ from wtforms import Form, DateField
 from flask import flash, redirect, url_for, request, render_template
 from flask.ext.databrowser import ModelView, column_spec, filters
 from flask.ext.databrowser.action import DeleteAction
-from flask.ext.databrowser.filters import BaseFilter
+from flask.ext.databrowser.filters import BaseFilter, Contains
 from flask.ext.principal import Permission, PermissionDenied
 
 from lite_mms.models import (User, Group, Department, Team, Procedure,
@@ -36,11 +36,13 @@ class AdminModelView(ModelView):
 class UserModelView(AdminModelView):
 
     edit_template = create_template = "admin2/user.html"
+    column_hide_backrefs = False
 
     __list_columns__ = ["id", "username", column_spec.PlaceHolderColumnSpec("groups", label=u"用户组", 
-                                                                            template_fname="admin2/user-groups-snippet.html")]
+                                                                            template_fname="admin2/user-groups-snippet.html"), 'enabled']
     __column_labels__ = {"id": u"编号", "username": u"用户名", "group": u"用户组", "password": u"密码(md5加密)", 
-                         "groups": u"用户组列表"}
+                         "groups": u"用户组列表", 'enabled': u'激活'}
+    __column_formatters__ = {"enabled": lambda v, obj: u"是" if v else u"否"}
 
     class UserDeleteAction(DeleteAction):
 
@@ -54,9 +56,6 @@ class UserModelView(AdminModelView):
                 -2: u"您不能删除超级管理员!"
             }
 
-    __customized_actions__ = [UserDeleteAction(u"删除", AdminPermission)]
-
-
     def get_column_filters(self):
         class UserGroupFilter(BaseFilter):
 
@@ -65,10 +64,10 @@ class UserModelView(AdminModelView):
                     self.value = int(self.value)
                     query = query.filter(User.groups.any(Group.id==self.value))
                 return query
-        return [UserGroupFilter(u"group", name=u"是", options=[(group.id, group.name) for group in Group.query.all()])]
+        return [UserGroupFilter(u"group", name=u"是", options=[(group.id, group.name) for group in Group.query.all()]), Contains(u'username', name=u'包含')]
 
     # ============ FORM PART ===========================
-    __create_columns__ = __form_columns__ = ["username", "password", "groups"]
+    __create_columns__ = __form_columns__ = ["username", "password", "groups", 'enabled']
 
 user_model_view = UserModelView(User, u"用户")
 

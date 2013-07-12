@@ -26,7 +26,7 @@ class ModelWrapper(object):
                 return type(attr)(self.__unwrap(i) for i in attr)
             else:
                 return type(attr)(self.__wrap(i) for i in attr)
-        return attr if unwrapped else self.__wrap(attr) 
+        return attr if unwrapped else self.__wrap(attr)
 
     def __setattr__(self, key, value):
         if key != '_ModelWrapper__model':
@@ -59,8 +59,13 @@ class ModelWrapper(object):
     def __dir__(self):
         return self.model.__dict__.keys()
 
+
 def wraps(model):
-    return _wrappers[model.__class__.__name__ + "Wrapper"](model)
+    try:
+        return _wrappers[model.__class__.__name__ + "Wrapper"](model)
+    except KeyError:
+        return model
+
 
 import auth
 import cargo

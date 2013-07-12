@@ -71,6 +71,14 @@ class WorkCommandWrapper(ModelWrapper):
                 return d
         return None
 
+    @property
+    def delivered_weight(self):
+        return sum(sum(sb.weight for sb in qir.store_bill_list if sb.delivered) for qir in self.qir_list)
+
+    @property
+    def to_delivery_weight(self):
+        return sum(sum(sb.weight for sb in qir.store_bill_list if not sb.delivered) for qir in self.qir_list)
+
     @classmethod
     def new_work_command(cls, sub_order_id, org_weight, org_cnt, procedure_id,
                          urgent, tech_req="", pic_path=""):

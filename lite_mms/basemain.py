@@ -67,7 +67,15 @@ if serve_web:
                 ret[v.__tablename__] = v.__modelname__
         return ret
 
-    FlaskReport(db, collect_models(models), app, report_page, {
+    class _FlaskReport(FlaskReport):
+
+        def try_view_report(self):
+            AdminPermission.test() 
+
+        def try_edit_data_set(self):
+            AdminPermission.test()
+
+    _FlaskReport(db, collect_models(models), app, report_page, {
         'report_list': {
             'nav_bar': nav_bar,    
         },

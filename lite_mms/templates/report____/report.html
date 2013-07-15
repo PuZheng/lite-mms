@@ -1,7 +1,6 @@
 {% extends "report____/base-report.html" %}
 {% block report____custom_external_block %}
-  {{ super }}
-  <link rel="stylesheet" href="{{ url_for('static', filename="css/customer.css") }}" media="print">
+  {{ super() }}
   <script type="text/javascript" src='{{ url_for("static", filename="js/jquery-printarea.js") }}'></script>
   <script type="text/javascript">
     $(function () {
@@ -24,7 +23,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn" data-dismiss="modal" aria-hidden="true">{{ _('Close') }}</button>
-      <button class="btn btn-primary" id="print-area">{{ _("Print") }}</button>
+      <button class="btn btn-primary" id="print-area">打印</button>
     </div>
   </div>
 {% endblock %}

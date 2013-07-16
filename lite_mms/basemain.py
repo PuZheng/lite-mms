@@ -14,7 +14,7 @@ app.config.from_pyfile(os.path.join(os.getcwd(), "config.py"), silent=True)
 from flask.ext.login import LoginManager, current_user
 login_manager = LoginManager()
 login_manager.init_app(app)
-from flask.ext.principal import Principal
+from flask.ext.principal import Principal, Permission
 
 principal = Principal(app)
 
@@ -70,10 +70,10 @@ if serve_web:
     class _FlaskReport(FlaskReport):
 
         def try_view_report(self):
-            AdminPermission.test() 
+            Permission.union(AdminPermission, AccountantPermission).test()
 
         def try_edit_data_set(self):
-            AdminPermission.test()
+            Permission.union(AdminPermission, AccountantPermission).test()
 
     _FlaskReport(db, collect_models(models), app, report_page, {
         'report_list': {
@@ -171,14 +171,13 @@ nav_bar.register(deduction_page, name=u"扣重管理", default_url="/deduction/"
 nav_bar.register(time_line_page, name=u"时间线", default_url="/timeline/log-list")
 nav_bar.register(search_page, name=u"搜索", default_url="/search/search")
 nav_bar.register(admin2_page, name=u"管理中心", default_url="/admin2/user-list", permissions=[AdminPermission])
-nav_bar.register(to_do_page, name=u"待办事项", default_url="/todo/todo-list")
-nav_bar.register(report_page, name=u"报表列表", default_url="/report/report-list", permissions=[AdminPermission], group=u'报表', 
-                 enabler=lambda nav: request.path.startswith('/report/report'))
-nav_bar.register(report_page, name=u"数据集合列表", default_url="/report/data-sets", permissions=[AdminPermission], group=u'报表', 
-                 enabler=lambda nav: request.path.startswith('/report/data-set'))
-nav_bar.register(report_page, name=u"推送列表", default_url="/report/notification-list", permissions=[AdminPermission], group=u'报表', 
+nav_bar.register(report_page, name=u"推送列表", default_url="/report/notification-list", permissions=[Permission.union(AdminPermission, AccountantPermission)], group=u'报表', 
                  enabler=lambda nav: request.path.startswith('/report/notification-list'))
-
+nav_bar.register(report_page, name=u"报表列表", default_url="/report/report-list", permissions=[Permission.union(AdminPermission, AccountantPermission)], group=u'报表',
+                 enabler=lambda nav: request.path.startswith('/report/report'))
+nav_bar.register(report_page, name=u"数据集合列表", default_url="/report/data-sets", permissions=[Permission.union(AdminPermission, AccountantPermission)], group=u'报表',
+                 enabler=lambda nav: request.path.startswith('/report/data-set'))
+nav_bar.register(to_do_page, name=u"待办事项", default_url="/todo/todo-list")
 
 #install jinja utilities
 from lite_mms.utilities import url_for_other_page, datetimeformat

@@ -20,7 +20,7 @@ sub_nav_bar.register(lambda: user_model_view.url_for_list(), u"用户管理",
 sub_nav_bar.register(lambda: group_model_view.url_for_list(), u"用户组管理", 
     enabler=lambda: group_model_view.within_domain(request.url, "admin2"), group=u"对象管理")
 sub_nav_bar.register(lambda: customer_model_view.url_for_list(), u"客户管理", 
-    enabler=lambda: group_model_view.within_domain(request.url, "admin2"), group=u"对象管理")
+    enabler=lambda: customer_model_view.within_domain(request.url, "admin2"), group=u"对象管理")
 sub_nav_bar.register(lambda: department_model_view.url_for_list(), u"车间管理", 
     enabler=lambda: department_model_view.within_domain(request.url, "admin2"), group=u"对象管理")
 sub_nav_bar.register(lambda: team_model_view.url_for_list(), u"班组管理", 

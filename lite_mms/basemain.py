@@ -176,6 +176,8 @@ nav_bar.register(report_page, name=u"报表列表", default_url="/report/report-
                  enabler=lambda nav: request.path.startswith('/report/report'))
 nav_bar.register(report_page, name=u"数据集合列表", default_url="/report/data-sets", permissions=[AdminPermission], group=u'报表', 
                  enabler=lambda nav: request.path.startswith('/report/data-set'))
+nav_bar.register(report_page, name=u"推送列表", default_url="/report/notification-list", permissions=[AdminPermission], group=u'报表', 
+                 enabler=lambda nav: request.path.startswith('/report/notification-list'))
 
 
 #install jinja utilities

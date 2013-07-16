@@ -87,6 +87,12 @@ if serve_web:
         },
         'data_sets': {
             'nav_bar': nav_bar,    
+        },
+        'notification_list': {
+            'nav_bar': nav_bar,    
+        },
+        'notification': {
+            'nav_bar': nav_bar,    
         }
     }, 
     collect_model_names())
@@ -171,12 +177,12 @@ nav_bar.register(deduction_page, name=u"扣重管理", default_url="/deduction/"
 nav_bar.register(time_line_page, name=u"时间线", default_url="/timeline/log-list")
 nav_bar.register(search_page, name=u"搜索", default_url="/search/search")
 nav_bar.register(admin2_page, name=u"管理中心", default_url="/admin2/user-list", permissions=[AdminPermission])
-nav_bar.register(report_page, name=u"推送列表", default_url="/report/notification-list", permissions=[Permission.union(AdminPermission, AccountantPermission)], group=u'报表', 
-                 enabler=lambda nav: request.path.startswith('/report/notification-list'))
 nav_bar.register(report_page, name=u"报表列表", default_url="/report/report-list", permissions=[Permission.union(AdminPermission, AccountantPermission)], group=u'报表',
                  enabler=lambda nav: request.path.startswith('/report/report'))
 nav_bar.register(report_page, name=u"数据集合列表", default_url="/report/data-sets", permissions=[Permission.union(AdminPermission, AccountantPermission)], group=u'报表',
                  enabler=lambda nav: request.path.startswith('/report/data-set'))
+nav_bar.register(report_page, name=u"推送列表", default_url="/report/notification-list", permissions=[Permission.union(AdminPermission, AccountantPermission)], group=u'报表', 
+                 enabler=lambda nav: request.path.startswith('/report/notification-list'))
 nav_bar.register(to_do_page, name=u"待办事项", default_url="/todo/todo-list")
 
 #install jinja utilities

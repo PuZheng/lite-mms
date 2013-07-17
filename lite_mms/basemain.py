@@ -75,24 +75,27 @@ if serve_web:
         def try_edit_data_set(self):
             Permission.union(AdminPermission, AccountantPermission).test()
 
+        def try_edit_notification(self):
+            AdminPermission.test()
+
     _FlaskReport(db, collect_models(models), app, report_page, {
         'report_list': {
-            'nav_bar': nav_bar,    
+            'nav_bar': nav_bar,
         },
         'report': {
-            'nav_bar': nav_bar,    
+            'nav_bar': nav_bar,
         },
         'data_set': {
-            'nav_bar': nav_bar,    
+            'nav_bar': nav_bar,
         },
         'data_sets': {
-            'nav_bar': nav_bar,    
+            'nav_bar': nav_bar,
         },
         'notification_list': {
-            'nav_bar': nav_bar,    
+            'nav_bar': nav_bar,
         },
         'notification': {
-            'nav_bar': nav_bar,    
+            'nav_bar': nav_bar,
         }
     }, 
     collect_model_names())

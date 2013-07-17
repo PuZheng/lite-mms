@@ -1,4 +1,6 @@
 # -*- coding: UTF-8 -*-
+from collections import OrderedDict
+
 from flask.ext.databrowser import ModelView, filters, column_spec
 from flask.ext.login import login_required
 from flask.ext.principal import PermissionDenied
@@ -95,7 +97,10 @@ class WorkCommandView(ModelView):
 
     def edit_hint_message(self,obj, read_only=False):
         if read_only:
-            return u"工单%d不能修改" % obj.id
+            if not SchedulerPermission.can():
+                return u"无修改订单的权限"
+            else:
+                return u"工单%d已进入生产流程，不能修改" % obj.id
         else:
             return super(WorkCommandView, self).edit_hint_message(obj, read_only)
 
@@ -119,18 +124,25 @@ class WorkCommandView(ModelView):
             return [schedule_action, retrieve_action]
         else:
             return []
+    __form_columns__ = OrderedDict()
 
-    __form_columns__ = [column_spec.ColumnSpec("id"), column_spec.ColumnSpec("sub_order"),
-                        column_spec.ColumnSpec("sub_order.order", label=u"订单号"), column_spec.ColumnSpec("department"),
-                        column_spec.ColumnSpec("team"), column_spec.ColumnSpec("org_weight"),
-                        column_spec.ColumnSpec("org_cnt"), column_spec.ColumnSpec("sub_order.unit"), "procedure",
-                        column_spec.ColumnSpec("previous_procedure"),
-                        column_spec.ColumnSpec("processed_weight", label=u"工序后重量"),
-                        column_spec.ColumnSpec("processed_cnt", label=u"工序后数量"), "urgent", "sub_order.returned",
-                        "tech_req", column_spec.ColumnSpec("status_name", label=u"状态"),
-                        column_spec.ColumnSpec("handle_type", label=u"处理类型",
-                                               formatter=lambda v, obj: get_handle_type_list().get(v, u"未知")),
-                        column_spec.PlaceHolderColumnSpec("log_list", label=u"日志", template_fname="logs-snippet.html")]
+    __form_columns__[u"工单信息"] = [column_spec.ColumnSpec("id"), column_spec.ColumnSpec("org_weight"),
+                                 column_spec.ColumnSpec("org_cnt"), column_spec.ColumnSpec("sub_order.unit"),
+                                 "urgent", "sub_order.returned", "tech_req",
+                                 column_spec.PlaceHolderColumnSpec("log_list", label=u"日志",
+                                                                   template_fname="logs-snippet.html")]
+    __form_columns__[u"加工信息"] = [column_spec.ColumnSpec("department"),
+                                 column_spec.ColumnSpec("team"), "procedure",
+                                 column_spec.ColumnSpec("previous_procedure"),
+                                 column_spec.ColumnSpec("processed_weight", label=u"工序后重量"),
+                                 column_spec.ColumnSpec("processed_cnt", label=u"工序后数量"),
+                                 column_spec.ColumnSpec("status_name", label=u"状态"),
+                                 column_spec.ColumnSpec("completed_time", label=u"生产结束时间"),
+                                 column_spec.ColumnSpec("handle_type", label=u"处理类型",
+                                                        formatter=lambda v, obj: get_handle_type_list().get(v, u"未知"))]
+
+    __form_columns__[u"订单信息"] = [ column_spec.ColumnSpec("sub_order"),
+                        column_spec.ColumnSpec("sub_order.order", label=u"订单号")]
 
 work_command_view = WorkCommandView(WorkCommand)
 # from flask import (request, abort, redirect, url_for, render_template, json,

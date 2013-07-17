@@ -1,5 +1,5 @@
 #-*- coding:utf-8 -*-
-from flask import g, _request_ctx_stack
+from flask import g, _request_ctx_stack, session
 from pyfeature import step
 
 from lite_mms import models, constants
@@ -7,8 +7,6 @@ from lite_mms.basemain import timeline_logger, app
 from lite_mms.utilities import do_commit
 
 timeline_logger.handlers = []
-
-user = None
 
 app.config["CSRF_ENABLED"] = False
 
@@ -29,11 +27,9 @@ def patch():
     needn't login in
     """
     g.identity.can = lambda p: True
-    global user
-    if not user:
-        from lite_mms.apis.auth import UserWrapper
-
-        user = UserWrapper(models.User.query.first())
+    from lite_mms.apis.auth import UserWrapper
+    user = UserWrapper(models.User.query.first())
+    session['current_group_id'] = user.groups[0].id
     _request_ctx_stack.top.user = user
 
 

@@ -4,7 +4,6 @@ from pyfeature import Feature, Scenario, given, and_, when, then, clear_hooks
 from lite_mms.basemain import app
 from lite_mms.database import db
 
-
 def test_cargo():
     from pyfeature import flask_sqlalchemy_setup
 
@@ -23,7 +22,8 @@ def test_cargo():
             and_(u"创建Product(默认加工件)", product_type=dpt)
             product_type = and_(u"创建ProductType(foo)")
             product = and_(u"创建Product(foo)", product_type=product_type)
-            user = and_(u"创建User", username="foo", password="foo")
+            group = and_(u'创建Group(cargo_clerk)', name='cargo_clerk', default_url='/cargo/unload-session-list')
+            user = and_(u"创建User", username="foo", password="foo", groups=[group])
 
         with Scenario(u"最简完整流程"):
             us = when(u'收发员创建UnloadSession， 毛重是10000公斤', plate)

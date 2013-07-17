@@ -3,7 +3,7 @@
 这里是test_cargo.py 的具体实现。
 """
 from datetime import datetime
-from flask import g, _request_ctx_stack
+from flask import g, _request_ctx_stack, session
 from pyfeature import *
 
 from lite_mms import models
@@ -14,7 +14,6 @@ from lite_mms.utilities import do_commit
 #patch logger
 timeline_logger.handlers = []
 app.config["CSRF_ENABLED"] = False
-user = None
 
 
 def refresh(obj):
@@ -41,12 +40,11 @@ def patch():
     needn't login in
     """
     g.identity.can = lambda p: True
-    global user
-    if not user:
-        from lite_mms.apis.auth import UserWrapper
-
-        user = UserWrapper(models.User.query.first())
+    from lite_mms.apis.auth import UserWrapper
+    user = UserWrapper(models.User.query.first())
+    session['current_group_id'] = user.groups[0].id
     _request_ctx_stack.top.user = user
+
 
 
 @step(u"收发员称重(\d+)公斤")

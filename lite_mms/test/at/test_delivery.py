@@ -15,7 +15,6 @@ def generate(times=1):
         temp += choice(string.letters)
     return temp
 
-
 def test():
     flask_sqlalchemy_setup(app, db, create_step_prefix=u"创建",
                            model_name_getter=lambda model: model.__name__,
@@ -27,7 +26,8 @@ def test():
             product_type_default = and_(u"创建ProductType", name=constants.DEFAULT_PRODUCT_TYPE_NAME)
             product_default = and_(u"创建Product", name=constants.DEFAULT_PRODUCT_NAME,
                                    product_type=product_type_default)
-            and_(u"创建User", username="cc", password="cc")
+            group = and_(u'创建Group(cargo_clerk)', name='cargo_clerk', default_url='/cargo/unload-session-list')
+            and_(u"创建User", username="cc", password="cc", groups=[group])
             customer = and_(u"创建Customer", name=generate(5), abbr=generate(2))
             department = and_(u"创建Department", name=generate(5))
             harbor = and_(u"创建Harbor", name=generate(5), department=department)
@@ -73,3 +73,6 @@ def test():
             then(u"提示需要重新生成发货单", delivery_session)
 
     clear_hooks()
+
+if __name__ == '__main__':
+    test()

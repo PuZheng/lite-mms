@@ -28,7 +28,8 @@ def test():
             product_type_default = and_(u"创建ProductType", name=constants.DEFAULT_PRODUCT_TYPE_NAME)
             product_default = and_(u"创建Product", name=constants.DEFAULT_PRODUCT_NAME,
                                    product_type=product_type_default)
-            and_(u"创建User", username="cc", password="cc")
+            group = and_(u'创建Group(cargo_clerk)', name='cargo_clerk', default_url='/cargo/unload-session-list')
+            and_(u"创建User", username="cc", password="cc", groups=[group])
             customer = and_(u"创建Customer", name=generate(5), abbr=generate(2))
             department = and_(u"创建Department", name=generate(5))
             harbor = and_(u"创建Harbor", name=generate(5), department=department)
@@ -39,4 +40,7 @@ def test():
             when(u"完善订单", order)
             status_code = and_(u"下发订单", order)
             then(u"操作成功", status_code)
+
+if __name__ == '__main__':
+    test()
 

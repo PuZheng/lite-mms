@@ -440,8 +440,11 @@ class ConsignmentWrapper(ModelWrapper):
         consignment.add_todo()
         return consignment
 
-    def add_todo(self):
+    def remove_todo(self):
         lite_mms.apis.todo.remove_todo(lite_mms.apis.todo.PAY_CONSIGNMENT, self.id)
+
+    def add_todo(self):
+        self.remove_todo()
         if self.pay_in_cash and not self.is_paid:
             for to in lite_mms.apis.auth.get_user_list(constants.groups.ACCOUNTANT):
                 lite_mms.apis.todo.new_todo(to, lite_mms.apis.todo.PAY_CONSIGNMENT, self)
@@ -457,11 +460,9 @@ class ConsignmentWrapper(ModelWrapper):
             raise ValueError(u"已导入原系统的发货单不能再修改")
         for k, v in kwargs.items():
             if hasattr(consignment, k):
+                setattr(consignment, k, v)
                 if k == "pay_in_cash" and v and not consignment.pay_in_cash:
-                    setattr(consignment, k, v)
                     consignment.add_todo()
-                else:
-                    setattr(consignment, k, v)
         return ConsignmentWrapper(do_commit(consignment))
 
     def paid(self):

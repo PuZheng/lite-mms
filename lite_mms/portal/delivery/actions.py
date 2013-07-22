@@ -94,11 +94,12 @@ class PayAction(BaseAction):
         return 0
 
     def get_forbidden_msg_formats(self):
-        return {-2:u"发货单%s已过时，请联系收发员重新生成"}
+        return {-2: u"发货单%s已过时，请联系收发员重新生成"}
 
     @committed
     def op(self, obj):
         obj.is_paid = True
+        obj.remove_todo()
 
 
 class PreviewConsignment(DirectAction):

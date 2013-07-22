@@ -76,7 +76,7 @@ def batch_print_consignment():
                     error_message += u"发货单%s，" % cn.id
             consignment_list.append(cn)
     if error_message:
-        error_message += u"插入MSSQL_ID，请手工插入"
+        error_message += u"插入MSSQL失败，请手工插入"
     return {"consignment_list": consignment_list, "error_message": error_message,
             "per_page": per_page, "nav_bar": nav_bar, "url": request.args.get("url"), "titlename": u"批量打印"}
 

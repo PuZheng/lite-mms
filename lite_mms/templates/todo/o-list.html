@@ -41,25 +41,27 @@
           <div class="accordion-body collapse" id="{{ grouper }}">
             <div class="accordion-inner">
               {% for todo in list %}
-              <blockquote>
+                <blockquote>
                 <span class="muted">
                   {{ todo.create_time.strftime("%H:%M") }}
                 </span>
-                {{todo.msg}}
-                {% if todo.context_url %}
-                  {% if "?" in todo.context_url %}
-                    <a href="{{ todo.context_url + "&url=" + request.url|urlencode }}">开始&gt;&gt;</a>
-                  {% else %}
-                    <a href="{{ todo.context_url + "?url=" + request.url|urlencode }}">开始&gt;&gt;</a>
+                  {{ todo.msg }}
+                  {% if todo.context_url %}
+                    {% if "?" in todo.context_url %}
+                      <a href="{{ todo.context_url + "&url=" + request.url|urlencode }}">开始&gt;&gt;</a>
+                    {% else %}
+                      <a href="{{ todo.context_url + "?url=" + request.url|urlencode }}">开始&gt;&gt;</a>
+                    {% endif %}
                   {% endif %}
-                {% endif %}
-              </blockquote>
+                </blockquote>
               {% endfor %}
             </div>
           </div>
         </div>
       {% endfor %}
     </div>
+    {% from "__data_browser__/macro.html" import render_pagination %}
+    {{ render_pagination(__pagination__, __count__, g.request_from_mobile) }}
   {% else %}
     <p class="alert alert-success">恭喜您！ 您的所有工作都完成了</p>
   {% endif %}

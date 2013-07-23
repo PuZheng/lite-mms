@@ -70,8 +70,9 @@ class StateDispatching(WorkCommandState):
                                             org_cnt=processed_quantity,
                                             processed_cnt=processed_quantity,
                                             pic_path=old_wc.pic_path,
-                                            handle_type=old_wc.handle_type)
-
+                                            handle_type=old_wc.handle_type,
+                                            cause=constants.work_command.CAUSE_FORWARD,
+                                            previous_work_command=old_wc)
                 do_commit(new_wc)
 
         self.sm.obj.department = None
@@ -166,7 +167,9 @@ class StateEnding(WorkCommandState):
                                         pic_path=old_wc.pic_path,
                                         handle_type=old_wc.handle_type,
                                         processed_weight=old_wc.processed_weight,
-                                        processed_cnt=old_wc.processed_cnt)
+                                        processed_cnt=old_wc.processed_cnt,
+                                        cause=constants.work_command.CAUSE_FORWARD,
+                                        previous_work_command=old_wc)
 
             remain_quantity = old_wc.org_cnt - old_wc.processed_cnt
             if remain_quantity <= 0:
@@ -235,9 +238,11 @@ class StateQualityInspecting(WorkCommandState):
                                             org_cnt=remain_quantity,
                                             pic_path=old_wc.pic_path,
                                             handle_type=old_wc.handle_type,
-                                            department=old_wc.department)
+                                            department=old_wc.department,
+                                            cause=constants.work_command.CAUSE_FORWARD,
+                                            previous_work_command=old_wc)
 
-                old_wc.org_cnt -= new_wc.org_cnt #:实际工作的黑件数
+                old_wc.org_cnt -= new_wc.org_cnt  #: 实际工作的黑件数
                 old_wc.org_weight -= new_wc.org_weight
 
                 do_commit([new_wc, old_wc])
@@ -318,6 +323,7 @@ class StateFinished(WorkCommandState):
                     previous_procedure = old_wc.procedure
                     status = constants.work_command.STATUS_DISPATCHING
                     department = None
+                    cause = constants.work_command.CAUSE_NEXT
                 elif qir.result == constants.quality_inspection.REPAIR:
                     handle_type = constants.work_command.HT_REPAIRE
                     procedure = old_wc.procedure
@@ -325,12 +331,14 @@ class StateFinished(WorkCommandState):
                     status = constants.work_command.STATUS_ASSIGNING if old_wc.department else constants.work_command.STATUS_DISPATCHING
                     # 这个工单可能是由退货产生的。
                     department = old_wc.department
+                    cause = constants.work_command.CAUSE_REPAIR
                 elif qir.result == constants.quality_inspection.REPLATE:
                     handle_type = constants.work_command.HT_REPLATE
                     procedure = old_wc.procedure
                     previous_procedure = old_wc.previous_procedure
                     status = constants.work_command.STATUS_ASSIGNING if old_wc.department else constants.work_command.STATUS_DISPATCHING
                     department = old_wc.department
+                    cause = constants.work_command.CAUSE_REPLATE
                 new_wc = models.WorkCommand(sub_order=old_wc.sub_order,
                                             org_weight=qir.weight,
                                             status=status,
@@ -340,7 +348,9 @@ class StateFinished(WorkCommandState):
                                             previous_procedure=previous_procedure,
                                             pic_path=qir.pic_path,
                                             handle_type=handle_type,
-                                            department=department)
+                                            department=department,
+                                            cause=cause,
+                                            previous_work_command=old_wc)
 
                 do_commit(new_wc)
                 qir.generated_work_command_id = new_wc.id
@@ -416,7 +426,7 @@ class WorkCommandSM(StateMachine):
             from flask.ext.login import current_user
             if current_user.is_authenticated():
                 actor = current_user
-        self.logger.info(u"action: %s" % action_name(action),
+        self.logger.info(u"操作: %s" % action_name(action),
                          extra={"obj": self.obj, "actor": actor,
                                 "action": action_name(action),
                                 "obj_pk": self.obj.id})

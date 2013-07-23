@@ -325,10 +325,9 @@ class WorkCommandWrapper(ModelWrapper):
 
     @property
     def log_list(self):
-        from lite_mms.models import Log
+        from lite_mms.apis.log import LogWrapper
 
-        ret = Log.query.filter(Log.obj_pk == str(self.id)).filter(
-            Log.obj_cls == self.model.__class__.__name__).all()
+        ret = LogWrapper.get_log_list(str(self.id), self.model.__class__.__name__)
         return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time), reverse=True)
 
 class DepartmentWrapper(ModelWrapper):
@@ -422,6 +421,13 @@ def get_handle_type_list():
         constants.work_command.HT_REPAIRE: u'返修',
         constants.work_command.HT_REPLATE: u'返镀'
     }
+
+def get_causes():
+    return {constants.work_command.CAUSE_NORMAL: u"排产",
+            constants.work_command.CAUSE_REPLATE: u"返镀",
+            constants.work_command.CAUSE_REPAIR: u"返修",
+            constants.work_command.CAUSE_NEXT: u"转下道工序",
+            constants.work_command.CAUSE_FORWARD: u"结转"}
 
 get_work_command_list = WorkCommandWrapper.get_list
 get_work_command = WorkCommandWrapper.get_work_command

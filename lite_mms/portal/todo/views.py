@@ -7,6 +7,8 @@ from lite_mms import models
 
 
 class TODOView(ModelView):
+    __default_order__ = ("id", "desc")
+
     list_template = "todo/o-list.html"
 
     def __list_filters__(self):

@@ -209,11 +209,12 @@ class DeliveryTaskWrapper(ModelWrapper):
             do_commit([unfinished_store_bill, dt] + finished_store_bills)
             StoreBillWrapper(new_sb).do_create_log(
                 u"由剩余%s公斤的仓单%s装货、分裂产生" % (unfinished_store_bill.weight, unfinished_store_bill_id), actor=actor)
+            StoreBillWrapper(new_sb).do_update_log(u"装货，发货会话%s、发货任务%s" % (ds.id, dt.id))
             StoreBillWrapper(unfinished_store_bill).do_update_log(u"装货、分裂出%s公斤的仓单%s" % (new_sb.weight, new_sb.id),
                                                                   actor=actor)
         else:
             do_commit([dt] + finished_store_bills)
-        for sb in finished_store_bills + [unfinished_store_bill]:
+        for sb in finished_store_bills:
             StoreBillWrapper(sb).do_update_log(u"装货，发货会话%s、发货任务%s" % (ds.id, dt.id))
 
         from lite_mms.apis.todo import new_todo, WEIGH_DELIVERY_TASK

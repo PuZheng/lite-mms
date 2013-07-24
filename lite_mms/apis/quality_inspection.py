@@ -100,6 +100,13 @@ class QIReportWrapper(ModelWrapper):
         qir.model.actor_id = actor_id
         return QIReportWrapper(do_commit(qir.model))
 
+    @property
+    def product(self):
+        return self.work_command.sub_order.product
+
+    @property
+    def unit(self):
+        return self.work_command.sub_order.unit
 
 get_qir_list = QIReportWrapper.get_list
 get_qir = QIReportWrapper.get

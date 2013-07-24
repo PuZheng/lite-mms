@@ -31,6 +31,7 @@ def default():
 def serv_pic(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+
 @app.route("/message")
 def ajax_new_message():
     from lite_mms.models import TODO
@@ -45,5 +46,5 @@ def ajax_new_message():
         } 
         for todo in get_all_notify(current_user.id)
     ]
-    return json.dumps({"total_cnt": TODO.query.filter(TODO.user_id==current_user.id).count(), "messages": messages})
+    return json.dumps({"total_cnt": TODO.query.filter(TODO.user_id == current_user.id).count(), "messages": messages})
 

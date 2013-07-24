@@ -648,8 +648,7 @@ def get_store_bill_list(idx=0, cnt=sys.maxint, unlocked_only=True, qir_id=None,
     return [StoreBillWrapper(sb) for sb in q.all()], total_cnt
 
 def fake_delivery_task():
-    fake_delivery_session = do_commit(models.DeliverySession(u"foo", 0))
-    fake_delivery_session.finish_time = datetime.now()
+    fake_delivery_session = do_commit(models.DeliverySession(plate="foo", tare=0, finish_time=datetime.now()))
     return do_commit(models.DeliveryTask(fake_delivery_session, None))
 
 new_delivery_session = DeliverySessionWrapper.new_delivery_session

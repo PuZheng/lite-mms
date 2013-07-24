@@ -336,7 +336,7 @@ class Order(db.Model):
     dispatched_time = db.Column(db.DateTime)
 
     def __init__(self, goods_receipt, creator,
-                 create_time=None, finish_time=None, dispatched=False, refined=False, dispatched_time=None):
+                 create_time=None, finish_time=None, dispatched=False, refined=False):
         self.goods_receipt = goods_receipt
         self.create_time = create_time or datetime.now()
         self.finish_time = finish_time
@@ -344,7 +344,6 @@ class Order(db.Model):
         self.dispatched = dispatched
         self.creator = creator
         self.refined = refined
-        self.dispatched_time = dispatched_time
 
     def __unicode__(self):
         return self.customer_order_number

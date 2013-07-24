@@ -384,8 +384,11 @@ def new_goods_receipt(customer_id, unload_session_id):
     unload_session = get_unload_session(unload_session_id)
     if not unload_session:
         raise ValueError(u"没有该卸货会话(%d)" % int(unload_session_id))
-    model = do_commit(models.GoodsReceipt(customer=customer.model,
-                                          unload_session=unload_session.model))
+    from flask.ext.login import current_user
+
+    model = do_commit(
+        models.GoodsReceipt(customer=customer.model, creator=current_user if current_user.is_authenticated() else None,
+                            unload_session=unload_session.model))
     gr = GoodsReceiptWrapper(model)
     gr.add_product_entries()
     return gr

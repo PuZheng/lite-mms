@@ -7,7 +7,7 @@ from flask import redirect, request, url_for
 class DispatchAction(BaseAction):
     
     def op(self, model):
-        model.update(dispatched=True)
+        model.update(dispatched=True, dispatched_time=datetime.now())
         model.add_todo()
 
 

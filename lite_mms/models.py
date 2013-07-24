@@ -272,11 +272,14 @@ class GoodsReceipt(db.Model):
     order = db.relationship(
         "Order", backref=db.backref("goods_receipt", uselist=False),
         cascade="all, delete-orphan", uselist=False)
+    creator_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
+    creator = db.relationship("User")
 
-    def __init__(self, customer, unload_session, create_time=None):
+    def __init__(self, customer, unload_session, create_time=None, creator=None):
         self.customer = customer
         self.unload_session = unload_session
         self.create_time = create_time or datetime.now()
+        self.creator = creator
         self.receipt_id = self.id_generator()
 
     def id_generator(self):
@@ -330,6 +333,7 @@ class Order(db.Model):
     creator_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
     creator = db.relationship("User")
     refined = db.Column(db.Boolean, default=False)
+    dispatched_time = db.Column(db.DateTime)
 
     def __init__(self, goods_receipt, creator,
                  create_time=None, finish_time=None, dispatched=False, refined=False):

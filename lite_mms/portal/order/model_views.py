@@ -48,7 +48,7 @@ class OrderModelView(ModelView):
                                               doc=u"指订单下所有是最后一道工序的工单,这类工单的工序后质量之和"),
                         PlaceHolderColumnSpec(col_name="to_deliver_store_bill_list", label=u"待发货重量",
                                               template_fname="order/store-bill-list-snippet.html"),
-                        "delivered_weight", "create_time", "goods_receipt",
+                        "delivered_weight", "create_time", "dispatched_time", "goods_receipt",
                         ColumnSpec("urgent", formatter=lambda v,obj:u"<span class='text-error'>是</span>" if v else u"否"),
                         "refined"]
 
@@ -61,18 +61,18 @@ class OrderModelView(ModelView):
     __column_labels__ = {"customer_order_number": u"订单号", "goods_receipt.customer": u"客户", "create_time": u"创建时间",
                          "goods_receipt": u"收货单", "net_weight": u"收货重量", "remaining_weight": u"待调度重量",
                          "delivered_weight": u"已发货重量", "refined": u"完善", "urgent": u"加急","product":u"产品",
-                         "category": u"类型", }
+                         "category": u"类型", "dispatched_time": u"下发时间"}
 
     __column_docs__ = {"remaining_weight": u"若大于0,请敦促调度员排产"}
 
     __column_formatters__ = {"urgent": lambda v, obj: u"是" if v else u"否",
                              "customer_order_number": lambda v, obj: (
-                                                                         "" if not obj.warning else '<i class="icon-exclamation-sign"></i>') + v + (
-                                                                         u"<b>(退货)</b>" if any(so.returned for so in
+                                                                         "" if not obj.warning else '<i class="icon-exclamation-sign"></i>') + v + (u"<b>(退货)</b>" if any(so.returned for so in
                                                                                                obj.sub_order_list) else ""),
                              "remaining_weight": lambda v, obj: unicode(v + obj.to_work_weight),
                              "refined": lambda v, obj: u"是" if v else u"否",
                              "create_time": lambda v, obj: v.strftime("%m-%d %H") + u"点",
+                             "dispatched_time": lambda v, obj: v.strftime("%m-%d %H") + u"点" if v else "",
     }
 
     def get_column_filters(self):
@@ -132,7 +132,7 @@ class OrderModelView(ModelView):
         form_columns = OrderedDict()
         form_columns[u"订单详情"] = ["customer_order_number", ColumnSpec("goods_receipt.customer"),
                                  ColumnSpec("goods_receipt", css_class="control-text", label=u"收货单"), "net_weight",
-                                 ColumnSpec("create_time"),
+                                 ColumnSpec("create_time"), ColumnSpec("dispatched_time"),
                                  PlaceHolderColumnSpec("log_list", label=u"日志", template_fname="logs-snippet.html")]
         form_columns[u"子订单列表"] = [PlaceHolderColumnSpec("sub_order_list", template_fname="order/sub-order-list-snippet.html", label="")]
         if SchedulerPermission.can():

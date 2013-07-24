@@ -19,6 +19,12 @@
           }).on('hide', function (e) {
             $(e.target).parent().find(".icon-chevron-up").removeClass("icon-chevron-up").addClass("icon-chevron-down");
           });
+      $("[name=delete-button]").click(function () {
+        btn = $(this);
+        if (confirm("删除该待办事项吗？")) {
+          btn.parents("form").submit();
+        }
+      });
     });
   </script>
 {% endblock %}
@@ -41,19 +47,24 @@
           <div class="accordion-body collapse" id="{{ grouper }}">
             <div class="accordion-inner">
               {% for todo in list %}
-                <blockquote>
+                <form action="{{ url_for("todo.delete", id_=todo.id) }}" method="POST">
+                  <blockquote>
+                    <button class="btn-link" name="delete-button" type="button">
+                      <i class="icon-remove text-error"></i>
+                    </button>
                 <span class="muted">
                   {{ todo.create_time.strftime("%H:%M") }}
                 </span>
-                  {{ todo.msg }}
-                  {% if todo.context_url %}
-                    {% if "?" in todo.context_url %}
-                      <a href="{{ todo.context_url + "&url=" + request.url|urlencode }}">开始&gt;&gt;</a>
-                    {% else %}
-                      <a href="{{ todo.context_url + "?url=" + request.url|urlencode }}">开始&gt;&gt;</a>
+                    {{ todo.msg }}
+                    {% if todo.context_url %}
+                      {% if "?" in todo.context_url %}
+                        <a href="{{ todo.context_url + "&url=" + request.url|urlencode }}">开始&gt;&gt;</a>
+                      {% else %}
+                        <a href="{{ todo.context_url + "?url=" + request.url|urlencode }}">开始&gt;&gt;</a>
+                      {% endif %}
                     {% endif %}
-                  {% endif %}
-                </blockquote>
+                  </blockquote>
+                </form>
               {% endfor %}
             </div>
           </div>

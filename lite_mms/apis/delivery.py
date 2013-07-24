@@ -198,6 +198,7 @@ class DeliveryTaskWrapper(ModelWrapper):
             raise ValueError(u"至少需要一个仓单")
         ds = finished_store_bills[0].delivery_session
         dt = models.DeliveryTask(ds, actor_id)
+        actor = models.User.query.get(actor_id)
         for sb in finished_store_bills:
             sb.delivery_task = dt
         dt.quantity = sum(sb.quantity for sb in finished_store_bills)
@@ -206,8 +207,14 @@ class DeliveryTaskWrapper(ModelWrapper):
             sb.weight for sb in finished_store_bills if sb.sub_order.returned)
         if unfinished_store_bill:
             do_commit([unfinished_store_bill, dt] + finished_store_bills)
+            StoreBillWrapper(new_sb).do_create_log(
+                u"由剩余%s公斤的仓单%s装货、分裂产生" % (unfinished_store_bill.weight, unfinished_store_bill_id), actor=actor)
+            StoreBillWrapper(unfinished_store_bill).do_update_log(u"装货、分裂出%s公斤的仓单%s" % (new_sb.weight, new_sb.id),
+                                                                  actor=actor)
         else:
             do_commit([dt] + finished_store_bills)
+        for sb in finished_store_bills + [unfinished_store_bill]:
+            StoreBillWrapper(sb).do_update_log(u"装货，发货会话%s、发货任务%s" % (ds.id, dt.id))
 
         from lite_mms.apis.todo import new_todo, WEIGH_DELIVERY_TASK
         from lite_mms.apis.auth import get_user_list
@@ -319,7 +326,6 @@ class DeliveryTaskWrapper(ModelWrapper):
         else:
             return ""
 
-
     def delete(self):
         ds = self.delivery_session
         do_commit(self.model, "delete")
@@ -340,6 +346,7 @@ class DeliveryTaskWrapper(ModelWrapper):
         # delete todo
         todo.remove_todo(todo.WEIGH_DELIVERY_TASK, self.id)
         return True
+
 
 class ConsignmentWrapper(ModelWrapper):
     @classmethod
@@ -483,6 +490,7 @@ class ConsignmentWrapper(ModelWrapper):
                 task_list.append(task)
         return task_list
 
+
 class ConsignmentProductWrapper(ModelWrapper):
     @classmethod
     def get_product(cls, id_):
@@ -497,6 +505,7 @@ class ConsignmentProductWrapper(ModelWrapper):
             if hasattr(self.model, k):
                 setattr(self.model, k, v)
         do_commit(self.model)
+
 
 class StoreBillWrapper(ModelWrapper):
     @property
@@ -573,8 +582,35 @@ class StoreBillWrapper(ModelWrapper):
         if kwargs.get("quantity"):
             store_bill.quantity = kwargs["quantity"]
         do_commit(store_bill.model)
-
+        store_bill.do_update_log()
         return StoreBillWrapper(do_commit(store_bill))
+
+    @property
+    def log_list(self):
+        from lite_mms.apis.log import LogWrapper
+
+        ret = LogWrapper.get_log_list(str(self.id), self.model.__class__.__name__)
+        return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time), reverse=True)
+
+    def do_create_log(self, message="", actor=None):
+        from flask.ext.login import current_user
+        from lite_mms.basemain import timeline_logger
+        timeline_logger.info(message or u"创建仓单%d" % self.id,
+                             extra={"obj": self.model,
+                                    "obj_pk": self.id,
+                                    "action": u"创建",
+                                    "actor": actor or (current_user if current_user.is_authenticated() else None)})
+
+    def do_update_log(self, message="", actor=None):
+        from flask.ext.login import current_user
+        from lite_mms.basemain import timeline_logger
+
+        timeline_logger.info(message or u"更新仓单%d" % self.id,
+                             extra={"obj": self.model,
+                                    "obj_pk": self.id,
+                                    "action": u"更新",
+                                    "actor": actor or (current_user if current_user.is_authenticated() else None)})
+
 
 def get_delivery_session_list(idx=0, cnt=sys.maxint, unfinished_only=False,
                               keywords=None):

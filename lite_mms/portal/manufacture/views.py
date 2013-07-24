@@ -115,16 +115,19 @@ class WorkCommandView(ModelView):
             else:
                 return None
 
-        if self.__column_filters__[0].value == unicode(_get_status_filter(u"待生产")) or (
-                processed_objs and all(schedule_action.test_enabled(obj) == 0 for obj in processed_objs)):
-            return [schedule_action]
-        elif self.__column_filters__[0].value == unicode(_get_status_filter(u"生产中")) or (
-                processed_objs and all(retrieve_action.test_enabled(obj) == 0 for obj in processed_objs)):
-            return [retrieve_action]
-        elif self.__column_filters__[0].has_value:
-            return [schedule_action, retrieve_action]
+        if processed_objs:
+            if all(schedule_action.test_enabled(obj) == 0 for obj in processed_objs):
+                return [schedule_action]
+            elif all(retrieve_action.test_enabled(obj) == 0 for obj in processed_objs):
+                return [retrieve_action]
         else:
-            return []
+            if self.__column_filters__[0].value == unicode(_get_status_filter(u"待生产")):
+                return [schedule_action]
+            elif self.__column_filters__[0].value == unicode(_get_status_filter(u"生产中")):
+                return [retrieve_action]
+            elif self.__column_filters__[0].has_value:
+                return [schedule_action, retrieve_action]
+        return []
 
     def get_form_columns(self, obj=None):
 

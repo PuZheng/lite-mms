@@ -3,7 +3,7 @@ from flask import request, redirect, url_for
 from flask.ext.login import login_required
 from werkzeug.utils import cached_property
 from flask.ext.databrowser import ModelView, filters
-from flask.ext.databrowser.column_spec import ColumnSpec, InputColumnSpec, ImageColumnSpec
+from flask.ext.databrowser.column_spec import ColumnSpec, InputColumnSpec, ImageColumnSpec, PlaceHolderColumnSpec
 from flask.ext.principal import PermissionDenied
 from wtforms.validators import Required
 from lite_mms import models
@@ -88,7 +88,8 @@ class StoreBillModelView(ModelView):
                         ColumnSpec("sub_order.type", label=u"规格"), ColumnSpec("create_time"),
                         ColumnSpec("printed", label=u"是否打印", formatter=lambda v, obj: u"是" if v else u"否"),
                         ColumnSpec("sub_order.id", label=u"子订单号"), "sub_order.order.customer_order_number",
-                        ImageColumnSpec("pic_url", label=u"图片"),]
+                        ImageColumnSpec("pic_url", label=u"图片"),
+                        PlaceHolderColumnSpec("log_list", label=u"日志", template_fname="logs-snippet.html")]
 
     def get_customized_actions(self, processed_objs=None):
         if QualityInspectorPermission.can():

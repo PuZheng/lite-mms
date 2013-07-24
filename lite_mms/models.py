@@ -464,7 +464,6 @@ class WorkCommand(db.Model):
                                            ".work_command_id")
     pic_path = db.Column(db.String(256))
     handle_type = db.Column(db.Integer)
-    cause = db.Column(db.Integer)
     previous_work_command_id = db.Column(db.Integer, db.ForeignKey("TB_WORK_COMMAND.id"))
     previous_work_command = db.relationship("WorkCommand", backref=db.backref("next_work_command", uselist=False),
                                             primaryjoin="WorkCommand.id==WorkCommand.previous_work_command_id",
@@ -490,7 +489,7 @@ class WorkCommand(db.Model):
                  last_mod=datetime.now(),
                  processed_weight=0, team=None, previous_procedure=None,
                  tag="", tech_req="", org_cnt=0, processed_cnt=0, pic_path="",
-                 handle_type=constants.work_command.HT_NORMAL, cause=constants.work_command.CAUSE_NORMAL,
+                 handle_type=constants.work_command.HT_NORMAL,
                  previous_work_command=None):
         self.sub_order = sub_order
         self.urgent = urgent
@@ -509,7 +508,6 @@ class WorkCommand(db.Model):
         self.processed_cnt = processed_cnt
         self.pic_path = pic_path
         self.handle_type = handle_type
-        self.cause = cause
         self.previous_work_command = previous_work_command
 
     def set_status(self, new_status):

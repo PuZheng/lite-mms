@@ -71,7 +71,6 @@ class StateDispatching(WorkCommandState):
                                             processed_cnt=processed_quantity,
                                             pic_path=old_wc.pic_path,
                                             handle_type=old_wc.handle_type,
-                                            cause=constants.work_command.CAUSE_FORWARD,
                                             previous_work_command=old_wc)
                 do_commit(new_wc)
 
@@ -168,7 +167,6 @@ class StateEnding(WorkCommandState):
                                         handle_type=old_wc.handle_type,
                                         processed_weight=old_wc.processed_weight,
                                         processed_cnt=old_wc.processed_cnt,
-                                        cause=constants.work_command.CAUSE_FORWARD,
                                         previous_work_command=old_wc)
 
             remain_quantity = old_wc.org_cnt - old_wc.processed_cnt
@@ -217,8 +215,7 @@ class StateQualityInspecting(WorkCommandState):
     def side_effect(self, **kwargs):
         self.sm.obj.set_status(
             constants.work_command.STATUS_QUALITY_INSPECTING)
-        if self.last_status == constants.work_command \
-            .STATUS_ENDING:
+        if self.last_status == constants.work_command.STATUS_ENDING:
             if self.last_action == constants.work_command.ACT_CARRY_FORWARD:
                 old_wc = self.sm.obj
                 remain_quantity = old_wc.org_cnt - old_wc.processed_cnt
@@ -239,7 +236,6 @@ class StateQualityInspecting(WorkCommandState):
                                             pic_path=old_wc.pic_path,
                                             handle_type=old_wc.handle_type,
                                             department=old_wc.department,
-                                            cause=constants.work_command.CAUSE_FORWARD,
                                             previous_work_command=old_wc)
 
                 old_wc.org_cnt -= new_wc.org_cnt  #: 实际工作的黑件数
@@ -295,8 +291,7 @@ class StateFinished(WorkCommandState):
 
     def side_effect(self, **kwargs):
         self.sm.obj.set_status(constants.work_command.STATUS_FINISHED)
-        if self.last_status == constants.work_command \
-            .STATUS_QUALITY_INSPECTING:
+        if self.last_status == constants.work_command.STATUS_QUALITY_INSPECTING:
             old_wc = self.sm.obj
             procedure = ""
             previous_procedure = ""
@@ -323,22 +318,21 @@ class StateFinished(WorkCommandState):
                     previous_procedure = old_wc.procedure
                     status = constants.work_command.STATUS_DISPATCHING
                     department = None
-                    cause = constants.work_command.CAUSE_NEXT
                 elif qir.result == constants.quality_inspection.REPAIR:
                     handle_type = constants.work_command.HT_REPAIRE
                     procedure = old_wc.procedure
-                    previous_procedure = old_wc.previous_procedure #可能有三道工序
-                    status = constants.work_command.STATUS_ASSIGNING if old_wc.department else constants.work_command.STATUS_DISPATCHING
+                    previous_procedure = old_wc.previous_procedure  # 可能有三道工序
+                    status = constants.work_command.STATUS_ASSIGNING if old_wc.department else constants\
+                        .work_command.STATUS_DISPATCHING
                     # 这个工单可能是由退货产生的。
                     department = old_wc.department
-                    cause = constants.work_command.CAUSE_REPAIR
                 elif qir.result == constants.quality_inspection.REPLATE:
                     handle_type = constants.work_command.HT_REPLATE
                     procedure = old_wc.procedure
                     previous_procedure = old_wc.previous_procedure
-                    status = constants.work_command.STATUS_ASSIGNING if old_wc.department else constants.work_command.STATUS_DISPATCHING
+                    status = constants.work_command.STATUS_ASSIGNING if old_wc.department else constants\
+                        .work_command.STATUS_DISPATCHING
                     department = old_wc.department
-                    cause = constants.work_command.CAUSE_REPLATE
                 new_wc = models.WorkCommand(sub_order=old_wc.sub_order,
                                             org_weight=qir.weight,
                                             status=status,
@@ -349,7 +343,6 @@ class StateFinished(WorkCommandState):
                                             pic_path=qir.pic_path,
                                             handle_type=handle_type,
                                             department=department,
-                                            cause=cause,
                                             previous_work_command=old_wc)
 
                 do_commit(new_wc)

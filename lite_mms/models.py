@@ -469,7 +469,7 @@ class WorkCommand(db.Model):
     pic_path = db.Column(db.String(256))
     handle_type = db.Column(db.Integer)
     previous_work_command_id = db.Column(db.Integer, db.ForeignKey("TB_WORK_COMMAND.id"))
-    previous_work_command = db.relationship("WorkCommand", backref=db.backref("next_work_command", uselist=False),
+    previous_work_command = db.relationship("WorkCommand", backref=db.backref("next_work_command_list"),
                                             primaryjoin="WorkCommand.id==WorkCommand.previous_work_command_id",
                                             uselist=False, remote_side=id)
 

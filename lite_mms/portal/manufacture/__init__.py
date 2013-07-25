@@ -22,21 +22,19 @@ def _wrapper(department):
 
 
 
-def _do_register(model_view):
-    extra_params = {
-        "list_view": {
-            "nav_bar": nav_bar,
-            "titlename": model_view.model_name + u"列表",
-        },
-        "form_view": {
-            "nav_bar": nav_bar,
-            "titlename": u"编辑" + model_view.model_name,
-        }
-
+extra_params = {
+    "list_view": {
+        "nav_bar": nav_bar,
+        "titlename": u"工单列表",
+    },
+    "form_view": {
+        "nav_bar": nav_bar,
+        "titlename": u"编辑工单"
     }
-    data_browser.register_model_view(model_view, manufacture_page, extra_params)
 
-_do_register(views.work_command_view)
+}
+data_browser.register_model_view(views.work_command_view, manufacture_page, extra_params)
+
 
 @manufacture_page.route("/")
 def index():

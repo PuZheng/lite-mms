@@ -136,6 +136,9 @@ if serve_web:
 
     import lite_mms.portal.admin
 
+    from lite_mms.portal.quality_inspection import qir_page
+    app.register_blueprint(qir_page, url_prefix="/qir")
+
 if serve_ws:
     from lite_mms.portal.auth_ws import auth_ws
     app.register_blueprint(auth_ws, url_prefix="/auth_ws")
@@ -187,6 +190,7 @@ nav_bar.register(report_page, name=u"数据集合列表", default_url="/report/d
 nav_bar.register(report_page, name=u"推送列表", default_url="/report/notification-list", permissions=[Permission.union(AdminPermission, AccountantPermission)], group=u'报表', 
                  enabler=lambda nav: request.path.startswith('/report/notification-list'))
 nav_bar.register(to_do_page, name=u"待办事项", default_url="/todo/todo-list")
+nav_bar.register(qir_page, name=u"质检报告", default_url="/qir/qireport-list", permissions=[QualityInspectorPermission])
 
 #install jinja utilities
 from lite_mms.utilities import url_for_other_page, datetimeformat

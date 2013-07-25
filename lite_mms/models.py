@@ -272,11 +272,14 @@ class GoodsReceipt(db.Model):
     order = db.relationship(
         "Order", backref=db.backref("goods_receipt", uselist=False),
         cascade="all, delete-orphan", uselist=False)
+    creator_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
+    creator = db.relationship("User")
 
-    def __init__(self, customer, unload_session, create_time=None):
+    def __init__(self, customer, unload_session, create_time=None, creator=None):
         self.customer = customer
         self.unload_session = unload_session
         self.create_time = create_time or datetime.now()
+        self.creator = creator
         self.receipt_id = self.id_generator()
 
     def id_generator(self):
@@ -330,6 +333,7 @@ class Order(db.Model):
     creator_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
     creator = db.relationship("User")
     refined = db.Column(db.Boolean, default=False)
+    dispatched_time = db.Column(db.DateTime)
 
     def __init__(self, goods_receipt, creator,
                  create_time=None, finish_time=None, dispatched=False, refined=False):
@@ -464,6 +468,10 @@ class WorkCommand(db.Model):
                                            ".work_command_id")
     pic_path = db.Column(db.String(256))
     handle_type = db.Column(db.Integer)
+    previous_work_command_id = db.Column(db.Integer, db.ForeignKey("TB_WORK_COMMAND.id"))
+    previous_work_command = db.relationship("WorkCommand", backref=db.backref("next_work_command", uselist=False),
+                                            primaryjoin="WorkCommand.id==WorkCommand.previous_work_command_id",
+                                            uselist=False, remote_side=id)
 
     @property
     def unit_weight(self):
@@ -485,7 +493,8 @@ class WorkCommand(db.Model):
                  last_mod=datetime.now(),
                  processed_weight=0, team=None, previous_procedure=None,
                  tag="", tech_req="", org_cnt=0, processed_cnt=0, pic_path="",
-                 handle_type=constants.work_command.HT_NORMAL):
+                 handle_type=constants.work_command.HT_NORMAL,
+                 previous_work_command=None):
         self.sub_order = sub_order
         self.urgent = urgent
         self.org_weight = org_weight
@@ -503,6 +512,7 @@ class WorkCommand(db.Model):
         self.processed_cnt = processed_cnt
         self.pic_path = pic_path
         self.handle_type = handle_type
+        self.previous_work_command = previous_work_command
 
     def set_status(self, new_status):
         """

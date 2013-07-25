@@ -31,6 +31,10 @@ def notify(user_id, to_do_id):
     notifications.add(user_id, to_do_id)
 
 
+def delete_todo(id_):
+    do_commit(models.TODO.query.get(id_), "delete")
+
+
 def remove_todo(action, obj_pk):
     for to_do in models.TODO.query.filter(models.TODO.action == action).filter(models.TODO.obj_pk == obj_pk).all():
         do_commit(to_do, "delete")

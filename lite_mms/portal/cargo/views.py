@@ -352,7 +352,7 @@ class GoodsReceiptModelView(ModelView):
     __list_columns__ = ["id", "receipt_id", "customer", "unload_session.plate", InputColumnSpec("order", formatter=lambda v, obj: v or "--", label=u"订单"),
                         ColumnSpec("printed", formatter=lambda v, obj: u"是" if v else u"否", label=u"是否打印"),
                         ColumnSpec("stale", formatter=lambda v, obj: u"是" if v else u"否", label=u"是否过时"),
-                        ColumnSpec("create_time", formatter=lambda v, obj: v.strftime("%y年%m月%d日 %H时%M分").decode("utf-8"), label=u"创建时间"),
+                        ColumnSpec("create_time", formatter=lambda v, obj: v.strftime("%y年%m月%d日 %H时%M分").decode("utf-8"), label=u"创建时间"), ColumnSpec("creator"),
                         ListColumnSpec("goods_receipt_entries", label=u"产品", compressed=True,
                                        item_col_spec=ColumnSpec("", formatter=lambda v, obj: unicode(v.product.product_type) + u"-" + unicode(v.product)))]
 
@@ -394,7 +394,8 @@ class GoodsReceiptModelView(ModelView):
         "receipt_id",
         "customer",
         "unload_session.plate",
-        InputColumnSpec("create_time", read_only=True, label=u"创建时间"),
+        ColumnSpec("create_time", label=u"创建时间"),
+        ColumnSpec("creator"),
         ColumnSpec("printed", label=u"是否打印",
                         formatter=lambda v, obj: u"是" if v else u'<span class="text-error">否</span>'),
         ColumnSpec("stale", label=u"是否过时",
@@ -414,7 +415,8 @@ class GoodsReceiptModelView(ModelView):
                         preprocess=lambda obj: GoodsReceiptWrapper(obj))
     ]
     __column_labels__ = {"receipt_id": u'编 号', "customer": u'客 户', "unload_session.plate": u"车牌号",
-                         "printed": u'是否打印', "stale": u"是否过时", "create_time": u"创建时间", "order": u"订 单"}
+                         "printed": u'是否打印', "stale": u"是否过时", "create_time": u"创建时间", "order": u"订 单",
+                         "creator": u"创建者"}
 
     def get_customized_actions(self, objs=None):
         from lite_mms.portal.cargo.actions import PrintGoodsReceipt, BatchPrintGoodsReceipt, CreateOrderAction, \

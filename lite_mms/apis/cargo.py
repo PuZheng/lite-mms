@@ -78,10 +78,9 @@ class UnloadSessionWrapper(ModelWrapper):
 
     @property
     def log_list(self):
-        from lite_mms.models import Log
+        from lite_mms.apis.log import LogWrapper
 
-        ret = Log.query.filter(Log.obj_pk == str(self.id)).filter(
-            Log.obj_cls == self.model.__class__.__name__).all()
+        ret = LogWrapper.get_log_list(str(self.id), self.model.__class__.__name__)
         for task in self.task_list:
             ret.extend(task.log_list)
         return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time))
@@ -146,10 +145,9 @@ class UnloadTaskWrapper(ModelWrapper):
 
     @property
     def log_list(self):
-        from lite_mms.models import Log
+        from lite_mms.apis.log import LogWrapper
 
-        return Log.query.filter(Log.obj_pk == str(self.id)).filter(
-            Log.obj_cls == self.model.__class__.__name__).all()
+        return LogWrapper.get_log_list(str(self.id), self.model.__class__.__name__)
 
     def update(self, **kwargs):
         """
@@ -235,12 +233,11 @@ class GoodsReceiptWrapper(ModelWrapper):
 
     @property
     def log_list(self):
-        from lite_mms.models import Log
-        ret = Log.query.filter(Log.obj_pk == str(self.id)).filter(
-            Log.obj_cls == self.model.__class__.__name__).all()
+        from lite_mms.apis.log import LogWrapper
+
+        ret = LogWrapper.get_log_list(str(self.id), self.model.__class__.__name__)
         for entry in self.goods_receipt_entries:
-            ret.extend(Log.query.filter(Log.obj_pk == str(entry.id)).filter(
-            Log.obj_cls == "GoodsReceiptEntry").all())
+            ret.extend(LogWrapper.get_log_list(str(entry.id), "GoodsReceiptEntry"))
         return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time))
 
     @property
@@ -384,8 +381,11 @@ def new_goods_receipt(customer_id, unload_session_id):
     unload_session = get_unload_session(unload_session_id)
     if not unload_session:
         raise ValueError(u"没有该卸货会话(%d)" % int(unload_session_id))
-    model = do_commit(models.GoodsReceipt(customer=customer.model,
-                                          unload_session=unload_session.model))
+    from flask.ext.login import current_user
+
+    model = do_commit(
+        models.GoodsReceipt(customer=customer.model, creator=current_user if current_user.is_authenticated() else None,
+                            unload_session=unload_session.model))
     gr = GoodsReceiptWrapper(model)
     gr.add_product_entries()
     return gr

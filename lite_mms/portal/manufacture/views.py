@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 from collections import OrderedDict
+from flask import url_for, request
 
 from flask.ext.databrowser import ModelView, filters, column_spec
 from flask.ext.login import login_required
@@ -114,35 +115,66 @@ class WorkCommandView(ModelView):
             else:
                 return None
 
-        if self.__column_filters__[0].value == unicode(_get_status_filter(u"待生产")) or (
-                processed_objs and all(schedule_action.test_enabled(obj) == 0 for obj in processed_objs)):
-            return [schedule_action]
-        elif self.__column_filters__[0].value == unicode(_get_status_filter(u"生产中")) or (
-                processed_objs and all(retrieve_action.test_enabled(obj) == 0 for obj in processed_objs)):
-            return [retrieve_action]
-        elif self.__column_filters__[0].has_value:
-            return [schedule_action, retrieve_action]
+        if processed_objs:
+            if all(schedule_action.test_enabled(obj) == 0 for obj in processed_objs):
+                return [schedule_action]
+            elif all(retrieve_action.test_enabled(obj) == 0 for obj in processed_objs):
+                return [retrieve_action]
         else:
-            return []
-    __form_columns__ = OrderedDict()
+            if self.__column_filters__[0].value == unicode(_get_status_filter(u"待生产")):
+                return [schedule_action]
+            elif self.__column_filters__[0].value == unicode(_get_status_filter(u"生产中")):
+                return [retrieve_action]
+            elif self.__column_filters__[0].has_value:
+                return [schedule_action, retrieve_action]
+        return []
 
-    __form_columns__[u"工单信息"] = [column_spec.ColumnSpec("id"), column_spec.ColumnSpec("org_weight"),
+    def get_form_columns(self, obj=None):
+
+        form_columns = OrderedDict()
+
+
+        form_columns[u"工单信息"] = [column_spec.ColumnSpec("id"), column_spec.ColumnSpec("org_weight"),
                                  column_spec.ColumnSpec("org_cnt"), column_spec.ColumnSpec("sub_order.unit"),
                                  "urgent", "sub_order.returned", "tech_req",
+                                 column_spec.ColumnSpec("cause", label=u"产生原因"),
+                                 column_spec.ColumnSpec("previous_work_command", label=u"上级工单",
+                                                        formatter=lambda v, obj: u"%s-%s" % (
+                                                        v.id, v.cause) if v else ""),
+                                 column_spec.ColumnSpec("next_work_command", label=u"下级工单",
+                                                        formatter=lambda v, obj: u"%s-%s" % (
+                                                        v.id, v.cause) if v else ""),
                                  column_spec.PlaceHolderColumnSpec("log_list", label=u"日志",
-                                                                   template_fname="logs-snippet.html")]
-    __form_columns__[u"加工信息"] = [column_spec.ColumnSpec("department"),
-                                 column_spec.ColumnSpec("team"), "procedure",
-                                 column_spec.ColumnSpec("previous_procedure"),
-                                 column_spec.ColumnSpec("processed_weight", label=u"工序后重量"),
-                                 column_spec.ColumnSpec("processed_cnt", label=u"工序后数量"),
-                                 column_spec.ColumnSpec("status_name", label=u"状态"),
-                                 column_spec.ColumnSpec("completed_time", label=u"生产结束时间"),
-                                 column_spec.ColumnSpec("handle_type", label=u"处理类型",
-                                                        formatter=lambda v, obj: get_handle_type_list().get(v, u"未知"))]
+                                                                   template_fname="logs-snippet.html"),
+        ]
+        form_columns[u"加工信息"] = [column_spec.ColumnSpec("department"),
+                                     column_spec.ColumnSpec("team"), "procedure",
+                                     column_spec.ColumnSpec("previous_procedure"),
+                                     column_spec.ColumnSpec("processed_weight", label=u"工序后重量"),
+                                     column_spec.ColumnSpec("processed_cnt", label=u"工序后数量"),
+                                     column_spec.ColumnSpec("status_name", label=u"状态"),
+                                     column_spec.ColumnSpec("completed_time", label=u"生产结束时间"),
+                                     column_spec.ColumnSpec("handle_type", label=u"处理类型",
+                                                            formatter=lambda v, obj: get_handle_type_list().get(v, u"未知"))]
+        if obj and obj.qir_list:
+            from lite_mms.apis.quality_inspection import get_QI_result_list
+            from lite_mms.portal.quality_inspection.views import qir_model_view
+            def result(qir):
+                for i in get_QI_result_list():
+                    if qir.result == i[0]:
+                        status =  i[1]
+                        break
+                else:
+                    status = u"未知"
+                return u"<a href='%s'>质检单%s%s了%s（公斤）</a>" % (
+                qir_model_view.url_for_object(qir, url=request.url), qir.id, status, qir.weight)
 
-    __form_columns__[u"订单信息"] = [ column_spec.ColumnSpec("sub_order"),
-                        column_spec.ColumnSpec("sub_order.order", label=u"订单号")]
+            form_columns[u"质检信息"] = [column_spec.ListColumnSpec("qir_list", label=u"质检结果",
+                                                                formatter=lambda v, obj: [result(qir) for qir in v])]
+
+        form_columns[u"订单信息"] = [ column_spec.ColumnSpec("sub_order"),
+                            column_spec.ColumnSpec("sub_order.order", label=u"订单号")]
+        return form_columns
 
 work_command_view = WorkCommandView(WorkCommand)
 # from flask import (request, abort, redirect, url_for, render_template, json,

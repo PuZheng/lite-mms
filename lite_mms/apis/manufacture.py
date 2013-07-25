@@ -334,14 +334,22 @@ class WorkCommandWrapper(ModelWrapper):
     def cause(self):
         if self.previous_work_command:
             if not self.parent_qir:
-                return u"结转"
+                return constants.work_command.CAUSE_CARRY
             elif self.parent_qir.result == constants.quality_inspection.REPAIR:
-                return u"返修"
+                return constants.work_command.CAUSE_REPAIR
             elif self.parent_qir.result == constants.quality_inspection.REPLATE:
-                return u"返镀"
+                return constants.work_command.CAUSE_REPLATE
             elif self.parent_qir.result == constants.quality_inspection.NEXT_PROCEDURE:
-                return u"转下道工序"
-        return u"预排产"
+                return constants.work_command.CAUSE_NEXT
+        return constants.work_command.CAUSE_NORMAL
+
+    _cause_name = {constants.work_command.CAUSE_NORMAL: u"预排产", constants.work_command.CAUSE_NEXT: u"转下道工序",
+                   constants.work_command.CAUSE_REPAIR: u"返修", constants.work_command.CAUSE_REPLATE: u"返镀",
+                   constants.work_command.CAUSE_CARRY: u"结转"}
+
+    @property
+    def cause_name(self):
+        return self._cause_name.get(self.cause, u"预排产")
 
 class DepartmentWrapper(ModelWrapper):
     @classmethod

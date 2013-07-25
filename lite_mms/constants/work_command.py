@@ -30,3 +30,9 @@ HT_REPAIRE = 3 #:返修
 PROCEDURE_FIRST = 1#：第一道工序
 PROCEDURE_END = 2#：合格，结束
 PROCEDURE_NEXT = 3#：质检完毕转下道工序
+
+CAUSE_NORMAL = 1  # 预排产
+CAUSE_NEXT = 2  # 转下道工序
+CAUSE_REPAIR = 3  # 返修
+CAUSE_REPLATE = 4  # 返镀
+CAUSE_CARRY = 5  # 结转

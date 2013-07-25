@@ -288,3 +288,86 @@ def get_locale():
 @app.before_request
 def _():
     g.locale = get_locale()
+
+from work_flow_repr import Event
+from work_flow_repr.utils import ModelNode, annotate_model
+from lite_mms.models import (GoodsReceipt, Order, SubOrder)
+
+class GoodsReceiptNode(ModelNode):
+    @property
+    def name(self):
+        return u"收货单" + unicode(self.obj)
+
+    @property
+    def description(self):
+        return render_template("work_flow_repr/goods_receipt.html", goods_receipt=self.obj)
+
+    @property
+    def events(self):
+        return [
+            #Event(self.obj.unload_session.create_time, u'开始卸货', self.obj.creator.username),
+            Event(self.obj.unload_session.create_time, u'开始卸货', ''),
+            Event(self.obj.unload_session.finish_time, u'卸货完毕', ",".join(task.creator.username for task in self.obj.unload_session.task_list)),
+            Event(self.obj.order.create_time, u'生成订单', self.obj.order.creator.username),
+        ]
+
+    @property
+    def target(self):
+        return data_browser.get_form_url(self.obj)
+
+    @property
+    def children_model_groups(self):
+        return [(u'订单', [self.obj.order]),]
+
+class OrderNode(ModelNode):
+
+    @property
+    def name(self):
+        return u"订单" + unicode(self.obj)
+
+    @property
+    def description(self):
+        return 'this is Order %d' % self.obj.id
+
+    @property
+    def target(self):
+        return data_browser.get_form_url(self.obj)
+
+    @property
+    def events(self):
+        return [
+            Event(self.obj.create_time, u'创建', self.obj.creator.username, by=u'生成订单'),
+        ]
+
+    @property
+    def children_model_groups(self):
+        return [(u'子订单', self.obj.sub_order_list)] 
+
+class SubOrderNode(ModelNode):
+
+    @property
+    def name(self):
+        return u"子订单" + unicode(self.obj)
+
+    @property
+    def description(self):
+        return 'this is SubOrder %d' % self.obj.id
+
+    @property
+    def target(self):
+        return data_browser.get_form_url(self.obj)
+
+    @property
+    def events(self):
+        return [
+            Event(self.obj.create_time, u'创建', self.obj.order.creator.username, by=u'生成子订单'),
+        ]
+
+    @property
+    def children_model_groups(self):
+        return [] 
+
+
+annotate_model(GoodsReceipt, GoodsReceiptNode)
+annotate_model(Order, OrderNode)
+annotate_model(SubOrder, SubOrderNode)

@@ -90,7 +90,6 @@ class OrderModelView(ModelView):
 
     def preprocess(self, model):
         from lite_mms.apis.order import OrderWrapper
-
         return OrderWrapper(model)
 
 
@@ -135,6 +134,7 @@ class OrderModelView(ModelView):
                                  ColumnSpec("create_time"),
                                  PlaceHolderColumnSpec("log_list", label=u"日志", template_fname="logs-snippet.html")]
         form_columns[u"子订单列表"] = [PlaceHolderColumnSpec("sub_order_list", template_fname="order/sub-order-list-snippet.html", label="")]
+        form_columns[u'订单流程图'] = [PlaceHolderColumnSpec('work_flow_json', template_fname='order/order-work-flow-snippet.html', label='')]
         if SchedulerPermission.can():
             from lite_mms.portal.manufacture.views import work_command_view
 

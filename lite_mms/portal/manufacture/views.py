@@ -132,7 +132,7 @@ class WorkCommandView(ModelView):
     def get_form_columns(self, obj=None):
 
         form_columns = OrderedDict()
-
+        c = column_spec.ColumnSpec("", formatter=lambda v, obj: u"%s-%s" % (v.id, v.cause_name) if v else "")
 
         form_columns[u"工单信息"] = [column_spec.ColumnSpec("id"), column_spec.ColumnSpec("org_weight"),
                                  column_spec.ColumnSpec("org_cnt"), column_spec.ColumnSpec("sub_order.unit"),
@@ -140,10 +140,9 @@ class WorkCommandView(ModelView):
                                  column_spec.ColumnSpec("cause_name", label=u"产生原因"),
                                  column_spec.ColumnSpec("previous_work_command", label=u"上级工单",
                                                         formatter=lambda v, obj: u"%s-%s" % (
-                                                        v.id, v.cause_name) if v else ""),
-                                 column_spec.ColumnSpec("next_work_command", label=u"下级工单",
-                                                        formatter=lambda v, obj: u"%s-%s" % (
-                                                        v.id, v.cause_name) if v else ""),
+                                                            v.id, v.cause_name) if v else ""),
+                                 column_spec.ListColumnSpec("next_work_command_list", label=u"下级工单",
+                                                            item_col_spec=c),
                                  column_spec.PlaceHolderColumnSpec("log_list", label=u"日志",
                                                                    template_fname="logs-snippet.html"),
         ]

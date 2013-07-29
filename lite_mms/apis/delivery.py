@@ -612,6 +612,17 @@ class StoreBillWrapper(ModelWrapper):
                                     "action": u"更新",
                                     "actor": actor or (current_user if current_user.is_authenticated() else None)})
 
+    @property
+    def previous_store_bill(self):
+        if self.qir.store_bill_list and self.qir.store_bill_list[0].id != self.id:
+            return self.qir.store_bill_list[0]
+        return None
+
+    @property
+    def next_store_bill_list(self):
+        if self.qir.store_bill_list and self.qir.store_bill_list[0].id == self.id:
+            return [sb for sb in self.qir.store_bill_list if sb.id != self.id]
+        return []
 
 def get_delivery_session_list(idx=0, cnt=sys.maxint, unfinished_only=False,
                               keywords=None):

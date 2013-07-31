@@ -56,4 +56,4 @@ wsgiref==0.1.2
 zope.interface==4.0.5
 APScheduler==2.1.1
 Flask-Mail==0.9.0
--e git+https://github.com/xiechao06/WorkFlowRepr.git@0f0959a8ef7f4023e080ba53c854b77f102fabfe#egg=work_flow_repr-dev
+-e git+https://github.com/xiechao06/WorkFlowRepr.git#egg=work_flow_repr-dev

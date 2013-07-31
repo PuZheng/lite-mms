@@ -65,6 +65,12 @@ def action_name(action):
         return _(u"<确认回收>")
     elif action == work_command.ACT_QI:
         return _(u"<质检>")
+    elif action == work_command.ACT_QUICK_CARRY_FORWARD:
+        return _(u"<快速结转>")
+    elif action == work_command.ACT_RETRIVE_QI:
+        return _(u"<取消质检报告>")
+    elif action == work_command.ACT_REFUSE_RETRIEVAL:
+        return _(u"<拒绝回收>")
     else:
         return _(u"<未知>")
 

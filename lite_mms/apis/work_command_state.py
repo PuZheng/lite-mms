@@ -168,6 +168,7 @@ class StateEnding(WorkCommandState):
                                         processed_weight=old_wc.processed_weight,
                                         processed_cnt=old_wc.processed_cnt,
                                         previous_work_command=old_wc)
+            new_wc.completed_time = datetime.now()
 
             remain_quantity = old_wc.org_cnt - old_wc.processed_cnt
             if remain_quantity <= 0:

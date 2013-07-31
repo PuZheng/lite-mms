@@ -21,7 +21,7 @@ def desc_action(action):
         return u"关闭"
     elif action == ACT_OPEN:
         return u"打开"
-    return "未知"
+    return u"未知"
 
 g_status_desc = {
     STATUS_LOADING: u"正在装货",

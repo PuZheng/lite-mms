@@ -90,7 +90,6 @@ class OrderModelView(ModelView):
 
     def preprocess(self, model):
         from lite_mms.apis.order import OrderWrapper
-
         return OrderWrapper(model)
 
 
@@ -149,6 +148,7 @@ class OrderModelView(ModelView):
                 ColumnSpec("processed_cnt", label=u"工序后数量"),ColumnSpec("tech_req", label=u"技术要求"),
                 ColumnSpec("department", label=u"车间"), ColumnSpec("team", label=u"班组"),
                 ColumnSpec("qi", label=u"质检员"), ColumnSpec("status_name", label=u"状态")])]
+        form_columns[u'订单流程图'] = [PlaceHolderColumnSpec('work_flow_json', template_fname='order/order-work-flow-snippet.html', label='')]
         return form_columns
 
 

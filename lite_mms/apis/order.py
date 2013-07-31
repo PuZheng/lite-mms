@@ -13,6 +13,7 @@ from lite_mms import models
 from lite_mms.apis import ModelWrapper
 import lite_mms.constants as constants
 from lite_mms.utilities import do_commit
+from work_flow_repr.utils import make_tree
 
 
 class OrderWrapper(ModelWrapper):
@@ -288,6 +289,10 @@ class OrderWrapper(ModelWrapper):
         for sub_order in self.sub_order_list:
             ret.extend(sub_order.log_list)
         return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time), reverse=True)
+
+    @property
+    def work_flow_json(self):
+        return make_tree(self.goods_receipt)
 
 
 class SubOrderWrapper(ModelWrapper):

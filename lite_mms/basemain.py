@@ -292,3 +292,155 @@ def get_locale():
 @app.before_request
 def _():
     g.locale = get_locale()
+
+from work_flow_repr import Event
+from work_flow_repr.utils import ModelNode, annotate_model
+from lite_mms.models import (GoodsReceipt, Order, SubOrder, WorkCommand, Log, StoreBill)
+from lite_mms.apis import WorkCommandWrapper
+
+class GoodsReceiptNode(ModelNode):
+    @property
+    def name(self):
+        return u"收货单" + unicode(self.obj)
+
+    @property
+    def description(self):
+        return render_template("work_flow_repr/goods_receipt.html", goods_receipt=self.obj)
+
+    @property
+    def events(self):
+        return [
+            Event(self.obj.unload_session.create_time, u'开始卸货', self.obj.creator.username if self.obj.creator else ''),
+            Event(self.obj.unload_session.finish_time, u'卸货完毕', ",".join(task.creator.username for task in self.obj.unload_session.task_list)),
+            Event(self.obj.order.create_time, u'生成订单', self.obj.order.creator.username),
+        ]
+
+    @property
+    def target(self):
+        return data_browser.get_form_url(self.obj)
+
+    @property
+    def children_model_groups(self):
+        return [(u'订单', [self.obj.order]),]
+
+class OrderNode(ModelNode):
+
+    @property
+    def name(self):
+        return u"订单" + unicode(self.obj)
+
+    @property
+    def description(self):
+        return ''
+
+    @property
+    def target(self):
+        return data_browser.get_form_url(self.obj)
+
+    @property
+    def events(self):
+        return [
+            Event(self.obj.create_time, u'创建', self.obj.creator.username, description=u'[%s] 创建' % str(self.obj.create_time), by=u'生成订单'),
+            Event(self.obj.dispatched_time, u'下发订单', self.obj.creator.username, description=u'[%s] 下发' % str(self.obj.dispatched_time)),
+        ]
+
+    @property
+    def children_model_groups(self):
+        return [(u'子订单', self.obj.sub_order_list)] 
+
+class SubOrderNode(ModelNode):
+
+    @property
+    def name(self):
+        return u"子订单" + unicode(self.obj)
+
+    @property
+    def description(self):
+        return render_template("work_flow_repr/sub_order.html", sub_order=self.obj)
+
+    @property
+    def target(self):
+        return data_browser.get_form_url(self.obj)
+
+    @property
+    def events(self):
+        ret = [
+            Event(self.obj.create_time, u'创建', self.obj.order.creator.username, by=u'生成子订单'),
+        ]
+
+        for wc in self.obj.work_command_list:
+            if wc.cause == constants.work_command.CAUSE_NORMAL:
+                ret.append(Event(wc.create_time, u'预排产', self.obj.order.creator.username))
+        return ret
+
+    @property
+    def children_model_groups(self):
+        return [(u'预排产工单', [wc for wc in self.obj.work_command_list if wc.cause == constants.work_command.CAUSE_NORMAL]),]
+
+class WorkCommandNode(ModelNode):
+
+    @property
+    def name(self):
+        return u"工单" + unicode(self.obj)
+
+    @property
+    def description(self):
+        return render_template('work_flow_repr/work-command.html', work_command=self.obj)
+
+    @property
+    def target(self):
+        return data_browser.get_form_url(self.obj)
+
+    @property
+    def events(self):
+        logs = Log.query.filter(Log.obj_cls==self.obj.model.__class__.__name__).filter(Log.obj_pk==self.obj.id).filter(Log.action!=u'<增加重量>').filter(Log.action!=u'新建').all()
+        return [Event(self.obj.create_time, u'新建', self.obj.order.creator.username, u'[%s]: 创建' % self.obj.create_time)] + [Event(log.create_time, log.action.strip('<>'), self.obj.order.creator.username, u'[%s] %s' % (str(log.create_time), log.action.strip('<>'))) for log in logs]
+
+    @property
+    def children_model_groups(self):
+        d = {}
+        for wc in self.obj.next_work_command_list:
+            d.setdefault(wc.cause, []).append(wc)
+
+        store_bills = []
+        for qir in self.obj.qir_list:
+            for sb in qir.store_bill_list[:1]:
+                store_bills.append(sb)
+
+        return [(k, v) for k, v in d.items()] + [('仓单', store_bills)]
+
+class StoreBillNode(ModelNode):
+
+    @property
+    def name(self):
+        return u"仓单" + unicode(self.obj)
+
+    @property
+    def description(self):
+        return render_template('work_flow_repr/store-bill.html', store_bill=self.obj)
+
+    @property
+    def target(self):
+        return data_browser.get_form_url(self.obj)
+
+    @property
+    def events(self):
+        ret = [
+            Event(self.obj.create_time, u'创建', self.obj.qir.actor.username, by='创建仓单', description=u'[%s] 创建' % str(self.obj.create_time))
+        ]
+        if self.obj.delivery_task:
+            ret.append(Event(self.obj.delivery_task.create_time, u'发货', self.obj.delivery_task.actor.username, description=u'[%s] 发货' % str(self.obj.delivery_task.create_time)))
+        return ret
+
+    @property
+    def children_model_groups(self):
+        next_store_bill_list = self.obj.next_store_bill_list
+        if next_store_bill_list:
+            return [(u'仓单', next_store_bill_list)]
+        return []
+        
+annotate_model(GoodsReceipt, GoodsReceiptNode)
+annotate_model(Order, OrderNode)
+annotate_model(SubOrder, SubOrderNode)
+annotate_model(WorkCommand, WorkCommandNode)
+annotate_model(StoreBill, StoreBillNode)

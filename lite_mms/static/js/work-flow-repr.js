@@ -212,7 +212,7 @@ WorkFlowRepr.prototype.draw = function () {
                     this.fill({color: 'red'});
                 }
             })(eventPoint));
-            circle.mouseleave((function (eventPoint) {
+            circle.mouseout((function (eventPoint) {
                 return function (event) {
                     this.scale(1, 1).center(eventPoint[0], eventPoint[1]).fill({color: 'green'});
                 }

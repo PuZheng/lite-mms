@@ -296,7 +296,6 @@ def _():
 from work_flow_repr import Event
 from work_flow_repr.utils import ModelNode, annotate_model
 from lite_mms.models import (GoodsReceipt, Order, SubOrder, WorkCommand, Log, StoreBill)
-from lite_mms.apis import WorkCommandWrapper
 
 class GoodsReceiptNode(ModelNode):
     @property
@@ -339,10 +338,12 @@ class OrderNode(ModelNode):
 
     @property
     def events(self):
-        return [
+        ret = [
             Event(self.obj.create_time, u'创建', self.obj.creator.username, description=u'[%s] 创建' % str(self.obj.create_time), by=u'生成订单'),
-            Event(self.obj.dispatched_time, u'下发订单', self.obj.creator.username, description=u'[%s] 下发' % str(self.obj.dispatched_time)),
         ]
+        if self.obj.dispatched:
+            ret.append(Event(self.obj.dispatched_time, u'下发订单', self.obj.creator.username, description=u'[%s] 下发' % str(self.obj.dispatched_time)))
+        return ret
 
     @property
     def children_model_groups(self):

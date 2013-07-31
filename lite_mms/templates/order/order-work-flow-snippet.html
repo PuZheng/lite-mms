@@ -1,0 +1,11 @@
+<script type="text/javascript">
+  $(function () {
+      var tree = {{ field_value|tojson|safe }};
+      var canvas = document.getElementById('work-flow-canvas');
+      var workFlowRepr = new WorkFlowRepr(canvas, tree, 5); 
+      workFlowRepr.draw();
+    });
+</script>
+
+<div id="work-flow-canvas">
+</div>

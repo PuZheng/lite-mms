@@ -292,7 +292,10 @@ class OrderWrapper(ModelWrapper):
 
     @property
     def work_flow_json(self):
-        return make_tree(self.goods_receipt)
+        try:
+            return make_tree(self.goods_receipt)
+        except AttributeError, e:
+            raise Exception(e.message)
 
 
 class SubOrderWrapper(ModelWrapper):

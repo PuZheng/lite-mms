@@ -134,7 +134,6 @@ class OrderModelView(ModelView):
                                  ColumnSpec("create_time"), ColumnSpec("dispatched_time"),
                                  PlaceHolderColumnSpec("log_list", label=u"日志", template_fname="logs-snippet.html")]
         form_columns[u"子订单列表"] = [PlaceHolderColumnSpec("sub_order_list", template_fname="order/sub-order-list-snippet.html", label="")]
-        form_columns[u'订单流程图'] = [PlaceHolderColumnSpec('work_flow_json', template_fname='order/order-work-flow-snippet.html', label='')]
         if SchedulerPermission.can():
             from lite_mms.portal.manufacture.views import work_command_view
 
@@ -149,6 +148,7 @@ class OrderModelView(ModelView):
                 ColumnSpec("processed_cnt", label=u"工序后数量"),ColumnSpec("tech_req", label=u"技术要求"),
                 ColumnSpec("department", label=u"车间"), ColumnSpec("team", label=u"班组"),
                 ColumnSpec("qi", label=u"质检员"), ColumnSpec("status_name", label=u"状态")])]
+        form_columns[u'订单流程图'] = [PlaceHolderColumnSpec('work_flow_json', template_fname='order/order-work-flow-snippet.html', label='')]
         return form_columns
 
 

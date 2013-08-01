@@ -56,20 +56,7 @@ obj_cls_fltr = ObjClsFilter("obj_class", name=u"是", hidden=True,
 
 class TimeLineModelView(ModelView):
     def scaffold_list(self, objs):
-        class _Proxy(object):
-            
-            def __init__(self, log):
-                self.log = log
-
-            def __getattr__(self, attr):
-                if attr == "obj_cls":
-                    if not self.log.obj_cls:
-                        return ""
-                    model = getattr(models, self.log.obj_cls.encode("utf-8"), None)
-                    return getattr(model, "__modelname__", self.log.obj_cls) if model else self.log.obj_cls
-                return getattr(self.log, attr)
-
-        return [_Proxy(wraps(obj)) for obj in objs]
+        return [wraps(obj) for obj in objs]
 
     list_template = "timeline/timeline.html"
 

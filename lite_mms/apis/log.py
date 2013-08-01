@@ -24,6 +24,7 @@ class LogWrapper(ModelWrapper):
         def _obj_wrap(str_, id_):
             from lite_mms.basemain import app
             from lite_mms.utilities import camel_case
+
             for endpoint, url in app.url_map._rules_by_endpoint.iteritems():
                 if endpoint.endswith(camel_case(str_)):
                     args = url[0].arguments
@@ -33,3 +34,8 @@ class LogWrapper(ModelWrapper):
                     else:
                         return url[0].build({"id": id_, "url": request.url})[1]
 
+        return self.obj_pk, _obj_wrap(self.obj_cls, self.obj_pk) if self.obj_cls else ""
+
+    @property
+    def create_date(self):
+        return self.create_time.date()

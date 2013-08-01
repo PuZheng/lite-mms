@@ -14,8 +14,9 @@ from flask.ext.login import current_user
 from flask.ext.principal import PermissionDenied
 
 from flask.ext.databrowser import filters
-class ObjClsFilter(filters.BaseFilter):
 
+
+class ObjClsFilter(filters.BaseFilter):
     UNLOAD_SESSION = 1
     GOODS_RECEIPT = 2
     ORDER = 3
@@ -37,6 +38,7 @@ class ObjClsFilter(filters.BaseFilter):
             query = query.filter(Log.obj_cls == obj_cls)
         return query
 
+
 class MyBetween(Between):
     format = "%Y-%m-%d"
 
@@ -44,15 +46,17 @@ class MyBetween(Between):
     def input_type(self):
         return "date", "date"
 
-my_between = MyBetween("create_time", u"从", sep=u"到", 
-                          default_value=[datetime.now().strftime(MyBetween.format), 
-                                         (datetime.now() + timedelta(days=7)).strftime(MyBetween.format)]) 
+
+my_between = MyBetween("create_time", u"从", sep=u"到",
+                       default_value=[datetime.now().strftime(MyBetween.format),
+                                      (datetime.now() + timedelta(days=7)).strftime(MyBetween.format)])
 
 obj_cls_fltr = ObjClsFilter("obj_class", name=u"是", hidden=True,
                             options=[(ObjClsFilter.UNLOAD_SESSION, u"卸货会话"),
                                      (ObjClsFilter.GOODS_RECEIPT, u"收货会话"),
                                      (ObjClsFilter.ORDER, u"订单"),
                                      (ObjClsFilter.WORK_COMMAND, u"工单")])
+
 
 class TimeLineModelView(ModelView):
     def scaffold_list(self, objs):
@@ -67,7 +71,7 @@ class TimeLineModelView(ModelView):
             raise PermissionDenied
 
     def get_column_filters(self):
-        return [EqualTo("actor", u"是", default_value=current_user.id), 
+        return [EqualTo("actor", u"是", default_value=current_user.id),
                 my_between, obj_cls_fltr]
 
 

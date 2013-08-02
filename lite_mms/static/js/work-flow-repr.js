@@ -185,13 +185,14 @@ WorkFlowRepr.prototype.draw = function () {
             if (j==0) {
                 var start = eventPoint;
             }
-            if (j < node.events.length - 1 && new Date(node.events[j + 1].datetime).getTime() - new Date(event_.datetime).getTime() < max * this.compress_range / 100) {
+            if (j < node.events.length - 1 && new Date(node.events[j + 1].datetime).getTime() - new Date(event_.datetime).getTime() < timespan * this.compress_range / 100) {
                 continue;
             } else {
                 if (group_size.length > 1) {
                     var avg = (_calcEventPos(group_size[0]) + _calcEventPos(group_size[group_size.length - 1])) / 2
                     eventPoint = [this.margin + avg, this.margin + i * step_size];
-                    var circle = draw.ellipse(eventDiameter * group_size.length, eventDiameter).center(eventPoint[0], eventPoint[1])
+                    var eventWidth = Math.max(eventDiameter, (new Date(event_.datetime).getTime() - new Date(group_size[0].datetime).getTime()) * this.width / timespan);
+                    var circle = draw.ellipse(eventWidth, eventDiameter).center(eventPoint[0], eventPoint[1])
                 } else {
                     circle = draw.circle(eventDiameter).center(eventPoint[0], eventPoint[1])
                 }

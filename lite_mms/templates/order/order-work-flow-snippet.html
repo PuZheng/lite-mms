@@ -2,7 +2,7 @@
   $(function () {
       var tree = {{ field_value|tojson|safe }};
       var canvas = document.getElementById('work-flow-canvas');
-      var workFlowRepr = new WorkFlowRepr(canvas, tree, 5); 
+      var workFlowRepr = new WorkFlowRepr(canvas, tree, 2);
       workFlowRepr.draw();
     });
 </script>

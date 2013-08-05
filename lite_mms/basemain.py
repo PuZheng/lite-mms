@@ -259,7 +259,20 @@ def permission_denied(error):
     return render_template("auth/login.html",
                            error=gettext(u"请登录"), next_url=request.url, titlename=u"请登录")
 
-if not app.config["DEBUG"]:
+if not app.debug:
+    def sender_email(traceback):
+        from flask.ext.mail import Mail, Message
+
+        mail = Mail(app)
+        senders = app.config.get("SENDERS", [])
+        if not senders:
+            return
+        msg = Message(subject=u"%s %s时遇到异常" % (request.method, request.url),
+                      html=traceback.render_summary(),
+                      sender="lite_mms@163.com",
+                      recipients=senders)
+        mail.send(msg)
+
     @app.errorhandler(Exception)
     def error(error):
         if isinstance(error, SQLAlchemyError):
@@ -272,9 +285,11 @@ if not app.config["DEBUG"]:
                                           ignore_system_exceptions=True)
         app.logger.error("%s %s" % (request.method, request.url))
         app.logger.error(traceback.plaintext)
-        return render_template("result.html", error_content=u"系统异常!",
+        sender_email(traceback)
+        return render_template("error.html", msg=u"%s %s时，系统异常" % (request.method, request.url),
+                               detail=traceback.render_summary(),
                                back_url=request.args.get("back_url", "/"),
-                               nav_bar=nav_bar), 403
+                               nav_bar=nav_bar, titlename=u"错误"), 403
 
 
 @app.after_request

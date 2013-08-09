@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from collections import OrderedDict
 import re
 import json
 
@@ -14,7 +15,6 @@ from flask.ext.databrowser.column_spec import (InputColumnSpec, ColumnSpec,
 from flask.ext.principal import PermissionDenied
 from werkzeug.utils import redirect
 from wtforms import Form, IntegerField, validators
-from werkzeug.datastructures import OrderedMultiDict
 
 from lite_mms.portal.cargo import cargo_page, fsm, gr_page
 from lite_mms.utilities import decorators, get_or_404
@@ -171,7 +171,7 @@ class UnloadSessionModelView(ModelView):
         else:
             return super(UnloadSessionModelView, self).edit_hint_message(obj, read_only)
 
-    __form_columns__ = OrderedMultiDict()
+    __form_columns__ = OrderedDict()
     __form_columns__[u"详细信息"] = [
         "plate_",
         InputColumnSpec("gross_weight", label=u"毛重"),
@@ -302,6 +302,23 @@ def weigh_unload_task(id_):
 
 class UnloadTaskModelView(ModelView):
 
+    create_in_steps = True
+
+    __create_columns__ = OrderedDict()
+    __create_columns__[u"选择车辆"] = [
+        PlaceHolderColumnSpec("unload_session", filter_=lambda q: q.filter(UnloadSession.finish_time == None),
+                              template_fname="cargo/unload-task-plate.html", as_input=True, label="")]
+
+    __create_columns__[u"选择卸货点"] = [
+        PlaceHolderColumnSpec("harbor", template_fname="cargo/unload-task-harbor.html", as_input=True, label="")]
+
+    __create_columns__[u"选择客户"] = [InputColumnSpec("customer", label="")]
+
+
+    __create_columns__[u"拍照"] = [PlaceHolderColumnSpec("pic_path", template_fname="cargo/unload-task-pic.html", as_input=True, label="")]
+
+    __create_columns__[u"是否完全卸货"] = [PlaceHolderColumnSpec("is_finished", template_fname="cargo/unload-task-finished.html")]
+
     __form_columns__ = [
         ColumnSpec("id", label=u"编号"),
         InputColumnSpec("product", group_by=Product.product_type, label=u"产品",
@@ -389,7 +406,7 @@ class GoodsReceiptModelView(ModelView):
                           NoneOrder("order", display_col_name=u"仅展示未生成订单", test=None, notation="__none")
                          ]
 
-    __form_columns__ = OrderedMultiDict()
+    __form_columns__ = OrderedDict()
     __form_columns__[u"详细信息"] = [
         "receipt_id",
         "customer",

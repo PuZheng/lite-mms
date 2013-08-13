@@ -11,13 +11,15 @@ def index():
     else:
         next_url = url_for("auth.login")
     if not next_url:
-        abort(404)
+        return render_template("index.html", nav_bar=nav_bar, titlename=u"首页")
     return redirect(next_url)
+
 
 @app.route("/error")
 def error():
     return render_template("error.html", msg=request.args["msg"], back_url=request.args.get("back_url", "/"),
                            nav_bar=nav_bar, titlename=u"错误")
+
 
 @app.route("/index")
 @decorators.templated("index.html")
@@ -36,6 +38,7 @@ def serv_pic(filename):
 def ajax_new_message():
     from lite_mms.models import TODO
     from lite_mms.apis.todo import get_all_notify
+
     messages = [
         {
             "create_time": str(todo.create_time),

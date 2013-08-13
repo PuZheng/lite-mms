@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from collections import OrderedDict
 import re
 import json
 
@@ -14,7 +15,6 @@ from flask.ext.databrowser.column_spec import (InputColumnSpec, ColumnSpec,
 from flask.ext.principal import PermissionDenied
 from werkzeug.utils import redirect
 from wtforms import Form, IntegerField, validators
-from werkzeug.datastructures import OrderedMultiDict
 
 from lite_mms.portal.cargo import cargo_page, fsm, gr_page
 from lite_mms.utilities import decorators, get_or_404
@@ -171,7 +171,7 @@ class UnloadSessionModelView(ModelView):
         else:
             return super(UnloadSessionModelView, self).edit_hint_message(obj, read_only)
 
-    __form_columns__ = OrderedMultiDict()
+    __form_columns__ = OrderedDict()
     __form_columns__[u"详细信息"] = [
         "plate_",
         InputColumnSpec("gross_weight", label=u"毛重"),
@@ -180,7 +180,7 @@ class UnloadSessionModelView(ModelView):
                    css_class="uneditable-input"),
         InputColumnSpec("create_time", label=u"创建时间", read_only=True),
         InputColumnSpec("finish_time", label=u"结束时间", read_only=True),
-        PlaceHolderColumnSpec(col_name="id", label=u"日志", template_fname="cargo/us-log-snippet.html")
+        PlaceHolderColumnSpec(col_name="log_list", label=u"日志", template_fname="cargo/us-log-snippet.html")
     ]
     __form_columns__[u"收货任务列表"] = [
         PlaceHolderColumnSpec(col_name="task_list", label=u"",
@@ -389,7 +389,7 @@ class GoodsReceiptModelView(ModelView):
                           NoneOrder("order", display_col_name=u"仅展示未生成订单", test=None, notation="__none")
                          ]
 
-    __form_columns__ = OrderedMultiDict()
+    __form_columns__ = OrderedDict()
     __form_columns__[u"详细信息"] = [
         "receipt_id",
         "customer",
@@ -400,7 +400,7 @@ class GoodsReceiptModelView(ModelView):
                         formatter=lambda v, obj: u"是" if v else u'<span class="text-error">否</span>'),
         ColumnSpec("stale", label=u"是否过时",
                   formatter=lambda v, obj: u'<span class="text-error">是</span>' if v else u"否"),
-        PlaceHolderColumnSpec("id", label=u"日志", template_fname="cargo/gr-logs-snippet.html")
+        PlaceHolderColumnSpec("log_list", label=u"日志", template_fname="cargo/gr-logs-snippet.html")
     ]
     __form_columns__[u"产品列表"] = [
         TableColumnSpec("goods_receipt_entries", label="",

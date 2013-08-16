@@ -45,7 +45,7 @@
         </strong></div>
         {% for log in list %}
           <blockquote>
-            {% for k, v in log.url_map %}
+            {% set k, v = log.url_map %}
               {% if v %}
                 <a href="{{ v }}">
               {% endif %}
@@ -53,7 +53,7 @@
               {{ log.create_time.strftime("%H:%M") }}
             </span>
             {% if log.obj_cls %}
-              {{ log.obj_cls }}
+              {{ log.obj_class }}
               <strong>{{ log.obj }}</strong>
             {% endif %}
             被操作员<strong>{{ log.actor or "" }}</strong>执行了<strong>{{ log.action }}</strong>操作 -
@@ -61,7 +61,6 @@
             {% if v %}
               </a>
             {% endif %}
-            {% endfor %}
           </blockquote>
         {% endfor %}
       {% endfor %}

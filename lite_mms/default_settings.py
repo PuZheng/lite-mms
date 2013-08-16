@@ -30,3 +30,5 @@ SERVE_TYPE = "both"
 import os
 LOG_FILE = os.path.join(os.getcwd(), "lite-mms.log")
 REPORT_DIR = 'report_conf'
+
+SENDERS = []

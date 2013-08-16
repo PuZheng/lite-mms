@@ -2,13 +2,13 @@
   $(function () {
       var tree = {{ field_value|tojson|safe }};
       var canvas = document.getElementById('work-flow-canvas');
-      var workFlowRepr = new WorkFlowRepr(canvas, tree, 5); 
+      var workFlowRepr = new WorkFlowRepr(canvas, tree, 2);
       workFlowRepr.draw();
     });
 </script>
 
-<i data-toggle='modal' href="#help-modal" class="icon-question-sign pull-right work-flow-help" ></i>
-<div class="modal fade" id="help-modal">
+<a data-toggle='modal' href="#help-modal" class="icon-question-sign pull-right work-flow-help" ></a>
+<div class="modal fade hide" id="help-modal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">

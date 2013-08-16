@@ -304,6 +304,8 @@ class UnloadTaskModelView(ModelView):
 
     create_in_steps = True
 
+    step_create_templates = [None, None, None, 'cargo/unload-task-pic.html', None]
+
     __create_columns__ = OrderedDict()
     __create_columns__[u"选择车辆"] = [
         PlaceHolderColumnSpec("unload_session", filter_=lambda q: q.filter(UnloadSession.finish_time == None),

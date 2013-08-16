@@ -8,7 +8,9 @@ import flask.ext.login as login
 from sqlalchemy.orm.exc import NoResultFound
 from lite_mms.exceptions import AuthenticateFailure
 from lite_mms.apis import ModelWrapper
-
+from lite_mms.basemain import app
+from itsdangerous import URLSafeTimedSerializer
+from lite_mms.constants import groups
 
 class UserWrapper(login.UserMixin, ModelWrapper):
     """
@@ -52,6 +54,34 @@ class UserWrapper(login.UserMixin, ModelWrapper):
     def __repr__(self):
         return "<UserWrapper %s> " % self.username
 
+    @property
+    def can_login_client(self):
+        """
+        test if the user could login in client
+        """
+        can_login_groups = { 
+            groups.DEPARTMENT_LEADER, 
+            groups.TEAM_LEADER, 
+            groups.LOADER, 
+            groups.QUALITY_INSPECTOR
+        }
+        return all(group.id in can_login_groups for group in self.groups)
+
+    @property
+    def _serializer(self):
+        """
+        get a serializer to generate authentication token
+        """
+        secret_key = app.config.get('SECRET_KEY')
+        salt = app.config.get('SECURITY_%s_SALT' % self.username.upper())
+        return URLSafeTimedSerializer(secret_key=secret_key, salt=salt)
+
+    def get_auth_token(self):
+        '''
+        get the authentiaction token, see `https://flask-login.readthedocs.org/en/latest/#flask.ext.login.LoginManager.token_loader`_
+        '''
+        return self._serializer.dumps([self.username, self.password])
+
 def get_user(id_):
     if not id_:
         return None
@@ -87,7 +117,7 @@ def authenticate(username, password):
             models.User.query.filter(models.User.username == username).filter(
                 models.User.password == md5(password).hexdigest()).one())
     except NoResultFound:
-        raise AuthenticateFailure("无此用户")
+        raise AuthenticateFailure("用户名或者密码错误")
 
 
 if __name__ == "__main__":

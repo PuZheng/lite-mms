@@ -18,17 +18,20 @@ def login():
         import lite_mms.apis as apis
 
         user = apis.auth.authenticate(username, password)
-        if user.groups[0].id not in [groups.DEPARTMENT_LEADER, groups.TEAM_LEADER, groups.LOADER, groups.QUALITY_INSPECTOR]:
-            return u'该用户不能在客户端登录', 403
-
+        if not user.can_login_client:
+            return json.dumps({
+                'reason': u'该用户不能在客户端登录'
+            }), 403
     except AuthenticateFailure as inst:
-        return unicode(inst), 403
+        return json.dumps({
+            'reason': unicode(inst)
+        }), 403
     return json.dumps(
         dict(username=user.username, teamID=user.team.id if user.team else "",
             userID=user.id,
             departmentID=",".join([str(department.id) for department in
                                    user.department_list]) if user.department_list else "",
-            userGroup=user.groups[0].id))
+            userGroup=user.groups[0].id, token=user.get_auth_token()))
 
 if __name__ == "__main__":
     try:

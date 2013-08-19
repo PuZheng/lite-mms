@@ -180,7 +180,7 @@ class UnloadSessionModelView(ModelView):
                    css_class="uneditable-input"),
         InputColumnSpec("create_time", label=u"创建时间", read_only=True),
         InputColumnSpec("finish_time", label=u"结束时间", read_only=True),
-        PlaceHolderColumnSpec(col_name="id", label=u"日志", template_fname="cargo/us-log-snippet.html")
+        PlaceHolderColumnSpec(col_name="log_list", label=u"日志", template_fname="cargo/us-log-snippet.html")
     ]
     __form_columns__[u"收货任务列表"] = [
         PlaceHolderColumnSpec(col_name="task_list", label=u"",
@@ -419,7 +419,7 @@ class GoodsReceiptModelView(ModelView):
                         formatter=lambda v, obj: u"是" if v else u'<span class="text-error">否</span>'),
         ColumnSpec("stale", label=u"是否过时",
                   formatter=lambda v, obj: u'<span class="text-error">是</span>' if v else u"否"),
-        PlaceHolderColumnSpec("id", label=u"日志", template_fname="cargo/gr-logs-snippet.html")
+        PlaceHolderColumnSpec("log_list", label=u"日志", template_fname="cargo/gr-logs-snippet.html")
     ]
     __form_columns__[u"产品列表"] = [
         TableColumnSpec("goods_receipt_entries", label="",

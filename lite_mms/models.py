@@ -125,18 +125,6 @@ class UnloadTask(db.Model):
     product = db.relationship("Product")
     is_last = db.Column(db.Boolean, default=False)
 
-    def __init__(self, unload_session, harbor, customer, creator,
-                 product, pic_path, create_time=None, weight=0, is_last=False):
-        self.unload_session = unload_session
-        self.harbor = harbor
-        self.customer = customer
-        self.creator = creator
-        self.pic_path = pic_path
-        self.product = product
-        self.create_time = create_time or datetime.now()
-        self.weight = weight
-        self.is_last = is_last
-
     def __unicode__(self):
         return unicode(self.id)
 

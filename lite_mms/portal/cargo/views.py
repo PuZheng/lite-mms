@@ -302,6 +302,25 @@ def weigh_unload_task(id_):
 
 class UnloadTaskModelView(ModelView):
 
+    create_in_steps = True
+
+    step_create_templates = [None, None, None, 'cargo/unload-task-pic.html', None]
+
+    __create_columns__ = OrderedDict()
+    __create_columns__[u"选择车辆"] = [
+        PlaceHolderColumnSpec("unload_session", filter_=lambda q: q.filter(UnloadSession.finish_time == None),
+                              template_fname="cargo/unload-task-plate.html", as_input=True, label="")]
+
+    __create_columns__[u"选择卸货点"] = [
+        PlaceHolderColumnSpec("harbor", template_fname="cargo/unload-task-harbor.html", as_input=True, label="")]
+
+    __create_columns__[u"选择客户"] = [InputColumnSpec("customer", label="")]
+
+
+    __create_columns__[u"拍照"] = [PlaceHolderColumnSpec("pic_path", template_fname="cargo/unload-task-pic.html", as_input=True, label="")]
+
+    __create_columns__[u"是否完全卸货"] = [PlaceHolderColumnSpec("is_finished", template_fname="cargo/unload-task-finished.html")]
+
     __form_columns__ = [
         ColumnSpec("id", label=u"编号"),
         InputColumnSpec("product", group_by=Product.product_type, label=u"产品",

@@ -4,6 +4,7 @@ from flask.ext.login import current_user, login_required
 from lite_mms.basemain import app, nav_bar
 from lite_mms.utilities import decorators
 
+
 @app.route("/")
 def index():
     if current_user.is_authenticated():
@@ -43,10 +44,10 @@ def ajax_new_message():
         {
             "create_time": str(todo.create_time),
             "actor": todo.actor.username if todo.actor else "",
-            "action": todo.action, 
+            "action": todo.action,
             "msg": todo.msg,
             "context_url": todo.context_url
-        } 
+        }
         for todo in get_all_notify(current_user.id)
     ]
     return json.dumps({"total_cnt": TODO.query.filter(TODO.user_id == current_user.id).count(), "messages": messages})

@@ -100,6 +100,7 @@ class InitializeTestDB(Command):
         # 初始化车辆
         vehicle1 = do_commit(Plate(name=u"浙A 00001"))
         vehicle2 = do_commit(Plate(name=u"浙A 00002"))
+        vehicle3 = do_commit(Plate(name=u"浙A 00003"))
 
         # 初始化客户
         customer1 = do_commit(Customer(u"宁波机床场", "nbjcc"))
@@ -112,24 +113,24 @@ class InitializeTestDB(Command):
         unload_session1 = do_commit(UnloadSession(plate_=vehicle1, gross_weight=10000, with_person=True,
                                                   finish_time=datetime.now(), status=cargo_const.STATUS_CLOSED))
         default_product = Product.query.filter(Product.name==DEFAULT_PRODUCT_NAME).one()
-        unload_task1 = do_commit(UnloadTask(unload_session1, harbor1, customer1, l, default_product, "0.png",
+        unload_task1 = do_commit(UnloadTask(unload_session=unload_session1, harbor=harbor1, customer=customer1, creator=l, product=default_product, pic_path="0.png",
                        weight=1000))
-        unload_task2 = do_commit(UnloadTask(unload_session1, harbor2, customer2, l, product2, "1.png", weight=3000))
+        unload_task2 = do_commit(UnloadTask(unload_session=unload_session1, harbor=harbor2, customer=customer2, creator=l, product=product2, pic_path="1.png", weight=3000))
         #     - 车上无人， 有三个任务，来自两个客户, 有一个尚未称重
         unload_session2 = do_commit(
             UnloadSession(plate_=vehicle2, gross_weight=10000, with_person=False,
-                          finish_time=datetime.now(), status=cargo_const.STATUS_WEIGHING))
+                          status=cargo_const.STATUS_WEIGHING))
         unload_task3 = do_commit(
-            UnloadTask(unload_session2, harbor1, customer2, l, product2, "2.png",
+            UnloadTask(unload_session=unload_session2, harbor=harbor1, customer=customer2, creator=l, product=product2, pic_path="2.png",
                        weight=1000))
         unload_task4 = do_commit(
-            UnloadTask(unload_session2, harbor2, customer3, l, product3, "3.png",
+            UnloadTask(unload_session=unload_session2, harbor=harbor2, customer=customer3, creator=l, product=product3, pic_path="3.png",
                        weight=4000))
         unload_task5 = do_commit(
-            UnloadTask(unload_session2, harbor2, customer3, l, product4, "4.png"))
+            UnloadTask(unload_session=unload_session2, harbor=harbor2, customer=customer3, creator=l, product=product4, pic_path="4.png"))
         #     - 车上无人，正在等待装货
         unload_session3 = do_commit(
-            UnloadSession(plate_=vehicle2, gross_weight=10000, with_person=False,
+            UnloadSession(plate_=vehicle3, gross_weight=10000, with_person=False, 
                           status=cargo_const.STATUS_LOADING))
 
         # 生成收货会话和收货项, 注意这里故意不为某些客户生成收货单

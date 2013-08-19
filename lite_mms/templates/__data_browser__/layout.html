@@ -18,6 +18,8 @@
   <script type="text/javascript" src="{{ url_for('static', filename='js/opentip-jquery.min.js') }}"></script>
   <script type="text/javascript">
     {% if g.request_from_mobile %}
+      var pictureSource;
+      var destinationType;
       function onLoad() {
         document.addEventListener("deviceready", onDeviceReady, false);
       }
@@ -42,11 +44,29 @@
       }
       function onDeviceReady() {
         document.addEventListener("menubutton", onMenuKeyDown, false);
-        document.addEventListener("backbutton", onBackKeyDown, false)
+        document.addEventListener("backbutton", onBackKeyDown, false);
+        pictureSource = navigator.camera.PictureSourceType;
+        destinationType = navigator.camera.DestinationType;
       }
 
       function onMenuKeyDown() {
         $(".context-menu").toggle();
+      }
+
+      function onPhotoURISuccess(imageData) {
+        var largeImage = document.getElementById('largeImage');
+        //largeImage.style.display = 'block';
+        largeImage.src = imageData;
+        $("[name=pic_url]").val(imageData);
+      }
+
+      function capturePhoto() {
+        navigator.camera.getPicture(onPhotoURISuccess, onFail, { quality: 50,
+          destinationType: destinationType.FILE_URI});
+      }
+
+      function onFail(message) {
+        alert('Failed because: ' + message);
       }
 
       $(function () {
@@ -188,11 +208,11 @@
                 您是
                 <strong>
                   {% if current_user.groups|length > 1 %}
-                  <a href="#switch-group-modal" data-role="switch-group" data-toggle="modal">
+                    <a href="#switch-group-modal" data-role="switch-group" data-toggle="modal">
                   {% endif %}
-                    {{ current_user.group_name }}
+                  {{ current_user.group_name }}
                   {% if current_user.groups|length > 1 %}
-                  </a>
+                    </a>
                   {% endif %}
                 </strong>
                 <a href="{{ url_for('auth.logout') }}">退出</a>
@@ -212,13 +232,13 @@
       <ul class="nav nav-pills nav-stacked">
         {% for group in current_user.groups %}
           {% if group.id == current_user.group.id %}
-          <li class='active pagination-centered'>
-            <a href='#'><b>{{ group.name }} (当前角色)</b></a>
-          </li>
+            <li class='active pagination-centered'>
+              <a href='#'><b>{{ group.name }} (当前角色)</b></a>
+            </li>
           {% else %}
-          <li class='pagination-centered'>
-            <a href="{{ url_for('auth.switch_group', id_=group.id) }}"><b>{{ group.name }}</b></a>
-          </li>
+            <li class='pagination-centered'>
+              <a href="{{ url_for('auth.switch_group', id_=group.id) }}"><b>{{ group.name }}</b></a>
+            </li>
           {% endif %}
         {% endfor %}
       </ul>

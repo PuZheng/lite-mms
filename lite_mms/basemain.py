@@ -182,6 +182,7 @@ nav_bar.register(store_bill_page, name=u"仓单管理",
                  permissions=[QualityInspectorPermission])
 nav_bar.register(deduction_page, name=u"扣重管理", default_url="/deduction/",
                  permissions=[QualityInspectorPermission])
+nav_bar.register(dashboard, name=u"仪表盘", permissions=[AdminPermission])
 
 nav_bar.register(time_line_page, name=u"时间线", default_url="/timeline/log-list")
 nav_bar.register(search_page, name=u"搜索", default_url="/search/search")

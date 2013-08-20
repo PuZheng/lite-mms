@@ -1,5 +1,6 @@
 #-*- coding:utf-8 -*-
 from flask import Blueprint, render_template
+from flask.ext.principal import PermissionDenied
 from lite_mms.utilities.decorators import templated, nav_bar_set
 
 dashboard = Blueprint(name="dashboard", import_name=__name__, static_folder="static", template_folder="templates")
@@ -21,15 +22,23 @@ class Widget(object):
     def query(self):
         return NotImplemented
 
+    def try_view(self):
+        return True
+
 
 DASHBOARD_WIDGETS = []
 from . import widgets
 
 
 def _get_widgets():
-    if not DASHBOARD_WIDGETS:
-        raise NotImplementedError
-    return DASHBOARD_WIDGETS
+    result = []
+    for i in DASHBOARD_WIDGETS:
+        try:
+            i.try_view()
+            result.append(i)
+        except PermissionDenied:
+            pass
+    return result
 
 
 @dashboard.route("/")

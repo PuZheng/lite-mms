@@ -4,6 +4,7 @@ from sqlalchemy import func
 
 from lite_mms import models, constants
 from lite_mms.database import db
+from lite_mms.permissions.roles import AdminPermission
 
 
 class ManufactureWidget(Widget):
@@ -15,6 +16,8 @@ class ManufactureWidget(Widget):
     def data(self):
         return int(self.query().first()[0])
 
+    def try_view(self):
+        AdminPermission.test()
 
 manufacture_widget = ManufactureWidget(name=u"生产中重量", description=u"生成中工单的总重量")
 
@@ -27,6 +30,8 @@ class ToDeliveryWidget(Widget):
     def data(self):
         return int(self.query().first()[0])
 
+    def try_view(self):
+        AdminPermission.test()
 
 to_delivery_widget = ToDeliveryWidget(name=u"待发货重量", description=u"待发货的仓单的总重量")
 DASHBOARD_WIDGETS.append(manufacture_widget)

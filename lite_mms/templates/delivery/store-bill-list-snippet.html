@@ -40,7 +40,7 @@
 {% else %}
   <span class="text-error">无</span>
 {% endif %}
-{% if obj %}
+{% if obj and obj.id %}
   <a class="btn btn-primary" href="{{ url_for("delivery.store_bill_add", url=request.url, delivery_session_id=obj.id) }}">
     <i class="icon-plus"></i>&nbsp;添加仓单
   </a>

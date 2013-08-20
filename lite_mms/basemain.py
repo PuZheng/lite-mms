@@ -139,6 +139,9 @@ if serve_web:
     from lite_mms.portal.quality_inspection import qir_page
     app.register_blueprint(qir_page, url_prefix="/qir")
 
+    from lite_mms.portal.dashboard import dashboard
+    app.register_blueprint(dashboard, url_prefix="/dashboard")
+
 if serve_ws:
     from lite_mms.portal.auth_ws import auth_ws
     app.register_blueprint(auth_ws, url_prefix="/auth_ws")

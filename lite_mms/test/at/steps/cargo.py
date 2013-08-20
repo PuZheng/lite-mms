@@ -14,7 +14,7 @@ from lite_mms.utilities import do_commit
 #patch logger
 timeline_logger.handlers = []
 app.config["CSRF_ENABLED"] = False
-
+app.config["WTF_CSRF_ENABLED"] = False
 
 def refresh(obj):
     return db.session.query(obj.__class__).filter(obj.__class__.id == obj.id).one()
@@ -69,7 +69,6 @@ def _(step, us):
     with app.test_request_context():
         with app.test_client() as c:
             rv = c.post("/cargo/unload-session/%d" % us.id, data={"__action__": u"生成收货单"})
-
             assert 302 == rv.status_code
             return db.session.query(models.GoodsReceipt).filter(models.GoodsReceipt.unload_session_id == us.id).all()
 

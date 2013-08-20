@@ -10,7 +10,7 @@ from lite_mms.utilities import do_commit
 timeline_logger.handlers = []
 
 app.config["CSRF_ENABLED"] = False
-
+app.config["WTF_CSRF_ENABLED"] = False
 
 def generate(times=1):
     from random import choice

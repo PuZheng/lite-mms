@@ -69,6 +69,7 @@ def _(step, us):
     with app.test_request_context():
         with app.test_client() as c:
             rv = c.post("/cargo/unload-session/%d" % us.id, data={"__action__": u"生成收货单"})
+
             assert 302 == rv.status_code
             return db.session.query(models.GoodsReceipt).filter(models.GoodsReceipt.unload_session_id == us.id).all()
 

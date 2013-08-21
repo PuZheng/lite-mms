@@ -86,8 +86,8 @@ class InitializeTestDB(Command):
         # 创建车间和班组
         department1 = do_commit(Department(name=u"车间1", leader_list=[d1_dl, super_dl])) 
         department2 = do_commit(Department(name=u"车间2", leader_list=[d2_dl, super_dl])) 
-        team1 = do_commit(Team(name=u"班组101", department=department1, leader=t101_tl))
-        team2 = do_commit(Team(name=u"班组201", department=department2, leader=t201_tl))
+        team1 = do_commit(Team(name=u"班组101", department=department1, leader_list=[t101_tl]))
+        team2 = do_commit(Team(name=u"班组201", department=department2, leader_list=[t201_tl]))
 
         # 创建工序
         procedure1 = do_commit(Procedure(name=u"工序1", department_list=[department1, department2]))

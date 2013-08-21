@@ -33,6 +33,10 @@ procedure_and_department_table = db.Table("TB_PROCEDURE_AND_DEPARTMENT",
                                                     db.ForeignKey(
                                                         "TB_DEPARTMENT.id")))
 
+user_and_team_table = db.Table("TB_USER_AND_TEAM", db.Column("team_id", db.Integer, db.ForeignKey("TB_TEAM.id")),
+                               db.Column("leader_id", db.Integer, db.ForeignKey("TB_USER.id")))
+
+
 
 class Permission(db.Model):
     __tablename__ = "TB_PERMISSION"
@@ -235,9 +239,7 @@ class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(32), nullable=False, unique=True)
     department_id = db.Column(db.Integer, db.ForeignKey('TB_DEPARTMENT.id'), nullable=False)
-    leader_id = db.Column(db.Integer, db.ForeignKey('TB_USER.id'))
-    leader = db.relationship("User", backref=db.backref("team", uselist=False))
-
+    leader_list = db.relationship("User", secondary=user_and_team_table, backref="team_list")
 
     def __unicode__(self):
         return self.name

@@ -36,7 +36,8 @@ class StoreBillModelView(ModelView):
                          "harbor": u"存放点",
                          "pic_url": u"图片"}
 
-    __column_formatters__ = {"printed": lambda v, obj: _printed if v else _unprinted}
+    __column_formatters__ = {"printed": lambda v, obj: _printed if v else _unprinted,
+                             "harbor": lambda v, model: v if v else ""}
 
     def preprocess(self, obj):
         return StoreBillWrapper(obj)

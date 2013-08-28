@@ -138,6 +138,9 @@
                       <tr {% if not store_bill.printed %}
                         class="warning" title="未打印">
                         <td></td>
+                        {% elif not store_bill.harbor %}
+                          class="warning" title="未选择存放点">
+                          <td></td>
                       {% else %}
                         >
                         <td>

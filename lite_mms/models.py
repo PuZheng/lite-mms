@@ -882,26 +882,5 @@ class Config(db.Model):
     def __unicode__(self):
         return self.property_name
 
-class TaskFlowModel(db.Model):
-
-    __modelname__ = u'电子流'
-    __tablename__ = 'TB_TASK_FLOW'
-
-    id = db.Column(db.Integer, primary_key=True)
-    create_time = db.Column(db.DateTime, default=datetime.now)
-    initiator_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
-    initiator = db.relationship("User")
-    annotation = db.Column(db.String(64))
-
-class TaskModel(db.Model):
-
-    __modelname__ = u'请求'
-    __tablename__ = 'TB_TASK'
-
-    id = db.Column(db.Integer, primary_key=True)
-    task_flow_id = db.Column(db.Integer, db.ForeignKey("TB_TASK_FLOW.id"), autoincrement=False)
-    actor_id = db.Column(db.Integer, db.ForeignKey("TB_USER.id"))
-    actor = db.relationship("User")
-    create_time = db.Column(db.DateTime, default=datetime.now)
 
 

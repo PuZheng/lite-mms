@@ -42,7 +42,6 @@ def index():
 
 
 @manufacture_page.route('/schedule', methods=['GET', 'POST'])
-@decorators.nav_bar_set
 def schedule():
     import lite_mms.apis as apis
 
@@ -52,7 +51,7 @@ def schedule():
 
         if 1 == len(work_command_list):
             work_command = work_command_list[0]
-            return render_template("manufacture/schedule-work-command.html", titlename=u'排产',
+            return render_template("manufacture/schedule-work-command.html", titlename=u'排产', nav_bar=nav_bar,
                                    department_list=[_wrapper(d) for d in get_department_list()], work_command=work_command)
         else:
             from lite_mms.utilities.functions import deduplicate
@@ -63,8 +62,7 @@ def schedule():
                          'work_command_list': work_command_list,
                          'default_department_id': department_set[0].id if len(department_set) == 1 else None}
 
-            return render_template("manufacture/batch-schedule.html",
-                                   **param_dic)
+            return render_template("manufacture/batch-schedule.html", nav_bar=nav_bar, **param_dic)
     else: # POST
         class WorkCommandForm(Form):
             id = HiddenField('id', [validators.required()])

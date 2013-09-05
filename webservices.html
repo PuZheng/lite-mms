@@ -1,0 +1,1453 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>webservices &mdash; lite-mms 1.1 文档</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <link rel="top" title="lite-mms 1.1 文档" href="index.html" />
+    <link rel="next" title="简介" href="mannual.html" />
+    <link rel="prev" title="Welcome to lite-mms-doc’s Documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="总目录"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python 模块索引"
+             >模块</a> |</li>
+        <li class="right" >
+          <a href="mannual.html" title="简介"
+             accesskey="N">下一页</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to lite-mms-doc’s Documentation"
+             accesskey="P">上一页</a> |</li>
+        <li><a href="index.html">lite-mms 1.1 文档</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="webservices">
+<h1>webservices<a class="headerlink" href="#webservices" title="永久链接至标题">¶</a></h1>
+<p>userGroup:
+1：车间主任
+2：班组长
+3：装卸工
+4：质检员
+5:收发员
+6：调度员</p>
+<p>&#8216;&#8217;&#8216;注释后面打*的字段可选填&#8217;&#8216;&#8217;</p>
+<div class="section" id="post-auth-login">
+<h2>post-auth-login(客户端登陆接口)<a class="headerlink" href="#post-auth-login" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li>单元测试: <tt class="xref py py-func docutils literal"><span class="pre">portal.auth.test_webservices.test_post_login_UT()</span></tt></li>
+<li>集成测试: :py:func:<a href="#id1"><span class="problematic" id="id2">`</span></a>portal.auth.test_webservices.test_post_login_IT `</li>
+</ul>
+<div class="section" id="request">
+<h3>request<a class="headerlink" href="#request" title="永久链接至标题">¶</a></h3>
+<p><strong>POST /auth_ws/login?username=&lt;str&gt;&amp;password=&lt;str&gt;</strong></p>
+<ul class="simple">
+<li>username - 用户名</li>
+<li>password - 用户密码</li>
+</ul>
+</div>
+<div class="section" id="response">
+<h3>response<a class="headerlink" href="#response" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>200 - 成功:</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+ <span class="s">&quot;username&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 用户名</span>
+ <span class="s">&quot;teamID&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 班组ID</span>
+ <span class="s">&quot;userID&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 用户ID</span>
+ <span class="s">&quot;departmentID&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">+&gt;</span><span class="p">,</span> <span class="c"># 车间ID, 包括多个，存在一个车间主任管理多个班组的情况。</span>
+ <span class="s">&quot;userGroup&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c">#</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>403 - 错误:</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;actual error reason&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="example">
+<h3>example<a class="headerlink" href="#example" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>请求</li>
+</ul>
+<p><strong>POST /auth_ws/login?username=xiechao&amp;password=asdf</strong></p>
+<ul>
+<li><p class="first">返回</p>
+<blockquote>
+<div><ul class="simple">
+<li>http code - 200</li>
+<li>数据</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+    <span class="s">&quot;username&quot;</span><span class="p">:</span> <span class="s">&quot;wangjiali&quot;</span><span class="p">,</span>
+    <span class="s">&quot;teamID&quot;</span><span class="p">:</span> <span class="s">&quot;22&quot;</span><span class="p">,</span>
+    <span class="s">&quot;userID&quot;</span><span class="p">:</span> <span class="s">&quot;10000&quot;</span><span class="p">,</span>
+    <span class="s">&quot;departmentID&quot;</span><span class="p">:</span> <span class="s">&quot;2,3&quot;</span><span class="p">,</span>
+    <span class="s">&quot;userGroup&quot;</span><span class="p">:</span> <span class="s">&quot;1&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="get-unload-session-list">
+<h2>get-unload-session-list(获取卸货会话列表)<a class="headerlink" href="#get-unload-session-list" title="永久链接至标题">¶</a></h2>
+<p>获取的卸货会话都是未完成的</p>
+<ul class="simple">
+<li>单元测试: <tt class="xref py py-func docutils literal"><span class="pre">portal.cargo.test_webservices.test_get_unload_session_list_UT()</span></tt></li>
+</ul>
+<div class="section" id="id3">
+<h3>request<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h3>
+<p><strong>GET /cargo_ws/unload-session-list?index=&lt;int&gt;&amp;cnt=&lt;int&gt;</strong></p>
+<ul class="simple">
+<li><a href="#id4"><span class="problematic" id="id5">*</span></a>index - 返回的集合在所有卸货会话列表中的起始位置，默认为0</li>
+<li><a href="#id6"><span class="problematic" id="id7">*</span></a>cnt - 返回的卸货会话数量，默认为sys.maxint</li>
+</ul>
+</div>
+<div class="section" id="id8">
+<h3>response<a class="headerlink" href="#id8" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>200 - 成功</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+ <span class="s">&quot;total_cnt&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span>
+ <span class="s">&quot;data&quot;</span><span class="p">:</span> <span class="p">[</span>
+     <span class="p">{</span>
+         <span class="s">&quot;sessionID&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 会话ID</span>
+         <span class="s">&quot;plateNumber&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 车牌号</span>
+         <span class="s">&quot;isLocked&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="o">|</span><span class="mi">0</span><span class="p">,</span> <span class="c"># 是否被锁定</span>
+     <span class="p">},</span>
+     <span class="o">...</span>
+ <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>404 - 错误</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;actual error reason&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id9">
+<h3>example<a class="headerlink" href="#id9" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>请求</li>
+</ul>
+<p><strong>GET /cargo_ws/unload-session-list</strong></p>
+<ul>
+<li><p class="first">响应</p>
+<blockquote>
+<div><ul class="simple">
+<li>http code: 200</li>
+<li>数据</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="get-harbour-list">
+<h2>get-harbour-list(获取装卸货点列表)<a class="headerlink" href="#get-harbour-list" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li>单元测试: <tt class="xref py py-func docutils literal"><span class="pre">portal.cargo.test_webservices.test_get_harbour_list()</span></tt></li>
+</ul>
+<div class="section" id="id10">
+<h3>request<a class="headerlink" href="#id10" title="永久链接至标题">¶</a></h3>
+<p><strong>GET /cargo_ws/harbour-list</strong></p>
+</div>
+<div class="section" id="id11">
+<h3>response<a class="headerlink" href="#id11" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>200 - 成功</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span>
+   <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># harbours</span>
+   <span class="o">...</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>404 - 失败</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;actual error reason&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id12">
+<h3>example<a class="headerlink" href="#id12" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>请求</li>
+</ul>
+<p><strong>GET /cargo_ws/harbour-list</strong></p>
+<ul>
+<li><p class="first">响应</p>
+<blockquote>
+<div><ul class="simple">
+<li>http code - 200</li>
+<li>数据</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span>
+   <span class="s">&quot;车间一&quot;</span><span class="p">,</span>
+   <span class="s">&quot;车间二&quot;</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="post-unload-task">
+<h2>post-unload-task(生成卸货任务)<a class="headerlink" href="#post-unload-task" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li>单元测试: <tt class="xref py py-func docutils literal"><span class="pre">portal.cargo.test_webservices.test_post_unload_task()</span></tt></li>
+</ul>
+<div class="section" id="id13">
+<h3>request<a class="headerlink" href="#id13" title="永久链接至标题">¶</a></h3>
+<p><strong>POST /cargo_ws/unload-task?actor_id=&lt;int&gt;&amp;customer_id=&lt;int&gt;&amp;harbour=&lt;int&gt;&amp;is_finished=[0|1]&amp;session_id=&lt;int&gt;</strong></p>
+<p><strong>&lt;raw_picture_data&gt;</strong></p>
+<ul class="simple">
+<li>actor_id - 当前操作用户ID</li>
+<li>customer_id - 客户id</li>
+<li>harbour - 卸货点名称</li>
+<li>* is_finished - 是否完全卸货, 0代表没有，1代表完毕。可选项，默认为0</li>
+<li>session_id - 卸货会话id</li>
+<li>raw_picture_data - 原始图片数据</li>
+</ul>
+</div>
+<div class="section" id="id14">
+<h3>response<a class="headerlink" href="#id14" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>200 - 成功</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span> <span class="c"># unload task id, 代表新创建的卸货任务ID</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>500 - 失败</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;error reason&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id15">
+<h3>example<a class="headerlink" href="#id15" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>请求：</li>
+</ul>
+<p><strong>POST http://&lt;your site&gt;/cargo_ws/unload-task?session_id=1&amp;is_finished=1&amp;harbour=装卸点1&amp;actor_id=2&amp;customer_id=2</strong></p>
+<ul>
+<li><dl class="first docutils">
+<dt>返回：</dt>
+<dd><ul class="first last simple">
+<li>http code - 200</li>
+<li>数据:</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="mi">10001</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="get-work-command-list">
+<h2>get-work-command-list(获取工单列表)<a class="headerlink" href="#get-work-command-list" title="永久链接至标题">¶</a></h2>
+<p>获取一系列的工单列表，其排序规则如下：</p>
+<ul class="simple">
+<li>首先按加急与否进行排序</li>
+<li>其次，按工单上一次状态变更的时间由远及近进行排序。</li>
+</ul>
+<p>例如：存在A，B两个待分配工单，这两个工单排产的时间分别是 <em>2012-9-10[10:09:10]</em> 和 <em>2012-9-10[9:50:07]</em> , 那么B要排在A的前面</p>
+<ul class="simple">
+<li>单元测试: <tt class="xref py py-func docutils literal"><span class="pre">portal.manufacture.test_webservices.test_work_command_list()</span></tt></li>
+</ul>
+<div class="section" id="id16">
+<h3>request<a class="headerlink" href="#id16" title="永久链接至标题">¶</a></h3>
+<p><strong>GET /manufacture_ws/work-command-list?department_id=&lt;int&gt;&amp;team_id=&lt;int&gt;&amp;start=&lt;int:0&gt;&amp;cnt=&lt;int:sys.maxint&gt;&amp;status=&lt;int&gt;+</strong></p>
+<ul class="simple">
+<li><a href="#id17"><span class="problematic" id="id18">*</span></a>department_id - 车间ID， 若为空，则team_id不能为空</li>
+<li><a href="#id19"><span class="problematic" id="id20">*</span></a>team_id - 班组ID， 若为空，则department_id不能为空</li>
+<li><a href="#id21"><span class="problematic" id="id22">*</span></a>start - 返回的工单列表在所有符合其他参数条件的工单列表中的起始位置, 若为空，默认为0</li>
+<li><a href="#id23"><span class="problematic" id="id24">*</span></a>cnt - 返回的工单数量，若为空，默认为sys.maxint</li>
+<li>status - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单状态的说明, 可以是多种工单状态的组合, 若是多种工单状态的组合，中间用&#8217;,&#8217;隔开</li>
+</ul>
+</div>
+<div class="section" id="id25">
+<h3>response<a class="headerlink" href="#id25" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>200 - 成功</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+    <span class="s">&quot;totalCnt&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 总数量</span>
+    <span class="s">&quot;data&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s">&quot;customerName&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 客户名称</span>
+            <span class="s">&quot;department&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 车间ID</span>
+                <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 车间名称</span>
+            <span class="p">}</span>
+            <span class="s">&quot;handleType&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 处理类型</span>
+            <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 工单ID</span>
+            <span class="s">&quot;isUrgent&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="o">|</span><span class="mi">0</span><span class="p">,</span> <span class="c"># 是否加急，1加急。</span>
+            <span class="s">&quot;lastMod&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># last modified time, seconds since epoch</span>
+            <span class="s">&quot;orderID&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 订单ID</span>
+            <span class="s">&quot;orderNum&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 订单号</span>
+            <span class="s">&quot;orderCreateTime&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 订单创建时间，seconds since epoch</span>
+            <span class="s">&quot;orderType&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 工单类型</span>
+            <span class="s">&quot;orgWeight&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 工序前重量 , 需要说明的是，若工单类型为瑞格或者紧固件，那么这个值只有参考意义。</span>
+            <span class="s">&quot;orgWeight&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 工序前重量</span>
+            <span class="s">&quot;picPath&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 图片链接</span>
+            <span class="s">&quot;previousProcedure&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 上一道工序名称，可为空</span>
+            <span class="s">&quot;procedure&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 当前工序名，可为空</span>
+            <span class="s">&quot;processedCount&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 桶数或者件数，视工单所属的订单类型而定</span>
+            <span class="s">&quot;processedWeight&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 工序后重量， 若工单类型为瑞格或者紧固件，那么这个值只有参考意义。</span>
+            <span class="s">&quot;productName&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 产品名称</span>
+            <span class="s">&quot;status&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 状态</span>
+            <span class="s">&quot;subOrderId&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 子订单ID</span>
+            <span class="s">&quot;team&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nb">id</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 班组ID</span>
+                <span class="n">name</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 组名称</span>
+            <span class="p">}</span>
+            <span class="s">&quot;technicalRequirements&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 技术要求，可为空</span>
+            <span class="s">&quot;rejected&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 是否退货</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>有关orderType的说明，请见 :py:mod:<a href="#id26"><span class="problematic" id="id27">`</span></a>lite_mms.constants.default`中对各种订单类型的说明</p>
+<p>这里特别需要说明的是 <strong>picPath</strong> 字段， 这个字段的含义是工序的工序前加工件的照片，也就是说：</p>
+<ol class="arabic simple">
+<li>工单第一次分配时，取子订单的照片。</li>
+<li>工单结束，进入下道工序时，质检员拍的工序后产品照片。</li>
+</ol>
+<p>若照片有缺失，不会回溯。</p>
+<ul class="simple">
+<li>404 - 失败</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;actual error reason&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id28">
+<h3>example<a class="headerlink" href="#id28" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>请求：</li>
+</ul>
+<p><strong>POST http://&lt;your site&gt;/manufacture_ws/work-command-list?department_id=1&amp;team_id=2&amp;status=3,5</strong></p>
+<ul>
+<li><dl class="first docutils">
+<dt>返回：</dt>
+<dd><ul class="first last simple">
+<li>http code - 200</li>
+<li>数据:</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+    <span class="s">&quot;totalCnt&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+    <span class="s">&quot;data&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s">&quot;status&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+            <span class="s">&quot;processedWeight&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s">&quot;customerName&quot;</span><span class="p">:</span> <span class="s">&quot;赛瑞&quot;</span><span class="p">,</span>
+            <span class="s">&quot;orgCount&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s">&quot;team&quot;</span><span class="p">:</span>  <span class="p">{</span>
+                     <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                     <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;1号班组&quot;</span><span class="p">,</span>
+             <span class="p">}</span>
+            <span class="s">&quot;productName&quot;</span><span class="p">:</span> <span class="s">&quot;workpiece&quot;</span><span class="p">,</span>
+            <span class="s">&quot;department&quot;</span><span class="p">:</span>  <span class="p">{</span>
+                     <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                     <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;一号车间&quot;</span><span class="p">,</span>
+             <span class="p">}</span>
+            <span class="s">&quot;subOrderId&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s">&quot;technicalRequirements&quot;</span><span class="p">:</span> <span class="s">&quot;&quot;</span><span class="p">,</span>
+            <span class="s">&quot;lastMod&quot;</span><span class="p">:</span> <span class="mi">1349851179</span><span class="p">,</span>
+            <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s">&quot;orderID&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s">&quot;previousProcedure&quot;</span><span class="p">:</span> <span class="s">&quot;&quot;</span><span class="p">,</span>
+            <span class="s">&quot;orderType&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s">&quot;isUrgent&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s">&quot;picPath&quot;</span><span class="p">:</span> <span class="s">&quot;&quot;</span><span class="p">,</span>
+            <span class="s">&quot;processedCount&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s">&quot;handleType&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s">&quot;orgWeight&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+            <span class="s">&quot;procedure&quot;</span><span class="p">:</span> <span class="s">&quot;screw&quot;</span>
+            <span class="s">&quot;rejected&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="get-customer-list">
+<h2>get-customer-list(获取客户列表)<a class="headerlink" href="#get-customer-list" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li>单元测试: <tt class="xref py py-func docutils literal"><span class="pre">portal.order.test_webservices.test_get_customer_list()</span></tt></li>
+</ul>
+<div class="section" id="id29">
+<h3>request<a class="headerlink" href="#id29" title="永久链接至标题">¶</a></h3>
+<p><strong>GET /order_ws/customer-list</strong></p>
+</div>
+<div class="section" id="id30">
+<h3>response<a class="headerlink" href="#id30" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>200 - 成功， 即使没有一个客户列表</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 用户ID</span>
+        <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 用户名称</span>
+        <span class="s">&quot;abbr&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 拼音首字母缩写，例如&quot;杭州Nokia&quot;的缩写是&quot;hznokia&quot;</span>
+    <span class="p">},</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id31">
+<h3>example<a class="headerlink" href="#id31" title="永久链接至标题">¶</a></h3>
+<p>略</p>
+</div>
+</div>
+<div class="section" id="get-team-list">
+<h2>get-team-list(获取班组列表)<a class="headerlink" href="#get-team-list" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li>单元测试: <tt class="xref py py-func docutils literal"><span class="pre">portal.manufacture.test_webservices.test_get_team_list()</span></tt></li>
+</ul>
+<div class="section" id="id32">
+<h3>request<a class="headerlink" href="#id32" title="永久链接至标题">¶</a></h3>
+<p><strong>GET /manufacture_ws/team-list?department_id=&lt;int&gt;</strong></p>
+<ul class="simple">
+<li>* department_id - 车间ID</li>
+</ul>
+</div>
+<div class="section" id="id33">
+<h3>response<a class="headerlink" href="#id33" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>200 - 成功</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 班组ID</span>
+        <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 班组名称</span>
+    <span class="p">},</span>
+    <span class="o">...</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>404 - 失败</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;actual error reason&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id34">
+<h3>example<a class="headerlink" href="#id34" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>请求</li>
+</ul>
+<p><strong>GET /manufacture_ws/team-list?department_id=100</strong></p>
+<ul>
+<li><dl class="first docutils">
+<dt>返回值</dt>
+<dd><ul class="first last simple">
+<li>http code - 200</li>
+<li>数据</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;alpha&quot;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="mi">101</span><span class="p">,</span>
+        <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;delta&quot;</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="assign-work-command">
+<span id="id35"></span><h2>assign-work-command(分配工单)<a class="headerlink" href="#assign-work-command" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li>单元测试: <tt class="xref py py-func docutils literal"><span class="pre">portal.manufacture.test_webservices.test_assign_work_command()</span></tt></li>
+</ul>
+<div class="section" id="id36">
+<h3>request<a class="headerlink" href="#id36" title="永久链接至标题">¶</a></h3>
+<p><strong>PUT /manufacture_ws/work-command?work_command_id=&lt;int&gt;&amp;actor_id=&lt;int&gt;&amp;team_id=&lt;int&gt;&amp;action=203</strong></p>
+<ul class="simple">
+<li>work_command_id - 工单id</li>
+<li>actor_id - 发起人id，这里为车间主任</li>
+<li>team_id - 被分配的班组id</li>
+<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
+</ul>
+</div>
+<div class="section" id="id37">
+<h3>response<a class="headerlink" href="#id37" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>200 - 成功, 返回更新后的工单</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+    <span class="s">&quot;customerName&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 客户名称</span>
+    <span class="s">&quot;department&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 车间ID</span>
+            <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 车间名称</span>
+    <span class="p">}</span>
+    <span class="s">&quot;handleType&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 处理类型</span>
+    <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 工单ID</span>
+    <span class="s">&quot;isUrgent&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="o">|</span><span class="mi">0</span><span class="p">,</span> <span class="c"># 是否加急，1加急。</span>
+    <span class="s">&quot;lastMod&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># last modified time, seconds since epoch</span>
+    <span class="s">&quot;orderID&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 工单ID</span>
+    <span class="s">&quot;orderType&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 工单类型</span>
+    <span class="s">&quot;orgCount&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 工序前的桶数或者件数，视工单所属的订单类型而定</span>
+    <span class="s">&quot;orgWeight&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 工序前重量 , 需要说明的是，若工单类型为瑞格或者紧固件，那么这个值只有参考意义。</span>
+    <span class="s">&quot;picPath&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 图片链接</span>
+    <span class="s">&quot;previousProcedure&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 上一道工序名称，可为空</span>
+    <span class="s">&quot;procedure&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 当前工序名，可为空</span>
+    <span class="s">&quot;processedCount&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 桶数或者件数，视工单所属的订单类型而定</span>
+    <span class="s">&quot;processedWeight&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 工序后重量， 若工单类型为瑞格或者紧固件，那么这个值只有参考意义。</span>
+    <span class="s">&quot;productName&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 产品名称</span>
+    <span class="s">&quot;status&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 状态</span>
+    <span class="s">&quot;subOrderId&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 子订单ID</span>
+    <span class="s">&quot;team&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 班组ID</span>
+            <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 组名称</span>
+    <span class="p">}</span>
+    <span class="s">&quot;technicalRequirements&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 技术要求，可为空</span>
+    <span class="s">&quot;unit&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 单位</span>
+    <span class="s">&quot;rejected&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 是否退货</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>有关orderType的说明，请见 :py:mod:<a href="#id38"><span class="problematic" id="id39">`</span></a>lite_mms.constants.default`中对各种订单类型的说明</p>
+<ul class="simple">
+<li>403 - 失败</li>
+</ul>
+<p>一般可能发生在工单当前状态不是 <strong>待分配</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;actual error reason&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id40">
+<h3>example<a class="headerlink" href="#id40" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>请求</li>
+</ul>
+<p><strong>PUT /manufacture_ws/work-command?work_command_id=123&amp;actor_id=456&amp;team_id=23&amp;action=203</strong></p>
+<ul>
+<li><p class="first">返回值</p>
+<blockquote>
+<div><ul class="simple">
+<li>http code: 200</li>
+<li>数据</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<div class="highlight-python"><pre>{
+    "status": 2,
+    "processedWeight": 0,
+    "customerName": "赛瑞",
+    "orgCount": 0,
+    "team": "1号班组",
+    "productName": "workpiece",
+    "department":  {
+           "id": 1,
+           "name": "一号车间",
+   }
+   "team": {
+           "id": 1,
+           "name": "一号班组",
+   }
+    "subOrderId": 1,
+    "technicalRequirements": "",
+    "lastMod": 1349851179,
+    "id": 1,
+    "orderID": 1,
+    "previousProcedure": "",
+    "orderType": 1,
+    "isUrgent": 0,
+    "picPath": "",
+    "processedCount": 0,
+    "handleType": 1,
+    "orgWeight": 1000,
+    "procedure": "screw",
+    "unit: "件",
+    "rejected": 0,
+}</pre>
+</div>
+</div>
+</div>
+<div class="section" id="add-processed-weight">
+<h2>add-processed-weight(增加工序后重量)<a class="headerlink" href="#add-processed-weight" title="永久链接至标题">¶</a></h2>
+<p>只有工单在 <strong>待请求结束或结转</strong> 时才可以增加工序后重量</p>
+<ul class="simple">
+<li>单元测试 - <tt class="xref py py-func docutils literal"><span class="pre">portal.manufacture.test_webservices.test_add_processed_weight()</span></tt></li>
+</ul>
+<div class="section" id="id41">
+<h3>request<a class="headerlink" href="#id41" title="永久链接至标题">¶</a></h3>
+<p><strong>PUT /manufacture_ws/work-command?work_command_id=&lt;int&gt;&amp;actor_id=&lt;int&gt;&amp;weight=&lt;int&gt;&amp;quantity=&lt;int&gt;&amp;action=204&amp;is_finished=&lt;1|0&gt;</strong></p>
+<ul class="simple">
+<li>work_command_id - 工单id</li>
+<li>actor_id - 发起人id，这里为team leader</li>
+<li>weight - 重量</li>
+<li>*quantity - <strong>增加</strong> 的件数，对于不同类型的工单有不同的含义，标准-公斤；瑞格-件数；紧固件-桶数；对于计件类型，quantity是必须填写的</li>
+<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
+<li>*is_finished - 是否结束，1为结束，若不传，默认为0</li>
+</ul>
+</div>
+<div class="section" id="id42">
+<h3>response<a class="headerlink" href="#id42" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>200 - 成功，返回修改后的工单信息, 返回信息见 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></li>
+<li>403 - 失败</li>
+</ul>
+<p>一般可能发生在工单当前状态不是&#8221;待请求结束或结转&#8221;</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;actual error reason&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id43">
+<h3>example<a class="headerlink" href="#id43" title="永久链接至标题">¶</a></h3>
+<p>请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></p>
+</div>
+</div>
+<div class="section" id="request-end-work-command">
+<h2>request-end-work-command(请求结束或结转工单)<a class="headerlink" href="#request-end-work-command" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li>单元测试 - <tt class="xref py py-func docutils literal"><span class="pre">portal.manufacture.test_webservices.test_request_end_work_command()</span></tt></li>
+</ul>
+<div class="section" id="id44">
+<h3>request<a class="headerlink" href="#id44" title="永久链接至标题">¶</a></h3>
+<p><strong>PUT /manufacture_ws/work-command?work_command_id=&lt;int&gt;+&amp;actor_id=&lt;int&gt;&amp;action=[205|206]</strong></p>
+<ul class="simple">
+<li>work_command_id - 工单id, 可以是一个工单id列表。例如 <strong>1,2,3</strong></li>
+<li>actor_id - 发起人id，这里为team leader</li>
+<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明, 205代表**结束**， 206代表**结转**</li>
+</ul>
+</div>
+<div class="section" id="id45">
+<h3>response<a class="headerlink" href="#id45" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>200 - 成功，返回修改后的工单信息, 返回信息见 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></li>
+</ul>
+<p><em>这里特别需要说明的是： 若修改的是多个工单，那么返回的工单信息是多个</em></p>
+<ul class="simple">
+<li>403 - 失败</li>
+</ul>
+<p>一般可能发生在工单当前状态不是**待请求结束或结转**</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;actual error reason&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id46">
+<h3>example<a class="headerlink" href="#id46" title="永久链接至标题">¶</a></h3>
+<blockquote>
+<div>请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></div></blockquote>
+</div>
+</div>
+<div class="section" id="refuse-work-command">
+<h2>refuse-work-command(打回工单)<a class="headerlink" href="#refuse-work-command" title="永久链接至标题">¶</a></h2>
+<p>车间主任打回工单</p>
+<div class="section" id="reqeust">
+<h3>reqeust<a class="headerlink" href="#reqeust" title="永久链接至标题">¶</a></h3>
+<p><strong>PUT /manufacture_ws/work-command?work_command_id=&lt;int&gt;&amp;actor_id=&lt;int&gt;&amp;reason=&lt;str&gt;&amp;action=209</strong></p>
+<ul class="simple">
+<li>work_command_id - 工单id</li>
+<li>actor_id - 发起人id，这里为车间主任</li>
+<li><a href="#id47"><span class="problematic" id="id48">*</span></a>reason - 理由</li>
+<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
+</ul>
+</div>
+<div class="section" id="id49">
+<h3>response<a class="headerlink" href="#id49" title="永久链接至标题">¶</a></h3>
+<ul>
+<li><dl class="first docutils">
+<dt>200 - 成功</dt>
+<dd><p class="first last">返回数据请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></p>
+</dd>
+</dl>
+</li>
+<li><p class="first">403 - 失败</p>
+</li>
+</ul>
+<p>一般可能发生在工单当前状态不是**待分配**</p>
+</div>
+<div class="section" id="id50">
+<h3>example<a class="headerlink" href="#id50" title="永久链接至标题">¶</a></h3>
+<blockquote>
+<div>请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></div></blockquote>
+</div>
+</div>
+<div class="section" id="affirm-retrieve-work-command">
+<h2>affirm-retrieve-work-command(确认回收工单)<a class="headerlink" href="#affirm-retrieve-work-command" title="永久链接至标题">¶</a></h2>
+<p>车间主任确认回收工单</p>
+<div class="section" id="id51">
+<h3>request<a class="headerlink" href="#id51" title="永久链接至标题">¶</a></h3>
+<p><strong>PUT /manufacture_ws/work-command?work_command_id=&lt;int&gt;&amp;actor_id=&lt;int&gt;&amp;action=211&amp;weight=&lt;int&gt;&amp;quantity=&lt;int&gt;</strong></p>
+<ul class="simple">
+<li>work_command_id - 工单id</li>
+<li>actor_id - 发起人id，这里为车间主任</li>
+<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
+<li>*quantity - 最终生产完成的件数，对于不同类型的工单有不同的含义，标准-公斤；瑞格-件数；紧固件-桶数；对于计件类型，quantity是必须填写的</li>
+<li>weight - 最终生产完成的重量</li>
+</ul>
+</div>
+<div class="section" id="id52">
+<h3>response<a class="headerlink" href="#id52" title="永久链接至标题">¶</a></h3>
+<ul>
+<li><p class="first">200 - 成功</p>
+<blockquote>
+<div><p>返回数据请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></p>
+</div></blockquote>
+</li>
+<li><p class="first">403 - 失败</p>
+</li>
+</ul>
+<p>一般可能发生在工单当前状态不是**锁定**</p>
+</div>
+<div class="section" id="id53">
+<h3>example<a class="headerlink" href="#id53" title="永久链接至标题">¶</a></h3>
+<blockquote>
+<div>请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></div></blockquote>
+</div>
+</div>
+<div class="section" id="refuse-retrieval-work-command">
+<h2>refuse-retrieval-work-command(拒绝回收工单)<a class="headerlink" href="#refuse-retrieval-work-command" title="永久链接至标题">¶</a></h2>
+<p>车间主任拒绝回收工单</p>
+<div class="section" id="id54">
+<h3>request<a class="headerlink" href="#id54" title="永久链接至标题">¶</a></h3>
+<p><a href="#id55"><span class="problematic" id="id56">**</span></a>PUT /manufacture_ws/work-command?work_command_id=&lt;int&gt;&amp;actor_id=&lt;int&gt;&amp;action=213</p>
+<ul class="simple">
+<li>work_command_id - 工单id, 支持多个工单id，可以用&#8221;,&#8221;隔开</li>
+<li>actor_id - 发起人id，这里为车间主任</li>
+<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
+</ul>
+</div>
+<div class="section" id="id57">
+<h3>response<a class="headerlink" href="#id57" title="永久链接至标题">¶</a></h3>
+<ul>
+<li><p class="first">200 - 成功</p>
+<blockquote>
+<div><p>返回数据请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></p>
+</div></blockquote>
+</li>
+<li><p class="first">403 - 失败</p>
+</li>
+</ul>
+<p>一般可能发生在工单当前状态不是**锁定**</p>
+</div>
+<div class="section" id="id58">
+<h3>example<a class="headerlink" href="#id58" title="永久链接至标题">¶</a></h3>
+<blockquote>
+<div>请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></div></blockquote>
+</div>
+</div>
+<div class="section" id="create-quality-inspection-report">
+<h2>create-quality-inspection-report(生成质检报告)<a class="headerlink" href="#create-quality-inspection-report" title="永久链接至标题">¶</a></h2>
+<p>生成质检报告</p>
+<ul class="simple">
+<li>单元测试 - <tt class="xref py py-func docutils literal"><span class="pre">portal.manufacture.test_webservices.test_create_quality_inspection_report()</span></tt></li>
+</ul>
+<div class="section" id="id59">
+<h3>request<a class="headerlink" href="#id59" title="永久链接至标题">¶</a></h3>
+<p><strong>POST /manufacture_ws/quality-inspection-report?actor_id=&lt;int&gt;&amp;work_command_id=&lt;int&gt;&amp;quantity=&lt;int&gt;&amp;result=&lt;int&gt;</strong></p>
+<p>&lt;picture data&gt;</p>
+<ul class="simple">
+<li>actor_id - 提交人id</li>
+<li>work_command_id - 对应的工单id</li>
+<li><em>quantity - **增加*</em> 的重量，对于不同类型的工单有不同的含义，标准-公斤；瑞格-件数；紧固件-桶数；</li>
+<li>result - 质检结果，请参考 <a class="reference internal" href="constants/quality_inspection.html#module-lite_mms.constants.quality_inspection" title="lite_mms.constants.quality_inspection"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.quality_inspection</span></tt></a></li>
+</ul>
+</div>
+<div class="section" id="id60">
+<h3>response<a class="headerlink" href="#id60" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>200 - 成功</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+    <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 质检报告id</span>
+    <span class="s">&quot;quantity&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 数量</span>
+    <span class="s">&quot;weight&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 质量，对于瑞格和紧固件，仅仅有参考意义</span>
+    <span class="s">&quot;result&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 质检结果</span>
+    <span class="s">&quot;work_command_id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 工单id</span>
+    <span class="s">&quot;actor_id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 质检人id</span>
+    <span class="s">&quot;pic_url&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 图片链接</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>403 - 失败</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;actual error reason&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id61">
+<h3>example<a class="headerlink" href="#id61" title="永久链接至标题">¶</a></h3>
+<p>略</p>
+</div>
+</div>
+<div class="section" id="update-quality-inspection-report">
+<h2>update-quality-inspection-report(修改质检报告)<a class="headerlink" href="#update-quality-inspection-report" title="永久链接至标题">¶</a></h2>
+<p>修改质检报告</p>
+<ul class="simple">
+<li>单元测试 - <tt class="xref py py-func docutils literal"><span class="pre">portal.manufacture.test_webservices.test_update_quality_inspection_report()</span></tt></li>
+</ul>
+<div class="section" id="id62">
+<h3>request<a class="headerlink" href="#id62" title="永久链接至标题">¶</a></h3>
+<p><strong>PUT /manufacture_ws/quality-inspection-report?id=&lt;int&gt;&amp;actor_id=&lt;int&gt;&amp;quantity=&lt;int&gt;&amp;result=&lt;int&gt;</strong></p>
+<ul class="simple">
+<li>id - 质检报告id</li>
+<li>actor_id - 提交人id</li>
+<li><em>quantity - **增加*</em> 的重量，对于不同类型的工单有不同的含义，标准-公斤；瑞格-件数；紧固件-桶数；</li>
+<li>result - 质检结果，请参考 <a class="reference internal" href="constants/quality_inspection.html#module-lite_mms.constants.quality_inspection" title="lite_mms.constants.quality_inspection"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.quality_inspection</span></tt></a></li>
+</ul>
+</div>
+<div class="section" id="id63">
+<h3>response<a class="headerlink" href="#id63" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>200 - 成功</li>
+</ul>
+<p>返回更新的质检报告数据:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+    <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 质检报告id</span>
+    <span class="s">&quot;quantity&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 数量</span>
+    <span class="s">&quot;weight&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="s">&quot;result&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 质检结果</span>
+    <span class="s">&quot;work_command_id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 工单id</span>
+    <span class="s">&quot;actor_id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 质检人id</span>
+    <span class="s">&quot;pic_url&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 图片链接</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>404 - 没有对应的质检报告</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;actual error reason&quot;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>403 - 失败</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;actual error reason&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id64">
+<h3>example<a class="headerlink" href="#id64" title="永久链接至标题">¶</a></h3>
+<p>略</p>
+</div>
+</div>
+<div class="section" id="delete-quality-inspection-report">
+<h2>delete-quality-inspection-report(删除质检报告)<a class="headerlink" href="#delete-quality-inspection-report" title="永久链接至标题">¶</a></h2>
+<p>删除质检报告</p>
+<ul class="simple">
+<li>单元测试 - <tt class="xref py py-func docutils literal"><span class="pre">portal.manufacture.test_webservices.test_delete_quality_inspection_report()</span></tt></li>
+</ul>
+<div class="section" id="id65">
+<h3>request<a class="headerlink" href="#id65" title="永久链接至标题">¶</a></h3>
+<p><strong>DELETE /manufacture_ws/quality-inspection-report?id=&lt;int&gt;&amp;actor_id=&lt;int&gt;</strong></p>
+<p>或者</p>
+<p><strong>POST /manufacture_ws/delete-quality-inspection-report?id=&lt;int&gt;&amp;actor_id=&lt;int&gt;</strong></p>
+<ul class="simple">
+<li>id - 质检报告id</li>
+<li>actor_id - 提交人id</li>
+</ul>
+</div>
+<div class="section" id="id66">
+<h3>response<a class="headerlink" href="#id66" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>200 - 成功</li>
+<li>403 - 失败</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;actual error reason&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id67">
+<h3>example<a class="headerlink" href="#id67" title="永久链接至标题">¶</a></h3>
+<p>略</p>
+</div>
+</div>
+<div class="section" id="get-quality-inspection-report-list">
+<h2>get-quality-inspection-report-list(查看质检报告列表)<a class="headerlink" href="#get-quality-inspection-report-list" title="永久链接至标题">¶</a></h2>
+<p>按创建时间由远及近进行排序</p>
+<ul class="simple">
+<li>单元测试 - <tt class="xref py py-func docutils literal"><span class="pre">portal.manufacture.test_webservices.test_get_quality_inspection_report_list()</span></tt></li>
+</ul>
+<div class="section" id="id68">
+<h3>request<a class="headerlink" href="#id68" title="永久链接至标题">¶</a></h3>
+<p><strong>GET /manufacture_ws/quality-inspection-report-list?work_command_id=&lt;int&gt;</strong></p>
+</div>
+<div class="section" id="id69">
+<h3>response<a class="headerlink" href="#id69" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>200 - 成功</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 质检报告id</span>
+        <span class="s">&quot;quantity&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 数量</span>
+        <span class="s">&quot;weight&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="s">&quot;result&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 质检结果</span>
+        <span class="s">&quot;work_command_id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 工单id</span>
+        <span class="s">&quot;actor_id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 质检人id</span>
+        <span class="s">&quot;pic_url&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 图片链接</span>
+    <span class="p">}</span>
+    <span class="o">...</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>其中质检结果请查看 <a class="reference internal" href="constants/quality_inspection.html#module-lite_mms.constants.quality_inspection" title="lite_mms.constants.quality_inspection"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.quality_inspection</span></tt></a></p>
+<ul class="simple">
+<li>403 - 失败</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;actual error reason&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id70">
+<h3>example<a class="headerlink" href="#id70" title="永久链接至标题">¶</a></h3>
+<p>略</p>
+</div>
+</div>
+<div class="section" id="submit-quality-inspection">
+<h2>submit-quality-inspection(提交质检单)<a class="headerlink" href="#submit-quality-inspection" title="永久链接至标题">¶</a></h2>
+<p>提交质检单，根据对应的质检报告，生成新的工单, 对于已经完成的，需要加入待发货列表中去。</p>
+<ul class="simple">
+<li>单元测试 - <tt class="xref py py-func docutils literal"><span class="pre">portal.manufacture.test_webservices.test_submit_quality_inspection()</span></tt></li>
+</ul>
+<div class="section" id="id71">
+<h3>request<a class="headerlink" href="#id71" title="永久链接至标题">¶</a></h3>
+<p><strong>PUT /manufacture_ws/work-command?work_command_id=&lt;int&gt;&amp;actor_id=&lt;int&gt;&amp;action=212&amp;deduction=&lt;int&gt;</strong></p>
+<ul class="simple">
+<li>work_command_id - 工单id</li>
+<li>actor_id - 发起人id，这里为质检员</li>
+<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
+<li><a href="#id72"><span class="problematic" id="id73">*</span></a>deduction - 扣量，必须以公斤为单位，默认为0</li>
+</ul>
+</div>
+<div class="section" id="id74">
+<h3>response<a class="headerlink" href="#id74" title="永久链接至标题">¶</a></h3>
+<ul>
+<li><p class="first">200 - 成功</p>
+<blockquote>
+<div><p>返回数据请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a>, 即处于结束状态的原工单</p>
+</div></blockquote>
+</li>
+<li><p class="first">403 - 失败</p>
+</li>
+</ul>
+<p>一般可能发生在工单当前状态不是**待质检**</p>
+</div>
+<div class="section" id="id75">
+<h3>example<a class="headerlink" href="#id75" title="永久链接至标题">¶</a></h3>
+<blockquote>
+<div>请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></div></blockquote>
+</div>
+</div>
+<div class="section" id="get-delivery-session-list">
+<h2>get-delivery-session-list(获取发货会话列表)<a class="headerlink" href="#get-delivery-session-list" title="永久链接至标题">¶</a></h2>
+<p>获取的发货会话都是未完成的，而且有仓单的，按创建时间由近及远进行排序</p>
+<div class="section" id="id76">
+<h3>request<a class="headerlink" href="#id76" title="永久链接至标题">¶</a></h3>
+<p><strong>GET /delivery_ws/delivery-session-list</strong></p>
+</div>
+<div class="section" id="id77">
+<h3>response<a class="headerlink" href="#id77" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>200 - 成功</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s">&quot;sessionID&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 会话ID</span>
+        <span class="s">&quot;plateNumber&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 车牌号</span>
+        <span class="s">&quot;isLocked&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="o">|</span><span class="mi">0</span><span class="p">,</span> <span class="c"># 是否被锁定</span>
+    <span class="p">},</span>
+    <span class="o">...</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>404 - 错误</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;actual error reason&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id78">
+<h3>example<a class="headerlink" href="#id78" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>请求</li>
+</ul>
+<p><strong>GET /delivery_ws/delivery-session-list</strong></p>
+<ul>
+<li><p class="first">响应</p>
+<blockquote>
+<div><ul class="simple">
+<li>http code: 200</li>
+<li>数据</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s">&quot;sessionID&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s">&quot;plateNumber&quot;</span><span class="p">:</span> <span class="s">&quot;ZA000001&quot;</span><span class="p">,</span>
+        <span class="s">&quot;isLocked&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s">&quot;sessionID&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s">&quot;plateNumber&quot;</span><span class="p">:</span> <span class="s">&quot;ZA000002&quot;</span><span class="p">,</span>
+        <span class="s">&quot;isLocked&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s">&quot;sessionID&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="s">&quot;plateNumber&quot;</span><span class="p">:</span> <span class="s">&quot;ZA000003&quot;</span><span class="p">,</span>
+        <span class="s">&quot;isLocked&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="get-delivery-session">
+<h2>get-delivery-session(获取发货会话详情)<a class="headerlink" href="#get-delivery-session" title="永久链接至标题">¶</a></h2>
+<div class="section" id="id79">
+<h3>request<a class="headerlink" href="#id79" title="永久链接至标题">¶</a></h3>
+<p><strong>GET /delivery_ws/delivery-session?id=&lt;int&gt;</strong></p>
+</div>
+<div class="section" id="id80">
+<h3>response<a class="headerlink" href="#id80" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>200 - 成功</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+    <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 发货会话id</span>
+    <span class="s">&quot;plate&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 车牌号</span>
+    <span class="s">&quot;store_bills&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">:</span> <span class="c"># 订单编号</span>
+        <span class="p">{</span>
+            <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">:</span> <span class="c"># 子订单编号</span>
+            <span class="p">[</span>
+                <span class="p">{</span>
+                    <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 仓单ID</span>
+                    <span class="s">&quot;harbor&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 装卸点</span>
+                    <span class="s">&quot;product_name&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 产品名称</span>
+                    <span class="s">&quot;customer_name&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 客户名称</span>
+                    <span class="s">&quot;pic_url&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 图片链接</span>
+                    <span class="s">&quot;unit&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 单位</span>
+                <span class="p">}</span>
+                <span class="o">...</span>
+            <span class="p">]</span>
+        <span class="p">}</span>
+        <span class="o">...</span>
+    <span class="p">}</span> <span class="c"># 卸货任务列表，按创建时间，由新到旧进行排序</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>404 - 不存在该卸货会话</li>
+</ul>
+</div>
+<div class="section" id="id81">
+<h3>example<a class="headerlink" href="#id81" title="永久链接至标题">¶</a></h3>
+<div class="highlight-python"><pre>{
+    "id": 1,
+    "plate": "浙A 00001",
+    "store_bills": {
+        "123465691233": {
+            "1":
+            [
+                {
+                    "id": 1,
+                    "habor": "卸货点1",
+                    "product_name": "螺丝",
+                    "customer_name": "宁波紧固件厂",
+                    "pic_url": "xxxxxxxx",
+                    "unit": "件",
+                },
+                {
+                    "id": 2,
+                    "habor": "卸货点2",
+                    "product_name": "螺母",
+                    "customer_name": "宁波紧固件厂",
+                    "pic_url": "xxxxxxxx",
+                    "unit": "件"，
+                },
+            ]
+            "2":
+            [
+                {
+                    "id": 3,
+                    "habor": "卸货点2",
+                    "product_name": "螺丝刀",
+                    "customer_name": "宁波紧固件厂",
+                    "pic_url": "xxxxxxxx",
+                    "unit": "件"，
+                },
+            ]
+        }
+    }
+}</pre>
+</div>
+</div>
+</div>
+<div class="section" id="post-delivery-task">
+<h2>post-delivery-task(创建发货任务)<a class="headerlink" href="#post-delivery-task" title="永久链接至标题">¶</a></h2>
+<p>已经完成的仓单不能反复提交， 只能选择同一个订单的一个或多个仓单，只能有一个未完成仓单</p>
+<div class="section" id="id82">
+<h3>request<a class="headerlink" href="#id82" title="永久链接至标题">¶</a></h3>
+<p><strong>POST /delivery_ws/delivery-task?sid=&lt;int&gt;&amp;is_finished=[0|1]&amp;remain=&lt;int&gt;&amp;actor_id=&lt;int&gt;</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s">&quot;store_bill_id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 处理的仓单号</span>
+        <span class="s">&quot;is_finished&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="mi">1</span><span class="o">|</span><span class="mi">0</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 该仓单是否完全装货, 1代表完全装货</span>
+    <span class="p">}</span>
+    <span class="o">...</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>sid - 发货会话id</li>
+<li>is_finished - 是否发货会话结束, 1代表结束</li>
+<li>actor_id - 操作者id</li>
+<li><a href="#id83"><span class="problematic" id="id84">*</span></a>remain - 未完成件数(计件类型)或重量（计重类型），若有为完成仓单，为必填项</li>
+</ul>
+</div>
+<div class="section" id="id85">
+<h3>response<a class="headerlink" href="#id85" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>200 - 成功</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+    <span class="s">&quot;store_bill_id_list&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;+</span><span class="p">,</span> <span class="c"># 已经完成的仓单列表，其规则具体见[ticket 224]</span>
+    <span class="p">],</span>
+    <span class="s">&quot;actor_id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 新生成的发货任务ID</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>403 - 失败</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;actual reason&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="retrive-quality-inspection">
+<h2>retrive-quality-inspection(打回质检单)<a class="headerlink" href="#retrive-quality-inspection" title="永久链接至标题">¶</a></h2>
+<p>前一天提交的或者生成的工单、仓单已经排产或者发货的都不能打回质检单</p>
+<div class="section" id="id86">
+<h3>request<a class="headerlink" href="#id86" title="永久链接至标题">¶</a></h3>
+<p><strong>PUT /manufacture_ws/work-command?work_command_id=&lt;int&gt;&amp;actor_id=&lt;int&gt;&amp;action=214</strong></p>
+<ul class="simple">
+<li>work_command_id - 工单id</li>
+<li>actor_id - 发起人id，这里为质检员</li>
+<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
+</ul>
+</div>
+<div class="section" id="id87">
+<h3>response<a class="headerlink" href="#id87" title="永久链接至标题">¶</a></h3>
+<ul>
+<li><p class="first">200 - 成功</p>
+<blockquote>
+<div><p>返回数据请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a>, 即处于结束状态的原工单</p>
+</div></blockquote>
+</li>
+<li><p class="first">403 - 失败</p>
+</li>
+</ul>
+</div>
+<div class="section" id="id88">
+<h3>example<a class="headerlink" href="#id88" title="永久链接至标题">¶</a></h3>
+<blockquote>
+<div>请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></div></blockquote>
+</div>
+</div>
+<div class="section" id="quick-carry-forward">
+<h2>quick-carry-forward(快速结转)<a class="headerlink" href="#quick-carry-forward" title="永久链接至标题">¶</a></h2>
+<p>班组长可以将工单快速结转，使工单完成的部分先质检剩下的继续做</p>
+<div class="section" id="id89">
+<h3>request<a class="headerlink" href="#id89" title="永久链接至标题">¶</a></h3>
+<p><strong>PUT /manufacture_ws/work-command?work_command_id=&lt;int&gt;&amp;actor_id=&lt;int&gt;&amp;action=215</strong></p>
+<ul class="simple">
+<li>work_command_id - 工单id</li>
+<li>actor_id - 发起人id，这里为质检员</li>
+<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
+</ul>
+</div>
+<div class="section" id="id90">
+<h3>response<a class="headerlink" href="#id90" title="永久链接至标题">¶</a></h3>
+<ul>
+<li><p class="first">200 - 成功</p>
+<blockquote>
+<div><p>返回数据请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a>, 即处于结束状态的原工单</p>
+</div></blockquote>
+</li>
+<li><p class="first">403 - 失败</p>
+</li>
+</ul>
+</div>
+<div class="section" id="id91">
+<h3>example<a class="headerlink" href="#id91" title="永久链接至标题">¶</a></h3>
+<blockquote>
+<div>请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></div></blockquote>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">內容目录</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">webservices</a><ul>
+<li><a class="reference internal" href="#post-auth-login">post-auth-login(客户端登陆接口)</a><ul>
+<li><a class="reference internal" href="#request">request</a></li>
+<li><a class="reference internal" href="#response">response</a></li>
+<li><a class="reference internal" href="#example">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#get-unload-session-list">get-unload-session-list(获取卸货会话列表)</a><ul>
+<li><a class="reference internal" href="#id3">request</a></li>
+<li><a class="reference internal" href="#id8">response</a></li>
+<li><a class="reference internal" href="#id9">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#get-harbour-list">get-harbour-list(获取装卸货点列表)</a><ul>
+<li><a class="reference internal" href="#id10">request</a></li>
+<li><a class="reference internal" href="#id11">response</a></li>
+<li><a class="reference internal" href="#id12">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#post-unload-task">post-unload-task(生成卸货任务)</a><ul>
+<li><a class="reference internal" href="#id13">request</a></li>
+<li><a class="reference internal" href="#id14">response</a></li>
+<li><a class="reference internal" href="#id15">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#get-work-command-list">get-work-command-list(获取工单列表)</a><ul>
+<li><a class="reference internal" href="#id16">request</a></li>
+<li><a class="reference internal" href="#id25">response</a></li>
+<li><a class="reference internal" href="#id28">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#get-customer-list">get-customer-list(获取客户列表)</a><ul>
+<li><a class="reference internal" href="#id29">request</a></li>
+<li><a class="reference internal" href="#id30">response</a></li>
+<li><a class="reference internal" href="#id31">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#get-team-list">get-team-list(获取班组列表)</a><ul>
+<li><a class="reference internal" href="#id32">request</a></li>
+<li><a class="reference internal" href="#id33">response</a></li>
+<li><a class="reference internal" href="#id34">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#assign-work-command">assign-work-command(分配工单)</a><ul>
+<li><a class="reference internal" href="#id36">request</a></li>
+<li><a class="reference internal" href="#id37">response</a></li>
+<li><a class="reference internal" href="#id40">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#add-processed-weight">add-processed-weight(增加工序后重量)</a><ul>
+<li><a class="reference internal" href="#id41">request</a></li>
+<li><a class="reference internal" href="#id42">response</a></li>
+<li><a class="reference internal" href="#id43">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#request-end-work-command">request-end-work-command(请求结束或结转工单)</a><ul>
+<li><a class="reference internal" href="#id44">request</a></li>
+<li><a class="reference internal" href="#id45">response</a></li>
+<li><a class="reference internal" href="#id46">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#refuse-work-command">refuse-work-command(打回工单)</a><ul>
+<li><a class="reference internal" href="#reqeust">reqeust</a></li>
+<li><a class="reference internal" href="#id49">response</a></li>
+<li><a class="reference internal" href="#id50">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#affirm-retrieve-work-command">affirm-retrieve-work-command(确认回收工单)</a><ul>
+<li><a class="reference internal" href="#id51">request</a></li>
+<li><a class="reference internal" href="#id52">response</a></li>
+<li><a class="reference internal" href="#id53">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#refuse-retrieval-work-command">refuse-retrieval-work-command(拒绝回收工单)</a><ul>
+<li><a class="reference internal" href="#id54">request</a></li>
+<li><a class="reference internal" href="#id57">response</a></li>
+<li><a class="reference internal" href="#id58">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#create-quality-inspection-report">create-quality-inspection-report(生成质检报告)</a><ul>
+<li><a class="reference internal" href="#id59">request</a></li>
+<li><a class="reference internal" href="#id60">response</a></li>
+<li><a class="reference internal" href="#id61">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#update-quality-inspection-report">update-quality-inspection-report(修改质检报告)</a><ul>
+<li><a class="reference internal" href="#id62">request</a></li>
+<li><a class="reference internal" href="#id63">response</a></li>
+<li><a class="reference internal" href="#id64">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#delete-quality-inspection-report">delete-quality-inspection-report(删除质检报告)</a><ul>
+<li><a class="reference internal" href="#id65">request</a></li>
+<li><a class="reference internal" href="#id66">response</a></li>
+<li><a class="reference internal" href="#id67">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#get-quality-inspection-report-list">get-quality-inspection-report-list(查看质检报告列表)</a><ul>
+<li><a class="reference internal" href="#id68">request</a></li>
+<li><a class="reference internal" href="#id69">response</a></li>
+<li><a class="reference internal" href="#id70">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#submit-quality-inspection">submit-quality-inspection(提交质检单)</a><ul>
+<li><a class="reference internal" href="#id71">request</a></li>
+<li><a class="reference internal" href="#id74">response</a></li>
+<li><a class="reference internal" href="#id75">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#get-delivery-session-list">get-delivery-session-list(获取发货会话列表)</a><ul>
+<li><a class="reference internal" href="#id76">request</a></li>
+<li><a class="reference internal" href="#id77">response</a></li>
+<li><a class="reference internal" href="#id78">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#get-delivery-session">get-delivery-session(获取发货会话详情)</a><ul>
+<li><a class="reference internal" href="#id79">request</a></li>
+<li><a class="reference internal" href="#id80">response</a></li>
+<li><a class="reference internal" href="#id81">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#post-delivery-task">post-delivery-task(创建发货任务)</a><ul>
+<li><a class="reference internal" href="#id82">request</a></li>
+<li><a class="reference internal" href="#id85">response</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#retrive-quality-inspection">retrive-quality-inspection(打回质检单)</a><ul>
+<li><a class="reference internal" href="#id86">request</a></li>
+<li><a class="reference internal" href="#id87">response</a></li>
+<li><a class="reference internal" href="#id88">example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#quick-carry-forward">quick-carry-forward(快速结转)</a><ul>
+<li><a class="reference internal" href="#id89">request</a></li>
+<li><a class="reference internal" href="#id90">response</a></li>
+<li><a class="reference internal" href="#id91">example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>上一个主题</h4>
+  <p class="topless"><a href="index.html"
+                        title="上一章">Welcome to lite-mms-doc&#8217;s Documentation</a></p>
+  <h4>下一个主题</h4>
+  <p class="topless"><a href="mannual.html"
+                        title="下一章">简介</a></p>
+  <h3>本页</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/webservices.txt"
+           rel="nofollow">显示源代码</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>快速搜索</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="搜索" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    输入相关的模块，术语，类或者函数名称进行搜索
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="总目录"
+             >索引</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python 模块索引"
+             >模块</a> |</li>
+        <li class="right" >
+          <a href="mannual.html" title="简介"
+             >下一页</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to lite-mms-doc’s Documentation"
+             >上一页</a> |</li>
+        <li><a href="index.html">lite-mms 1.1 文档</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; 版权所有 2012, xiechao.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

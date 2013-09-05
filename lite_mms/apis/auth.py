@@ -3,7 +3,7 @@
 用户类
 """
 from hashlib import md5
-from flask import session, g
+from flask import session, g, _request_ctx_stack, current_app, request
 import flask.ext.login as login
 from sqlalchemy.orm.exc import NoResultFound
 from lite_mms.exceptions import AuthenticateFailure
@@ -16,6 +16,7 @@ class UserWrapper(login.UserMixin, ModelWrapper):
     """
     a wrapper of the actual user model
     """
+    __serializer__ = URLSafeTimedSerializer(secret_key=app.config.get('SECRET_KEY'), salt=app.config.get('SECURITY_SALT'))
 
     @property
     def default_url(self):
@@ -67,20 +68,12 @@ class UserWrapper(login.UserMixin, ModelWrapper):
         }
         return all(group.id in can_login_groups for group in self.groups)
 
-    @property
-    def _serializer(self):
-        """
-        get a serializer to generate authentication token
-        """
-        secret_key = app.config.get('SECRET_KEY')
-        salt = app.config.get('SECURITY_%s_SALT' % self.username.upper())
-        return URLSafeTimedSerializer(secret_key=secret_key, salt=salt)
 
     def get_auth_token(self):
         '''
         get the authentiaction token, see `https://flask-login.readthedocs.org/en/latest/#flask.ext.login.LoginManager.token_loader`_
         '''
-        return self._serializer.dumps([self.username, self.password])
+        return self.__serializer__.dumps([self.id, self.username, self.password])
 
 def get_user(id_):
     if not id_:
@@ -94,6 +87,13 @@ def get_user(id_):
     except NoResultFound:
         return None
 
+def load_user_from_token():
+    ctx = _request_ctx_stack.top
+    token = request.args.get('auth_token')
+    if token is None:
+        ctx.user = current_app.login_manager.anonymous_user()
+    else:
+        ctx.user = get_user(UserWrapper.__serializer__.loads(token)[0])
 
 def get_user_list(group_id=None):
     from lite_mms import models

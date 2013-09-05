@@ -2,16 +2,20 @@
 import time
 import sys
 from datetime import datetime
-from flask import url_for
+
+from flask import url_for, render_template
 from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import cached_property
+
 from lite_mms import models, constants
 import lite_mms.apis.order
 from lite_mms.database import db
 import lite_mms.apis.customer
 from lite_mms.apis import ModelWrapper
-from lite_mms.utilities import do_commit
+from lite_mms.utilities import do_commit, to_timestamp
+import lite_task_flow
+from lite_task_flow import Task, register_task_cls
 
 
 class DeliverySessionWrapper(ModelWrapper):
@@ -144,8 +148,8 @@ class DeliverySessionWrapper(ModelWrapper):
 
 class DeliveryTaskWrapper(ModelWrapper):
     @classmethod
-    def new_delivery_task(cls, actor_id, finished_store_bill_id_list,
-                          unfinished_store_bill_id, remain=None):
+    def new_delivery_task(cls, actor_id, finished_store_bill_list,
+                          unfinished_store_bill, remain=None):
         """
         创建一个新的卸货任务，若有部分完成的仓单，需要将没有完成的部分生成一个新的仓单, 这个仓单是完成的
         :param cls:
@@ -155,28 +159,9 @@ class DeliveryTaskWrapper(ModelWrapper):
         :param remain:
         :return:
         """
-        finished_store_bills = []
-
-        for sb_id in finished_store_bill_id_list:
-            try:
-                sb = models.StoreBill.query.filter_by(
-                    id=sb_id).one()
-                if sb.delivery_task:
-                    raise ValueError(u"仓单%(id)d已经完成了" % {"id": sb_id})
-                finished_store_bills.append(sb)
-            except NoResultFound:
-                raise ValueError(u"没有该仓单%(id)d" % {"id": sb_id})
-        unfinished_store_bill = None
-        if unfinished_store_bill_id:
-            try:
-                unfinished_store_bill = models.StoreBill.query.filter_by(
-                    id=unfinished_store_bill_id).one()
-            except NoResultFound, e:
-                raise ValueError(u"没有该仓单%(id)d" %
-                                 {"id": unfinished_store_bill_id})
-            if not remain:
-                raise ValueError(u"需要remain字段")
-        if unfinished_store_bill_id:
+        if unfinished_store_bill and not remain:
+            raise ValueError(u"需要remain字段")
+        if unfinished_store_bill:
             # 创建一个已经完成的新仓单
             new_sb = models.StoreBill(unfinished_store_bill.qir)
             new_sb.quantity = max(1,
@@ -185,7 +170,7 @@ class DeliveryTaskWrapper(ModelWrapper):
                 unfinished_store_bill.unit_weight * new_sb.quantity)
             new_sb.delivery_session = unfinished_store_bill.delivery_session
             new_sb.printed = True
-            finished_store_bills.append(new_sb)
+            finished_store_bill_list.append(new_sb)
             # 重新计算未完成仓单的数量，重量, 并且加入到已有的完成仓单列表中
             new_sb.harbor = unfinished_store_bill.harbor
             # 必须先计算净重
@@ -194,27 +179,27 @@ class DeliveryTaskWrapper(ModelWrapper):
             unfinished_store_bill.quantity = remain
             unfinished_store_bill.delivery_session = None
 
-        if len(finished_store_bills) == 0:
+        if len(finished_store_bill_list) == 0:
             raise ValueError(u"至少需要一个仓单")
-        ds = finished_store_bills[0].delivery_session
+        ds = finished_store_bill_list[0].delivery_session
         dt = models.DeliveryTask(ds, actor_id)
         actor = models.User.query.get(actor_id)
-        for sb in finished_store_bills:
+        for sb in finished_store_bill_list:
             sb.delivery_task = dt
-        dt.quantity = sum(sb.quantity for sb in finished_store_bills)
+        dt.quantity = sum(sb.quantity for sb in finished_store_bill_list)
 
         dt.returned_weight = sum(
-            sb.weight for sb in finished_store_bills if sb.sub_order.returned)
+            sb.weight for sb in finished_store_bill_list if sb.sub_order.returned)
         if unfinished_store_bill:
-            do_commit([unfinished_store_bill, dt] + finished_store_bills)
+            do_commit([unfinished_store_bill, dt] + finished_store_bill_list)
             StoreBillWrapper(new_sb).do_create_log(
-                u"由剩余%s公斤的仓单%s装货、分裂产生" % (unfinished_store_bill.weight, unfinished_store_bill_id), actor=actor)
+                u"由剩余%s公斤的仓单%s装货、分裂产生" % (unfinished_store_bill.weight, unfinished_store_bill.id), actor=actor)
             StoreBillWrapper(new_sb).do_update_log(u"装货，发货会话%s、发货任务%s" % (ds.id, dt.id))
             StoreBillWrapper(unfinished_store_bill).do_update_log(u"装货、分裂出%s公斤的仓单%s" % (new_sb.weight, new_sb.id),
                                                                   actor=actor)
         else:
-            do_commit([dt] + finished_store_bills)
-        for sb in finished_store_bills:
+            do_commit([dt] + finished_store_bill_list)
+        for sb in finished_store_bill_list:
             StoreBillWrapper(sb).do_update_log(u"装货，发货会话%s、发货任务%s" % (ds.id, dt.id))
 
         from lite_mms.apis.todo import new_todo, WEIGH_DELIVERY_TASK
@@ -709,6 +694,72 @@ get_delivery_task = DeliveryTaskWrapper.get_delivery_task
 get_store_bill = StoreBillWrapper.get_store_bill
 get_store_bill_customer_list = StoreBillWrapper.customer_bill_list
 update_store_bill = StoreBillWrapper.update_store_bill
+
+def store_bill_remain_unacceptable(unfinished_store_bill, remain):
+    return remain >= unfinished_store_bill.weight
+
+
+from lite_task_flow import Task
+
+class CreateDeliveryTaskWithAbnormalWeight(Task):
+
+    @property
+    def tag(self):
+        return self.__class__.__name__
+
+    def __call__(self):
+        # strong gurantee here
+        delivery_session = get_delivery_session(self.extra_params['delivery_session_id'])
+        remain = self.extra_params['remain']
+        from lite_mms.apis import wraps
+        finished_store_bill_list = [wraps(models.StoreBill.query.get(store_bill_id)) for store_bill_id in self.extra_params['finished_store_bill_id_list']]
+        unfinished_store_bill = wraps(models.StoreBill.query.get(self.extra_params['unfinished_store_bill_id']))
+        is_finished = self.extra_params['is_last_task']
+        loader = models.User.query.get(self.extra_params['loader_id'])
+        from lite_mms.portal.delivery_ws.webservices import create_delivery_task
+        create_delivery_task(delivery_session, remain, finished_store_bill_list, 
+                             unfinished_store_bill, loader, is_finished)
+
+    @property
+    def dependencies(self):
+        return [PermitDeliveryTaskWithAbnormalWeight(self.task_flow, handle_group_id=constants.groups.CARGO_CLERK, **self.extra_params)]
+
+    def on_delayed(self, unmet_task):
+    
+        from lite_mms.apis.todo import new_todo, PERMIT_DELIVERY_TASK_WITH_ABNORMAL_WEIGHT
+        from lite_mms.apis.auth import get_user_list
+        for user in get_user_list(unmet_task.extra_params['handle_group_id']):
+            new_todo(user, PERMIT_DELIVERY_TASK_WITH_ABNORMAL_WEIGHT, unmet_task)
+
+class PermitDeliveryTaskWithAbnormalWeight(Task):
+
+    @property
+    def tag(self):
+        return self.__class__.__name__
+
+    @property
+    def title(self):
+        return u'发货任务剩余重量异常处理'
+
+    @property
+    def annotation(self):
+        from lite_mms.apis import wraps
+        remain = self.extra_params['remain']
+        unfinished_store_bill = wraps(models.StoreBill.query.get(self.extra_params['unfinished_store_bill_id']))
+        return render_template("task-flow/permit-delivery-task-with-abnormal-weight-annotation.html", remain=remain, unfinished_store_bill=unfinished_store_bill)
+
+
+    @property
+    def task_flow_literally_status(self):
+
+        if self.task_flow.status == lite_task_flow.constants.TASK_FLOW_PROCESSING:
+            return u'正在处理'
+        elif self.task_flow.status == lite_task_flow.constants.TASK_FLOW_EXECUTED:
+            return u'执行完毕'
+        elif self.task_flow.status == lite_task_flow.constants.TASK_FLOW_APPROVED:
+            return u'批准'
+        elif self.task_flow.status == lite_task_flow.constants.TASK_FLOW_REFUSED:
+            return u'打回'
 
 if __name__ == "__main__":
     pass

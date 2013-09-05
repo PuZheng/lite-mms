@@ -13,8 +13,8 @@ from lite_mms.portal.cargo.views import (unload_session_model_view,
                                          goods_receipt_entry_view,
                                          goods_receipt_model_view,
                                          unload_task_model_view)
-from lite_mms.basemain import data_browser, nav_bar
 
+from lite_mms.basemain import data_browser, nav_bar
 
 def _do_register(model_view, bp):
     extra_params = {

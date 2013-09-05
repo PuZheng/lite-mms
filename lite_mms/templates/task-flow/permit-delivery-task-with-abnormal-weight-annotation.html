@@ -1,0 +1,28 @@
+<table class='table table-striped'>
+  <tbody>
+    <tr>
+    	<th>剩余仓单编号</th>
+      <td>{{unfinished_store_bill.id}}</td>
+    </tr>
+    <tr>
+    	<th>仓单原重</th>
+      <td>{{ unfinished_store_bill.weight }}</td>
+    </tr>
+    <tr>
+    	<th>产品</th>
+      <td>
+        {{ unfinished_store_bill.sub_order.product }}({{unfinished_store_bill.sub_order.spec or '?'}}:{{ unfinished_store_bill.sub_order.type or '?' }})
+      </td>
+    </tr>
+    <tr>
+    	<th>客户</th>
+      <td>
+        {{ unfinished_store_bill.sub_order.customer.name}}
+      </td>
+    </tr>
+    <tr>
+    	<th>剩余重量</th>
+      <td>{{ remain }}(公斤)</td>
+    </tr>
+  </tbody>
+</table>

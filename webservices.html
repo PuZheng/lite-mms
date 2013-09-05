@@ -36,9 +36,6 @@
           <a href="genindex.html" title="总目录"
              accesskey="I">索引</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python 模块索引"
-             >模块</a> |</li>
-        <li class="right" >
           <a href="mannual.html" title="简介"
              accesskey="N">下一页</a> |</li>
         <li class="right" >
@@ -88,6 +85,7 @@
  <span class="s">&quot;userID&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 用户ID</span>
  <span class="s">&quot;departmentID&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">+&gt;</span><span class="p">,</span> <span class="c"># 车间ID, 包括多个，存在一个车间主任管理多个班组的情况。</span>
  <span class="s">&quot;userGroup&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c">#</span>
+ <span class="s">&quot;token&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -307,7 +305,7 @@
 <li><a href="#id19"><span class="problematic" id="id20">*</span></a>team_id - 班组ID， 若为空，则department_id不能为空</li>
 <li><a href="#id21"><span class="problematic" id="id22">*</span></a>start - 返回的工单列表在所有符合其他参数条件的工单列表中的起始位置, 若为空，默认为0</li>
 <li><a href="#id23"><span class="problematic" id="id24">*</span></a>cnt - 返回的工单数量，若为空，默认为sys.maxint</li>
-<li>status - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单状态的说明, 可以是多种工单状态的组合, 若是多种工单状态的组合，中间用&#8217;,&#8217;隔开</li>
+<li>status - 见 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt> 中对各种工单状态的说明, 可以是多种工单状态的组合, 若是多种工单状态的组合，中间用&#8217;,&#8217;隔开</li>
 </ul>
 </div>
 <div class="section" id="id25">
@@ -527,7 +525,7 @@
 <li>work_command_id - 工单id</li>
 <li>actor_id - 发起人id，这里为车间主任</li>
 <li>team_id - 被分配的班组id</li>
-<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
+<li>action - 见 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt> 中对各种工单操作的说明</li>
 </ul>
 </div>
 <div class="section" id="id37">
@@ -640,7 +638,7 @@
 <li>actor_id - 发起人id，这里为team leader</li>
 <li>weight - 重量</li>
 <li>*quantity - <strong>增加</strong> 的件数，对于不同类型的工单有不同的含义，标准-公斤；瑞格-件数；紧固件-桶数；对于计件类型，quantity是必须填写的</li>
-<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
+<li>action - 见 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt> 中对各种工单操作的说明</li>
 <li>*is_finished - 是否结束，1为结束，若不传，默认为0</li>
 </ul>
 </div>
@@ -671,7 +669,7 @@
 <ul class="simple">
 <li>work_command_id - 工单id, 可以是一个工单id列表。例如 <strong>1,2,3</strong></li>
 <li>actor_id - 发起人id，这里为team leader</li>
-<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明, 205代表**结束**， 206代表**结转**</li>
+<li>action - 见 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt> 中对各种工单操作的说明, 205代表**结束**， 206代表**结转**</li>
 </ul>
 </div>
 <div class="section" id="id45">
@@ -704,7 +702,7 @@
 <li>work_command_id - 工单id</li>
 <li>actor_id - 发起人id，这里为车间主任</li>
 <li><a href="#id47"><span class="problematic" id="id48">*</span></a>reason - 理由</li>
-<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
+<li>action - 见 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt> 中对各种工单操作的说明</li>
 </ul>
 </div>
 <div class="section" id="id49">
@@ -736,7 +734,7 @@
 <ul class="simple">
 <li>work_command_id - 工单id</li>
 <li>actor_id - 发起人id，这里为车间主任</li>
-<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
+<li>action - 见 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt> 中对各种工单操作的说明</li>
 <li>*quantity - 最终生产完成的件数，对于不同类型的工单有不同的含义，标准-公斤；瑞格-件数；紧固件-桶数；对于计件类型，quantity是必须填写的</li>
 <li>weight - 最终生产完成的重量</li>
 </ul>
@@ -769,7 +767,7 @@
 <ul class="simple">
 <li>work_command_id - 工单id, 支持多个工单id，可以用&#8221;,&#8221;隔开</li>
 <li>actor_id - 发起人id，这里为车间主任</li>
-<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
+<li>action - 见 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt> 中对各种工单操作的说明</li>
 </ul>
 </div>
 <div class="section" id="id57">
@@ -805,7 +803,7 @@
 <li>actor_id - 提交人id</li>
 <li>work_command_id - 对应的工单id</li>
 <li><em>quantity - **增加*</em> 的重量，对于不同类型的工单有不同的含义，标准-公斤；瑞格-件数；紧固件-桶数；</li>
-<li>result - 质检结果，请参考 <a class="reference internal" href="constants/quality_inspection.html#module-lite_mms.constants.quality_inspection" title="lite_mms.constants.quality_inspection"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.quality_inspection</span></tt></a></li>
+<li>result - 质检结果，请参考 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.quality_inspection</span></tt></li>
 </ul>
 </div>
 <div class="section" id="id60">
@@ -849,7 +847,7 @@
 <li>id - 质检报告id</li>
 <li>actor_id - 提交人id</li>
 <li><em>quantity - **增加*</em> 的重量，对于不同类型的工单有不同的含义，标准-公斤；瑞格-件数；紧固件-桶数；</li>
-<li>result - 质检结果，请参考 <a class="reference internal" href="constants/quality_inspection.html#module-lite_mms.constants.quality_inspection" title="lite_mms.constants.quality_inspection"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.quality_inspection</span></tt></a></li>
+<li>result - 质检结果，请参考 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.quality_inspection</span></tt></li>
 </ul>
 </div>
 <div class="section" id="id63">
@@ -947,7 +945,7 @@
 <span class="p">]</span>
 </pre></div>
 </div>
-<p>其中质检结果请查看 <a class="reference internal" href="constants/quality_inspection.html#module-lite_mms.constants.quality_inspection" title="lite_mms.constants.quality_inspection"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.quality_inspection</span></tt></a></p>
+<p>其中质检结果请查看 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.quality_inspection</span></tt></p>
 <ul class="simple">
 <li>403 - 失败</li>
 </ul>
@@ -972,7 +970,7 @@
 <ul class="simple">
 <li>work_command_id - 工单id</li>
 <li>actor_id - 发起人id，这里为质检员</li>
-<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
+<li>action - 见 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt> 中对各种工单操作的说明</li>
 <li><a href="#id72"><span class="problematic" id="id73">*</span></a>deduction - 扣量，必须以公斤为单位，默认为0</li>
 </ul>
 </div>
@@ -1148,7 +1146,7 @@
 <p>已经完成的仓单不能反复提交， 只能选择同一个订单的一个或多个仓单，只能有一个未完成仓单</p>
 <div class="section" id="id82">
 <h3>request<a class="headerlink" href="#id82" title="永久链接至标题">¶</a></h3>
-<p><strong>POST /delivery_ws/delivery-task?sid=&lt;int&gt;&amp;is_finished=[0|1]&amp;remain=&lt;int&gt;&amp;actor_id=&lt;int&gt;</strong></p>
+<p><strong>POST /delivery_ws/delivery-task?sid=&lt;int&gt;&amp;is_finished=[0|1]&amp;remain=&lt;int&gt;&amp;auth_token=&lt;str&gt;</strong></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">[</span>
     <span class="p">{</span>
         <span class="s">&quot;store_bill_id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 处理的仓单号</span>
@@ -1161,7 +1159,7 @@
 <ul class="simple">
 <li>sid - 发货会话id</li>
 <li>is_finished - 是否发货会话结束, 1代表结束</li>
-<li>actor_id - 操作者id</li>
+<li>auth_token - login返回的token</li>
 <li><a href="#id83"><span class="problematic" id="id84">*</span></a>remain - 未完成件数(计件类型)或重量（计重类型），若有为完成仓单，为必填项</li>
 </ul>
 </div>
@@ -1196,7 +1194,7 @@
 <ul class="simple">
 <li>work_command_id - 工单id</li>
 <li>actor_id - 发起人id，这里为质检员</li>
-<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
+<li>action - 见 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt> 中对各种工单操作的说明</li>
 </ul>
 </div>
 <div class="section" id="id87">
@@ -1226,7 +1224,7 @@
 <ul class="simple">
 <li>work_command_id - 工单id</li>
 <li>actor_id - 发起人id，这里为质检员</li>
-<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
+<li>action - 见 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt> 中对各种工单操作的说明</li>
 </ul>
 </div>
 <div class="section" id="id90">
@@ -1433,9 +1431,6 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="总目录"
              >索引</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python 模块索引"
-             >模块</a> |</li>
         <li class="right" >
           <a href="mannual.html" title="简介"
              >下一页</a> |</li>

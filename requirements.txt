@@ -57,3 +57,4 @@ zope.interface>=4.0.5
 APScheduler>=2.1.1
 Flask-Mail>=0.9.0
 -e git+https://github.com/xiechao06/WorkFlowRepr.git#egg=work_flow_repr-dev
+-e git+https://github.com/xiechao06/lite-task-flow.git@15079ee03925194d6e23817f34c37bfe48ce1300#egg=lite_task_flow-dev

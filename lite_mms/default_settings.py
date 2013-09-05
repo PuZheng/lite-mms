@@ -33,3 +33,5 @@ LOG_FILE = os.path.join(os.getcwd(), "lite-mms.log")
 REPORT_DIR = 'report_conf'
 
 SENDERS = []
+
+CODERNITY_DATABASE_PATH = "codernity_db"

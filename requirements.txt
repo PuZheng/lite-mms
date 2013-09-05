@@ -58,3 +58,4 @@ APScheduler>=2.1.1
 Flask-Mail>=0.9.0
 -e git+https://github.com/xiechao06/WorkFlowRepr.git#egg=work_flow_repr-dev
 CodernityDB==0.4.2
+-e git+https://github.com/xiechao06/lite-task-flow.git@3217d9692a43f5d4d38744cb5fa8c1886071c08f#egg=lite_task_flow-dev

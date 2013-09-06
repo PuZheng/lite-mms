@@ -6,22 +6,21 @@
         var val = 'table' + $(this).val().match(/\d+/);
         $("#" + val + " input:checkbox[name='store_bill_list']").attr("checked", this.checked);
       });
-      {% if request.args.get("delivery_session_id") %}
-        $("#select").click(function () {
-          if ($("input:checkbox[name='store_bill_list']:checked").val() == undefined) {
-            alert("请选择仓单");
-            return false;
-          } else {
-            return true;
+      $("#select").click(function () {
+        if ($("input:checkbox[name='store_bill_list']:checked").val() == undefined) {
+          alert("请选择仓单");
+          return false;
+        } else {
+          return true;
+        }
+      });
+      {% if not request.args.get("delivery_session_id") %}
+        var id_list = {{ request.args.getlist("store_bill_list")|tojson|safe }};
+        $("[name=store_bill_list]").each(function () {
+          if ($.inArray($(this).val(), id_list) > -1) {
+            $(this).attr("checked", true);
           }
         });
-      {% else %}
-        var id_list = {{ request.args.getlist("store_bill_list")|tojson|safe }};
-          $("[name=store_bill_list]").each(function(){
-            if($.inArray($(this).val(), id_list) > -1){
-              $(this).attr("checked", true);
-            }
-          });
       {% endif %}
       $(".collapse").each(function () {
         $(this).collapse({toggle: false});
@@ -32,15 +31,15 @@
           $(".collapse").each(
               function () {
                 var e = $(this).parent("div.accordion-group");
-                if( $(this).attr("id") != "customer" + current_id){
+                if ($(this).attr("id") != "customer" + current_id) {
                   e.hide();
-                }else{
+                } else {
                   e.show();
                   $(this).collapse("show");
                 }
               }
           );
-        }else{
+        } else {
           $(".collapse").each(
               function () {
                 $(this).parent("div.accordion-group").show();
@@ -48,18 +47,18 @@
           );
         }
       });
-      function genatext(){
-        var text="";
-        $(".accordion-group").each(function(){
+      function genatext() {
+        var text = "";
+        $(".accordion-group").each(function () {
           var head = $(this).find("a").text();
           var checkbox = $(this).find("[name=store_bill_list]:checked");
-          if(checkbox.length != 0) {
+          if (checkbox.length != 0) {
             text += head + ":";
             checkbox.each(function (inx) {
               text += $(this).val();
-              if (inx != checkbox.length -1){
+              if (inx != checkbox.length - 1) {
                 text += ",";
-              }else{
+              } else {
                 text += "; ";
               }
             })
@@ -67,6 +66,7 @@
         });
         $(".text-success").text(text);
       }
+
       genatext();
       $("[type=checkbox]").click(genatext);
     })
@@ -83,8 +83,8 @@
       </a>
     {% else %}
       <p>
-      已选择的仓单：
-      <span class="text-success"></span>
+        已选择的仓单：
+        <span class="text-success"></span>
       </p>
       <div class="form-inline">
         <label class="padding" for="customer">客户</label>
@@ -138,6 +138,9 @@
                       <tr {% if not store_bill.printed %}
                         class="warning" title="未打印">
                         <td></td>
+                        {% elif not store_bill.harbor %}
+                          class="warning" title="未选择存放点">
+                          <td></td>
                       {% else %}
                         >
                         <td>
@@ -180,7 +183,7 @@
         <div class="control-group">
           <div class="controls">
             {% if delivery_session_id %}
-              <input type="hidden" name="url" value="{{ request.args.get("url") or url_for('delivery.delivery_session', id_=delivery_session_id)  }}">
+              <input type="hidden" name="url" value="{{ request.args.get("url") or url_for('delivery.delivery_session', id_=delivery_session_id) }}">
               <button class="btn btn-large btn-primary" id="select">添加
               </button>
               <a class="btn btn-large"
@@ -188,7 +191,7 @@
               </a>
             {% else %}
               <button class="btn btn-large btn-primary" id="select">
-                生成发货会话
+                添加
               </button>
               <button class="btn btn-large" type="button" onclick="window.history.go(-1)">
                 返回

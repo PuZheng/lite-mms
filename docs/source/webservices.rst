@@ -39,6 +39,7 @@ response
     "userID": <int>, # 用户ID
     "departmentID": <int+>, # 车间ID, 包括多个，存在一个车间主任管理多个班组的情况。
     "userGroup": <int>, # 
+    "token": <str>, 
    }
       
 * 403 - 错误::
@@ -1089,7 +1090,7 @@ post-delivery-task(创建发货任务)
 request
 =======
 
-**POST /delivery_ws/delivery-task?sid=<int>&is_finished=[0|1]&remain=<int>&actor_id=<int>**
+**POST /delivery_ws/delivery-task?sid=<int>&is_finished=[0|1]&remain=<int>&auth_token=<str>**
 
 .. code-block:: python
     
@@ -1103,7 +1104,7 @@ request
 
 * sid - 发货会话id
 * is_finished - 是否发货会话结束, 1代表结束
-* actor_id - 操作者id
+* auth_token - login返回的token
 * *remain - 未完成件数(计件类型)或重量（计重类型），若有为完成仓单，为必填项
 
 response

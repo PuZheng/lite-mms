@@ -44,7 +44,6 @@ paramiko>=1.9.0
 path.py>=3.0.1
 py>=1.4.12
 pycrypto>=2.6
--e git+https://github.com/xiechao06/pyfeature.git@c13a383477a89906f6ec3c6c9f4b6f552ae894f4#egg=pyfeature-dev
 pyflakes>=0.7.2
 pytest>=2.3.4
 pytz>=2013b
@@ -57,3 +56,6 @@ zope.interface>=4.0.5
 APScheduler>=2.1.1
 Flask-Mail>=0.9.0
 -e git+https://github.com/xiechao06/WorkFlowRepr.git#egg=work_flow_repr-dev
+CodernityDB==0.4.2
+-e git+https://github.com/xiechao06/lite-task-flow.git@3217d9692a43f5d4d38744cb5fa8c1886071c08f#egg=lite_task_flow-dev
+-e git+https://github.com/xiechao06/pyfeature.git@92e086490ab44384dc21ecea65592c302273feab#egg=pyfeature-dev

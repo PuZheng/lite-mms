@@ -5,6 +5,7 @@ this is the default settings, don't insert into your customized settings!
 
 DEBUG = True
 SECRET_KEY = "5L)0K%,i.;*i/s("
+SECURITY_SALT = "mohnooso"
 
 #DB config
 import os.path
@@ -32,3 +33,5 @@ LOG_FILE = os.path.join(os.getcwd(), "lite-mms.log")
 REPORT_DIR = 'report_conf'
 
 SENDERS = []
+
+CODERNITY_DATABASE_PATH = "codernity_db"

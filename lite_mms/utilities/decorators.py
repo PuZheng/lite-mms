@@ -7,7 +7,6 @@ from flask.templating import render_template, TemplateNotFound
 from functools import wraps
 import types
 
-
 def templated(template):
     """This is a method to put a named arguments into the template file
     :param template:the file to be added a argument

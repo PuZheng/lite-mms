@@ -142,7 +142,11 @@ if serve_web:
     from lite_mms.portal.dashboard import dashboard
     app.register_blueprint(dashboard, url_prefix="/dashboard")
 
+    from lite_mms.portal.task_flow import task_flow_page
+    app.register_blueprint(task_flow_page, url_prefix="/task-flow")
+
 if serve_ws:
+
     from lite_mms.portal.auth_ws import auth_ws
     app.register_blueprint(auth_ws, url_prefix="/auth_ws")
     from lite_mms.portal.cargo_ws import cargo_ws
@@ -153,6 +157,7 @@ if serve_ws:
     app.register_blueprint(order_ws, url_prefix="/order_ws")
     from lite_mms.portal.manufacture_ws import manufacture_ws
     app.register_blueprint(manufacture_ws, url_prefix="/manufacture_ws")
+
 
 # ====================== REGISTER NAV BAR ===================================
 from lite_mms.permissions.roles import (CargoClerkPermission, AccountantPermission, QualityInspectorPermission,
@@ -195,6 +200,7 @@ nav_bar.register(report_page, name=u"推送列表", default_url="/report/notific
                  enabler=lambda nav: request.path.startswith('/report/notification-list'))
 nav_bar.register(to_do_page, name=u"待办事项", default_url="/todo/todo-list")
 nav_bar.register(qir_page, name=u"质检报告", default_url="/qir/qireport-list", permissions=[QualityInspectorPermission])
+nav_bar.register(task_flow_page, name=u"工作流", default_url="/task-flow/task-flow-list", permissions=[CargoClerkPermission])
 
 #install jinja utilities
 from lite_mms.utilities import url_for_other_page, datetimeformat
@@ -464,3 +470,12 @@ annotate_model(Order, OrderNode)
 annotate_model(SubOrder, SubOrderNode)
 annotate_model(WorkCommand, WorkCommandNode)
 annotate_model(StoreBill, StoreBillNode)
+
+# register tasks
+from lite_task_flow import register_task_cls, TaskFlowEngine
+from lite_mms.apis.delivery import CreateDeliveryTaskWithAbnormalWeight, PermitDeliveryTaskWithAbnormalWeight
+
+from lite_mms.database import codernity_db
+TaskFlowEngine(codernity_db)
+register_task_cls(CreateDeliveryTaskWithAbnormalWeight)
+register_task_cls(PermitDeliveryTaskWithAbnormalWeight)

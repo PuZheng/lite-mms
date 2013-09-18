@@ -106,12 +106,20 @@ def work_command_list():
 @webservice_call("json")
 def team_list():
     department_id = request.args.get("department_id", type=int)
-    if department_id:
-        import lite_mms.apis as apis
+    import lite_mms.apis as apis
 
-        teams = apis.manufacture.get_team_list(department_id)
-        return json.dumps([dict(name=t.name, id=t.id) for t in teams])
-    return "invalid department_id", 404
+    teams = apis.manufacture.get_team_list(department_id)
+    return json.dumps([dict(name=t.name, id=t.id) for t in teams])
+
+
+@manufacture_ws.route("/department-list", methods=["GET"])
+@webservice_call("json")
+def department_list():
+    import lite_mms.apis as apis
+
+    department_list = apis.manufacture.get_department_list()
+    return json.dumps(
+        [dict(name=t.name, id=t.id, team_id_list=[team.id for team in t.team_list]) for t in department_list])
 
 
 @manufacture_ws.route("/work-command", methods=["PUT"])
@@ -286,6 +294,7 @@ work command")
         # we disable E1101, since it's a bug of pylint
         return str(form.errors), 403 # pylint: disable=E1101        
 
+
 def _handle_delete():
     from lite_mms.apis import quality_inspection
 
@@ -298,6 +307,7 @@ def _handle_delete():
                                                    actor_id=actor_id)
     except ValueError, e:
         return unicode(e), 403
+
 
 @manufacture_ws.route("/delete-quality-inspection-report",
                       methods=["POST"])
@@ -400,3 +410,24 @@ def quality_inspection_report_list():
     else:
         return "work command id required", 403
 
+
+@manufacture_ws.route("/off-duty", methods=["POST"])
+def off_duty():
+    actor_id = request.args.get("actor_id", type=int)
+    if actor_id:
+        cnt = 0
+        from lite_mms.apis import manufacture, auth
+
+        actor = auth.get_user(actor_id)
+        for team in actor.team_list:
+            work_command_list, total_cnt = manufacture.get_work_command_list(status_list=[STATUS_ENDING],
+                                                                             team_id=team.id)
+            for work_command in work_command_list:
+                try:
+                    work_command.go(actor_id=actor_id, action=ACT_CARRY_FORWARD)
+                    cnt += 1
+                except ValueError, e:
+                    return unicode(e), 403
+        return str(cnt)
+    else:
+        return "actor id is required", 403

@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 import os
 from sqlalchemy.exc import SQLAlchemyError
-from flask import Flask, render_template, request, session, g
+from flask import Flask, render_template, request, session, g, url_for
 from flask.ext.babel import Babel, gettext
 from flask.ext.nav_bar import FlaskNavBar
 
@@ -15,6 +15,17 @@ from flask.ext.login import LoginManager, current_user
 login_manager = LoginManager()
 login_manager.init_app(app)
 from flask.ext.principal import Principal, Permission
+
+
+import yawf
+
+from lite_mms.database import db
+from lite_mms import models
+yawf.WorkFlowEngine(db, models.Node)
+import yawf.models
+from lite_mms.apis.delivery import CreateDeliveryTaskWithAbnormalWeight, PermitDeliveryTaskWithAbnormalWeight
+yawf.register_policy(CreateDeliveryTaskWithAbnormalWeight)
+yawf.register_policy(PermitDeliveryTaskWithAbnormalWeight)
 
 principal = Principal(app)
 
@@ -142,8 +153,8 @@ if serve_web:
     from lite_mms.portal.dashboard import dashboard
     app.register_blueprint(dashboard, url_prefix="/dashboard")
 
-    from lite_mms.portal.task_flow import task_flow_page
-    app.register_blueprint(task_flow_page, url_prefix="/task-flow")
+    from lite_mms.portal.work_flow import work_flow_page
+    app.register_blueprint(work_flow_page, url_prefix="/work-flow")
 
 if serve_ws:
 
@@ -200,7 +211,7 @@ nav_bar.register(report_page, name=u"推送列表", default_url="/report/notific
                  enabler=lambda nav: request.path.startswith('/report/notification-list'))
 nav_bar.register(to_do_page, name=u"待办事项", default_url="/todo/todo-list")
 nav_bar.register(qir_page, name=u"质检报告", default_url="/qir/qireport-list", permissions=[QualityInspectorPermission])
-nav_bar.register(task_flow_page, name=u"工作流", default_url="/task-flow/task-flow-list", permissions=[CargoClerkPermission])
+nav_bar.register(work_flow_page, name=u"工作流", default_url="/work-flow/node-list", permissions=[CargoClerkPermission])
 
 #install jinja utilities
 from lite_mms.utilities import url_for_other_page, datetimeformat
@@ -219,6 +230,8 @@ def load_user(user_id):
     from lite_mms.apis import auth
     return auth.get_user(user_id)
 
+
+from lite_mms.permissions.work_flow import HandleNodeNeed
 
 @identity_loaded.connect_via(app)
 def permission_handler(sender, identity):
@@ -254,6 +267,12 @@ def permission_handler(sender, identity):
                     identity.provides.add(need)
             except KeyError:
                 pass
+
+    if os.path.dirname(request.path) == os.path.dirname(url_for('work_flow.node', id_=-1)):
+        node = models.Node.query.get(os.path.basename(request.path))
+        if node:
+            if node.handler_group_id == current_user.group.id:
+                identity.provides.add(HandleNodeNeed)
 
 #设置无权限处理器
 @app.errorhandler(PermissionDenied)
@@ -471,11 +490,3 @@ annotate_model(SubOrder, SubOrderNode)
 annotate_model(WorkCommand, WorkCommandNode)
 annotate_model(StoreBill, StoreBillNode)
 
-# register tasks
-from lite_task_flow import register_task_cls, TaskFlowEngine
-from lite_mms.apis.delivery import CreateDeliveryTaskWithAbnormalWeight, PermitDeliveryTaskWithAbnormalWeight
-
-from lite_mms.database import codernity_db
-TaskFlowEngine(codernity_db)
-register_task_cls(CreateDeliveryTaskWithAbnormalWeight)
-register_task_cls(PermitDeliveryTaskWithAbnormalWeight)

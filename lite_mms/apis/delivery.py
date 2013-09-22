@@ -2,20 +2,21 @@
 import time
 import sys
 from datetime import datetime
+from collections import OrderedDict
 
 from flask import url_for, render_template
 from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import cached_property
+import yawf
 
 from lite_mms import models, constants
 import lite_mms.apis.order
+from lite_mms import database
 from lite_mms.database import db
 import lite_mms.apis.customer
 from lite_mms.apis import ModelWrapper
 from lite_mms.utilities import do_commit, to_timestamp
-import lite_task_flow
-from lite_task_flow import Task, register_task_cls
 
 
 class DeliverySessionWrapper(ModelWrapper):
@@ -26,7 +27,8 @@ class DeliverySessionWrapper(ModelWrapper):
     @property
     def is_locked(self):
         return bool(self.delivery_task_list and
-                    any(not t.weight for t in self.delivery_task_list))
+                    any(not t.weight for t in self.delivery_task_list) or 
+                    yawf.token_bound(constants.work_flow.DELIVERY_TASK_WITH_ABNORMAL_WEIGHT, str(self.id)))
 
     @property
     def load_finish(self):
@@ -699,67 +701,53 @@ def store_bill_remain_unacceptable(unfinished_store_bill, remain):
     return remain >= unfinished_store_bill.weight
 
 
-from lite_task_flow import Task
-
-class CreateDeliveryTaskWithAbnormalWeight(Task):
-
-    @property
-    def tag(self):
-        return self.__class__.__name__
+class CreateDeliveryTaskWithAbnormalWeight(yawf.Policy):
 
     def __call__(self):
         # strong gurantee here
-        delivery_session = get_delivery_session(self.extra_params['delivery_session_id'])
-        remain = self.extra_params['remain']
+        doc = database.codernity_db.get('id', self.node.tag, with_doc=True)
+        delivery_session = get_delivery_session(doc['delivery_session_id'])
+        remain = doc['remain']
         from lite_mms.apis import wraps
-        finished_store_bill_list = [wraps(models.StoreBill.query.get(store_bill_id)) for store_bill_id in self.extra_params['finished_store_bill_id_list']]
-        unfinished_store_bill = wraps(models.StoreBill.query.get(self.extra_params['unfinished_store_bill_id']))
-        is_finished = self.extra_params['is_last_task']
-        loader = models.User.query.get(self.extra_params['loader_id'])
+        finished_store_bill_list = [wraps(models.StoreBill.query.get(store_bill_id)) for store_bill_id in doc['finished_store_bill_id_list']]
+        unfinished_store_bill = wraps(models.StoreBill.query.get(doc['unfinished_store_bill_id']))
+        is_finished = doc['is_last_task']
+        loader = models.User.query.get(doc['loader_id'])
         from lite_mms.portal.delivery_ws.webservices import create_delivery_task
         create_delivery_task(delivery_session, remain, finished_store_bill_list, 
                              unfinished_store_bill, loader, is_finished)
 
     @property
     def dependencies(self):
-        return [PermitDeliveryTaskWithAbnormalWeight(self.task_flow, handle_group_id=constants.groups.CARGO_CLERK, **self.extra_params)]
+        return [('PermitDeliveryTaskWithAbnormalWeight', 
+                     {'name': u'批准生成剩余重量异常的发货任务',
+                     'handler_group': models.Group.query.filter(models.Group.id==constants.groups.CARGO_CLERK).one(),
+                     'tag': self.node.tag,})]
 
-    def on_delayed(self, unmet_task):
+
+    def on_delayed(self, unmet_node):
     
         from lite_mms.apis.todo import new_todo, PERMIT_DELIVERY_TASK_WITH_ABNORMAL_WEIGHT
         from lite_mms.apis.auth import get_user_list
-        for user in get_user_list(unmet_task.extra_params['handle_group_id']):
-            new_todo(user, PERMIT_DELIVERY_TASK_WITH_ABNORMAL_WEIGHT, unmet_task)
+        for user in get_user_list(unmet_node.handler_group_id):
+            new_todo(user, PERMIT_DELIVERY_TASK_WITH_ABNORMAL_WEIGHT, unmet_node)
 
-class PermitDeliveryTaskWithAbnormalWeight(Task):
-
-    @property
-    def tag(self):
-        return self.__class__.__name__
-
-    @property
-    def title(self):
-        return u'发货任务剩余重量异常处理'
+class PermitDeliveryTaskWithAbnormalWeight(yawf.Policy):
 
     @property
     def annotation(self):
         from lite_mms.apis import wraps
-        remain = self.extra_params['remain']
-        unfinished_store_bill = wraps(models.StoreBill.query.get(self.extra_params['unfinished_store_bill_id']))
-        return render_template("task-flow/permit-delivery-task-with-abnormal-weight-annotation.html", remain=remain, unfinished_store_bill=unfinished_store_bill)
-
-
-    @property
-    def task_flow_literally_status(self):
-
-        if self.task_flow.status == lite_task_flow.constants.TASK_FLOW_PROCESSING:
-            return u'正在处理'
-        elif self.task_flow.status == lite_task_flow.constants.TASK_FLOW_EXECUTED:
-            return u'执行完毕'
-        elif self.task_flow.status == lite_task_flow.constants.TASK_FLOW_APPROVED:
-            return u'批准'
-        elif self.task_flow.status == lite_task_flow.constants.TASK_FLOW_REFUSED:
-            return u'打回'
+        doc = database.codernity_db.get('id', self.node.tag, with_doc=True)
+        remain = doc['remain']
+        unfinished_store_bill = wraps(models.StoreBill.query.get(doc['unfinished_store_bill_id']))
+        d = OrderedDict()
+        d[u'剩余仓单编号'] = unfinished_store_bill.id
+        d[u'仓单原重'] = unfinished_store_bill.weight
+        d[u'产品'] = unfinished_store_bill.sub_order.product.name + '(%s:%s)' % (unfinished_store_bill.sub_order.spec or '?',
+                                                                            unfinished_store_bill.sub_order.type or '?')
+        d[u'客户'] = unfinished_store_bill.sub_order.customer.name
+        d[u'剩余重量'] = str(remain) + u'(公斤)'
+        return d
 
 if __name__ == "__main__":
     pass

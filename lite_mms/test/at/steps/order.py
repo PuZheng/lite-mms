@@ -20,7 +20,6 @@ def generate(times=1):
         temp += choice(string.letters)
     return temp
 
-
 @app.before_request
 def patch():
     """

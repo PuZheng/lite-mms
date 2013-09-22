@@ -14,7 +14,7 @@ import sys
 DBSTR = "sqlite:///lite_mms.db"
 #else:
 #    DBSTR = "sqlite:///" + os.path.join(sys.prefix, "share/lite-mms/lite_mms.db")
-DB_ECHO = True
+SQLALCHEMY_ECHO = True
 
 UPLOAD_FOLDER = "upload"
 
@@ -31,7 +31,6 @@ SERVE_TYPE = "both"
 import os
 LOG_FILE = os.path.join(os.getcwd(), "lite-mms.log")
 REPORT_DIR = 'report_conf'
-
 SENDERS = []
-
 CODERNITY_DATABASE_PATH = "codernity_db"
+FLASK_REPORT_SEND_NOTIFICATION = False

@@ -1,9 +1,12 @@
 # -*- coding: UTF-8 -*-
 import json
 from datetime import datetime
+import md5
 
 from flask import request
 from flask.ext.login import current_user
+
+import yawf
 
 from lite_mms.utilities import _
 from werkzeug.exceptions import BadRequest
@@ -13,9 +16,9 @@ from lite_mms.utilities.decorators import webservice_call
 import lite_mms.apis as apis
 from lite_mms.apis.delivery import DeliverySessionWrapper
 from lite_mms import models
-from lite_task_flow import new_task_flow
-from lite_task_flow.exceptions import TaskFlowDelayed
+from lite_mms import database
 from lite_mms import constants
+
 
 
 @delivery_ws.route("/delivery-session-list", methods=["GET"])
@@ -96,6 +99,9 @@ def delivery_task():
 
     delivery_session_id = request.args.get("sid", type=int)
 
+    if yawf.token_bound(constants.work_flow.DELIVERY_TASK_WITH_ABNORMAL_WEIGHT, str(delivery_session_id)):
+        return u'本卸货会话有待处理的工作流，请先敦促工作人员处理该工作流', 403
+
     delivery_session = apis.delivery.get_delivery_session(delivery_session_id)
     if not delivery_session:
         return _(u"需要发货会话字段"), 403
@@ -107,15 +113,19 @@ def delivery_task():
     unfinished_store_bill = get_or_404(models.StoreBill, unfinished_store_bill_id_list[0]) if unfinished_store_bill_id_list else None
     if unfinished_store_bill and apis.delivery.store_bill_remain_unacceptable(unfinished_store_bill, remain):
         try:
-            task_flow = new_task_flow(apis.delivery.CreateDeliveryTaskWithAbnormalWeight, 
-                                      delivery_session_id=delivery_session_id,
+            doc = database.codernity_db.insert(dict(delivery_session_id=delivery_session_id,
                                       remain=remain, 
                                       finished_store_bill_id_list=finished_store_bill_id_list,
                                       unfinished_store_bill_id=unfinished_store_bill.id,
                                       loader_id=current_user.id, 
-                                      is_last_task=is_finished)
-            task_flow.start()
-        except TaskFlowDelayed, e:
+                                      is_last_task=is_finished))
+            # 保存token，以避免重复提交工作流, 显然，对于一个卸货会话而言，只能同时存在一个正在处理的工作流
+            work_flow = yawf.new_work_flow(constants.work_flow.DELIVERY_TASK_WITH_ABNORMAL_WEIGHT, 
+                                      lambda work_flow: models.Node(work_flow=work_flow, 
+                                                                    name=u"生成异常剩余重量的发货任务", policy_name='CreateDeliveryTaskWithAbnormalWeight'),
+                                      tag_creator=lambda work_flow: doc['_id'], token=str(delivery_session_id))
+            work_flow.start()
+        except yawf.exceptions.WorkFlowDelayed, e:
             return "", 201
     else:
         finished_store_bill_list = [get_or_404(models.StoreBill, store_bill_id) for store_bill_id in finished_store_bill_id_list]

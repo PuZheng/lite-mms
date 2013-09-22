@@ -2,11 +2,13 @@
 import json
 from flask import g, _request_ctx_stack, session
 from pyfeature import step
+import yawf
+
 from lite_mms import models, constants
 from lite_mms.apis.delivery import DeliverySessionWrapper
 from lite_mms.basemain import app, timeline_logger
 from lite_mms.utilities import do_commit
-
+from lite_mms.test.utils import login, client_login
 
 timeline_logger.handlers = []
 
@@ -21,18 +23,6 @@ def generate(times=1):
     for i in range(times):
         temp += choice(string.letters)
     return temp
-
-@app.before_request
-def patch():
-    """
-    needn't login in
-    """
-    g.identity.can = lambda p: True
-    from lite_mms.apis.auth import UserWrapper
-    user = UserWrapper(models.User.query.first())
-    _request_ctx_stack.top.user = user
-    session['current_group_id'] = user.groups[0].id
-
 
 @step(u"收发员创建发货会话")
 def _(step, plate, tare):
@@ -76,23 +66,23 @@ def _(step, delivery_session, store_bill_list):
 def _(step, delivery_session, store_bill):
     with app.test_request_context():
         with app.test_client() as c:
-            rv = c.post('/auth_ws/login?username=l&password=l') 
-            assert rv.status_code == 200
-            auth_token = json.loads(rv.data)['token']
+            auth_token = client_login('l', 'l', c)
             rv = c.post("/delivery_ws/delivery-task?sid=%s&is_finished=1&remain=0&auth_token=%s" % (delivery_session.id, auth_token),
                         data=json.dumps([{"store_bill_id": store_bill.id, "is_finished": 1}]))
             assert 200 == rv.status_code
             delivery_task = models.DeliveryTask.query.filter(
                 models.DeliveryTask.delivery_session == delivery_session).order_by(
                 models.DeliveryTask.id.desc()).first()
+            login('cc', 'cc', c)
             rv = c.post("/delivery/weigh-delivery-task/%d" % delivery_task.id, data={"weight": 6500})
-            assert 302 == rv.status_code
+            assert rv.status_code == 302
 
 
 @step(u"收发员生成发货单")
 def _(step, delivery_session):
     with app.test_request_context():
         with app.test_client() as c:
+            login('cc', 'cc', c)
             rv = c.post("/delivery/create-consignment-list/%s" % delivery_session.id,
                         data={"customer-pay_mod": json.dumps({customer.id: 0 for customer in
                                                               DeliverySessionWrapper(
@@ -121,6 +111,7 @@ def _(step, plate, tare):
 def _(step, delivery_session):
     with app.test_request_context():
         with app.test_client() as c:
+            login('cc', 'cc', c)
             rv = c.post("/delivery/delivery-session/%d" % delivery_session.id)
             return rv.status_code
 
@@ -128,6 +119,7 @@ def _(step, delivery_session):
 def _(step, delivery_session):
     with app.test_request_context():
         with app.test_client() as c:
+            login('cc', 'cc', c)
             rv = c.post("/delivery/delivery-session/%d" % delivery_session.id, data={"__action__": u"打开"})
             assert 302 == rv.status_code
 
@@ -136,6 +128,7 @@ def _(step, delivery_session):
 def _(step, delivery_session):
     with app.test_request_context():
         with app.test_client() as c:
+            login('cc', 'cc', c)
             rv = c.post("/delivery/delivery-session/%d" % delivery_session.id)
             assert 302 == rv.status_code
 
@@ -149,6 +142,7 @@ def _(step, delivery_session):
 def _(step, delivery_task):
     with app.test_request_context():
         with app.test_client() as c:
+            login('cc', 'cc', c)
             rv = c.post("/delivery/delivery-task/%d" % delivery_task.id)
             return rv.status_code
 
@@ -175,6 +169,7 @@ def _(step, customer, delivery_session, product):
 def _(step, consignment):
     with app.test_request_context():
         with app.test_client() as c:
+            login('cc', 'cc', c)
             rv = c.post("/consignment/consignment-product/%d" % consignment.product_list[0].id)
             return rv.status_code
         
@@ -197,6 +192,7 @@ def _(step,plate,tare, customer, product):
 def _(step, delivery_session, store_bill):
     with app.test_request_context():
         with app.test_client() as c:
+            login('cc', 'cc', c)
             rv = c.post("/delivery/store-bill-list/%d" % delivery_session.id, data={"store_bill_list": store_bill.id})
             assert 302 == rv.status_code
             rv = c.post('/auth_ws/login?username=l&password=l')
@@ -220,26 +216,35 @@ def _(step, delivery_session, store_bill1, store_bill2):
         rv = c.post("/delivery_ws/delivery-task?sid=%s&is_finished=1&auth_token=%s&remain=%d" % (delivery_session.id, auth_token, store_bill2.weight+1),
                     data=json.dumps([{"store_bill_id": store_bill1.id, "is_finished": 1}, 
                                      {'store_bill_id': store_bill2.id, 'is_finished': 0}]))
-        print rv.data
         assert rv.status_code == 201 
+
+@step(u'不能再次创建发货任务，包含两个仓单，全部都完成')
+def _(step, delivery_session, store_bill1, store_bill2):
+    with app.test_client() as c:
+        rv = c.post('/auth_ws/login?username=l&password=l')
+        assert rv.status_code == 200
+        auth_token = json.loads(rv.data)['token']
+        rv = c.post("/delivery_ws/delivery-task?sid=%s&is_finished=1&auth_token=%s" % (delivery_session.id, auth_token),
+                    data=json.dumps([{"store_bill_id": store_bill1.id, "is_finished": 1}, 
+                                     {'store_bill_id': store_bill2.id, 'is_finished': 1}]))
+        print rv.data
+        assert rv.status_code == 403 
+
 
 @step(u'一个异常发货任务申请生成了')
 def _(step, codernity_db):
-    from lite_task_flow.constants import TASK_TYPE_CODE
-    from lite_task_flow import get_task
     from lite_mms.apis.delivery import PermitDeliveryTaskWithAbnormalWeight
-    return [item for item in codernity_db.all('id', with_doc=True) if item['t'] == TASK_TYPE_CODE and item['tag']=='PermitDeliveryTaskWithAbnormalWeight'][0]['_id']
+    return models.Node.query.filter(models.Node.policy_name=='PermitDeliveryTaskWithAbnormalWeight').one().id
+
 
 @step(u'批准该申请')
-def _(step, task_id):
+def _(step, node_id):
     with app.test_client() as c:
-        rv = c.post('/task-flow/task/'+task_id+'?action=approve')
-        assert rv.status_code == 200
-        from lite_task_flow import get_task
-        from lite_task_flow.constants import TASK_FLOW_EXECUTED
-        task = get_task(task_id)
-        assert task.approved
-        assert task.task_flow.status == TASK_FLOW_EXECUTED
+        login('cc', 'cc', c)
+        node = models.Node.query.get(node_id)
+        node.approve()
+        assert node.approved
+        assert node.work_flow.status == yawf.constants.WORK_FLOW_EXECUTED
 
 @step(u'发货任务生成了, 存在一个未发货的仓单, 剩余重量是1001, 另外由两个仓单已经发货完毕, 其重量分别是2000, 1')
 def _(step, delivery_session, store_bill_id1, store_bill_id2):

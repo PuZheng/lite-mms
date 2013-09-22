@@ -121,178 +121,181 @@ def department_list():
     return json.dumps(
         [dict(name=t.name, id=t.id, team_id_list=[team.id for team in t.team_list]) for t in department_list])
 
-
+@manufacture_ws.route("/work-command/<int:id_>")
 @manufacture_ws.route("/work-command", methods=["PUT"])
 @webservice_call("json")
-def work_command():
+def work_command(id_=None):
     import lite_mms.apis as apis
+    if id_:
+        work_command =apis.manufacture.get_work_command(id_)
+        return json.dumps(_work_command_to_dict(work_command))
+    else:
+        class _ValidationForm(Form):
+            def validate_team_id(self, field):
+                if self.action.data == ACT_ASSIGN:
+                    if field.data is None:
+                        raise ValidationError("team required when assigning \
+    work command")
 
-    class _ValidationForm(Form):
-        def validate_team_id(self, field):
-            if self.action.data == ACT_ASSIGN:
-                if field.data is None:
-                    raise ValidationError("team required when assigning \
-work command")
+            def validate_weight(self, field):
+                if self.action.data == ACT_ADD_WEIGHT or self.action.data == \
+                        ACT_AFFIRM_RETRIEVAL:
+                    if field.data is None:
+                        raise ValidationError(_("需要weight字段"))
 
-        def validate_weight(self, field):
-            if self.action.data == ACT_ADD_WEIGHT or self.action.data == \
-                    ACT_AFFIRM_RETRIEVAL:
-                if field.data is None:
-                    raise ValidationError(_("需要weight字段"))
+            def validate_is_finished(self, field):
+                if field.data is not None:
+                    if field.data not in [0, 1]:
+                        raise ValidationError("is finished should be 0 or 1")
 
-        def validate_is_finished(self, field):
-            if field.data is not None:
-                if field.data not in [0, 1]:
-                    raise ValidationError("is finished should be 0 or 1")
-
-        work_command_id = StringField(u"work command id",
-                                      [validators.DataRequired()])
-        actor_id = IntegerField(u"actor id", [validators.DataRequired()])
-        quantity = IntegerField(u"quantity")
-        weight = IntegerField(u"weight")
-        remain_weight = IntegerField(u"remain_weight")
-        team_id = IntegerField(u"team id")
-        action = IntegerField(u"action", [validators.DataRequired()])
-        is_finished = IntegerField(u"is finished")
-        deduction = IntegerField(u"deduction")
+            work_command_id = StringField(u"work command id",
+                                          [validators.DataRequired()])
+            actor_id = IntegerField(u"actor id", [validators.DataRequired()])
+            quantity = IntegerField(u"quantity")
+            weight = IntegerField(u"weight")
+            remain_weight = IntegerField(u"remain_weight")
+            team_id = IntegerField(u"team id")
+            action = IntegerField(u"action", [validators.DataRequired()])
+            is_finished = IntegerField(u"is finished")
+            deduction = IntegerField(u"deduction")
 
 
-    form = _ValidationForm(request.args)
-    if form.validate():
-        # pylint: disable=R0912
-        if form.action.data == ACT_ASSIGN:
-            try:
-                work_command_id = int(form.work_command_id.data)
-            except ValueError:
-                return "work command id should be integer", 403
-            try:
-                wc = apis.manufacture.get_work_command(work_command_id)
-                if not wc:
-                    return u"无此工单%s" % work_command_id, 404
-                wc.go(actor_id=form.actor_id.data, action=form.action.data,
-                      team_id=form.team_id.data)
-            except ValueError, e:
-                return unicode(e), 403
-            result = wc
-        elif form.action.data == ACT_AFFIRM_RETRIEVAL:
-            kwargs = {"weight": form.weight.data}
-            if form.quantity.data:
-                kwargs.update(quantity=form.quantity.data)
-            try:
-                work_command_id = int(form.work_command_id.data)
-            except ValueError:
-                return "work command id should be integer", 403
-            try:
-                wc = apis.manufacture.get_work_command(work_command_id)
-                if not wc:
-                    return u"无此工单%s" % work_command_id, 404
-
-                wc.go(actor_id=form.actor_id.data, action=form.action.data,
-                      **kwargs)
-            except ValueError, e:
-                return unicode(e), 403
-            result = wc
-        elif form.action.data == ACT_ADD_WEIGHT:
-            kwargs = {"weight": form.weight.data}
-            if form.quantity.data:
-                kwargs.update(quantity=form.quantity.data)
-            try:
-                work_command_id = int(form.work_command_id.data)
-            except ValueError:
-                return "work command id should be integer", 403
-            try:
-                wc = apis.manufacture.get_work_command(work_command_id)
-                if not wc:
-                    return u"无此工单%s" % work_command_id, 404
-
-                wc.go(actor_id=form.actor_id.data, action=form.action.data,
-                      **kwargs)
-                if form.is_finished.data:
-                    wc.go(actor_id=form.actor_id.data, action=ACT_END)
-            except ValueError, e:
-                return unicode(e), 403
-            result = wc
-        elif form.action.data == ACT_QI:
-            try:
-                work_command_id = int(form.work_command_id.data)
-            except ValueError:
-                return "work command id should be integer", 403
-            try:
-                wc = apis.manufacture.get_work_command(work_command_id)
-                if not wc:
-                    return u"无此工单%s" % work_command_id, 404
-
-                wc.go(actor_id=form.actor_id.data, action=form.action.data,
-                      deduction=form.deduction.data or 0)
-            except ValueError, e:
-                return unicode(e), 403
-            result = wc
-        elif form.action.data in [ACT_CARRY_FORWARD, ACT_END,
-                                  ACT_REFUSE_RETRIEVAL,
-                                  ACT_REFUSE]:
-            try:
-                wc_id_list = [int(wc_id) for wc_id in
-                              form.work_command_id.data.split(",")]
-            except ValueError:
-                return "work command id should be integer", 403
-            result = []
-            # TODO may be it could be done batchly
-            for work_command_id in wc_id_list:
-                wc = apis.manufacture.get_work_command(work_command_id)
-                if not wc:
-                    return u"无此工单%s" % work_command_id, 404
+        form = _ValidationForm(request.args)
+        if form.validate():
+            # pylint: disable=R0912
+            if form.action.data == ACT_ASSIGN:
+                try:
+                    work_command_id = int(form.work_command_id.data)
+                except ValueError:
+                    return "work command id should be integer", 403
+                try:
+                    wc = apis.manufacture.get_work_command(work_command_id)
+                    if not wc:
+                        return u"无此工单%s" % work_command_id, 404
+                    wc.go(actor_id=form.actor_id.data, action=form.action.data,
+                          team_id=form.team_id.data)
+                except ValueError, e:
+                    return unicode(e), 403
+                result = wc
+            elif form.action.data == ACT_AFFIRM_RETRIEVAL:
+                kwargs = {"weight": form.weight.data}
 
                 try:
+                    work_command_id = int(form.work_command_id.data)
+                except ValueError:
+                    return "work command id should be integer", 403
+                try:
+                    wc = apis.manufacture.get_work_command(work_command_id)
+                    if not wc:
+                        return u"无此工单%s" % work_command_id, 404
+                    if not wc.sub_order.measured_by_weight:
+                        kwargs.update(quantity=form.quantity.data)
+                    wc.go(actor_id=form.actor_id.data, action=form.action.data,
+                          **kwargs)
+                except ValueError, e:
+                    return unicode(e), 403
+                result = wc
+            elif form.action.data == ACT_ADD_WEIGHT:
+                kwargs = {"weight": form.weight.data}
+                if form.quantity.data:
+                    kwargs.update(quantity=form.quantity.data)
+                try:
+                    work_command_id = int(form.work_command_id.data)
+                except ValueError:
+                    return "work command id should be integer", 403
+                try:
+                    wc = apis.manufacture.get_work_command(work_command_id)
+                    if not wc:
+                        return u"无此工单%s" % work_command_id, 404
+
+                    wc.go(actor_id=form.actor_id.data, action=form.action.data,
+                          **kwargs)
+                    if form.is_finished.data:
+                        wc.go(actor_id=form.actor_id.data, action=ACT_END)
+                except ValueError, e:
+                    return unicode(e), 403
+                result = wc
+            elif form.action.data == ACT_QI:
+                try:
+                    work_command_id = int(form.work_command_id.data)
+                except ValueError:
+                    return "work command id should be integer", 403
+                try:
+                    wc = apis.manufacture.get_work_command(work_command_id)
+                    if not wc:
+                        return u"无此工单%s" % work_command_id, 404
+
+                    wc.go(actor_id=form.actor_id.data, action=form.action.data,
+                          deduction=form.deduction.data or 0)
+                except ValueError, e:
+                    return unicode(e), 403
+                result = wc
+            elif form.action.data in [ACT_CARRY_FORWARD, ACT_END,
+                                      ACT_REFUSE_RETRIEVAL,
+                                      ACT_REFUSE]:
+                try:
+                    wc_id_list = [int(wc_id) for wc_id in
+                                  form.work_command_id.data.split(",")]
+                except ValueError:
+                    return "work command id should be integer", 403
+                result = []
+                # TODO may be it could be done batchly
+                for work_command_id in wc_id_list:
+                    wc = apis.manufacture.get_work_command(work_command_id)
+                    if not wc:
+                        return u"无此工单%s" % work_command_id, 404
+
+                    try:
+                        wc.go(actor_id=form.actor_id.data, action=form.action.data)
+                    except ValueError, e:
+                        return unicode(e), 403
+                    result.append(wc)
+                if len(result) == 1:
+                    result = result[0]
+                    # pylint: enable=R0912
+            elif form.action.data == ACT_RETRIVE_QI:
+
+                try:
+                    work_command_id = int(form.work_command_id.data)
+                except ValueError:
+                    return "work command id should be integer", 403
+                try:
+                    wc = apis.manufacture.get_work_command(work_command_id)
+                    if not wc:
+                        return u"无此工单%s" % work_command_id, 404
+
+                    if wc.last_mod.date() < date.today():
+                        return u'不能取消今天以前的质检单', 403
+
                     wc.go(actor_id=form.actor_id.data, action=form.action.data)
                 except ValueError, e:
                     return unicode(e), 403
-                result.append(wc)
-            if len(result) == 1:
-                result = result[0]
-                # pylint: enable=R0912
-        elif form.action.data == ACT_RETRIVE_QI:
+                result = wc
+            elif form.action.data == ACT_QUICK_CARRY_FORWARD:
+                try:
+                    work_command_id = int(form.work_command_id.data)
+                except ValueError:
+                    return "work command id should be integer", 403
+                try:
+                    wc = apis.manufacture.get_work_command(work_command_id)
+                    if not wc:
+                        return u"无此工单%s" % work_command_id, 404
 
-            try:
-                work_command_id = int(form.work_command_id.data)
-            except ValueError:
-                return "work command id should be integer", 403
-            try:
-                wc = apis.manufacture.get_work_command(work_command_id)
-                if not wc:
-                    return u"无此工单%s" % work_command_id, 404
+                    if wc.processed_weight <= 0:
+                        return u'未加工过的工单不能快速结转', 403
 
-                if wc.last_mod.date() < date.today():
-                    return u'不能取消今天以前的质检单', 403
+                    wc.go(actor_id=form.actor_id.data, action=form.action.data)
+                except ValueError, e:
+                    return unicode(e), 403
+                result = wc
 
-                wc.go(actor_id=form.actor_id.data, action=form.action.data)
-            except ValueError, e:
-                return unicode(e), 403
-            result = wc
-        elif form.action.data == ACT_QUICK_CARRY_FORWARD:
-            try:
-                work_command_id = int(form.work_command_id.data)
-            except ValueError:
-                return "work command id should be integer", 403
-            try:
-                wc = apis.manufacture.get_work_command(work_command_id)
-                if not wc:
-                    return u"无此工单%s" % work_command_id, 404
-
-                if wc.processed_weight <= 0:
-                    return u'未加工过的工单不能快速结转', 403
-
-                wc.go(actor_id=form.actor_id.data, action=form.action.data)
-            except ValueError, e:
-                return unicode(e), 403
-            result = wc
-
-        if isinstance(result, types.ListType):
-            return json.dumps([_work_command_to_dict(wc) for wc in result])
+            if isinstance(result, types.ListType):
+                return json.dumps([_work_command_to_dict(wc) for wc in result])
+            else:
+                return json.dumps(_work_command_to_dict(result))
         else:
-            return json.dumps(_work_command_to_dict(result))
-    else:
-        # we disable E1101, since it's a bug of pylint
-        return str(form.errors), 403 # pylint: disable=E1101        
+            # we disable E1101, since it's a bug of pylint
+            return str(form.errors), 403 # pylint: disable=E1101
 
 
 def _handle_delete():

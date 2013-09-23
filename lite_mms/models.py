@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
+
 from datetime import datetime
+
+from sqlalchemy.ext.declarative import declared_attr
+
 from lite_mms import constants
 from lite_mms.database import db
 
@@ -883,3 +887,21 @@ class Config(db.Model):
 
     def __unicode__(self):
         return self.property_name
+
+
+import yawf
+from yawf.node_mixin import NodeMixin
+
+class Node(db.Model, NodeMixin):
+
+    __tablename__ = 'TB_NODE'
+    __modelname__ = '工作流节点'
+
+    @declared_attr
+    def handler_group_id(self):
+        return db.Column(db.Integer, db.ForeignKey('TB_GROUP.id'))
+
+    @declared_attr
+    def handler_group(self):
+        return db.relationship('Group')
+

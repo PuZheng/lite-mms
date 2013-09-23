@@ -1,0 +1,108 @@
+{% extends 'layout.html' %}
+
+{% block __data_browser__customized_head_block %}
+{{ super() }}
+<script type="text/javascript">
+  $(function () {
+      $('a[data-toggle="popover"]').popover();
+      $('[data-role="approve-node"]').click(
+        function () {
+        $('[data-role="confirm-modal"]').modal('show');
+        $('[data-role="modal-title"]').text('您确认要批准这条请求?')
+        $('.modal-body').html($(this).attr('data-annotation'));
+        $('a[data-role="confirm"]').click((function (node_id) {
+          return function () {
+          $.post('/node-flow/node/' + node_id + '?action=approve').done(
+            function () {
+            alert("成功"); 
+            location.reload();
+            }
+            ); 
+          };
+          })($(this).attr('data-target')));
+        });
+      $('[data-role="refuse-node"]'.click(function () {
+        $('[data-role="confirm-modal"]').modal('show');
+        $('[data-role="modal-title"]').text('您确认要拒绝这条请求?')
+        $('.modal-body').html($(this).attr('data-annotation'));
+        $('a[data-role="confirm"]').click((function (node_id) {
+          return function () {
+          $.post('/node-flow/node/' + node_id + '?action=refuse').done(
+            function () {
+            alert("成功"); 
+            location.reload();
+            }
+            ); 
+          };
+          })($(this).attr('data-target'))); 
+        }));
+  });
+</script>
+{% endblock %}
+
+{% block body %}
+  <div class="container">
+    <ul class="nav nav-pills">
+      <li {% if request.args.get('unapproved_only') %}class="active"{% endif %}>
+        <a href="?unhandled_only=1">待处理({{ unhandled_nodes_cnt }})</a>
+      </li>
+      <li {% if request.args.get('approved_only')%}class="active"{% endif %}>
+        <a href="?handled_only=1">已经处理({{ handled_nodes_cnt }})</a>
+      </li>
+    </ul>
+    <table class='table table-striped'>
+      <thead>
+        <tr>
+          <th>概述</th>
+          <th>创建时间</th>
+          <th>批准时间</th>
+          <th>状态</th>
+          <th>工作流状态</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for node in nodes %}
+        <tr class={% if not node.handle_time %}'text-success'{% else %}'text-muted'{% endif %}>
+          <td>{{ node.title }} 
+            <a href="#" data-toggle='popover' data-content="{{ node.annotation }}" data-html='true' data-placement='bottom'>&gt;&gt;</a>
+          </td>
+          <td>{{ node.create_time }}</td>
+          <td>{{ node.handle_time or '--' }}</td>
+          <td>{{ '批准' if node.approved else '未批准' }}</td>
+          <td>{{ node.work_flow_literally_status }}</td>
+          <td>
+            {% if not node.approved and node.node_flow.status == constants.TASK_FLOW_PROCESSING %}
+            <div class="btn-group">
+              <button class="btn" data-role='approve-node' data-target="{{ node.id_ }}" data-annotation="{{ node.annotation }}">批准</button>
+              <button class="btn dropdown-toggle" data-toggle="dropdown">
+                <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu">
+                <li>
+                  <a href="#" data-role='refuse-node' data-target="{{ node.id_ }}" data-annotation="{{ node.annotation }}">拒绝</a>
+                </li>
+              </ul>
+            </div> 
+            {% else %}
+            --
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div data-role="confirm-modal" class="modal hide fade">
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+      <h3 data-role='modal-title'></h3>
+    </div>
+    <div class="modal-body">
+    </div>
+    <div class="modal-footer">
+      <a href="#" class="btn" data-dismiss='modal'>关闭</a>
+      <a href="#" class="btn btn-primary" data-role='confirm' data-dismiss='modal'>确认</a>
+    </div>
+  </div>
+{% endblock %}

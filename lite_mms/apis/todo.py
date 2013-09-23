@@ -1,7 +1,9 @@
 #-*- coding:utf-8 -*-
+from flask import url_for
 from . import ModelWrapper
 from lite_mms import models
 from lite_mms.utilities import do_commit
+from lite_mms import database
 from .notify import notifications
 
 
@@ -68,6 +70,7 @@ WEIGH_UNLOAD_TASK = u"weigh_unload_task"
 WEIGH_DELIVERY_TASK = u"weigh_delivery_task"
 PAY_CONSIGNMENT = u"pay_consignment"
 DISPATCH_ORDER = u"dispatch_order"
+PERMIT_DELIVERY_TASK_WITH_ABNORMAL_WEIGHT = u'permit_delivery_task_with_abnormal_weight'
 
 
 @todo_factory.upon(WEIGH_UNLOAD_TASK)
@@ -122,3 +125,13 @@ def dispatch_order(whom, action, obj, msg, sender, **kwargs):
         obj.customer_order_number) + (msg and " - " + msg)
     return models.TODO(user=whom, action=action, obj_pk=obj.id, actor=sender, msg=msg,
                        context_url=data_browser.get_form_url(obj))
+
+
+@todo_factory.upon(PERMIT_DELIVERY_TASK_WITH_ABNORMAL_WEIGHT)
+def permit_delivery_task_with_abnormal_weight(whom, action, obj, msg, sender, **kwargs):
+    doc = database.codernity_db.get('id', obj.tag, with_doc=True)
+    loader = models.User.query.get(doc['loader_id'])
+    msg = u'装卸工%s完成了剩余重量异常的发货任务，请处理!' % loader.username 
+    return models.TODO(user=whom, action=action, obj_pk=obj.id, actor=sender, msg=msg,
+                       context_url=url_for('work_flow.node_list'))
+

@@ -57,7 +57,6 @@ class OpenAction(BaseAction):
     def get_forbidden_msg_formats(self):
         return {-2: u"收货会话%s处在打开状态, 只有已经关闭的会话才能被打开"}
 
-
 class CreateReceiptAction(BaseAction):
     def test_enabled(self, model):
         if model.goods_receipt_list and all(not gr.stale for gr in model.goods_receipt_list) and len(
@@ -73,12 +72,10 @@ class CreateReceiptAction(BaseAction):
     def get_forbidden_msg_formats(self):
         return {-2: u"卸货会话%s已生成收货单", -3: u"卸货会话%s没有卸货任务，请先生成卸货任务"}
 
-
 class PrintGoodsReceipt(DirectAction):
     def op_upon_list(self, objs, model_view):
         model_view.do_update_log(objs[0], self.name)
         return redirect(url_for("cargo.goods_receipt_preview", id_=objs[0].id, url=request.url))
-
 
 class BatchPrintGoodsReceipt(DirectAction):
     def op_upon_list(self, objs, model_view):

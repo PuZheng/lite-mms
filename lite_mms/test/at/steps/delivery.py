@@ -2,10 +2,13 @@
 import json
 from flask import g, _request_ctx_stack, session
 from pyfeature import step
+import yawf
+
 from lite_mms import models, constants
 from lite_mms.apis.delivery import DeliverySessionWrapper
 from lite_mms.basemain import app, timeline_logger
 from lite_mms.utilities import do_commit
+from lite_mms.test.utils import login, client_login
 
 timeline_logger.handlers = []
 
@@ -21,26 +24,13 @@ def generate(times=1):
         temp += choice(string.letters)
     return temp
 
-
-@app.before_request
-def patch():
-    """
-    needn't login in
-    """
-    g.identity.can = lambda p: True
-    from lite_mms.apis.auth import UserWrapper
-    user = UserWrapper(models.User.query.first())
-    _request_ctx_stack.top.user = user
-    session['current_group_id'] = user.groups[0].id
-
-
 @step(u"收发员创建发货会话")
 def _(step, plate, tare):
     return do_commit(models.DeliverySession(plate_=plate, tare=tare))
 
 
 @step(u"生成StoreBill")
-def _(step, customer, harbor, order_type=constants.STANDARD_ORDER_TYPE):
+def _(step, customer, harbor, order_type=constants.STANDARD_ORDER_TYPE, weight=5000):
     plate = do_commit(models.Plate(name=generate(5)))
     unload_session = do_commit(models.UnloadSession(plate_=plate, gross_weight=50000))
     product_type = do_commit(models.ProductType(name=generate(5)))
@@ -50,17 +40,17 @@ def _(step, customer, harbor, order_type=constants.STANDARD_ORDER_TYPE):
     order = do_commit(models.Order(creator=None, goods_receipt=goods_receipt))
     if order_type == constants.STANDARD_ORDER_TYPE:
         sub_order = do_commit(
-            models.SubOrder(harbor=harbor, order=order, product=product, quantity=5000, weight=5000, unit="KG"))
+            models.SubOrder(harbor=harbor, order=order, product=product, quantity=weight, weight=weight, unit="KG"))
         work_command = do_commit(
-            models.WorkCommand(sub_order=sub_order, org_weight=5000, org_cnt=5000, procedure=procedure))
-        qir = do_commit(models.QIReport(work_command=work_command, quantity=5000, weight=5000,
+            models.WorkCommand(sub_order=sub_order, org_weight=weight, org_cnt=weight, procedure=procedure))
+        qir = do_commit(models.QIReport(work_command=work_command, quantity=weight, weight=weight,
                                         result=constants.quality_inspection.FINISHED, actor_id=None))
     else:
-        sub_order = models.SubOrder(harbor=harbor, order=order, product=product, quantity=500, weight=5000, unit=u"刀",
+        sub_order = models.SubOrder(harbor=harbor, order=order, product=product, quantity=weight/10, weight=weight, unit=u"刀",
                                     order_type=constants.EXTRA_ORDER_TYPE)
         work_command = do_commit(
-            models.WorkCommand(sub_order=sub_order, org_weight=5000, org_cnt=500, procedure=procedure))
-        qir = do_commit(models.QIReport(work_command=work_command, quantity=500, weight=5000,
+            models.WorkCommand(sub_order=sub_order, org_weight=weight, org_cnt=weight/10, procedure=procedure))
+        qir = do_commit(models.QIReport(work_command=work_command, quantity=weight/10, weight=weight,
                                         result=constants.quality_inspection.FINISHED, actor_id=None))
     return do_commit(models.StoreBill(qir=qir))
 
@@ -76,20 +66,23 @@ def _(step, delivery_session, store_bill_list):
 def _(step, delivery_session, store_bill):
     with app.test_request_context():
         with app.test_client() as c:
-            rv = c.post("/delivery_ws/delivery-task?sid=%s&is_finished=1&remain=0&actor_id=1" % delivery_session.id,
+            auth_token = client_login('l', 'l', c)
+            rv = c.post("/delivery_ws/delivery-task?sid=%s&is_finished=1&remain=0&auth_token=%s" % (delivery_session.id, auth_token),
                         data=json.dumps([{"store_bill_id": store_bill.id, "is_finished": 1}]))
             assert 200 == rv.status_code
             delivery_task = models.DeliveryTask.query.filter(
                 models.DeliveryTask.delivery_session == delivery_session).order_by(
                 models.DeliveryTask.id.desc()).first()
+            login('cc', 'cc', c)
             rv = c.post("/delivery/weigh-delivery-task/%d" % delivery_task.id, data={"weight": 6500})
-            assert 302 == rv.status_code
+            assert rv.status_code == 302
 
 
 @step(u"收发员生成发货单")
 def _(step, delivery_session):
     with app.test_request_context():
         with app.test_client() as c:
+            login('cc', 'cc', c)
             rv = c.post("/delivery/create-consignment-list/%s" % delivery_session.id,
                         data={"customer-pay_mod": json.dumps({customer.id: 0 for customer in
                                                               DeliverySessionWrapper(
@@ -118,6 +111,7 @@ def _(step, plate, tare):
 def _(step, delivery_session):
     with app.test_request_context():
         with app.test_client() as c:
+            login('cc', 'cc', c)
             rv = c.post("/delivery/delivery-session/%d" % delivery_session.id)
             return rv.status_code
 
@@ -125,6 +119,7 @@ def _(step, delivery_session):
 def _(step, delivery_session):
     with app.test_request_context():
         with app.test_client() as c:
+            login('cc', 'cc', c)
             rv = c.post("/delivery/delivery-session/%d" % delivery_session.id, data={"__action__": u"打开"})
             assert 302 == rv.status_code
 
@@ -133,11 +128,12 @@ def _(step, delivery_session):
 def _(step, delivery_session):
     with app.test_request_context():
         with app.test_client() as c:
+            login('cc', 'cc', c)
             rv = c.post("/delivery/delivery-session/%d" % delivery_session.id)
             assert 302 == rv.status_code
 
 
-@step(u"发货任务")
+@step(u"发货任务$")
 def _(step, delivery_session):
     return do_commit(models.DeliveryTask(actor_id=None, delivery_session=delivery_session))
 
@@ -146,6 +142,7 @@ def _(step, delivery_session):
 def _(step, delivery_task):
     with app.test_request_context():
         with app.test_client() as c:
+            login('cc', 'cc', c)
             rv = c.post("/delivery/delivery-task/%d" % delivery_task.id)
             return rv.status_code
 
@@ -172,6 +169,7 @@ def _(step, customer, delivery_session, product):
 def _(step, consignment):
     with app.test_request_context():
         with app.test_client() as c:
+            login('cc', 'cc', c)
             rv = c.post("/consignment/consignment-product/%d" % consignment.product_list[0].id)
             return rv.status_code
         
@@ -194,9 +192,13 @@ def _(step,plate,tare, customer, product):
 def _(step, delivery_session, store_bill):
     with app.test_request_context():
         with app.test_client() as c:
+            login('cc', 'cc', c)
             rv = c.post("/delivery/store-bill-list/%d" % delivery_session.id, data={"store_bill_list": store_bill.id})
             assert 302 == rv.status_code
-            rv = c.post("/delivery_ws/delivery-task?sid=%s&is_finished=1&remain=0&actor_id=1" % delivery_session.id,
+            rv = c.post('/auth_ws/login?username=l&password=l')
+            assert rv.status_code == 200
+            auth_token = json.loads(rv.data)['token']
+            rv = c.post("/delivery_ws/delivery-task?sid=%s&is_finished=1&remain=0&auth_token=%s" % (delivery_session.id, auth_token),
                         data=json.dumps([{"store_bill_id": store_bill.id, "is_finished": 1}]))
             assert 200 == rv.status_code
 
@@ -204,3 +206,57 @@ def _(step, delivery_session, store_bill):
 def _(step, delivery_session):
     ds = DeliverySessionWrapper(delivery_session)
     assert ds.stale
+
+@step(u'创建发货任务, 包含两个仓单, 其中一个未完成, 剩余重量超过了原有仓单的重量')
+def _(step, delivery_session, store_bill1, store_bill2):
+    with app.test_client() as c:
+        rv = c.post('/auth_ws/login?username=l&password=l')
+        assert rv.status_code == 200
+        auth_token = json.loads(rv.data)['token']
+        rv = c.post("/delivery_ws/delivery-task?sid=%s&is_finished=1&auth_token=%s&remain=%d" % (delivery_session.id, auth_token, store_bill2.weight+1),
+                    data=json.dumps([{"store_bill_id": store_bill1.id, "is_finished": 1}, 
+                                     {'store_bill_id': store_bill2.id, 'is_finished': 0}]))
+        assert rv.status_code == 201 
+
+@step(u'不能再次创建发货任务，包含两个仓单，全部都完成')
+def _(step, delivery_session, store_bill1, store_bill2):
+    with app.test_client() as c:
+        rv = c.post('/auth_ws/login?username=l&password=l')
+        assert rv.status_code == 200
+        auth_token = json.loads(rv.data)['token']
+        rv = c.post("/delivery_ws/delivery-task?sid=%s&is_finished=1&auth_token=%s" % (delivery_session.id, auth_token),
+                    data=json.dumps([{"store_bill_id": store_bill1.id, "is_finished": 1}, 
+                                     {'store_bill_id': store_bill2.id, 'is_finished': 1}]))
+        print rv.data
+        assert rv.status_code == 403 
+
+
+@step(u'一个异常发货任务申请生成了')
+def _(step, codernity_db):
+    from lite_mms.apis.delivery import PermitDeliveryTaskWithAbnormalWeight
+    return models.Node.query.filter(models.Node.policy_name=='PermitDeliveryTaskWithAbnormalWeight').one().id
+
+
+@step(u'批准该申请')
+def _(step, node_id):
+    with app.test_client() as c:
+        login('cc', 'cc', c)
+        node = models.Node.query.get(node_id)
+        node.approve()
+        assert node.approved
+        assert node.work_flow.status == yawf.constants.WORK_FLOW_EXECUTED
+
+@step(u'发货任务生成了, 存在一个未发货的仓单, 剩余重量是1001, 另外由两个仓单已经发货完毕, 其重量分别是2000, 1')
+def _(step, delivery_session, store_bill_id1, store_bill_id2):
+    dt = models.DeliveryTask.query.one()
+    assert dt.is_last
+    assert dt.delivery_session_id == delivery_session.id 
+    store_bill1 = models.StoreBill.query.get(store_bill_id1)
+    store_bill2 = models.StoreBill.query.get(store_bill_id2)
+    assert store_bill1.delivery_task_id == dt.id
+    assert store_bill1.weight == 2000
+    assert store_bill2.weight == 1001
+    assert store_bill2.delivery_task is None
+    new_sb = models.StoreBill.query.filter(models.StoreBill.id!=store_bill_id1).filter(models.StoreBill.id!=store_bill_id2).one()
+    assert new_sb.delivery_task_id == dt.id
+    assert new_sb.weight == 1

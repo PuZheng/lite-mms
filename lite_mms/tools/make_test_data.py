@@ -216,9 +216,11 @@ class InitializeTestDB(Command):
                                   quality_inspection.REPAIR, qi.id))
         qir3 = do_commit(QIReport(work_command4, 10, 10,
                                   quality_inspection.REPLATE, qi.id))
-        store_bill1 = do_commit(StoreBill(qir1))
         delivery_session = do_commit(DeliverySession(plate=vehicle1.name, tare=2300))
         delivery_task = do_commit(DeliveryTask(delivery_session, cc.id))
+        store_bill1 = StoreBill(qir1)
+        store_bill1.delivery_task = delivery_task
+        do_commit(store_bill1)
         consignment = Consignment(customer1, delivery_session, True)
         consignment.actor = cc
         consignment.notes = "".join(str(i) for i in xrange(100))
@@ -230,6 +232,12 @@ class InitializeTestDB(Command):
         cp.returned_weight = 50
         do_commit(cp)
 
+        delivery_session = do_commit(DeliverySession(plate=vehicle2.name, tare=2300))
+        store_bill2 = StoreBill(qir2)
+        store_bill2.harbor = harbor2
+        store_bill2.printed = True
+        store_bill2.delivery_session = delivery_session
+        do_commit(store_bill2)
 
 if __name__ == "__main__":
     from distutils.dist import Distribution

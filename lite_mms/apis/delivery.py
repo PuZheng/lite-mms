@@ -704,7 +704,7 @@ def store_bill_remain_unacceptable(unfinished_store_bill, remain):
 class CreateDeliveryTaskWithAbnormalWeight(yawf.Policy):
 
     def __call__(self):
-        # strong gurantee here
+        # strong guaranteed here
         doc = database.codernity_db.get('id', self.node.tag, with_doc=True)
         delivery_session = get_delivery_session(doc['delivery_session_id'])
         remain = doc['remain']

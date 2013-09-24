@@ -136,9 +136,9 @@ def delivery_task():
         finished_store_bill_list = [get_or_404(models.StoreBill, store_bill_id) for store_bill_id in
                                     finished_store_bill_id_list]
 
-        dt = create_delivery_task(delivery_session, remain, finished_store_bill_list, unfinished_store_bill, actor,
-                                  is_finished)
-        ret = dict(id=dt.actor_id, actor_id=dt.actor_id,
+        dt = create_delivery_task(delivery_session, remain, finished_store_bill_list,
+                                  unfinished_store_bill, actor, is_finished)
+        ret = dict(id=dt.id, actor_id=dt.actor_id,
                    store_bill_id_list=dt.store_bill_id_list)
 
     return json.dumps(ret)

@@ -82,6 +82,7 @@ class BatchPrintConsignment(DirectAction):
             return -2
         if any(cn.pay_in_cash and not cn.is_paid for cn in model.consignment_list):
             return -3
+        return 0
 
     def get_forbidden_msg_formats(self):
         return {-2: u"发货会话%s未生成发货单", -3: u"发货会话%s有未支付的发货单"}

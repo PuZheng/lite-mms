@@ -77,6 +77,10 @@ class StateClosed(RuleSpecState):
     @committed
     def side_effect(self, **kwargs):
         CargoClerkPermission.test()
+        for sb in self.obj.store_bill_list:
+            if sb.delivery_session and sb.delivery_task is None:
+                sb.delivery_session = None
+
         self.obj.status = delivery.STATUS_CLOSED
         from datetime import datetime
 

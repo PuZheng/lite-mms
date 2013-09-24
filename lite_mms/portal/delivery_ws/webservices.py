@@ -132,6 +132,7 @@ def delivery_task():
             work_flow.start()
         except yawf.exceptions.WorkFlowDelayed, e:
             return "", 201
+        return u"工作流应当延迟", 403
     else:
         finished_store_bill_list = [get_or_404(models.StoreBill, store_bill_id) for store_bill_id in
                                     finished_store_bill_id_list]

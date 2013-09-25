@@ -2,10 +2,13 @@
 """
 handy decorators
 """
-from flask import request, abort, g
-from flask.templating import render_template, TemplateNotFound
 from functools import wraps
 import types
+
+from flask import request, abort, g
+from flask.templating import render_template, TemplateNotFound
+from flask.ext.login import current_user
+from flask.ext.principal import PermissionDenied
 
 def templated(template):
     """This is a method to put a named arguments into the template file
@@ -145,4 +148,28 @@ def after_this_request(f):
     if not hasattr(g, 'after_request_callbacks'):
         g.after_request_callbacks = []
     g.after_request_callbacks.append(f)
+    return f
+
+def login_required_webservice(view):
+
+    @wraps(view)
+    def f(*args, **kwargs):
+        if not current_user.is_authenticated():
+            return u'您没有权限查看数据', 401
+        return view(*args, **kwargs)
+
+    return f
+
+def permission_required_webservice(perm):
+
+    def f(view):
+        @wraps(view)
+        def g(*args, **kwargs):
+            try:
+                perm.test()
+            except PermissionDenied:
+                return u'您无权执行此操作，需要权限: ' + perm.brief, 401
+            view(*args, **kwargs)
+        return g
+
     return f

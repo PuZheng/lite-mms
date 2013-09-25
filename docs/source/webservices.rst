@@ -16,9 +16,6 @@ userGroup:
 post-auth-login(客户端登陆接口)
 ************************
 
-* 单元测试: :py:func:`portal.auth.test_webservices.test_post_login_UT`
-* 集成测试: :py:func:`portal.auth.test_webservices.test_post_login_IT `
-
 request
 =======
 
@@ -154,7 +151,7 @@ response
       ...
    ]
 
-* 404 - 失败
+* 401 - 失败
 
 .. code-block:: python
    
@@ -299,7 +296,7 @@ response
 
 若照片有缺失，不会回溯。
 
-* 404 - 失败
+* 401 - 失败
 
 .. code-block:: python
    
@@ -382,8 +379,6 @@ example
 get-team-list(获取班组列表)
 *********************
 
-* 单元测试: :py:func:`portal.manufacture.test_webservices.test_get_team_list`
-
 request
 =======
 **GET /manufacture_ws/team-list?department_id=<int>&auth_token=<str>**
@@ -404,7 +399,7 @@ response
        ...
    ]
 
-* 404 - 失败
+* 401 - 失败
 
 .. code-block:: python
    
@@ -1151,6 +1146,10 @@ response
    
 * 403/401 - 失败
 
+.. code-block:: python
+
+   "actual reason"
+
 
 example
 =======
@@ -1180,6 +1179,10 @@ response
    返回数据请参考 :ref:`assign-work-command`, 即处于结束状态的原工单
    
 * 403/401 - 失败
+
+.. code-block:: python
+
+   "actual reason"
 
 
 example

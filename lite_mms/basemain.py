@@ -211,7 +211,8 @@ nav_bar.register(report_page, name=u"推送列表", default_url="/report/notific
                  enabler=lambda nav: request.path.startswith('/report/notification-list'))
 nav_bar.register(to_do_page, name=u"待办事项", default_url="/todo/todo-list")
 nav_bar.register(qir_page, name=u"质检报告", default_url="/qir/qireport-list", permissions=[QualityInspectorPermission])
-nav_bar.register(work_flow_page, name=lambda: u"工作流(%d)" % models.Node.query.filter(models.Node.handle_time==None).count(), default_url="/work-flow/node-list", permissions=[CargoClerkPermission])
+nav_bar.register(work_flow_page, name=lambda: u"工作流(%d)" % models.Node.query.filter(models.Node.handle_time==None).count(), 
+                 default_url="/work-flow/node-list", permissions=[CargoClerkPermission])
 
 #install jinja utilities
 from lite_mms.utilities import url_for_other_page, datetimeformat

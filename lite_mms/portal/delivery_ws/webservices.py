@@ -72,12 +72,8 @@ def delivery_session():
 @webservice_call("json")
 def delivery_task():
     is_finished = request.args.get("is_finished", type=int)
-    actor_id = request.args.get("actor_id", type=int)
-
     remain = request.args.get("remain", type=int)
-    actor = apis.auth.get_user(actor_id)
-    if not actor:
-        return _(u"actor_id %d 无对应的用户" % actor_id)
+
     json_sb_list = json.loads(request.data)
     if len(json_sb_list) == 0:
         return _(u"至少需要一个仓单"), 403
@@ -121,7 +117,7 @@ def delivery_task():
                                                     remain=remain,
                                                     finished_store_bill_id_list=finished_store_bill_id_list,
                                                     unfinished_store_bill_id=unfinished_store_bill.id,
-                                                    loader_id=actor_id,
+                                                    loader_id=current_user.id,
                                                     is_last_task=is_finished))
             # 保存token，以避免重复提交工作流, 显然，对于一个卸货会话而言，只能同时存在一个正在处理的工作流
             work_flow = yawf.new_work_flow(constants.work_flow.DELIVERY_TASK_WITH_ABNORMAL_WEIGHT,
@@ -135,9 +131,8 @@ def delivery_task():
     else:
         finished_store_bill_list = [get_or_404(models.StoreBill, store_bill_id) for store_bill_id in
                                     finished_store_bill_id_list]
-
-        dt = create_delivery_task(delivery_session, remain, finished_store_bill_list, unfinished_store_bill, actor,
-                                  is_finished)
+        dt = create_delivery_task(delivery_session, remain, finished_store_bill_list, unfinished_store_bill,
+                                  current_user, is_finished)
         ret = dict(id=dt.actor_id, actor_id=dt.actor_id,
                    store_bill_id_list=dt.store_bill_id_list)
 

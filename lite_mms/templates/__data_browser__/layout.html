@@ -156,71 +156,69 @@
 {% block __data_browser__nav_bar_block %}
   <header class="navbar navbar-inverse navbar-fixed-top">
     <div class="navbar-inner">
-      <div class="container">
-        {% if g.request_from_mobile %}
-          <div class="brand">
-            LITE-MMS
-            <small><i>- {{ titlename }}</i></small>
-          </div>
-          {% if current_user.is_authenticated() and nav_bar %}
-            <a href="#" class="btn btn-navbar">
-              <i class="icon-search nav-text"></i>
-            </a>
-            <button class="btn btn-navbar" data-target=".nav-collapse" data-toggle="collapse" type="button">
-              <i class="icon-reorder"></i>
-            </button>
-            <nav class="nav-collapse">
-              {{ nav_bar.as_ul("active")|safe }}
-              <ul class="nav">
-                <li>
-                  <a href="{{ url_for('auth.logout') }}" class="navbar-text">
-                    <i class="icon-off icon-large"></i>
-                  </a>
-                </li>
-              </ul>
-            </nav>
-          {% endif %}
-        {% else %}
-          <div class="brand">
-            LITE-MMS
-          </div>
-          {% if current_user.is_authenticated() and nav_bar is defined %}
-            <button class="btn btn-navbar" data-target=".nav-collapse" data-toggle="collapse" type="button">
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-            </button>
-            <nav class="nav-collapse">
-              {{ nav_bar.as_ul("active", grouped=True)|safe }}
-              <form class="navbar-search pull-right form-search"
-                    action="{{ url_for('search.search') }}" method="GET">
-                <div class="input-append">
-                  <input class="search-query span2" type="text"
-                         placeholder="关键词..." name="content"
-                         {% if keywords %}value="{{ keywords }}"{% endif %}/>
-                  <button class="btn btn-inverse">搜索</button>
-                </div>
-              </form>
-              <bold class="navbar-text pull-right">
-                欢迎
-                <mark><strong>{{ current_user.username }}</strong>
-                </mark>
-                您是
-                <strong>
-                  {% if current_user.groups|length > 1 %}
-                    <a href="#switch-group-modal" data-role="switch-group" data-toggle="modal">
-                  {% endif %}
-                  {{ current_user.group_name }}
-                  {% if current_user.groups|length > 1 %}
-                    </a>
-                  {% endif %}
-                </strong>
-                <a href="{{ url_for('auth.logout') }}">退出</a>
-              </bold>
-            </nav>
-          {% endif %}
+      {% if g.request_from_mobile %}
+        <div class="brand">
+          LITE-MMS
+          <small><i>- {{ titlename }}</i></small>
+        </div>
+        {% if current_user.is_authenticated() and nav_bar %}
+          <a href="#" class="btn btn-navbar">
+            <i class="icon-search nav-text"></i>
+          </a>
+          <button class="btn btn-navbar" data-target=".nav-collapse" data-toggle="collapse" type="button">
+            <i class="icon-reorder"></i>
+          </button>
+          <nav class="nav-collapse">
+            {{ nav_bar.as_ul("active")|safe }}
+            <ul class="nav">
+              <li>
+                <a href="{{ url_for('auth.logout') }}" class="navbar-text">
+                  <i class="icon-off icon-large"></i>
+                </a>
+              </li>
+            </ul>
+          </nav>
         {% endif %}
-      </div>
+      {% else %}
+        <div class="brand">
+          LITE-MMS
+        </div>
+        {% if current_user.is_authenticated() and nav_bar is defined %}
+          <button class="btn btn-navbar" data-target=".nav-collapse" data-toggle="collapse" type="button">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <nav class="nav-collapse">
+            {{ nav_bar.as_ul("active", grouped=True)|safe }}
+            <form class="navbar-search pull-right form-search"
+                  action="{{ url_for('search.search') }}" method="GET">
+              <div class="input-append">
+                <input class="search-query span2" type="text"
+                       placeholder="关键词..." name="content"
+                       {% if keywords %}value="{{ keywords }}"{% endif %}/>
+                <button class="btn btn-inverse">搜索</button>
+              </div>
+            </form>
+            <bold class="navbar-text pull-right">
+              欢迎
+              <mark><strong>{{ current_user.username }}</strong>
+              </mark>
+              您是
+              <strong>
+                {% if current_user.groups|length > 1 %}
+                  <a href="#switch-group-modal" data-role="switch-group" data-toggle="modal">
+                {% endif %}
+                {{ current_user.group_name }}
+                {% if current_user.groups|length > 1 %}
+                  </a>
+                {% endif %}
+              </strong>
+              <a href="{{ url_for('auth.logout') }}">退出</a>
+            </bold>
+          </nav>
+        {% endif %}
+      {% endif %}
     </div>
   </header>
   <div id="switch-group-modal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">

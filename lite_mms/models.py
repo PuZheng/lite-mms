@@ -876,6 +876,7 @@ class TODO(db.Model):
     msg = db.Column(db.String(128))
     context_url = db.Column(db.String(256))
 
+
 class Config(db.Model):
     __modelname__ = u"配置项"
     __tablename__ = "TB_CONFIG"
@@ -889,11 +890,10 @@ class Config(db.Model):
         return self.property_name
 
 
-import yawf
 from yawf.node_mixin import NodeMixin
 
-class Node(db.Model, NodeMixin):
 
+class Node(db.Model, NodeMixin):
     __tablename__ = 'TB_NODE'
     __modelname__ = '工作流节点'
 

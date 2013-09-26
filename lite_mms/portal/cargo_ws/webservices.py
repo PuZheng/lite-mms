@@ -4,6 +4,7 @@ import json
 import os.path
 
 from flask import request
+from flask.ext.login import current_user
 from wtforms import validators, Form, IntegerField, StringField
 
 from lite_mms.portal.cargo_ws import cargo_ws
@@ -69,7 +70,7 @@ def unload_task():
         from lite_mms.constants import cargo as cargo_const
         if unload_session:
             fsm.reset_obj(unload_session)
-            fsm.next(cargo_const.ACT_LOAD, creator)
+            fsm.next(cargo_const.ACT_LOAD, current_user)
             new_task = apis.cargo.new_unload_task(session_id=unload_session.id,
                                                   harbor=form.harbour.data,
                                                   customer_id=form.customer_id.data,

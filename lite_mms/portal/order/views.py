@@ -76,7 +76,6 @@ def new_sub_order():
             flash(unicode(e), "error")
         return redirect(url_for('order.order', id_=order_id))
 
-
 @order_page.route('/work-command', methods=['GET', 'POST'])
 @decorators.templated("order/work-command.html")
 @decorators.nav_bar_set

@@ -169,7 +169,7 @@ def permission_required_webservice(perm):
                 perm.test()
             except PermissionDenied:
                 return u'您无权执行此操作，需要权限: ' + perm.brief, 401
-            view(*args, **kwargs)
+            return view(*args, **kwargs)
         return g
 
     return f

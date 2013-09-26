@@ -16,7 +16,7 @@ userGroup:
 post-auth-login(客户端登陆接口)
 ************************
 
-request
+：request
 =======
 
 **POST /auth_ws/login?username=<str>&password=<str>**
@@ -266,7 +266,7 @@ response
                "orderCreateTime": <int>, # 订单创建时间，seconds since epoch
                "orderType": <int>, # 工单类型
                "orgWeight": <int>, # 工序前重量 , 需要说明的是，若工单类型为瑞格或者紧固件，那么这个值只有参考意义。               
-               "orgWeight": <int>, # 工序前重量 
+               "orgCount": <int>, # 工序前数量 
                "picPath": <str>, # 图片链接
                "previousProcedure": <string>, # 上一道工序名称，可为空
                "procedure": <string>, # 当前工序名，可为空
@@ -286,7 +286,7 @@ response
    }
    
 
-有关orderType的说明，请见 :py:mod:`lite_mms.constants.default`中对各种订单类型的说明
+有关orderType的说明，请见 :py:mod:`lite_mms.constants.default` 中对各种订单类型的说明
 
 这里特别需要说明的是 **picPath** 字段， 这个字段的含义是工序的工序前加工件的照片，也就是说：
 

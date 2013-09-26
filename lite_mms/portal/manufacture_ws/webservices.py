@@ -5,7 +5,7 @@ import json
 import os
 import types
 from flask import request
-from flask.login import current_user
+from flask.ext.login import current_user
 
 from wtforms import (Form, IntegerField, StringField, validators, 
     ValidationError)
@@ -131,7 +131,7 @@ def work_command():
     else:
         permission = QualityInspectorPermission
 
-    return permission_required_webservice(permission)(_work_command)
+    return permission_required_webservice(permission)(_work_command)()
 
 def _work_command():
     import lite_mms.apis as apis
@@ -160,7 +160,7 @@ work command")
         weight = IntegerField(u"weight")
         remain_weight = IntegerField(u"remain_weight")
         team_id = IntegerField(u"team id")
-        action = IntegerField(u"action", [validators.DataRequired(), validators.AnyOf([ACT_AFFIRM_RETRIEVAL, ACT_ADD_WEIGHT, ACT_END, ACT_CARRY_FORWARD, ACT_REFUSE, ACT_REFUSE_RETRIEVAL, ACT_AFFIRM_RETRIEVAL, ACT_QI, ACT_REFUSE_RETRIEVAL, ACT_RETRIVE_QI, ACT_QUICK_CARRY_FORWARD])])
+        action = IntegerField(u"action", [validators.DataRequired(), validators.AnyOf([ACT_ASSIGN, ACT_AFFIRM_RETRIEVAL, ACT_ADD_WEIGHT, ACT_END, ACT_CARRY_FORWARD, ACT_REFUSE, ACT_REFUSE_RETRIEVAL, ACT_AFFIRM_RETRIEVAL, ACT_QI, ACT_REFUSE_RETRIEVAL, ACT_RETRIVE_QI, ACT_QUICK_CARRY_FORWARD])])
         is_finished = IntegerField(u"is finished")
         deduction = IntegerField(u"deduction")
 

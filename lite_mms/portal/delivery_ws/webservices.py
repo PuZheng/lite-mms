@@ -19,7 +19,6 @@ from lite_mms import database
 from lite_mms import constants
 
 
-
 @delivery_ws.route("/delivery-session-list", methods=["GET"])
 @webservice_call("json")
 def delivery_session_list():
@@ -27,6 +26,7 @@ def delivery_session_list():
     get **unfinished** delivery sessions from database, accept no arguments
     """
     import lite_mms.apis as apis
+
     try:
         delivery_sessions, total_cnt = apis.delivery.get_delivery_session_list(unfinished_only=True)
     except BadRequest as inst:
@@ -101,55 +101,55 @@ def delivery_task():
     if yawf.token_bound(constants.work_flow.DELIVERY_TASK_WITH_ABNORMAL_WEIGHT, str(delivery_session_id)):
         return u'本卸货会话有待处理的工作流，请先敦促工作人员处理该工作流', 403
 
-    delivery_session = apis.delivery.get_delivery_session(delivery_session_id)
-    if not delivery_session:
+    ds = apis.delivery.get_delivery_session(delivery_session_id)
+    if not ds:
         return _(u"需要发货会话字段"), 403
-    id_list = [store_bill.id for store_bill in delivery_session.store_bill_list]
+    id_list = [store_bill.id for store_bill in ds.store_bill_list]
     for id_ in finished_store_bill_id_list + unfinished_store_bill_id_list:
         if id_ not in id_list:
             return _(u"仓单%s未关联到发货会话%s" % (id_, delivery_session_id)), 403
 
-    unfinished_store_bill = get_or_404(models.StoreBill, unfinished_store_bill_id_list[0]) if unfinished_store_bill_id_list else None
+    unfinished_store_bill = get_or_404(models.StoreBill,
+                                       unfinished_store_bill_id_list[0]) if unfinished_store_bill_id_list else None
     if unfinished_store_bill and apis.delivery.store_bill_remain_unacceptable(unfinished_store_bill, remain):
         try:
             doc = database.codernity_db.insert(dict(delivery_session_id=delivery_session_id,
-                                      remain=remain, 
-                                      finished_store_bill_id_list=finished_store_bill_id_list,
-                                      unfinished_store_bill_id=unfinished_store_bill.id,
-                                      loader_id=current_user.id, 
-                                      is_last_task=is_finished))
+                                                    remain=remain,
+                                                    finished_store_bill_id_list=finished_store_bill_id_list,
+                                                    unfinished_store_bill_id=unfinished_store_bill.id,
+                                                    loader_id=current_user.id,
+                                                    is_last_task=is_finished))
             # 保存token，以避免重复提交工作流, 显然，对于一个卸货会话而言，只能同时存在一个正在处理的工作流
-            work_flow = yawf.new_work_flow(constants.work_flow.DELIVERY_TASK_WITH_ABNORMAL_WEIGHT, 
-                                      lambda work_flow: models.Node(work_flow=work_flow, 
-                                                                    name=u"生成异常剩余重量的发货任务", policy_name='CreateDeliveryTaskWithAbnormalWeight'),
-                                      tag_creator=lambda work_flow: doc['_id'], token=str(delivery_session_id))
+            work_flow = yawf.new_work_flow(constants.work_flow.DELIVERY_TASK_WITH_ABNORMAL_WEIGHT,
+                                           lambda work_flow: models.Node(work_flow=work_flow,
+                                                                         name=u"生成异常剩余重量的发货任务",
+                                                                         policy_name='CreateDeliveryTaskWithAbnormalWeight'),
+                                           tag_creator=lambda work_flow: doc['_id'], token=str(delivery_session_id))
             work_flow.start()
         except yawf.exceptions.WorkFlowDelayed, e:
             return "", 201
     else:
-        finished_store_bill_list = [get_or_404(models.StoreBill, store_bill_id) for store_bill_id in finished_store_bill_id_list]
-        dt = create_delivery_task(delivery_session, remain, finished_store_bill_list, unfinished_store_bill, current_user, is_finished)
-        ret = dict(id=dt.actor_id, actor_id=dt.actor_id,
-                   store_bill_id_list=dt.store_bill_id_list)
+        finished_store_bill_list = [get_or_404(models.StoreBill, store_bill_id) for store_bill_id in
+                                    finished_store_bill_id_list]
+        try:
+            dt = create_delivery_task(ds, remain, finished_store_bill_list, unfinished_store_bill,
+                                      current_user, is_finished)
+            ret = dict(id=dt.actor_id, actor_id=dt.actor_id, store_bill_id_list=dt.store_bill_id_list)
+            return json.dumps(ret)
+        except KeyError:
+            return _(u"不能添加发货任务"), 403
+        except (ValueError, PermissionDenied) as e:
+            return unicode(e), 403
 
 
-    return json.dumps(ret)
-        
-def create_delivery_task(delivery_session, remain, finished_store_bill_id_list, 
-                         unfinished_store_bill, loader, is_finished):
-
+def create_delivery_task(ds, remain, finished_store_bill_id_list, unfinished_store_bill, loader,
+                         is_finished):
     from lite_mms.portal.delivery.fsm import fsm
-    try:
-        fsm.reset_obj(delivery_session)
-        fsm.next(constants.delivery.ACT_LOAD, loader)
-        dt = apis.delivery.new_delivery_task(loader.id, finished_store_bill_id_list,
-                                             unfinished_store_bill,
-                                             remain)
-    except KeyError:
-        return _(u"不能添加发货任务"), 403
-    except (ValueError, PermissionDenied) as e:
-        return unicode(e), 403
-    if is_finished: # 发货会话结束
+
+    fsm.reset_obj(ds)
+    fsm.next(constants.delivery.ACT_LOAD, loader)
+    dt = apis.delivery.new_delivery_task(loader.id, finished_store_bill_id_list, unfinished_store_bill, remain)
+    if is_finished:  # 发货会话结束
         dt.update(is_last=True)
         dt.delivery_session.update(finish_time=to_timestamp(datetime.now()))
     return dt

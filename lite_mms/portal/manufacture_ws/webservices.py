@@ -197,7 +197,7 @@ def work_command(id_=None):
                 result = wc
             elif form.action.data == ACT_ADD_WEIGHT:
                 kwargs = {"weight": form.weight.data}
-                if form.quantity.data:
+                if form.quantity.data is not None:
                     kwargs.update(quantity=form.quantity.data)
                 try:
                     work_command_id = int(form.work_command_id.data)

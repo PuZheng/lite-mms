@@ -5,16 +5,20 @@ import json
 import os
 import types
 from flask import request
-from wtforms import Form, IntegerField, StringField, validators, \
-    ValidationError
+from flask.ext.login import current_user
+
+from wtforms import (Form, IntegerField, StringField, validators, 
+    ValidationError)
 from lite_mms.utilities import _
 from lite_mms.basemain import app
 from lite_mms.constants.quality_inspection import * # pylint: disable=W0401,
 # W0614
 from lite_mms.constants.work_command import * # pylint: disable=W0401,W0614
 from lite_mms.portal.manufacture_ws import manufacture_ws
-from lite_mms.utilities.decorators import webservice_call
+from lite_mms.utilities.decorators import (webservice_call, login_required_webservice, 
+                                           permission_required_webservice)
 from lite_mms.utilities import to_timestamp
+from lite_mms.permissions.roles import (TeamLeaderPermission, DepartmentLeaderPermission, QualityInspectorPermission)
 
 
 def _work_command_to_dict(wc):
@@ -52,6 +56,7 @@ def _work_command_to_dict(wc):
 
 @manufacture_ws.route("/work-command-list", methods=["GET"])
 @webservice_call("json")
+@login_required_webservice
 def work_command_list():
     # pylint: disable=R0903
     class _ValidationForm(Form):
@@ -104,6 +109,7 @@ def work_command_list():
 
 @manufacture_ws.route("/team-list", methods=["GET"])
 @webservice_call("json")
+@login_required_webservice
 def team_list():
     department_id = request.args.get("department_id", type=int)
     import lite_mms.apis as apis
@@ -125,6 +131,18 @@ def department_list():
 @manufacture_ws.route("/work-command", methods=["PUT"])
 @webservice_call("json")
 def work_command(id_=None):
+    action = request.args.get('action', type=int)
+    if action in {ACT_ASSIGN, ACT_REFUSE, ACT_AFFIRM_RETRIEVAL, ACT_REFUSE_RETRIEVAL}:
+        permission = DepartmentLeaderPermission
+    elif action in {ACT_ADD_WEIGHT, ACT_END, ACT_CARRY_FORWARD, ACT_QUICK_CARRY_FORWARD}:
+        permission = TeamLeaderPermission
+    else:
+        permission = QualityInspectorPermission
+
+    return permission_required_webservice(permission)(_work_command)(id_)
+
+
+def _work_command(id_):
     import lite_mms.apis as apis
     if id_:
         work_command =apis.manufacture.get_work_command(id_)
@@ -150,17 +168,16 @@ def work_command(id_=None):
 
             work_command_id = StringField(u"work command id",
                                           [validators.DataRequired()])
-            actor_id = IntegerField(u"actor id", [validators.DataRequired()])
             quantity = IntegerField(u"quantity")
             weight = IntegerField(u"weight")
             remain_weight = IntegerField(u"remain_weight")
             team_id = IntegerField(u"team id")
-            action = IntegerField(u"action", [validators.DataRequired()])
+            action = IntegerField(u"action", [validators.DataRequired(), validators.AnyOf([ACT_ASSIGN, ACT_AFFIRM_RETRIEVAL, ACT_ADD_WEIGHT, ACT_END, ACT_CARRY_FORWARD, ACT_REFUSE, ACT_REFUSE_RETRIEVAL, ACT_AFFIRM_RETRIEVAL, ACT_QI, ACT_REFUSE_RETRIEVAL, ACT_RETRIVE_QI, ACT_QUICK_CARRY_FORWARD])])
             is_finished = IntegerField(u"is finished")
             deduction = IntegerField(u"deduction")
 
-
         form = _ValidationForm(request.args)
+    
         if form.validate():
             # pylint: disable=R0912
             if form.action.data == ACT_ASSIGN:
@@ -172,14 +189,13 @@ def work_command(id_=None):
                     wc = apis.manufacture.get_work_command(work_command_id)
                     if not wc:
                         return u"无此工单%s" % work_command_id, 404
-                    wc.go(actor_id=form.actor_id.data, action=form.action.data,
+                    wc.go(actor_id=current_user.id, action=form.action.data,
                           team_id=form.team_id.data)
                 except ValueError, e:
                     return unicode(e), 403
                 result = wc
             elif form.action.data == ACT_AFFIRM_RETRIEVAL:
                 kwargs = {"weight": form.weight.data}
-
                 try:
                     work_command_id = int(form.work_command_id.data)
                 except ValueError:
@@ -190,15 +206,12 @@ def work_command(id_=None):
                         return u"无此工单%s" % work_command_id, 404
                     if not wc.sub_order.measured_by_weight:
                         kwargs.update(quantity=form.quantity.data)
-                    wc.go(actor_id=form.actor_id.data, action=form.action.data,
-                          **kwargs)
+                    wc.go(actor_id=current_user.id, action=form.action.data, **kwargs)
                 except ValueError, e:
                     return unicode(e), 403
                 result = wc
             elif form.action.data == ACT_ADD_WEIGHT:
                 kwargs = {"weight": form.weight.data}
-                if form.quantity.data is not None:
-                    kwargs.update(quantity=form.quantity.data)
                 try:
                     work_command_id = int(form.work_command_id.data)
                 except ValueError:
@@ -207,11 +220,11 @@ def work_command(id_=None):
                     wc = apis.manufacture.get_work_command(work_command_id)
                     if not wc:
                         return u"无此工单%s" % work_command_id, 404
-
-                    wc.go(actor_id=form.actor_id.data, action=form.action.data,
-                          **kwargs)
+                    if not wc.sub_order.measured_by_weight:
+                        kwargs.update(quantity=form.quantity.data)
+                    wc.go(actor_id=current_user.id, action=form.action.data, **kwargs)
                     if form.is_finished.data:
-                        wc.go(actor_id=form.actor_id.data, action=ACT_END)
+                        wc.go(actor_id=current_user.id, action=ACT_END)
                 except ValueError, e:
                     return unicode(e), 403
                 result = wc
@@ -225,7 +238,7 @@ def work_command(id_=None):
                     if not wc:
                         return u"无此工单%s" % work_command_id, 404
 
-                    wc.go(actor_id=form.actor_id.data, action=form.action.data,
+                    wc.go(actor_id=current_user.id, action=form.action.data,
                           deduction=form.deduction.data or 0)
                 except ValueError, e:
                     return unicode(e), 403
@@ -246,7 +259,7 @@ def work_command(id_=None):
                         return u"无此工单%s" % work_command_id, 404
 
                     try:
-                        wc.go(actor_id=form.actor_id.data, action=form.action.data)
+                        wc.go(actor_id=current_user.id, action=form.action.data)
                     except ValueError, e:
                         return unicode(e), 403
                     result.append(wc)
@@ -267,7 +280,7 @@ def work_command(id_=None):
                     if wc.last_mod.date() < date.today():
                         return u'不能取消今天以前的质检单', 403
 
-                    wc.go(actor_id=form.actor_id.data, action=form.action.data)
+                    wc.go(actor_id=current_user.id, action=form.action.data)
                 except ValueError, e:
                     return unicode(e), 403
                 result = wc
@@ -280,40 +293,38 @@ def work_command(id_=None):
                     wc = apis.manufacture.get_work_command(work_command_id)
                     if not wc:
                         return u"无此工单%s" % work_command_id, 404
-
+    
                     if wc.processed_weight <= 0:
                         return u'未加工过的工单不能快速结转', 403
-
-                    wc.go(actor_id=form.actor_id.data, action=form.action.data)
+    
+                    wc.go(actor_id=current_user.id, action=form.action.data)
                 except ValueError, e:
                     return unicode(e), 403
                 result = wc
-
+    
             if isinstance(result, types.ListType):
                 return json.dumps([_work_command_to_dict(wc) for wc in result])
             else:
                 return json.dumps(_work_command_to_dict(result))
         else:
             # we disable E1101, since it's a bug of pylint
-            return str(form.errors), 403 # pylint: disable=E1101
+            return str(form.errors), 403 # pylint: disable=E1101        
+
 
 
 def _handle_delete():
     from lite_mms.apis import quality_inspection
 
     id_ = request.args.get("id", type=int)
-    actor_id = request.args.get("actor_id", type=int)
-    if not id_ or not actor_id:
-        return "id and actor id required", 403
+    if not id_:
+        return "id and required", 403
     try:
-        return quality_inspection.remove_qi_report(id_=id_,
-                                                   actor_id=actor_id)
+        return quality_inspection.remove_qi_report(id_=id_, actor_id=current_user.id)
     except ValueError, e:
         return unicode(e), 403
 
 
-@manufacture_ws.route("/delete-quality-inspection-report",
-                      methods=["POST"])
+@manufacture_ws.route("/delete-quality-inspection-report", methods=["POST"])
 @webservice_call("json")
 def delete_quality_inspection_report():
     """
@@ -332,12 +343,12 @@ def _qir2dict(qir):
 @manufacture_ws.route("/quality-inspection-report",
                       methods=["POST", "PUT", "DELETE"])
 @webservice_call("json")
+@permission_required_webservice(QualityInspectorPermission)
 def quality_inspection_report():
     from lite_mms.apis import quality_inspection
 
     if request.method == "POST":
         class _ValidationForm(Form):
-            actor_id = IntegerField(u"actor_id", [validators.DataRequired()])
             work_command_id = IntegerField(u"work_command_id",
                                            [validators.DataRequired()])
             quantity = IntegerField(u"quantity", [validators.DataRequired()])
@@ -360,7 +371,7 @@ def quality_inspection_report():
                     pic_path = datetime.now().strftime("%Y-%m-%d_%H-%M-%S.jpg")
                     f.save(os.path.join(app.config["UPLOAD_FOLDER"], pic_path))
                 qir = quality_inspection.new_QI_report(
-                    actor_id=form.actor_id.data,
+                    actor_id=current_user.id,
                     work_command_id=form.work_command_id.data,
                     quantity=form.quantity.data,
                     result=form.result.data, pic_path=pic_path)
@@ -390,15 +401,15 @@ def quality_inspection_report():
 
             qir = quality_inspection.update_qi_report(
                 request.args.get("id", type=int),
-                actor_id=request.args.get("actor_id", type=int),
+                actor_id=current_user.id,
                 quantity=quantity, result=result, pic_path=pic_path)
             return json.dumps(_qir2dict(qir))
         except ValueError, e:
             return unicode(e), 403
 
 
-@manufacture_ws.route("/quality-inspection-report-list",
-                      methods=['GET'])
+@manufacture_ws.route("/quality-inspection-report-list", methods=['GET'])
+@login_required_webservice
 def quality_inspection_report_list():
     work_command_id = request.args.get("work_command_id", type=int)
 

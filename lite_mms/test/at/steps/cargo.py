@@ -11,6 +11,8 @@ from lite_mms.basemain import app, timeline_logger
 from lite_mms.database import db
 from lite_mms.utilities import do_commit
 
+from lite_mms.test.utils import client_login
+
 #patch logger
 timeline_logger.handlers = []
 app.config["CSRF_ENABLED"] = False
@@ -84,7 +86,9 @@ def _(step, customer_name, weight, gr_list):
 def _(step, us):
     with app.test_request_context():
         with app.test_client() as c:
-            rv = c.get("/cargo_ws/unload-session-list")
+
+            auth_token = client_login('l', 'l', c)
+            rv = c.get("/cargo_ws/unload-session-list?auth_token=" + auth_token)
             from flask import json
 
             assert not [i for i in json.loads(rv.data)["data"] if not i["isLocked"]]
@@ -365,8 +369,9 @@ def _(step, gr):
 def _(step, us):
     with app.test_request_context():
         with app.test_client() as c:
+            auth_token = client_login('l', 'l', c)
             rv = c.post(
-                "/cargo_ws/unload-task?actor_id=1&customer_id=1&harbour=foo车间&is_finished=1&session_id=%d" % us.id)
+                u"/cargo_ws/unload-task?actor_id=1&customer_id=1&harbour=foo车间&is_finished=1&session_id=%d&auth_token=%s" % (us.id, auth_token))
             assert 200 == rv.status_code
             rv = c.post("/cargo/weigh-unload-task/%s" % rv.data,
                         data={"weight": 2213, "product_type": 1, "product": 1})

@@ -2,19 +2,26 @@
 from datetime import datetime
 import json
 import os.path
+
 from flask import request
+from flask.ext.login import current_user
 from wtforms import validators, Form, IntegerField, StringField
+
 from lite_mms.portal.cargo_ws import cargo_ws
-from lite_mms.utilities.decorators import webservice_call
+from lite_mms.utilities.decorators import (webservice_call, login_required_webservice, 
+                                           permission_required_webservice)
 from lite_mms.basemain import app
+from lite_mms.permissions.roles import LoaderPermission
 
 
 @cargo_ws.route("/unload-session-list", methods=["GET"])
 @webservice_call("json")
+@login_required_webservice
 def unload_session_list():
     """
     get **unfinished** unload sessions from database, accept no arguments
     """
+
     import lite_mms.apis as apis
 
     unload_sessions, total_cnt = apis.cargo.get_unload_session_list(
@@ -27,6 +34,7 @@ def unload_session_list():
 
 @cargo_ws.route("/harbour-list", methods=["GET"])
 @cargo_ws.route("/harbor-list", methods=["GET"])
+@login_required_webservice
 def harbour_list():
     from lite_mms.apis.harbor import get_harbor_list
 
@@ -34,13 +42,14 @@ def harbour_list():
 
 
 @cargo_ws.route("/unload-task", methods=["POST"])
+@permission_required_webservice(LoaderPermission)
 def unload_task():
+
     class _ValidationForm(Form):
         session_id = IntegerField("session id", [validators.DataRequired()])
         harbour = StringField("harbour", [validators.DataRequired()])
         customer_id = IntegerField("customer id", [validators.DataRequired()])
         is_finished = IntegerField("is finished", default=0)
-        actor_id = IntegerField("actor id", [validators.DataRequired()])
 
     try:
         f = request.files.values()[0]
@@ -57,16 +66,15 @@ def unload_task():
 
     try:
         unload_session = apis.cargo.get_unload_session(form.session_id.data)
-        creator = apis.auth.get_user(form.actor_id.data)
         from lite_mms.portal.cargo.fsm import fsm
         from lite_mms.constants import cargo as cargo_const
         if unload_session:
             fsm.reset_obj(unload_session)
-            fsm.next(cargo_const.ACT_LOAD, creator)
+            fsm.next(cargo_const.ACT_LOAD, current_user)
             new_task = apis.cargo.new_unload_task(session_id=unload_session.id,
                                                   harbor=form.harbour.data,
                                                   customer_id=form.customer_id.data,
-                                                  creator_id=creator.id,
+                                                  creator_id=current_user.id,
                                                   pic_path=pic_path,
                                                   is_last=form.is_finished.data)
             return json.dumps(new_task.id)

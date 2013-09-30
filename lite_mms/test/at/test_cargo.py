@@ -1,6 +1,9 @@
 
 # -*- coding: UTF-8 -*-
+from hashlib import md5
+
 from pyfeature import Feature, Scenario, given, and_, when, then, clear_hooks
+import lite_mms
 from lite_mms.basemain import app
 from lite_mms.database import db
 
@@ -22,8 +25,11 @@ def test_cargo():
             and_(u"创建Product(默认加工件)", product_type=dpt)
             product_type = and_(u"创建ProductType(foo)")
             product = and_(u"创建Product(foo)", product_type=product_type)
-            group = and_(u'创建Group(cargo_clerk)', name='cargo_clerk', default_url='/cargo/unload-session-list')
-            user = and_(u"创建User", username="foo", password="foo", groups=[group])
+            cargo_clerk_group = and_(u'创建Group(cargo_clerk)', id=lite_mms.constants.groups.CARGO_CLERK, 
+                                     default_url='/cargo/unload-session-list')
+            and_(u"创建User", username="cc", password=md5("cc").hexdigest(), groups=[cargo_clerk_group])
+            loader_group = and_(u'创建Group(loader)', id=lite_mms.constants.groups.LOADER)
+            and_(u'创建User', username="l", password=md5("l").hexdigest(), groups=[loader_group])
 
         with Scenario(u"最简完整流程"):
             us = when(u'收发员创建UnloadSession， 毛重是10000公斤', plate)

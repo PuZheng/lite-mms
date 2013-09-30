@@ -9,28 +9,26 @@ from flask.ext.principal import PermissionDenied
 import yawf
 
 from lite_mms.utilities import _
-from werkzeug.exceptions import BadRequest
 from lite_mms.portal.delivery_ws import delivery_ws
 from lite_mms.utilities import to_timestamp, get_or_404
-from lite_mms.utilities.decorators import webservice_call
+from lite_mms.utilities.decorators import (webservice_call, login_required_webservice, 
+                                           permission_required_webservice)
 import lite_mms.apis as apis
 from lite_mms import models
 from lite_mms import database
 from lite_mms import constants
+from lite_mms.permissions.roles import LoaderPermission
 
 
 @delivery_ws.route("/delivery-session-list", methods=["GET"])
 @webservice_call("json")
+@login_required_webservice
 def delivery_session_list():
     """
     get **unfinished** delivery sessions from database, accept no arguments
     """
     import lite_mms.apis as apis
-
-    try:
-        delivery_sessions, total_cnt = apis.delivery.get_delivery_session_list(unfinished_only=True)
-    except BadRequest as inst:
-        return str(inst), 403
+    delivery_sessions, total_cnt = apis.delivery.get_delivery_session_list(unfinished_only=True)
     data = [{'plateNumber': ds.plate, 'sessionID': ds.id, 'isLocked': int(ds.is_locked)} for ds in
             delivery_sessions]
     return json.dumps(data)
@@ -38,6 +36,7 @@ def delivery_session_list():
 
 @delivery_ws.route("/delivery-session", methods=["GET"])
 @webservice_call("json")
+@login_required_webservice
 def delivery_session():
     """
     get delivery session from database
@@ -70,6 +69,7 @@ def delivery_session():
 
 @delivery_ws.route("/delivery-task", methods=["POST"])
 @webservice_call("json")
+@permission_required_webservice(LoaderPermission)
 def delivery_task():
     is_finished = request.args.get("is_finished", type=int)
     remain = request.args.get("remain", type=int)

@@ -3,13 +3,15 @@
 用户类
 """
 from hashlib import md5
+
 from flask import session, g, _request_ctx_stack, current_app, request
 import flask.ext.login as login
+from flask.ext.principal import identity_changed, Identity, AnonymousIdentity
 from sqlalchemy.orm.exc import NoResultFound
 from lite_mms.exceptions import AuthenticateFailure
 from lite_mms.apis import ModelWrapper
 from lite_mms.basemain import app
-from itsdangerous import URLSafeTimedSerializer
+from itsdangerous import URLSafeTimedSerializer, BadTimeSignature
 from lite_mms.constants import groups
 
 class UserWrapper(login.UserMixin, ModelWrapper):
@@ -90,10 +92,18 @@ def get_user(id_):
 def load_user_from_token():
     ctx = _request_ctx_stack.top
     token = request.args.get('auth_token')
+    user_id = None
+    identity = AnonymousIdentity()
     if token is None:
         ctx.user = current_app.login_manager.anonymous_user()
     else:
-        ctx.user = get_user(UserWrapper.__serializer__.loads(token)[0])
+        try:
+            ctx.user = get_user(UserWrapper.__serializer__.loads(token)[0])
+            identity = Identity(ctx.user.id)
+            # change identity to reset permissions
+        except BadTimeSignature:
+            ctx.user = current_app.login_manager.anonymous_user()
+    identity_changed.send(current_app._get_current_object(), identity=identity)
 
 def get_user_list(group_id=None):
     from lite_mms import models
@@ -101,7 +111,6 @@ def get_user_list(group_id=None):
     if group_id:
         q = q.filter(models.User.groups.any(models.Group.id == group_id))
     return [UserWrapper(user) for user in q.all()]
-
 
 def authenticate(username, password):
     """

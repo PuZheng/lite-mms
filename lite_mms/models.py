@@ -2,7 +2,9 @@
 
 from datetime import datetime
 
+import flask.ext.databrowser as databrowser
 from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.orm.properties import ColumnProperty
 
 from lite_mms import constants
 from lite_mms.database import db
@@ -39,6 +41,20 @@ procedure_and_department_table = db.Table("TB_PROCEDURE_AND_DEPARTMENT",
 
 user_and_team_table = db.Table("TB_USER_AND_TEAM", db.Column("team_id", db.Integer, db.ForeignKey("TB_TEAM.id")),
                                db.Column("leader_id", db.Integer, db.ForeignKey("TB_USER.id")))
+class _ResyncMixin(object):
+
+
+
+    def resync(self):
+        
+        pk = databrowser.utils.get_primary_key(self.__class__)
+        fresh_obj = self.query.filter(getattr(self.__class__, pk)==getattr(self, pk)).one()
+        props = self.__class__._sa_class_manager.mapper.iterate_properties
+        
+        for p in props:
+            if isinstance(p, ColumnProperty) and not p.is_primary:
+                setattr(self, p.key, getattr(fresh_obj, p.key))
+        return self
 
 
 
@@ -346,7 +362,7 @@ class Order(db.Model):
         return "<Order %s>" % self.id
 
 
-class SubOrder(db.Model):
+class SubOrder(db.Model, _ResyncMixin):
     __modelname__ = u"子订单"
     __tablename__ = "TB_SUB_ORDER"
 
@@ -423,7 +439,7 @@ class SubOrder(db.Model):
         return "<SubOrder %d>" % self.id
 
 
-class WorkCommand(db.Model):
+class WorkCommand(db.Model, _ResyncMixin):
     __modelname__ = u"工单"
     __tablename__ = "TB_WORK_COMMAND"
 

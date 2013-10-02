@@ -117,6 +117,13 @@ def team_list():
         teams = apis.manufacture.get_team_list(department_id)
     return json.dumps([dict(name=t.name, id=t.id) for t in teams])
 
+@manufacture_ws.route("/department-list", methods=["GET"])
+@webservice_call("json")
+def department_list():
+    departments = lite_mms.models.Department.query.all()
+    return json.dumps([dict(id=d.id, name=d.name,
+                            team_id_list=[t.id for t in d.team_list])
+                       for d in departments])
 
 @manufacture_ws.route("/work-command", methods=["PUT"])
 @webservice_call("json")

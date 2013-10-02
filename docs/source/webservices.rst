@@ -390,8 +390,6 @@ example
 get-team-list(获取班组列表)
 *********************
 
-* 单元测试: :py:func:`portal.manufacture.test_webservices.test_get_team_list`
-
 request
 =======
 **GET /manufacture_ws/team-list?department_id=<int>**
@@ -436,6 +434,31 @@ example
            "name": "delta"
        }
    ]
+
+*********************
+get-department-list(获取车间列表)
+*********************
+
+
+request
+=======
+**GET /manufacture_ws/department-list**
+
+response
+========
+* 200 - 成功
+
+.. code-block:: python
+
+   [
+       {
+           "id": <int>, # ID
+           "name": <str>, # 车间名称
+           "team_id_list": <list<int>>, # 所属班组列表
+       },
+       ...
+   ]
+
 
 .. _assign-work-command:
 

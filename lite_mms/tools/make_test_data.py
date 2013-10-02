@@ -14,6 +14,7 @@ from lite_mms.permissions import permissions
 from lite_mms.constants import groups, work_command as wc_const, \
     quality_inspection, DEFAULT_PRODUCT_NAME, DEFAULT_PRODUCT_TYPE_NAME
 from lite_mms.constants import cargo as cargo_const
+from lite_mms import constants
 from setuptools import Command
 from lite_mms.models import *
 from lite_mms.utilities import do_commit
@@ -216,7 +217,7 @@ class InitializeTestDB(Command):
                                   quality_inspection.REPAIR, qi.id))
         qir3 = do_commit(QIReport(work_command4, 10, 10,
                                   quality_inspection.REPLATE, qi.id))
-        delivery_session = do_commit(DeliverySession(plate=vehicle1.name, tare=2300))
+        delivery_session = do_commit(DeliverySession(plate=vehicle1.name, tare=2300, status=constants.delivery.STATUS_CLOSED))
         delivery_task = do_commit(DeliveryTask(delivery_session, cc.id))
         store_bill1 = StoreBill(qir1)
         store_bill1.delivery_task = delivery_task

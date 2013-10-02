@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 
+# -*- coding: UTF-8
 import time
 from datetime import datetime, date, timedelta
 import json
@@ -7,11 +7,12 @@ import types
 from flask import request
 from wtforms import Form, IntegerField, StringField, validators, \
     ValidationError
+import lite_mms
 from lite_mms.utilities import _
 from lite_mms.basemain import app
-from lite_mms.constants.quality_inspection import * # pylint: disable=W0401,
+from lite_mms.constants.quality_inspection import *  # pylint: disable=W0401,
 # W0614
-from lite_mms.constants.work_command import * # pylint: disable=W0401,W0614
+from lite_mms.constants.work_command import *  # pylint: disable=W0401,W0614
 from lite_mms.portal.manufacture_ws import manufacture_ws
 from lite_mms.utilities.decorators import webservice_call
 from lite_mms.utilities import to_timestamp
@@ -29,7 +30,8 @@ def _work_command_to_dict(wc):
                 lastMod=to_timestamp(wc.last_mod),
                 orderID=wc.sub_order.order_id,
                 orderNum=wc.sub_order.order.customer_order_number,
-                orderCreateTime=time.mktime(wc.sub_order.order.create_time.timetuple()),
+                orderCreateTime=time.mktime(wc.sub_order.order.create_time.
+                                            timetuple()),
                 orderType=wc.sub_order.order_type,
                 orgCount=wc.org_cnt,
                 orgWeight=wc.org_weight,
@@ -99,19 +101,21 @@ def work_command_list():
                  totalCnt=total_cnt))
     else:
         # we disable E1101, since it's a bug of pylint
-        return str(form.errors), 412 # pylint: disable=E1101        
+        return str(form.errors), 412 # pylint: disable=E1101
 
 
 @manufacture_ws.route("/team-list", methods=["GET"])
 @webservice_call("json")
 def team_list():
     department_id = request.args.get("department_id", type=int)
-    if department_id:
+    if department_id is None:
+        teams = lite_mms.models.Team.query.all()
+        return json.dumps([dict(name=t.name, id=t.id) for t in teams])
+    else:
         import lite_mms.apis as apis
 
         teams = apis.manufacture.get_team_list(department_id)
-        return json.dumps([dict(name=t.name, id=t.id) for t in teams])
-    return "invalid department_id", 404
+    return json.dumps([dict(name=t.name, id=t.id) for t in teams])
 
 
 @manufacture_ws.route("/work-command", methods=["PUT"])
@@ -284,7 +288,7 @@ work command")
             return json.dumps(_work_command_to_dict(result))
     else:
         # we disable E1101, since it's a bug of pylint
-        return str(form.errors), 403 # pylint: disable=E1101        
+        return str(form.errors), 403 # pylint: disable=E1101
 
 def _handle_delete():
     from lite_mms.apis import quality_inspection
@@ -356,7 +360,7 @@ def quality_inspection_report():
                 return unicode(e), 403
         else:
             # we disable E1101, since it's a bug of pylint
-            return str(form.errors), 403 # pylint: disable=E1101        
+            return str(form.errors), 403 # pylint: disable=E1101
     elif request.method == "DELETE":
         return _handle_delete()
     else: # PUT

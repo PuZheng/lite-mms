@@ -396,7 +396,7 @@ request
 =======
 **GET /manufacture_ws/team-list?department_id=<int>**
 
-* \* department_id - 车间ID
+* \* department_id - 车间ID, 若不传入，则为所有班组
 
 response
 ========
@@ -412,11 +412,6 @@ response
        ...
    ]
 
-* 404 - 失败
-
-.. code-block:: python
-   
-   "actual error reason"
    
 example
 =======

@@ -4,7 +4,7 @@
 SYNOPSIS
     python runserver.py [options]
 OPTIONS
-    -h 
+    -h
         show this help
     -p  <port>
         the port of server runs on
@@ -16,7 +16,7 @@ from getopt import getopt
 import sys
 opts, _ = getopt(sys.argv[1:], "s:p:h")
 
-host = None
+host = '0.0.0.0'
 port = None
 for o, v in opts:
     if o == "-s":

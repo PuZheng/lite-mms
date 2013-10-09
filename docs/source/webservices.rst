@@ -471,7 +471,7 @@ assign-work-command(分配工单)
 request
 =======
 
-**PUT /manufacture_ws/work-command?work_command_id=<int>&actor_id=<int>&team_id=<int>&action=203**
+**PUT /manufacture_ws/work-command/<work_command_id>?actor_id=<int>&team_id=<int>&action=203**
 
 * work_command_id - 工单id
 * actor_id - 发起人id，这里为车间主任
@@ -531,7 +531,7 @@ example
 
 * 请求
 
-**PUT /manufacture_ws/work-command?work_command_id=123&actor_id=456&team_id=23&action=203**
+**PUT /manufacture_ws/work-command/123?actor_id=456&team_id=23&action=203**
 
 * 返回值
 
@@ -583,7 +583,7 @@ add-processed-weight(增加工序后重量)
 request
 =======
 
-**PUT /manufacture_ws/work-command?work_command_id=<int>&actor_id=<int>&weight=<int>&quantity=<int>&action=204&is_finished=<1|0>**
+**PUT /manufacture_ws/work-command/<work_command_id>?actor_id=<int>&weight=<int>&quantity=<int>&action=204&is_finished=<1|0>**
 
 * work_command_id - 工单id
 * actor_id - 发起人id，这里为team leader
@@ -620,7 +620,7 @@ request-end-work-command(请求结束或结转工单)
 request
 =======
 
-**PUT /manufacture_ws/work-command?work_command_id=<int>+&actor_id=<int>&action=[205|206]**
+**PUT /manufacture_ws/work-command/<work_command_id>?actor_id=<int>&action=[205|206]**
 
 * work_command_id - 工单id, 可以是一个工单id列表。例如 **1,2,3**
 * actor_id - 发起人id，这里为team leader
@@ -655,7 +655,7 @@ refuse-work-command(打回工单)
 reqeust
 =======
 
-**PUT /manufacture_ws/work-command?work_command_id=<int>&actor_id=<int>&reason=<str>&action=209**
+**PUT /manufacture_ws/work-command/<work_command_id>?actor_id=<int>&reason=<str>&action=209**
 
 * work_command_id - 工单id
 * actor_id - 发起人id，这里为车间主任
@@ -685,7 +685,7 @@ affirm-retrieve-work-command(确认回收工单)
 request
 =======
 
-**PUT /manufacture_ws/work-command?work_command_id=<int>&actor_id=<int>&action=211&weight=<int>&quantity=<int>**
+**PUT /manufacture_ws/work-command/<work_command_id>?actor_id=<int>&action=211&weight=<int>&quantity=<int>**
 
 * work_command_id - 工单id
 * actor_id - 发起人id，这里为车间主任
@@ -717,7 +717,7 @@ refuse-retrieval-work-command(拒绝回收工单)
 request
 =======
 
-**PUT /manufacture_ws/work-command?work_command_id=<int>&actor_id=<int>&action=213
+**PUT /manufacture_ws/work-command/<work_command_id>?actor_id=<int>&action=213
 
 * work_command_id - 工单id, 支持多个工单id，可以用","隔开
 * actor_id - 发起人id，这里为车间主任
@@ -930,7 +930,7 @@ submit-quality-inspection(提交质检单)
 request
 =======
 
-**PUT /manufacture_ws/work-command?work_command_id=<int>&actor_id=<int>&action=212&deduction=<int>**
+**PUT /manufacture_ws/work-command/<work_command_id>?actor_id=<int>&action=212&deduction=<int>**
 
 * work_command_id - 工单id
 * actor_id - 发起人id，这里为质检员
@@ -1155,7 +1155,7 @@ retrive-quality-inspection(打回质检单)
 request
 =======
 
-**PUT /manufacture_ws/work-command?work_command_id=<int>&actor_id=<int>&action=214**
+**PUT /manufacture_ws/work-command/<work_command_id>?actor_id=<int>&action=214**
 
 * work_command_id - 工单id
 * actor_id - 发起人id，这里为质检员
@@ -1185,7 +1185,7 @@ quick-carry-forward(快速结转)
 request
 =======
 
-**PUT /manufacture_ws/work-command?work_command_id=<int>&actor_id=<int>&action=215**
+**PUT /manufacture_ws/work-command/<work_command_id>?actor_id=<int>&action=215**
 
 * work_command_id - 工单id
 * actor_id - 发起人id，这里为质检员
@@ -1205,4 +1205,3 @@ example
 =======
 
    请参考 :ref:`assign-work-command`
-

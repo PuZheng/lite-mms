@@ -10,9 +10,8 @@ from wtforms import Form, IntegerField, StringField, validators, \
 import lite_mms
 from lite_mms.utilities import _
 from lite_mms.basemain import app
-from lite_mms.constants.quality_inspection import *  # pylint: disable=W0401,
-# W0614
-from lite_mms.constants.work_command import *  # pylint: disable=W0401,W0614
+from lite_mms.constants import (quality_inspection as qi_const,
+                                work_command as wc_const)
 from lite_mms.portal.manufacture_ws import manufacture_ws
 from lite_mms.utilities.decorators import webservice_call
 from lite_mms.utilities import to_timestamp
@@ -57,11 +56,15 @@ def _work_command_to_dict(wc):
 def work_command_list():
     # pylint: disable=R0903
     class _ValidationForm(Form):
-        def validate_status(self, field): # pylint: disable=R0201
+        def validate_status(self, field):
             status_list = field.data.split(",")
-            valid_status = [STATUS_DISPATCHING, STATUS_ASSIGNING,
-                            STATUS_ENDING, STATUS_LOCKED, STATUS_REFUSED,
-                            STATUS_QUALITY_INSPECTING, STATUS_FINISHED]
+            valid_status = [wc_const.STATUS_DISPATCHING,
+                            wc_const.STATUS_ASSIGNING,
+                            wc_const.STATUS_ENDING,
+                            wc_const.STATUS_LOCKED,
+                            wc_const.STATUS_REFUSED,
+                            wc_const.STATUS_QUALITY_INSPECTING,
+                            wc_const.STATUS_FINISHED]
             if not all(status.isdigit() and int(status) in valid_status for
                        status in status_list):
                 raise ValidationError("status must be one of " +
@@ -73,16 +76,13 @@ def work_command_list():
         cnt = IntegerField(u"count")
         status = StringField(u"status", [validators.DataRequired()])
 
-
-        # pylint: enable=R0903
-
-
     form = _ValidationForm(request.args)
     if form.validate():
         status_list = [int(status) for status in form.status.data.split(',')]
         param_dict = dict(status_list=status_list)
 
-        if len(status_list) == 1 and status_list[0] == STATUS_FINISHED:
+        if len(status_list) == 1 and \
+           status_list[0] == wc_const.STATUS_FINISHED:
             param_dict["date"] = datetime.now().date() - timedelta(days=1)
         if form.department_id.data is not None:
             param_dict.update(department_id=form.department_id.data)
@@ -100,8 +100,7 @@ def work_command_list():
             dict(data=[_work_command_to_dict(wc) for wc in wc_list],
                  totalCnt=total_cnt))
     else:
-        # we disable E1101, since it's a bug of pylint
-        return str(form.errors), 412 # pylint: disable=E1101
+        return str(form.errors), 412
 
 
 @manufacture_ws.route("/team-list", methods=["GET"])
@@ -117,6 +116,7 @@ def team_list():
         teams = apis.manufacture.get_team_list(department_id)
     return json.dumps([dict(name=t.name, id=t.id) for t in teams])
 
+
 @manufacture_ws.route("/department-list", methods=["GET"])
 @webservice_call("json")
 def department_list():
@@ -125,6 +125,7 @@ def department_list():
                             team_id_list=[t.id for t in d.team_list])
                        for d in departments])
 
+
 @manufacture_ws.route("/work-command", methods=["PUT"])
 @webservice_call("json")
 def work_command():
@@ -132,14 +133,14 @@ def work_command():
 
     class _ValidationForm(Form):
         def validate_team_id(self, field):
-            if self.action.data == ACT_ASSIGN:
+            if self.action.data == wc_const.ACT_ASSIGN:
                 if field.data is None:
                     raise ValidationError("team required when assigning \
 work command")
 
         def validate_weight(self, field):
-            if self.action.data == ACT_ADD_WEIGHT or self.action.data == \
-                    ACT_AFFIRM_RETRIEVAL:
+            if self.action.data == wc_const.ACT_ADD_WEIGHT or \
+               self.action.data == wc_const.ACT_AFFIRM_RETRIEVAL:
                 if field.data is None:
                     raise ValidationError(_("需要weight字段"))
 
@@ -159,11 +160,9 @@ work command")
         is_finished = IntegerField(u"is finished")
         deduction = IntegerField(u"deduction")
 
-
     form = _ValidationForm(request.args)
     if form.validate():
-        # pylint: disable=R0912
-        if form.action.data == ACT_ASSIGN:
+        if form.action.data == wc_const.ACT_ASSIGN:
             try:
                 work_command_id = int(form.work_command_id.data)
             except ValueError:
@@ -177,7 +176,7 @@ work command")
             except ValueError, e:
                 return unicode(e), 403
             result = wc
-        elif form.action.data == ACT_AFFIRM_RETRIEVAL:
+        elif form.action.data == wc_const.ACT_AFFIRM_RETRIEVAL:
             kwargs = {"weight": form.weight.data}
             if form.quantity.data:
                 kwargs.update(quantity=form.quantity.data)
@@ -195,7 +194,7 @@ work command")
             except ValueError, e:
                 return unicode(e), 403
             result = wc
-        elif form.action.data == ACT_ADD_WEIGHT:
+        elif form.action.data == wc_const.ACT_ADD_WEIGHT:
             kwargs = {"weight": form.weight.data}
             if form.quantity.data:
                 kwargs.update(quantity=form.quantity.data)
@@ -211,11 +210,12 @@ work command")
                 wc.go(actor_id=form.actor_id.data, action=form.action.data,
                       **kwargs)
                 if form.is_finished.data:
-                    wc.go(actor_id=form.actor_id.data, action=ACT_END)
+                    wc.go(actor_id=form.actor_id.data,
+                          action=wc_const.ACT_END)
             except ValueError, e:
                 return unicode(e), 403
             result = wc
-        elif form.action.data == ACT_QI:
+        elif form.action.data == wc_const.ACT_QI:
             try:
                 work_command_id = int(form.work_command_id.data)
             except ValueError:
@@ -230,9 +230,10 @@ work command")
             except ValueError, e:
                 return unicode(e), 403
             result = wc
-        elif form.action.data in [ACT_CARRY_FORWARD, ACT_END,
-                                  ACT_REFUSE_RETRIEVAL,
-                                  ACT_REFUSE]:
+        elif form.action.data in [wc_const.ACT_CARRY_FORWARD,
+                                  wc_const.ACT_END,
+                                  wc_const.ACT_REFUSE_RETRIEVAL,
+                                  wc_const.ACT_REFUSE]:
             try:
                 wc_id_list = [int(wc_id) for wc_id in
                               form.work_command_id.data.split(",")]
@@ -253,7 +254,7 @@ work command")
             if len(result) == 1:
                 result = result[0]
                 # pylint: enable=R0912
-        elif form.action.data == ACT_RETRIVE_QI:
+        elif form.action.data == wc_const.ACT_RETRIVE_QI:
 
             try:
                 work_command_id = int(form.work_command_id.data)
@@ -271,7 +272,7 @@ work command")
             except ValueError, e:
                 return unicode(e), 403
             result = wc
-        elif form.action.data == ACT_QUICK_CARRY_FORWARD:
+        elif form.action.data == wc_const.ACT_QUICK_CARRY_FORWARD:
             try:
                 work_command_id = int(form.work_command_id.data)
             except ValueError:
@@ -290,12 +291,12 @@ work command")
             result = wc
 
         if isinstance(result, types.ListType):
-            return json.dumps([_work_command_to_dict(wc) for wc in result])
+            return json.dumps([_work_command_to_dict(wc_) for wc_ in result])
         else:
             return json.dumps(_work_command_to_dict(result))
     else:
-        # we disable E1101, since it's a bug of pylint
-        return str(form.errors), 403 # pylint: disable=E1101
+        return str(form.errors), 403
+
 
 def _handle_delete():
     from lite_mms.apis import quality_inspection
@@ -309,6 +310,7 @@ def _handle_delete():
                                                    actor_id=actor_id)
     except ValueError, e:
         return unicode(e), 403
+
 
 @manufacture_ws.route("/delete-quality-inspection-report",
                       methods=["POST"])
@@ -339,12 +341,12 @@ def quality_inspection_report():
             work_command_id = IntegerField(u"work_command_id",
                                            [validators.DataRequired()])
             quantity = IntegerField(u"quantity", [validators.DataRequired()])
-            result = IntegerField(u"result", [validators.AnyOf([FINISHED,
-                                                                NEXT_PROCEDURE,
-                                                                REPAIR,
-                                                                REPLATE,
-                                                                DISCARD])])
-
+            result = IntegerField(u"result",
+                                  [validators.AnyOf([qi_const.FINISHED,
+                                                     qi_const.NEXT_PROCEDURE,
+                                                     qi_const.REPAIR,
+                                                     qi_const.REPLATE,
+                                                     qi_const.DISCARD])])
 
         form = _ValidationForm(request.args)
         if form.validate():
@@ -366,11 +368,10 @@ def quality_inspection_report():
             except ValueError, e:
                 return unicode(e), 403
         else:
-            # we disable E1101, since it's a bug of pylint
-            return str(form.errors), 403 # pylint: disable=E1101
+            return str(form.errors), 403
     elif request.method == "DELETE":
         return _handle_delete()
-    else: # PUT
+    else:  # PUT
         try:
             try:
                 f = request.files.values()[0]
@@ -410,4 +411,3 @@ def quality_inspection_report_list():
             return unicode(e), 403
     else:
         return "work command id required", 403
-

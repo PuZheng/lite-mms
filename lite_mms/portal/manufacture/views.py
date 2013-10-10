@@ -136,6 +136,8 @@ class WorkCommandView(ModelView):
 
         form_columns[u"工单信息"] = [column_spec.ColumnSpec("id"), column_spec.ColumnSpec("org_weight"),
                                  column_spec.ColumnSpec("org_cnt"), column_spec.ColumnSpec("sub_order.unit"),
+                                 column_spec.ColumnSpec("sub_order.spec", label=u"规格"),
+                                 column_spec.ColumnSpec("sub_order.type", label=u"型号"),
                                  "urgent", "sub_order.returned", "tech_req",
                                  column_spec.ColumnSpec("cause_name", label=u"产生原因"),
                                  column_spec.ColumnSpec("previous_work_command", label=u"上级工单",
@@ -144,7 +146,7 @@ class WorkCommandView(ModelView):
                                  column_spec.ListColumnSpec("next_work_command_list", label=u"下级工单",
                                                             item_col_spec=c),
                                  column_spec.PlaceHolderColumnSpec("log_list", label=u"日志",
-                                                                   template_fname="logs-snippet.html"),
+                                                                   template_fname="logs-snippet.html")
         ]
         form_columns[u"加工信息"] = [column_spec.ColumnSpec("department"),
                                      column_spec.ColumnSpec("team"), "procedure",

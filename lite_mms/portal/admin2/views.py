@@ -142,20 +142,20 @@ department_model_view = DepartmentModelView(Department, u"车间")
 
 class TeamModelView(AdminModelView):
 
-    __list_columns__ = ["id", "name", "department", "leader"]
+    __list_columns__ = ["id", "name", "department",
+                        column_spec.ColumnSpec("leader_list", formatter=lambda v, obj: ",".join([unicode(i) for i in v]))]
 
     __create_columns__ = __form_columns__ = ["name", 
-                                             column_spec.InputColumnSpec("leader", 
-                                                                         label=u"班组长",
+                                             column_spec.InputColumnSpec("leader_list",
                                                                          filter_=lambda q: q.filter(User.groups.any(Group.id==groups_const.TEAM_LEADER)),
                                                                          doc=u'只有用户组是"班组长"，才能作为班组长'), "department"]
    
-    __column_labels__ = {"id": u"编号", "name": u"名称", "leader": u"班组长", "department": u"所属车间"}
+    __column_labels__ = {"id": u"编号", "name": u"名称", "leader_list": u"班组长列表", "department": u"所属车间"}
 
     __customized_actions__ = [DeleteAction(u"删除", AdminPermission)]
 
     def populate_obj(self, form):
-        return Team(name=form.name.data, department=form.department.data, leader=form.leader.data)
+        return Team(name=form.name.data, department=form.department.data, leader=form.leader_list.data)
 
 team_model_view = TeamModelView(Team, u"班组")
 

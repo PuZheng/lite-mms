@@ -44,7 +44,9 @@ class DeliverySessionModelView(ModelView):
             if v.stale:
                 ret += u'<small class="text-error"> (过期)</small>'
             return ret
-        return ["id", "plate_", "tare", "create_time", "finish_time", "with_person", "status",
+
+        return ["id", "plate_", ColumnSpec("tare", label=u"净重", formatter=lambda v, obj: sum(
+            dt.weight for dt in obj.delivery_task_list)), "create_time", "finish_time", "with_person", "status",
                 ListColumnSpec("customer_list_unwrapped", label=u"客 户", compressed=True),
                 ListColumnSpec("consignment_list_unwrapped",
                                label=u"发货单",

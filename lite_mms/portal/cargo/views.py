@@ -424,8 +424,8 @@ class GoodsReceiptModelView(ModelView):
     __form_columns__[u"产品列表"] = [
         TableColumnSpec("goods_receipt_entries", label="",
                         col_specs=[
-                            LinkColumnSpec("id", formatter=lambda v, obj: goods_receipt_entry_view.url_for_object(obj,
-                                                                                                                  url=request.url), anchor=lambda v:v),
+                            LinkColumnSpec("id", label=u"编号",
+                                           formatter=lambda v, obj: goods_receipt_entry_view.url_for_object(obj,url=request.url), anchor=lambda v:v),
                             ColumnSpec("product", label=u"产品"),
                             ColumnSpec("product.product_type", label=u"产品类型"),
                             ColumnSpec("weight", label=u"净重(KG)"),

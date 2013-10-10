@@ -27,11 +27,11 @@ def login():
             'reason': unicode(inst)
         }), 403
     return json.dumps(
-        dict(username=user.username, teamID=user.team.id if user.team else "",
-            userID=user.id,
-            departmentID=",".join([str(department.id) for department in
-                                   user.department_list]) if user.department_list else "",
-            userGroup=user.groups[0].id, token=user.get_auth_token()))
+        dict(username=user.username,
+             teamID=",".join([str(team.id) for team in user.team_list]) if user.team_list else "",
+             userID=user.id, departmentID=",".join([str(department.id) for department in
+                                                    user.department_list]) if user.department_list else "",
+             userGroup=user.groups[0].id, token=user.get_auth_token()))
 
 if __name__ == "__main__":
     try:

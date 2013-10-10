@@ -57,5 +57,5 @@ Flask-Mail>=0.9.0
 -e git+https://github.com/xiechao06/WorkFlowRepr.git#egg=work_flow_repr-dev
 CodernityDB>=0.4.2
 -e git+https://github.com/xiechao06/pyfeature.git@92e086490ab44384dc21ecea65592c302273feab#egg=pyfeature-dev
--e git+https://github.com/xiechao06/yawf.git@24b0e39faa663732e487096012f6cf83f11ee7dc#egg=yawf-dev
 -e git+https://github.com/xiechao06/Flask-DataBrowser.git@0f5c4d6a0acd14f630422420da04a71317485b68#egg=Flask_DataBrowser-dev
+-e git+https://github.com/xiechao06/yawf.git@dc581f919c853eed866684c11082dac1a6522d83#egg=yawf-dev

@@ -6,7 +6,7 @@ def login(username, password, app):
     assert rv.status_code == 302
 
 def client_login(username, password, app):
-    rv = app.post('/auth_ws/login?username=%s&password=%s' % (username, password)) 
+    rv = app.post('/auth_ws/login?username=%s&password=%s' % (username, password))
     assert rv.status_code == 200
     return json.loads(rv.data)['token']
 

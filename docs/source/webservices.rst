@@ -1,4 +1,4 @@
-﻿###########
+###########
 webservices
 ###########
 
@@ -76,8 +76,8 @@ request
 =======
 **GET /cargo_ws/unload-session-list?index=<int>&cnt=<int>&auth_token=<str>**
 
-* *index - 返回的集合在所有卸货会话列表中的起始位置，默认为0
-* *cnt - 返回的卸货会话数量，默认为sys.maxint
+* \*index - 返回的集合在所有卸货会话列表中的起始位置，默认为0
+* \*cnt - 返回的卸货会话数量，默认为sys.maxint
 
 response
 ========
@@ -220,6 +220,72 @@ example
 
      10001
 
+
+**************************
+get-work-command(获取工单)
+**************************
+
+获取单个工单
+
+request
+=======
+
+**GET /manufacture_ws/work-command/<work_command_id:int>?auth_token=<str>**
+
+* work_command_id - 工单ID
+
+
+response
+========
+
+* 200 - 成功
+
+.. code-block:: python
+
+    {
+        "customerName": <string>, # 客户名称
+        "department": {
+            "id": <int>, # 车间ID
+            "name": <string>, # 车间名称	
+        }
+        "handleType": <int>, # 处理类型
+        "id": <int>, # 工单ID
+        "isUrgent": 1|0, # 是否加急，1加急。
+        "lastMod": <int>, # last modified time, seconds since epoch
+        "orderID": <int>, # 订单ID
+        "orderNum": <str>, # 订单号
+        "orderCreateTime": <int>, # 订单创建时间，seconds since epoch
+        "orderType": <int>, # 工单类型
+        "orgWeight": <int>, # 工序前重量 , 需要说明的是，若工单类型为瑞格或者紧固件，那么这个值只有参考意义。               
+        "orgWeight": <int>, # 工序前重量 
+        "picPath": <str>, # 图片链接
+        "previousProcedure": <string>, # 上一道工序名称，可为空
+        "procedure": <string>, # 当前工序名，可为空
+        "processedCount": <int>, # 桶数或者件数，视工单所属的订单类型而定
+        "processedWeight": <int>, # 工序后重量， 若工单类型为瑞格或者紧固件，那么这个值只有参考意义。
+        "productName": <string>, # 产品名称 
+        "status": <int>, # 状态
+        "subOrderId": <int>, # 子订单ID
+        "team": {
+            id: <int>, # 班组ID
+            name: <string>, # 组名称
+        }
+        "technicalRequirements": <string>, # 技术要求，可为空
+        "rejected": <int>, # 是否退货
+        "qirList": [
+            {
+                result: <int>,  # 质检结果,
+                weight: <int>,  # 质检重量,
+                id: <int>,  # 质检报告ID,
+                quantity: <int>,  # 质检数量,
+                picUrl: <str>,  # 质检报告图片链接
+                actorId: <int>,  # 操作员ID
+            }
+        ]
+    }
+   
+* 404 - 该工单不存在
+
 *****************************
 get-work-command-list(获取工单列表)
 *****************************
@@ -228,7 +294,7 @@ get-work-command-list(获取工单列表)
 
 * 首先按加急与否进行排序
 * 其次，按工单上一次状态变更的时间由远及近进行排序。
-例如：存在A，B两个待分配工单，这两个工单排产的时间分别是 *2012-9-10[10:09:10]* 和 *2012-9-10[9:50:07]* , 那么B要排在A的前面 
+例如：存在A，B两个待分配工单，这两个工单排产的时间分别是 \*2012-9-10[10:09:10]\* 和 \*2012-9-10[9:50:07]\* , 那么B要排在A的前面 
 
 
 request
@@ -236,10 +302,10 @@ request
 
 **GET /manufacture_ws/work-command-list?department_id=<int>&team_id=<int>&start=<int:0>&cnt=<int:sys.maxint>&status=<int>+&auth_token=<str>**
 
-* *department_id - 车间ID， 若为空，则team_id不能为空
-* *team_id - 班组ID， 若为空，则department_id不能为空
-* *start - 返回的工单列表在所有符合其他参数条件的工单列表中的起始位置, 若为空，默认为0
-* *cnt - 返回的工单数量，若为空，默认为sys.maxint
+* \*department_id - 车间ID， 若为空，则team_id不能为空
+* \*team_id - 班组ID， 若为空，则department_id不能为空
+* \*start - 返回的工单列表在所有符合其他参数条件的工单列表中的起始位置, 若为空，默认为0
+* \*cnt - 返回的工单数量，若为空，默认为sys.maxint
 * status - 见 :py:mod:`lite_mms.constants.work_command` 中对各种工单状态的说明, 可以是多种工单状态的组合, 若是多种工单状态的组合，中间用','隔开
 
 response
@@ -248,42 +314,52 @@ response
 
 .. code-block:: python
 
-   {
-       "totalCnt": <int>, # 总数量
-       "data": [
-           {
-               "customerName": <string>, # 客户名称
-               "department": {
-                   "id": <int>, # 车间ID
-                   "name": <string>, # 车间名称	
-               }
-               "handleType": <int>, # 处理类型
-               "id": <int>, # 工单ID
-               "isUrgent": 1|0, # 是否加急，1加急。
-               "lastMod": <int>, # last modified time, seconds since epoch
-               "orderID": <int>, # 订单ID
-               "orderNum": <str>, # 订单号
-               "orderCreateTime": <int>, # 订单创建时间，seconds since epoch
-               "orderType": <int>, # 工单类型
-               "orgWeight": <int>, # 工序前重量 , 需要说明的是，若工单类型为瑞格或者紧固件，那么这个值只有参考意义。               
-               "orgCount": <int>, # 工序前数量 
-               "picPath": <str>, # 图片链接
-               "previousProcedure": <string>, # 上一道工序名称，可为空
-               "procedure": <string>, # 当前工序名，可为空
-               "processedCount": <int>, # 桶数或者件数，视工单所属的订单类型而定
-               "processedWeight": <int>, # 工序后重量， 若工单类型为瑞格或者紧固件，那么这个值只有参考意义。
-               "productName": <string>, # 产品名称 
-               "status": <int>, # 状态
-               "subOrderId": <int>, # 子订单ID
-               "team": {
-                   id: <int>, # 班组ID
-                   name: <string>, # 组名称
-               }
-               "technicalRequirements": <string>, # 技术要求，可为空
-               "rejected": <int>, # 是否退货
-           }
-       ]
-   }
+    {
+        "totalCnt": <int>, # 总数量
+        "data": [
+            {
+                "customerName": <string>, # 客户名称
+                "department": {
+                    "id": <int>, # 车间ID
+                    "name": <string>, # 车间名称	
+                }
+                "handleType": <int>, # 处理类型
+                "id": <int>, # 工单ID
+                "isUrgent": 1|0, # 是否加急，1加急。
+                "lastMod": <int>, # last modified time, seconds since epoch
+                "orderID": <int>, # 订单ID
+                "orderNum": <str>, # 订单号
+                "orderCreateTime": <int>, # 订单创建时间，seconds since epoch
+                "orderType": <int>, # 工单类型
+                "orgWeight": <int>, # 工序前重量 , 需要说明的是，若工单类型为瑞格或者紧固件，那么这个值只有参考意义。               
+                "orgCount": <int>, # 工序前数量 
+                "picPath": <str>, # 图片链接
+                "previousProcedure": <string>, # 上一道工序名称，可为空
+                "procedure": <string>, # 当前工序名，可为空
+                "processedCount": <int>, # 桶数或者件数，视工单所属的订单类型而定
+                "processedWeight": <int>, # 工序后重量， 若工单类型为瑞格或者紧固件，那么这个值只有参考意义。
+                "productName": <string>, # 产品名称 
+                "status": <int>, # 状态
+                "subOrderId": <int>, # 子订单ID
+                "team": {
+                    id: <int>, # 班组ID
+                    name: <string>, # 组名称
+                }
+                "technicalRequirements": <string>, # 技术要求，可为空
+                "rejected": <int>, # 是否退货
+                "qirList": [
+                    {
+                    result: <int>,  # 质检结果,
+                    weight: <int>,  # 质检重量,
+                    id: <int>,  # 质检报告ID,
+                    quantity: <int>,  # 质检数量,
+                    picUrl: <str>,  # 质检报告图片链接
+                    actorId: <int>,  # 操作员ID
+                    }
+                ]
+            }
+        ]
+    }
    
 
 有关orderType的说明，请见 :py:mod:`lite_mms.constants.default` 中对各种订单类型的说明
@@ -440,7 +516,7 @@ assign-work-command(分配工单)
 request
 =======
 
-**PUT /manufacture_ws/work-command?work_command_id=<int>&team_id=<int>&action=203&auth_token=<str>**
+**PUT /manufacture_ws/work-command/<int>?team_id=<int>&action=203&auth_token=<str>**
 
 * work_command_id - 工单id
 * team_id - 被分配的班组id
@@ -484,7 +560,7 @@ response
         "rejected": <int>, # 是否退货
     }
    
-有关orderType的说明，请见 :py:mod:`lite_mms.constants.default`中对各种订单类型的说明
+有关orderType的说明，请见 :py:mod:`lite_mms.constants.default` 中对各种订单类型的说明
 
 * 403/401 - 失败
 
@@ -499,7 +575,7 @@ example
 
 * 请求
 
-**PUT /manufacture_ws/work-command?work_command_id=123&team_id=23&action=203&auth_token=xxx**
+**PUT /manufacture_ws/work-command/123?team_id=23&action=203&auth_token=xxx**
 
 * 返回值
 
@@ -551,7 +627,7 @@ add-processed-weight(增加工序后重量)
 request
 =======
 
-**PUT /manufacture_ws/work-command?work_command_id=<int>&weight=<int>&quantity=<int>&action=204&is_finished=<1|0>&auth_token=str>**
+**PUT /manufacture_ws/work-command/<int>?weight=<int>&quantity=<int>&action=204&is_finished=<1|0>&auth_token=str>**
 
 * work_command_id - 工单id
 * weight - 重量
@@ -587,7 +663,7 @@ request-end-work-command(请求结束或结转工单)
 request
 =======
 
-**PUT /manufacture_ws/work-command?work_command_id=<int>+>&action=[205|206]**
+**PUT /manufacture_ws/work-command/<int>?action=[205|206]&auth_token=<str>**
 
 * work_command_id - 工单id, 可以是一个工单id列表。例如 **1,2,3**
 * action - 见 :py:mod:`lite_mms.constants.work_command` 中对各种工单操作的说明, 205代表**结束**， 206代表**结转**
@@ -597,7 +673,7 @@ response
 
 * 200 - 成功，返回修改后的工单信息, 返回信息见 :ref:`assign-work-command`
 
-*这里特别需要说明的是： 若修改的是多个工单，那么返回的工单信息是多个*
+ *这里特别需要说明的是： 若修改的是多个工单，那么返回的工单信息是多个*
 
 * 403/401 - 失败
 
@@ -623,10 +699,10 @@ refuse-work-command(打回工单)
 reqeust
 =======
 
-**PUT /manufacture_ws/work-command?work_command_id=<int>&reason=<str>&action=209**
+**PUT /manufacture_ws/work-command/<int>?reason=<str>&action=209&auth_token=<str>**
 
 * work_command_id - 工单id
-* *reason - 理由
+* \*reason - 理由
 * action - 见 :py:mod:`lite_mms.constants.work_command` 中对各种工单操作的说明
 
 response
@@ -654,7 +730,7 @@ affirm-retrieve-work-command(确认回收工单)
 request
 =======
 
-**PUT /manufacture_ws/work-command?work_command_id=<int>&action=211&weight=<int>&quantity=<int>**
+**PUT /manufacture_ws/work-command/<int>?action=211&weight=<int>&quantity=<int>&auth_token=<str>**
 
 * work_command_id - 工单id
 * action - 见 :py:mod:`lite_mms.constants.work_command` 中对各种工单操作的说明
@@ -687,7 +763,7 @@ refuse-retrieval-work-command(拒绝回收工单)
 request
 =======
 
-**PUT /manufacture_ws/work-command?work_command_id=<int>&action=213
+**PUT /manufacture_ws/work-command/<int>?action=213&auth_token=<str>**
 
 * work_command_id - 工单id, 支持多个工单id，可以用","隔开
 * action - 见 :py:mod:`lite_mms.constants.work_command` 中对各种工单操作的说明
@@ -724,7 +800,7 @@ request
 
 * actor_id - 提交人id
 * work_command_id - 对应的工单id
-* *quantity - **增加** 的重量，对于不同类型的工单有不同的含义，标准-公斤；瑞格-件数；紧固件-桶数；
+* \*quantity - **增加** 的重量，对于不同类型的工单有不同的含义，标准-公斤；瑞格-件数；紧固件-桶数；
 * result - 质检结果，请参考 :py:mod:`lite_mms.constants.quality_inspection`
 
 response
@@ -769,7 +845,7 @@ request
 
 * id - 质检报告id
 * actor_id - 提交人id
-* *quantity - **增加** 的重量，对于不同类型的工单有不同的含义，标准-公斤；瑞格-件数；紧固件-桶数；
+* \*quantity - **增加** 的重量，对于不同类型的工单有不同的含义，标准-公斤；瑞格-件数；紧固件-桶数；
 * result - 质检结果，请参考 :py:mod:`lite_mms.constants.quality_inspection`
 
 response
@@ -841,49 +917,6 @@ example
 
 略
 
-********************************************
-get-quality-inspection-report-list(查看质检报告列表)
-********************************************
-
-按创建时间由远及近进行排序
-
-request
-=======
-
-**GET /manufacture_ws/quality-inspection-report-list?work_command_id=<int>&auth_token**
-
-response
-========
-
-* 200 - 成功
-
-.. code-block:: python
-
-   [
-       {
-           "id": <int>, # 质检报告id
-           "quantity": <int>, # 数量
-           "weight": <int>, 
-           "result": <int>, # 质检结果
-           "work_command_id": <int>, # 工单id
-           "actor_id": <int>, # 质检人id
-           "pic_url": <string>, # 图片链接
-       }
-       ...
-   ]
-
-其中质检结果请查看 :py:mod:`lite_mms.constants.quality_inspection`
-   
-* 403/401 - 失败
-
-.. code-block:: python
-
-   "actual error reason" 
-
-example
-=======
-
-略
 
 ********************************
 submit-quality-inspection(提交质检单)
@@ -896,12 +929,12 @@ submit-quality-inspection(提交质检单)
 request
 =======
 
-**PUT /manufacture_ws/work-command?work_command_id=<int>&action=212&deduction=<int>&auth_token=<str>**
+**PUT /manufacture_ws/work-command/<int>?action=212&deduction=<int>&auth_token=<str>**
 
 * work_command_id - 工单id
 * actor_id - 发起人id，这里为质检员
 * action - 见 :py:mod:`lite_mms.constants.work_command` 中对各种工单操作的说明
-* *deduction - 扣量，必须以公斤为单位，默认为0
+* \*deduction - 扣量，必须以公斤为单位，默认为0
 
 response
 ========
@@ -1098,7 +1131,7 @@ request
 * sid - 发货会话id
 * is_finished - 是否发货会话结束, 1代表结束
 * auth_token - login返回的token
-* *remain - 未完成件数(计件类型)或重量（计重类型），若有为完成仓单，为必填项
+* \*remain - 未完成件数(计件类型)或重量（计重类型），若有为完成仓单，为必填项
 
 response
 ========
@@ -1132,7 +1165,7 @@ retrive-quality-inspection(打回质检单)
 request
 =======
 
-**PUT /manufacture_ws/work-command?work_command_id=<int>&action=214&auth_token=<str>**
+**PUT /manufacture_ws/work-command/<int>?action=214&auth_token=<str>**
 
 * work_command_id - 工单id
 * action - 见 :py:mod:`lite_mms.constants.work_command` 中对各种工单操作的说明
@@ -1166,7 +1199,7 @@ quick-carry-forward(快速结转)
 request
 =======
 
-**PUT /manufacture_ws/work-command?work_command_id=<int>&action=215**
+**PUT /manufacture_ws/work-command/<int>?action=215**
 
 * work_command_id - 工单id
 * action - 见 :py:mod:`lite_mms.constants.work_command` 中对各种工单操作的说明

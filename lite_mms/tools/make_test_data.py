@@ -80,7 +80,7 @@ class InitializeTestDB(Command):
         department2 = do_commit(Department(name=u"车间2",
                                            leader_list=[d2_dl, super_dl]))
         team1 = do_commit(Team(name=u"班组101", department=department1,
-                               leader=t101_tl))
+                               leader_list=[t101_tl]))
 
         # 创建工序
         procedure1 = do_commit(Procedure(name=u"工序1",
@@ -208,7 +208,8 @@ class InitializeTestDB(Command):
                                     pic_path="1.jpg",
                                     status=wc_const.STATUS_QUALITY_INSPECTING,
                                     department=department1,
-                                    team=team1)
+                                    team=team1,
+                                    processed_weight=50)
         do_commit(work_command4)
         #     - FINISHED STATUS
         WorkCommand(sub_order=sub_order1,
@@ -226,13 +227,17 @@ class InitializeTestDB(Command):
         do_commit(work_command4)
 
         qir1 = do_commit(QIReport(work_command4, 20, 20,
-                                  quality_inspection.FINISHED, qi.id))
+                                  quality_inspection.FINISHED, qi.id,
+                                  pic_path='1.jpg'))
         qir2 = do_commit(QIReport(work_command4, 10, 10,
-                                  quality_inspection.NEXT_PROCEDURE, qi.id))
+                                  quality_inspection.NEXT_PROCEDURE, qi.id,
+                                  pic_path='1.jpg'))
         do_commit(QIReport(work_command4, 10, 10,
-                           quality_inspection.REPAIR, qi.id))
+                           quality_inspection.REPAIR, qi.id,
+                           pic_path='1.jpg'))
         do_commit(QIReport(work_command4, 10, 10,
-                           quality_inspection.REPLATE, qi.id))
+                           quality_inspection.REPLATE, qi.id,
+                           pic_path='1.jpg'))
         delivery_session = DeliverySession(plate=vehicle1.name,
                                            tare=2300,
                                            status=delivery_const.STATUS_CLOSED)

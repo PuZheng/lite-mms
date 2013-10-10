@@ -123,7 +123,6 @@ def work_command_list():
 
 @manufacture_ws.route("/team-list", methods=["GET"])
 @webservice_call("json")
-@login_required_webservice
 def team_list():
     department_id = request.args.get("department_id", type=int)
     if department_id is None:

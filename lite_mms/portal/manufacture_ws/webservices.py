@@ -47,7 +47,7 @@ def _work_command_to_dict(wc):
                 orderID=wc.sub_order.order_id,
                 orderNum=wc.sub_order.order.customer_order_number,
                 orderCreateTime=time.mktime(wc.sub_order.order.create_time.
-                                            timetuple()),
+                timetuple()),
                 orderType=wc.sub_order.order_type,
                 orgCount=wc.org_cnt,
                 orgWeight=wc.org_weight,
@@ -100,7 +100,7 @@ def work_command_list():
         param_dict = dict(status_list=status_list)
 
         if len(status_list) == 1 and \
-           status_list[0] == wc_const.STATUS_FINISHED:
+                        status_list[0] == wc_const.STATUS_FINISHED:
             param_dict["date"] = datetime.now().date() - timedelta(days=1)
         if form.department_id.data is not None:
             param_dict.update(department_id=form.department_id.data)
@@ -182,7 +182,7 @@ work command")
 
             def validate_weight(self, field):
                 if self.action.data == wc_const.ACT_ADD_WEIGHT or \
-                   self.action.data == wc_const.ACT_AFFIRM_RETRIEVAL:
+                                self.action.data == wc_const.ACT_AFFIRM_RETRIEVAL:
                     if field.data is None:
                         raise ValidationError(_("需要weight字段"))
 

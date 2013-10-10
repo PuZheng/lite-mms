@@ -185,7 +185,7 @@ class StateEnding(WorkCommandState):
 
         else:
             self.sm.obj.set_status(constants.work_command.STATUS_ENDING)
-            if "team" is kwargs:  # when it comes by ACT_ASSIGN
+            if "team" in kwargs:  # when it comes by ACT_ASSIGN
                 self.sm.obj.team = kwargs["team"]
 
             if self.last_status == constants.work_command.STATUS_ENDING:

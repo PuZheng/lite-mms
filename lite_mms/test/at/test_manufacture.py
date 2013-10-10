@@ -59,7 +59,7 @@ def test():
                                password=md5('tl').hexdigest(),
                                groups=[team_leader_group])
             team = and_(u'创建Team', name='foo', department=department,
-                        leader=team_leader)
+                        leader_list=[team_leader])
             quality_inspector_group = and_(u'创建Group(quality_inspector)',
                                            id=groups_const.QUALITY_INSPECTOR)
             and_(u'创建User', username='qi',

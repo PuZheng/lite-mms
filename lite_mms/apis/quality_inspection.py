@@ -1,12 +1,14 @@
 # -*- coding: UTF-8 -*-
 import sys
-from flask import  url_for
+from flask import url_for
 from lite_mms.utilities import _
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import NoResultFound
-from lite_mms import models, constants
+from lite_mms import models
+from lite_mms.constants import (work_command as wc_const,
+                                quality_inspection as qi_const)
 from lite_mms.apis import ModelWrapper
 from lite_mms.utilities import do_commit
+
 
 class QIReportWrapper(ModelWrapper):
     @property
@@ -38,24 +40,6 @@ class QIReportWrapper(ModelWrapper):
             return None
 
     @classmethod
-    def get_list(cls, work_command_id=None, idx=0, cnt=sys.maxint,
-                 finished_only=False, result=None):
-        """
-        get the quality inspection_report from database
-        """
-        qir_q = models.QIReport.query
-        if work_command_id:
-            qir_q = qir_q.filter(models.QIReport.work_command_id == work_command_id)
-        if finished_only:
-            qir_q = qir_q.filter(models.QIReport.report_time == None)
-        if result:
-            qir_q = qir_q.filter(models.QIReport.result == result)
-
-        total_cnt = qir_q.count()
-        qir_q = qir_q.offset(idx).limit(cnt)
-        return [QIReportWrapper(qir) for qir in qir_q.all()], total_cnt
-
-    @classmethod
     def new(cls, actor_id, work_command_id, quantity, result, pic_path,
             report_time=None):
         from lite_mms.apis.manufacture import WorkCommandWrapper
@@ -67,7 +51,7 @@ class QIReportWrapper(ModelWrapper):
         weight = workcommand.model.processed_unit_weight * quantity
         qi_report = models.QIReport(workcommand.model, quantity, weight,
                                     result, actor_id, report_time, pic_path)
-        return  QIReportWrapper(do_commit(qi_report))
+        return QIReportWrapper(do_commit(qi_report))
 
     @classmethod
     def remove(cls, id_, actor_id):
@@ -77,11 +61,10 @@ class QIReportWrapper(ModelWrapper):
         qir = cls.get(id_)
         if not qir:
             raise ValueError(_(u"无此报告单(%s)" % id_))
-        if qir.work_command.status != constants.work_command.STATUS_QUALITY_INSPECTING:
+        if qir.work_command.status != wc_const.STATUS_QUALITY_INSPECTING:
             raise ValueError(_(u"已提交的质检单中的质检报告不能删除"))
         do_commit(qir.model, action="delete")
         return "sucess"
-
 
     @classmethod
     def update(cls, id_, actor_id, quantity=None, result=None, pic_path=None):
@@ -108,17 +91,37 @@ class QIReportWrapper(ModelWrapper):
     def unit(self):
         return self.work_command.sub_order.unit
 
-get_qir_list = QIReportWrapper.get_list
+
+def get_qir_list(work_command_id=None, idx=0, cnt=sys.maxint,
+                 finished_only=False, result=None):
+    """
+    get the quality inspection_report from database
+    """
+    qir_q = models.QIReport.query
+    if work_command_id:
+        qir_q = qir_q.filter(models.QIReport.work_command_id ==
+                             work_command_id)
+    if finished_only:
+        # see sqlalchemy IS NULL
+        qir_q = qir_q.filter(models.QIReport.report_time == None)
+    if result:
+        qir_q = qir_q.filter(models.QIReport.result == result)
+
+    total_cnt = qir_q.count()
+    qir_q = qir_q.offset(idx).limit(cnt)
+    return [QIReportWrapper(qir) for qir in qir_q.all()], total_cnt
+
 get_qir = QIReportWrapper.get
 new_QI_report = QIReportWrapper.new
 remove_qi_report = QIReportWrapper.remove
 update_qi_report = QIReportWrapper.update
 
+
 def get_QI_result_list():
     return [
-        (constants.quality_inspection.FINISHED, u'通过'),
-        (constants.quality_inspection.NEXT_PROCEDURE, u'通过转下道工序'),
-        (constants.quality_inspection.REPAIR, u'返修'),
-        (constants.quality_inspection.REPLATE, u'返镀'),
-        (constants.quality_inspection.DISCARD, u'报废'),
+        (qi_const.FINISHED, u'通过'),
+        (qi_const.NEXT_PROCEDURE, u'通过转下道工序'),
+        (qi_const.REPAIR, u'返修'),
+        (qi_const.REPLATE, u'返镀'),
+        (qi_const.DISCARD, u'报废'),
     ]

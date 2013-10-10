@@ -18,7 +18,15 @@ from lite_mms.utilities.decorators import webservice_call
 from lite_mms.utilities import to_timestamp
 
 
+def _qir2dict(qir):
+    return dict(id=qir.id, actorId=qir.actor_id, quantity=qir.quantity,
+                weight=qir.weight, result=qir.result,
+                picUrl=qir.pic_url)
+
+
 def _work_command_to_dict(wc):
+    qirs, total_cnt = lite_mms.apis.quality_inspection.get_qir_list(wc.id)
+
     return dict(id=wc.id,
                 customerName=wc.order.customer.name,
                 department=dict(id=wc.department.id,
@@ -49,7 +57,8 @@ def _work_command_to_dict(wc):
                 handleType=wc.handle_type,
                 deduction=wc.deduction,
                 unit=wc.unit,
-                rejected=int(wc.sub_order.returned))
+                rejected=int(wc.sub_order.returned),
+                qirList=[_qir2dict(qir) for qir in qirs])
 
 
 @manufacture_ws.route("/work-command-list", methods=["GET"])
@@ -305,12 +314,6 @@ def delete_quality_inspection_report():
     return _handle_delete()
 
 
-def _qir2dict(qir):
-    return dict(id=qir.id, actor_id=qir.actor_id, quantity=qir.quantity,
-                weight=qir.weight, result=qir.result,
-                work_command_id=qir.work_command_id, pic_url=qir.pic_url)
-
-
 @manufacture_ws.route("/quality-inspection-report",
                       methods=["POST", "PUT", "DELETE"])
 @webservice_call("json")
@@ -376,20 +379,3 @@ def quality_inspection_report():
             return json.dumps(_qir2dict(qir))
         except ValueError, e:
             return unicode(e), 403
-
-
-@manufacture_ws.route("/quality-inspection-report-list",
-                      methods=['GET'])
-def quality_inspection_report_list():
-    work_command_id = request.args.get("work_command_id", type=int)
-
-    if work_command_id:
-        import lite_mms.apis.quality_inspection as QI
-
-        try:
-            qirs, total_cnt = QI.get_qir_list(work_command_id)
-            return json.dumps([_qir2dict(qir) for qir in qirs])
-        except ValueError, e:
-            return unicode(e), 403
-    else:
-        return "work command id required", 403

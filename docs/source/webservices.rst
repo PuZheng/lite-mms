@@ -227,6 +227,72 @@ example
 
      10001
 
+**************************
+get-work-command(获取工单)
+**************************
+
+获取单个工单
+
+request
+=======
+
+**GET /manufacture_ws/work-command/<work_command_id:int>
+
+* work_command_id - 工单ID
+
+
+response
+========
+
+* 200 - 成功
+
+.. code-block:: python
+
+    {
+        "customerName": <string>, # 客户名称
+        "department": {
+            "id": <int>, # 车间ID
+            "name": <string>, # 车间名称	
+        }
+        "handleType": <int>, # 处理类型
+        "id": <int>, # 工单ID
+        "isUrgent": 1|0, # 是否加急，1加急。
+        "lastMod": <int>, # last modified time, seconds since epoch
+        "orderID": <int>, # 订单ID
+        "orderNum": <str>, # 订单号
+        "orderCreateTime": <int>, # 订单创建时间，seconds since epoch
+        "orderType": <int>, # 工单类型
+        "orgWeight": <int>, # 工序前重量 , 需要说明的是，若工单类型为瑞格或者紧固件，那么这个值只有参考意义。               
+        "orgWeight": <int>, # 工序前重量 
+        "picPath": <str>, # 图片链接
+        "previousProcedure": <string>, # 上一道工序名称，可为空
+        "procedure": <string>, # 当前工序名，可为空
+        "processedCount": <int>, # 桶数或者件数，视工单所属的订单类型而定
+        "processedWeight": <int>, # 工序后重量， 若工单类型为瑞格或者紧固件，那么这个值只有参考意义。
+        "productName": <string>, # 产品名称 
+        "status": <int>, # 状态
+        "subOrderId": <int>, # 子订单ID
+        "team": {
+            id: <int>, # 班组ID
+            name: <string>, # 组名称
+        }
+        "technicalRequirements": <string>, # 技术要求，可为空
+        "rejected": <int>, # 是否退货
+        "qirList": [
+            {
+                result: <int>,  # 质检结果,
+                weight: <int>,  # 质检重量,
+                id: <int>,  # 质检报告ID,
+                quantity: <int>,  # 质检数量,
+                picUrl: <str>,  # 质检报告图片链接
+                actorId: <int>,  # 操作员ID
+            }
+        ]
+    }
+   
+* 404 - 该工单不存在
+
+
 *****************************
 get-work-command-list(获取工单列表)
 *****************************
@@ -237,8 +303,6 @@ get-work-command-list(获取工单列表)
 * 其次，按工单上一次状态变更的时间由远及近进行排序。
 例如：存在A，B两个待分配工单，这两个工单排产的时间分别是 *2012-9-10[10:09:10]* 和 *2012-9-10[9:50:07]* , 那么B要排在A的前面 
 
-
-* 单元测试: :py:func:`portal.manufacture.test_webservices.test_work_command_list`
 
 request
 =======
@@ -290,6 +354,16 @@ response
                }
                "technicalRequirements": <string>, # 技术要求，可为空
                "rejected": <int>, # 是否退货
+               "qirList": [
+                    {
+                        result: <int>,  # 质检结果,
+                        weight: <int>,  # 质检重量,
+                        id: <int>,  # 质检报告ID,
+                        quantity: <int>,  # 质检数量,
+                        picUrl: <str>,  # 质检报告图片链接
+                        actorId: <int>,  # 操作员ID
+                    }
+                ]
            }
        ]
    }
@@ -314,7 +388,7 @@ response
 example
 =======
 * 请求：
-**POST http://<your site>/manufacture_ws/work-command-list?department_id=1&team_id=2&status=3,5**
+**GET http://<your site>/manufacture_ws/work-command-list?department_id=1&team_id=2&status=3,5**
 
 * 返回：
      * http code - 200
@@ -738,53 +812,6 @@ example
 
    请参考 :ref:`assign-work-command`
 
-
-****************************************
-create-quality-inspection-report(生成质检报告)
-****************************************
-生成质检报告
-
-* 单元测试 - :py:func:`portal.manufacture.test_webservices.test_create_quality_inspection_report`
-
-request
-=======
-
-**POST /manufacture_ws/quality-inspection-report?actor_id=<int>&work_command_id=<int>&quantity=<int>&result=<int>**
-
-<picture data>
-
-* actor_id - 提交人id
-* work_command_id - 对应的工单id
-* *quantity - **增加** 的重量，对于不同类型的工单有不同的含义，标准-公斤；瑞格-件数；紧固件-桶数；
-* result - 质检结果，请参考 :py:mod:`lite_mms.constants.quality_inspection`
-
-response
-========
-
-* 200 - 成功
-   
-.. code-block:: python
-
-    {
-        "id": <int>, # 质检报告id
-        "quantity": <int>, # 数量
-        "weight": <int>, # 质量，对于瑞格和紧固件，仅仅有参考意义
-        "result": <int>, # 质检结果
-        "work_command_id": <int>, # 工单id
-        "actor_id": <str>, # 质检人id
-        "pic_url": <string>, # 图片链接
-    }
-   
-* 403 - 失败
-
-.. code-block:: python
-   
-   "actual error reason"
-   
-example
-=======
-
-略
 
 ****************************************
 update-quality-inspection-report(修改质检报告)

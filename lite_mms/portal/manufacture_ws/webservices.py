@@ -147,21 +147,24 @@ def department_list():
                       methods=["GET", "PUT"])
 @webservice_call("json")
 def work_command(work_command_id):
-    action = request.args.get('action', type=int)
-    if action in {wc_const.ACT_ASSIGN,
-                  wc_const.ACT_REFUSE,
-                  wc_const.ACT_AFFIRM_RETRIEVAL,
-                  wc_const.ACT_REFUSE_RETRIEVAL}:
-        permission = DepartmentLeaderPermission
-    elif action in {wc_const.ACT_ADD_WEIGHT,
-                    wc_const.ACT_END,
-                    wc_const.ACT_CARRY_FORWARD,
-                    wc_const.ACT_QUICK_CARRY_FORWARD}:
-        permission = TeamLeaderPermission
-    else:
-        permission = QualityInspectorPermission
+    if request.method == 'PUT':
+        action = request.args.get('action', type=int)
+        if action in {wc_const.ACT_ASSIGN,
+                      wc_const.ACT_REFUSE,
+                      wc_const.ACT_AFFIRM_RETRIEVAL,
+                      wc_const.ACT_REFUSE_RETRIEVAL}:
+            permission = DepartmentLeaderPermission
+        elif action in {wc_const.ACT_ADD_WEIGHT,
+                        wc_const.ACT_END,
+                        wc_const.ACT_CARRY_FORWARD,
+                        wc_const.ACT_QUICK_CARRY_FORWARD}:
+            permission = TeamLeaderPermission
+        else:
+            permission = QualityInspectorPermission
 
-    func = permission_required_webservice(permission)(_work_command)
+        func = permission_required_webservice(permission)(_work_command)
+    else:
+        func = login_required_webservice(_work_command)
     return func(work_command_id)
 
 

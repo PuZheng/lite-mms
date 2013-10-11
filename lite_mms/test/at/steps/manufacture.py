@@ -1,6 +1,10 @@
 # -*- coding: UTF-8 -*-
 import json
+from StringIO import StringIO
 
+import werkzeug
+from flask import url_for
+from flask.ext.login import current_user
 from sqlalchemy import and_
 from pyfeature import step
 
@@ -8,6 +12,8 @@ import lite_mms
 from lite_mms import models
 from lite_mms.basemain import app
 from lite_mms.test.utils import login, client_login
+from lite_mms.constants import (quality_inspection as qi_const,
+                                work_command as wc_const)
 
 
 @step(u'调度员对子订单进行预排产(\d+)公斤')
@@ -138,12 +144,31 @@ def _(step, wc):
     with app.test_request_context():
         with app.test_client() as c:
             auth_token = client_login('qi', 'qi', c)
-            rv = c.post('/manufacture_ws/quality-inspection-report?work_command_id=%d&quantity=%d&result=%d&auth_token=%s' % (wc.id, wc.processed_weight, lite_mms.constants.quality_inspection.FINISHED, auth_token))
-            qir_id = json.loads(rv.data)['id']
+            url = url_for('manufacture_ws.work_command',
+                          work_command_id=wc.id,
+                          action=wc_const.ACT_QI,
+                          auth_token=auth_token)
+            headers = werkzeug.datastructures.Headers()
+            headers.add('Content-Type', 'application/json')
+            rv = c.put(url,
+                       data={
+                           'file': (StringIO('foo picture'), 'foo.jpg'),
+                           'qirList': json.dumps([{'result': qi_const.FINISHED, 'weight': wc.processed_weight}])
+                       },
+                       headers=headers)
             assert rv.status_code == 200
-            rv = c.put('/manufacture_ws/work-command/%d?action=%d&auth_token=%s' % (wc.id, lite_mms.constants.work_command.ACT_QI, auth_token))
+            url = url_for('manufacture_ws.work_command', work_command_id=wc.id,
+                          auth_token=auth_token)
+            rv = c.get(url)
             assert rv.status_code == 200
-            return models.QIReport.query.get(qir_id)
+            d = json.loads(rv.data)
+            assert len(d['qirList']) == 1
+            qir_dict = d['qirList'][0]
+            assert qir_dict['result'] == qi_const.FINISHED
+            assert qir_dict['weight'] == wc.processed_weight
+            assert qir_dict['quantity'] is None
+            assert qir_dict['actorId'] == current_user.id
+            return qir_dict
 
 @step(u'该工单已经结束')
 def _(step, wc):
@@ -152,8 +177,43 @@ def _(step, wc):
 @step(u'一条对应的仓单生成了')
 def _(step, qir, harbor):
     model = models.StoreBill
-    return model.query.filter(and_(model.qir_id==qir.id,
-                                   model.weight==qir.weight,
+    return model.query.filter(and_(model.qir_id==qir['id'],
+                                   model.weight==qir['weight'],
                                    model.harbor_name==harbor.name)).one()
 
 
+@step(u'质检员保存质检结果')
+def _(step, wc):
+    with app.test_client() as c:
+        auth_token = client_login('qi', 'qi', c)
+        url = url_for('manufacture_ws.quality_inspection_report_list',
+                      work_command_id=wc.id,
+                      auth_token=auth_token)
+        qir_list = [{'result': qi_const.FINISHED,
+                     'weight': wc.processed_weight}]
+        rv = c.put(url,
+                   data={
+                       'file': (StringIO('foo jpg'), 'foo.jpg'),
+                       'qirList': json.dumps(qir_list)
+                   })
+        assert rv.status_code == 200
+        return qir_list
+
+
+@step(u'工单的质检报告列表正确保存了')
+def _(step, wc, qir_list):
+    with app.test_client() as c:
+        auth_token = client_login('qi', 'qi', c)
+        url = url_for('manufacture_ws.work_command', work_command_id=wc.id,
+                      auth_token=auth_token)
+        rv = c.get(url)
+        assert rv.status_code == 200
+        wc_dict = json.loads(rv.data)
+        assert len(wc_dict['qirList']) == 1
+        qir_dict1 = wc_dict['qirList'][0]
+        qir_dict2 = qir_list[0]
+
+        assert qir_dict1['result'] == qi_const.FINISHED
+        assert qir_dict1['weight'] == qir_dict2['weight']
+        assert qir_dict1['quantity'] == qir_dict2.get('quantity')
+        assert qir_dict1['actorId'] == current_user.id

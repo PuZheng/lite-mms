@@ -46,11 +46,11 @@ class _ResyncMixin(object):
 
 
     def resync(self):
-        
+
         pk = databrowser.utils.get_primary_key(self.__class__)
         fresh_obj = self.query.filter(getattr(self.__class__, pk)==getattr(self, pk)).one()
         props = self.__class__._sa_class_manager.mapper.iterate_properties
-        
+
         for p in props:
             if isinstance(p, ColumnProperty) and not p.is_primary:
                 setattr(self, p.key, getattr(fresh_obj, p.key))
@@ -567,7 +567,7 @@ class QIReport(db.Model):
         self.weight = weight
         self.result = result
         self.actor_id = actor_id
-        self.report_time = report_time
+        self.report_time = report_time or datetime.now()
         self.pic_path = pic_path
 
     def __unicode__(self):

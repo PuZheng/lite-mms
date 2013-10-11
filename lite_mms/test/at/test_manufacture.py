@@ -18,7 +18,7 @@ def test():
                                                                     attr),
         set_step_pattern=u'(\w+)([\.\w+]+)设置为(.+)')
 
-    with Feature(u'订单测试', step_files=['lite_mms.test.at.steps.manufacture']):
+    with Feature(u'工单测试', step_files=['lite_mms.test.at.steps.manufacture']):
         with Scenario(u'准备数据'):
             cargo_clerk_group = and_(u'创建Group(cargo_clerk)',
                                      id=lite_mms.constants.groups.CARGO_CLERK)
@@ -85,6 +85,16 @@ def test():
             qir = when(u'质检员全部通过该工单', wc)
             then(u'该工单已经结束', wc)
             and_(u'一条对应的仓单生成了', qir, harbor)
+
+        with Scenario(u'临时保存质检报告'):
+            when(u'调度员对子订单进行预排产40公斤', sub_order)
+            wc = then(u'一条重量是40公斤的工单生成了', sub_order)
+            and_(u'调度员将工单排产给车间', wc, department)
+            and_(u'车间主任将工单分配到班组', wc, department, team)
+            and_(u'班组长增加重量40公斤, 并且结束', wc)
+
+            qir_list = when(u'质检员保存质检结果', wc)
+            then(u'工单的质检报告列表正确保存了', wc, qir_list)
 
     clear_hooks()
 

@@ -111,6 +111,7 @@ example
    * 数据
 
 .. code-block:: python
+
    {
     "total_cnt": 400,
     "data": [
@@ -784,139 +785,6 @@ example
    请参考 :ref:`assign-work-command`
 
 
-****************************************
-create-quality-inspection-report(生成质检报告)
-****************************************
-生成质检报告
-
-此接口需要质检员权限
-
-request
-=======
-
-**POST /manufacture_ws/quality-inspection-report?&work_command_id=<int>&quantity=<int>&result=<int>&auth_token=<str>**
-
-<picture data>
-
-* actor_id - 提交人id
-* work_command_id - 对应的工单id
-* \*quantity - **增加** 的重量，对于不同类型的工单有不同的含义，标准-公斤；瑞格-件数；紧固件-桶数；
-* result - 质检结果，请参考 :py:mod:`lite_mms.constants.quality_inspection`
-
-response
-========
-
-* 200 - 成功
-   
-.. code-block:: python
-
-    {
-        "id": <int>, # 质检报告id
-        "quantity": <int>, # 数量
-        "weight": <int>, # 质量，对于瑞格和紧固件，仅仅有参考意义
-        "result": <int>, # 质检结果
-        "work_command_id": <int>, # 工单id
-        "actor_id": <str>, # 质检人id
-        "pic_url": <string>, # 图片链接
-    }
-   
-* 403/401 - 失败
-
-.. code-block:: python
-   
-   "actual error reason"
-   
-example
-=======
-
-略
-
-****************************************
-update-quality-inspection-report(修改质检报告)
-****************************************
-修改质检报告
-
-此接口需要质检员权限
-
-request
-=======
-
-**PUT /manufacture_ws/quality-inspection-report?id=<int>&quantity=<int>&result=<int>&auth_token=<str>**
-
-* id - 质检报告id
-* actor_id - 提交人id
-* \*quantity - **增加** 的重量，对于不同类型的工单有不同的含义，标准-公斤；瑞格-件数；紧固件-桶数；
-* result - 质检结果，请参考 :py:mod:`lite_mms.constants.quality_inspection`
-
-response
-========
-
-* 200 - 成功
-返回更新的质检报告数据:
-
-.. code-block:: python
-
-    {
-        "id": <int>, # 质检报告id
-        "quantity": <int>, # 数量
-        "weight": <int>, 
-        "result": <int>, # 质检结果
-        "work_command_id": <int>, # 工单id
-        "actor_id": <str>, # 质检人id
-        "pic_url": <string>, # 图片链接
-    }
-   
-* 404 - 没有对应的质检报告
-
-.. code-block:: python
-   
-   "actual error reason"
-
-* 403/401 - 失败
-
-.. code-block:: python
-   
-   "actual error reason"
-   
-example
-=======
-
-略
-
-****************************************
-delete-quality-inspection-report(删除质检报告)
-****************************************
-删除质检报告
-此接口需要质检员权限
-
-request
-=======
-
-**DELETE /manufacture_ws/quality-inspection-report?id=<int>&auth_token=<str>**
-
-或者
-
-**POST /manufacture_ws/delete-quality-inspection-report?id=<int>&actor_id=<int>**
-
-* id - 质检报告id
-* actor_id - 提交人id
-
-response
-========
-
-* 200 - 成功
-   
-* 403/401 - 失败
-
-.. code-block:: python
-   
-   "actual error reason"
-   
-example
-=======
-
-略
-
 
 ********************************
 submit-quality-inspection(提交质检单)
@@ -931,10 +799,22 @@ request
 
 **PUT /manufacture_ws/work-command/<int>?action=212&deduction=<int>&auth_token=<str>**
 
+.. code-bolck:: python
+
+    [
+        {
+            result: <int>,  # 质检结果,
+            weight: <int>,  # 质检重量,
+            quantity: <int>,  # 质检数量, 若是计重类型的订单，可以不传
+        }
+    ]
+
+**<multiple_raw_picture_data>**
+
 * work_command_id - 工单id
-* actor_id - 发起人id，这里为质检员
 * action - 见 :py:mod:`lite_mms.constants.work_command` 中对各种工单操作的说明
 * \*deduction - 扣量，必须以公斤为单位，默认为0
+* multiple_raw_picture_data - 必须和提交的质检报告个数相同
 
 response
 ========
@@ -1222,3 +1102,33 @@ example
 =======
 
    请参考 :ref:`assign-work-command`
+
+********************
+临时保存质检报告列表
+********************
+
+request
+=======
+
+**PUT /manufacture_ws/quality-inspection-report-list?work_command_id=<work_command_id>**
+
+response
+========
+
+* 200 - 成功
+
+.. code-bolck:: python
+
+    [
+        {
+            result: <int>,  # 质检结果,
+            weight: <int>,  # 质检重量,
+            quantity: <int>,  # 质检数量, 若是计重类型的订单，可以不传
+        }
+    ]
+
+**<multiple_raw_picture_data>**
+
+* work_command_id - 工单id
+* actor_id - 发起人id，这里为质检员
+* multiple_raw_picture_data - 必须和提交的质检报告个数相同

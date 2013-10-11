@@ -148,14 +148,11 @@ def _(step, wc):
                           work_command_id=wc.id,
                           action=wc_const.ACT_QI,
                           auth_token=auth_token)
-            headers = werkzeug.datastructures.Headers()
-            headers.add('Content-Type', 'application/json')
             rv = c.put(url,
                        data={
                            'file': (StringIO('foo picture'), 'foo.jpg'),
                            'qirList': json.dumps([{'result': qi_const.FINISHED, 'weight': wc.processed_weight}])
-                       },
-                       headers=headers)
+                       })
             assert rv.status_code == 200
             url = url_for('manufacture_ws.work_command', work_command_id=wc.id,
                           auth_token=auth_token)

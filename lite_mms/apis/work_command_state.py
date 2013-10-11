@@ -301,6 +301,10 @@ class StateFinished(WorkCommandState):
             status = ""
             department = None
 
+            for qir_dict in kwargs['qir_list']:
+                do_commit(models.QIReport(old_wc, qir_dict['quantity'],
+                                          qir_dict['weight'], qir_dict['result'],
+                                          qir_dict['actor_id'], pic_path=qir_dict['pic_path']))
             for qir in old_wc.qir_list:
                 qir.report_time = datetime.now()
                 do_commit(qir)

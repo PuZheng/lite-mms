@@ -286,8 +286,10 @@ class WorkCommandWrapper(ModelWrapper):
             work_command_sm.logger = timeline_logger
         try:
             work_command_sm.reset_obj(work_command=self.model)
-            work_command_sm.next(actor=models.User.query.get(actor_id),
-                                 **form.values)
+            d = form.values
+            if 'qir_list' in kwargs:
+                d.update([('qir_list', kwargs['qir_list'])])
+            work_command_sm.next(actor=models.User.query.get(actor_id), **d)
         except Exception, e:
             raise ValueError(e.message)
         self.model.last_mod = datetime.now()

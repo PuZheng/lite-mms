@@ -14,16 +14,17 @@ from lite_mms import apis
 from lite_mms import models
 from lite_mms.utilities import _, get_or_404
 from lite_mms.basemain import app
-import lite_mms.constants.quality_inspection as qi_const
 import lite_mms.constants.work_command as wc_const
 from lite_mms.portal.manufacture_ws import manufacture_ws
 from lite_mms.utilities.decorators import (webservice_call,
                                            login_required_webservice,
                                            permission_required_webservice)
-from lite_mms.utilities import to_timestamp, do_commit
+from lite_mms.utilities import to_timestamp
+from lite_mms.database import db
 from lite_mms.permissions.roles import (TeamLeaderPermission,
                                         DepartmentLeaderPermission,
                                         QualityInspectorPermission)
+
 
 
 def _qir2dict(qir):
@@ -367,11 +368,10 @@ def quality_inspection_report_list():
         pic_path = datetime.now().strftime("%Y-%m-%d_%H-%M-%S.jpg")
         f.save(os.path.join(app.config["UPLOAD_FOLDER"], pic_path))
         pic_path_list.append(pic_path)
-
+    wc.qir_list = []
     for qir_dict, pic_path in zip(json.loads(request.form['qirList']),
                                   pic_path_list):
-        do_commit(models.QIReport(wc.model, qir_dict.get('quantity'),
-                                  qir_dict['weight'], qir_dict['result'],
-                                  current_user.id,
-                                  pic_path=pic_path))
+        db.session.add(models.QIReport(wc.model, qir_dict.get('quantity'), qir_dict['weight'], qir_dict['result'],
+                                       current_user.id, pic_path=pic_path))
+    db.session.commit()
     return ""

@@ -273,7 +273,7 @@ work command")
                 result = []
                 # TODO may be it could be done batchly
                 for _work_command_id in wc_id_list:
-                    wc = get_or_404(models.WorkCommand, work_command_id)
+                    wc = get_or_404(models.WorkCommand, _work_command_id)
 
                     try:
                         wc.go(actor_id=current_user.id,
@@ -284,8 +284,6 @@ work command")
                 if len(result) == 1:
                     result = result[0]
                     # pylint: enable=R0912
-            elif form.action.data == wc_const.ACT_END:
-                pass
             elif form.action.data == wc_const.ACT_RETRIVE_QI:
 
                 try:

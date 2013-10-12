@@ -36,6 +36,9 @@
           <a href="genindex.html" title="总目录"
              accesskey="I">索引</a></li>
         <li class="right" >
+          <a href="py-modindex.html" title="Python 模块索引"
+             >模块</a> |</li>
+        <li class="right" >
           <a href="mannual.html" title="简介"
              accesskey="N">下一页</a> |</li>
         <li class="right" >
@@ -305,7 +308,7 @@
 <li><a href="#id19"><span class="problematic" id="id20">*</span></a>team_id - 班组ID， 若为空，则department_id不能为空</li>
 <li><a href="#id21"><span class="problematic" id="id22">*</span></a>start - 返回的工单列表在所有符合其他参数条件的工单列表中的起始位置, 若为空，默认为0</li>
 <li><a href="#id23"><span class="problematic" id="id24">*</span></a>cnt - 返回的工单数量，若为空，默认为sys.maxint</li>
-<li>status - 见 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt> 中对各种工单状态的说明, 可以是多种工单状态的组合, 若是多种工单状态的组合，中间用&#8217;,&#8217;隔开</li>
+<li>status - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单状态的说明, 可以是多种工单状态的组合, 若是多种工单状态的组合，中间用&#8217;,&#8217;隔开</li>
 </ul>
 </div>
 <div class="section" id="id25">
@@ -451,14 +454,11 @@
 </div>
 <div class="section" id="get-team-list">
 <h2>get-team-list(获取班组列表)<a class="headerlink" href="#get-team-list" title="永久链接至标题">¶</a></h2>
-<ul class="simple">
-<li>单元测试: <tt class="xref py py-func docutils literal"><span class="pre">portal.manufacture.test_webservices.test_get_team_list()</span></tt></li>
-</ul>
 <div class="section" id="id32">
 <h3>request<a class="headerlink" href="#id32" title="永久链接至标题">¶</a></h3>
 <p><strong>GET /manufacture_ws/team-list?department_id=&lt;int&gt;</strong></p>
 <ul class="simple">
-<li>* department_id - 车间ID</li>
+<li>* department_id - 车间ID, 若不传入，则为所有班组</li>
 </ul>
 </div>
 <div class="section" id="id33">
@@ -473,12 +473,6 @@
     <span class="p">},</span>
     <span class="o">...</span>
 <span class="p">]</span>
-</pre></div>
-</div>
-<ul class="simple">
-<li>404 - 失败</li>
-</ul>
-<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;actual error reason&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -513,23 +507,46 @@
 </div>
 </div>
 </div>
+<div class="section" id="get-department-list">
+<h2>get-department-list(获取车间列表)<a class="headerlink" href="#get-department-list" title="永久链接至标题">¶</a></h2>
+<div class="section" id="id35">
+<h3>request<a class="headerlink" href="#id35" title="永久链接至标题">¶</a></h3>
+<p><strong>GET /manufacture_ws/department-list</strong></p>
+</div>
+<div class="section" id="id36">
+<h3>response<a class="headerlink" href="#id36" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>200 - 成功</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># ID</span>
+        <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="c"># 车间名称</span>
+        <span class="s">&quot;team_id_list&quot;</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">list</span><span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;&gt;</span><span class="p">,</span> <span class="c"># 所属班组列表</span>
+    <span class="p">},</span>
+    <span class="o">...</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
 <div class="section" id="assign-work-command">
-<span id="id35"></span><h2>assign-work-command(分配工单)<a class="headerlink" href="#assign-work-command" title="永久链接至标题">¶</a></h2>
+<span id="id37"></span><h2>assign-work-command(分配工单)<a class="headerlink" href="#assign-work-command" title="永久链接至标题">¶</a></h2>
 <ul class="simple">
 <li>单元测试: <tt class="xref py py-func docutils literal"><span class="pre">portal.manufacture.test_webservices.test_assign_work_command()</span></tt></li>
 </ul>
-<div class="section" id="id36">
-<h3>request<a class="headerlink" href="#id36" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id38">
+<h3>request<a class="headerlink" href="#id38" title="永久链接至标题">¶</a></h3>
 <p><strong>PUT /manufacture_ws/work-command?work_command_id=&lt;int&gt;&amp;actor_id=&lt;int&gt;&amp;team_id=&lt;int&gt;&amp;action=203</strong></p>
 <ul class="simple">
 <li>work_command_id - 工单id</li>
 <li>actor_id - 发起人id，这里为车间主任</li>
 <li>team_id - 被分配的班组id</li>
-<li>action - 见 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt> 中对各种工单操作的说明</li>
+<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
 </ul>
 </div>
-<div class="section" id="id37">
-<h3>response<a class="headerlink" href="#id37" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id39">
+<h3>response<a class="headerlink" href="#id39" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li>200 - 成功, 返回更新后的工单</li>
 </ul>
@@ -565,7 +582,7 @@
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>有关orderType的说明，请见 :py:mod:<a href="#id38"><span class="problematic" id="id39">`</span></a>lite_mms.constants.default`中对各种订单类型的说明</p>
+<p>有关orderType的说明，请见 :py:mod:<a href="#id40"><span class="problematic" id="id41">`</span></a>lite_mms.constants.default`中对各种订单类型的说明</p>
 <ul class="simple">
 <li>403 - 失败</li>
 </ul>
@@ -574,8 +591,8 @@
 </pre></div>
 </div>
 </div>
-<div class="section" id="id40">
-<h3>example<a class="headerlink" href="#id40" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id42">
+<h3>example<a class="headerlink" href="#id42" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li>请求</li>
 </ul>
@@ -630,20 +647,20 @@
 <ul class="simple">
 <li>单元测试 - <tt class="xref py py-func docutils literal"><span class="pre">portal.manufacture.test_webservices.test_add_processed_weight()</span></tt></li>
 </ul>
-<div class="section" id="id41">
-<h3>request<a class="headerlink" href="#id41" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id43">
+<h3>request<a class="headerlink" href="#id43" title="永久链接至标题">¶</a></h3>
 <p><strong>PUT /manufacture_ws/work-command?work_command_id=&lt;int&gt;&amp;actor_id=&lt;int&gt;&amp;weight=&lt;int&gt;&amp;quantity=&lt;int&gt;&amp;action=204&amp;is_finished=&lt;1|0&gt;</strong></p>
 <ul class="simple">
 <li>work_command_id - 工单id</li>
 <li>actor_id - 发起人id，这里为team leader</li>
 <li>weight - 重量</li>
 <li>*quantity - <strong>增加</strong> 的件数，对于不同类型的工单有不同的含义，标准-公斤；瑞格-件数；紧固件-桶数；对于计件类型，quantity是必须填写的</li>
-<li>action - 见 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt> 中对各种工单操作的说明</li>
+<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
 <li>*is_finished - 是否结束，1为结束，若不传，默认为0</li>
 </ul>
 </div>
-<div class="section" id="id42">
-<h3>response<a class="headerlink" href="#id42" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id44">
+<h3>response<a class="headerlink" href="#id44" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li>200 - 成功，返回修改后的工单信息, 返回信息见 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></li>
 <li>403 - 失败</li>
@@ -653,8 +670,8 @@
 </pre></div>
 </div>
 </div>
-<div class="section" id="id43">
-<h3>example<a class="headerlink" href="#id43" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id45">
+<h3>example<a class="headerlink" href="#id45" title="永久链接至标题">¶</a></h3>
 <p>请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></p>
 </div>
 </div>
@@ -663,17 +680,17 @@
 <ul class="simple">
 <li>单元测试 - <tt class="xref py py-func docutils literal"><span class="pre">portal.manufacture.test_webservices.test_request_end_work_command()</span></tt></li>
 </ul>
-<div class="section" id="id44">
-<h3>request<a class="headerlink" href="#id44" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id46">
+<h3>request<a class="headerlink" href="#id46" title="永久链接至标题">¶</a></h3>
 <p><strong>PUT /manufacture_ws/work-command?work_command_id=&lt;int&gt;+&amp;actor_id=&lt;int&gt;&amp;action=[205|206]</strong></p>
 <ul class="simple">
 <li>work_command_id - 工单id, 可以是一个工单id列表。例如 <strong>1,2,3</strong></li>
 <li>actor_id - 发起人id，这里为team leader</li>
-<li>action - 见 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt> 中对各种工单操作的说明, 205代表**结束**， 206代表**结转**</li>
+<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明, 205代表**结束**， 206代表**结转**</li>
 </ul>
 </div>
-<div class="section" id="id45">
-<h3>response<a class="headerlink" href="#id45" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id47">
+<h3>response<a class="headerlink" href="#id47" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li>200 - 成功，返回修改后的工单信息, 返回信息见 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></li>
 </ul>
@@ -686,8 +703,8 @@
 </pre></div>
 </div>
 </div>
-<div class="section" id="id46">
-<h3>example<a class="headerlink" href="#id46" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id48">
+<h3>example<a class="headerlink" href="#id48" title="永久链接至标题">¶</a></h3>
 <blockquote>
 <div>请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></div></blockquote>
 </div>
@@ -701,12 +718,12 @@
 <ul class="simple">
 <li>work_command_id - 工单id</li>
 <li>actor_id - 发起人id，这里为车间主任</li>
-<li><a href="#id47"><span class="problematic" id="id48">*</span></a>reason - 理由</li>
-<li>action - 见 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt> 中对各种工单操作的说明</li>
+<li><a href="#id49"><span class="problematic" id="id50">*</span></a>reason - 理由</li>
+<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
 </ul>
 </div>
-<div class="section" id="id49">
-<h3>response<a class="headerlink" href="#id49" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id51">
+<h3>response<a class="headerlink" href="#id51" title="永久链接至标题">¶</a></h3>
 <ul>
 <li><dl class="first docutils">
 <dt>200 - 成功</dt>
@@ -719,8 +736,8 @@
 </ul>
 <p>一般可能发生在工单当前状态不是**待分配**</p>
 </div>
-<div class="section" id="id50">
-<h3>example<a class="headerlink" href="#id50" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id52">
+<h3>example<a class="headerlink" href="#id52" title="永久链接至标题">¶</a></h3>
 <blockquote>
 <div>请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></div></blockquote>
 </div>
@@ -728,19 +745,19 @@
 <div class="section" id="affirm-retrieve-work-command">
 <h2>affirm-retrieve-work-command(确认回收工单)<a class="headerlink" href="#affirm-retrieve-work-command" title="永久链接至标题">¶</a></h2>
 <p>车间主任确认回收工单</p>
-<div class="section" id="id51">
-<h3>request<a class="headerlink" href="#id51" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id53">
+<h3>request<a class="headerlink" href="#id53" title="永久链接至标题">¶</a></h3>
 <p><strong>PUT /manufacture_ws/work-command?work_command_id=&lt;int&gt;&amp;actor_id=&lt;int&gt;&amp;action=211&amp;weight=&lt;int&gt;&amp;quantity=&lt;int&gt;</strong></p>
 <ul class="simple">
 <li>work_command_id - 工单id</li>
 <li>actor_id - 发起人id，这里为车间主任</li>
-<li>action - 见 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt> 中对各种工单操作的说明</li>
+<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
 <li>*quantity - 最终生产完成的件数，对于不同类型的工单有不同的含义，标准-公斤；瑞格-件数；紧固件-桶数；对于计件类型，quantity是必须填写的</li>
 <li>weight - 最终生产完成的重量</li>
 </ul>
 </div>
-<div class="section" id="id52">
-<h3>response<a class="headerlink" href="#id52" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id54">
+<h3>response<a class="headerlink" href="#id54" title="永久链接至标题">¶</a></h3>
 <ul>
 <li><p class="first">200 - 成功</p>
 <blockquote>
@@ -752,8 +769,8 @@
 </ul>
 <p>一般可能发生在工单当前状态不是**锁定**</p>
 </div>
-<div class="section" id="id53">
-<h3>example<a class="headerlink" href="#id53" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id55">
+<h3>example<a class="headerlink" href="#id55" title="永久链接至标题">¶</a></h3>
 <blockquote>
 <div>请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></div></blockquote>
 </div>
@@ -761,17 +778,17 @@
 <div class="section" id="refuse-retrieval-work-command">
 <h2>refuse-retrieval-work-command(拒绝回收工单)<a class="headerlink" href="#refuse-retrieval-work-command" title="永久链接至标题">¶</a></h2>
 <p>车间主任拒绝回收工单</p>
-<div class="section" id="id54">
-<h3>request<a class="headerlink" href="#id54" title="永久链接至标题">¶</a></h3>
-<p><a href="#id55"><span class="problematic" id="id56">**</span></a>PUT /manufacture_ws/work-command?work_command_id=&lt;int&gt;&amp;actor_id=&lt;int&gt;&amp;action=213</p>
+<div class="section" id="id56">
+<h3>request<a class="headerlink" href="#id56" title="永久链接至标题">¶</a></h3>
+<p><a href="#id57"><span class="problematic" id="id58">**</span></a>PUT /manufacture_ws/work-command?work_command_id=&lt;int&gt;&amp;actor_id=&lt;int&gt;&amp;action=213</p>
 <ul class="simple">
 <li>work_command_id - 工单id, 支持多个工单id，可以用&#8221;,&#8221;隔开</li>
 <li>actor_id - 发起人id，这里为车间主任</li>
-<li>action - 见 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt> 中对各种工单操作的说明</li>
+<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
 </ul>
 </div>
-<div class="section" id="id57">
-<h3>response<a class="headerlink" href="#id57" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id59">
+<h3>response<a class="headerlink" href="#id59" title="永久链接至标题">¶</a></h3>
 <ul>
 <li><p class="first">200 - 成功</p>
 <blockquote>
@@ -783,8 +800,8 @@
 </ul>
 <p>一般可能发生在工单当前状态不是**锁定**</p>
 </div>
-<div class="section" id="id58">
-<h3>example<a class="headerlink" href="#id58" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id60">
+<h3>example<a class="headerlink" href="#id60" title="永久链接至标题">¶</a></h3>
 <blockquote>
 <div>请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></div></blockquote>
 </div>
@@ -795,19 +812,19 @@
 <ul class="simple">
 <li>单元测试 - <tt class="xref py py-func docutils literal"><span class="pre">portal.manufacture.test_webservices.test_create_quality_inspection_report()</span></tt></li>
 </ul>
-<div class="section" id="id59">
-<h3>request<a class="headerlink" href="#id59" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id61">
+<h3>request<a class="headerlink" href="#id61" title="永久链接至标题">¶</a></h3>
 <p><strong>POST /manufacture_ws/quality-inspection-report?actor_id=&lt;int&gt;&amp;work_command_id=&lt;int&gt;&amp;quantity=&lt;int&gt;&amp;result=&lt;int&gt;</strong></p>
 <p>&lt;picture data&gt;</p>
 <ul class="simple">
 <li>actor_id - 提交人id</li>
 <li>work_command_id - 对应的工单id</li>
 <li><em>quantity - **增加*</em> 的重量，对于不同类型的工单有不同的含义，标准-公斤；瑞格-件数；紧固件-桶数；</li>
-<li>result - 质检结果，请参考 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.quality_inspection</span></tt></li>
+<li>result - 质检结果，请参考 <a class="reference internal" href="constants/quality_inspection.html#module-lite_mms.constants.quality_inspection" title="lite_mms.constants.quality_inspection"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.quality_inspection</span></tt></a></li>
 </ul>
 </div>
-<div class="section" id="id60">
-<h3>response<a class="headerlink" href="#id60" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id62">
+<h3>response<a class="headerlink" href="#id62" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li>200 - 成功</li>
 </ul>
@@ -829,8 +846,8 @@
 </pre></div>
 </div>
 </div>
-<div class="section" id="id61">
-<h3>example<a class="headerlink" href="#id61" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id63">
+<h3>example<a class="headerlink" href="#id63" title="永久链接至标题">¶</a></h3>
 <p>略</p>
 </div>
 </div>
@@ -840,18 +857,18 @@
 <ul class="simple">
 <li>单元测试 - <tt class="xref py py-func docutils literal"><span class="pre">portal.manufacture.test_webservices.test_update_quality_inspection_report()</span></tt></li>
 </ul>
-<div class="section" id="id62">
-<h3>request<a class="headerlink" href="#id62" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id64">
+<h3>request<a class="headerlink" href="#id64" title="永久链接至标题">¶</a></h3>
 <p><strong>PUT /manufacture_ws/quality-inspection-report?id=&lt;int&gt;&amp;actor_id=&lt;int&gt;&amp;quantity=&lt;int&gt;&amp;result=&lt;int&gt;</strong></p>
 <ul class="simple">
 <li>id - 质检报告id</li>
 <li>actor_id - 提交人id</li>
 <li><em>quantity - **增加*</em> 的重量，对于不同类型的工单有不同的含义，标准-公斤；瑞格-件数；紧固件-桶数；</li>
-<li>result - 质检结果，请参考 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.quality_inspection</span></tt></li>
+<li>result - 质检结果，请参考 <a class="reference internal" href="constants/quality_inspection.html#module-lite_mms.constants.quality_inspection" title="lite_mms.constants.quality_inspection"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.quality_inspection</span></tt></a></li>
 </ul>
 </div>
-<div class="section" id="id63">
-<h3>response<a class="headerlink" href="#id63" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id65">
+<h3>response<a class="headerlink" href="#id65" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li>200 - 成功</li>
 </ul>
@@ -880,8 +897,8 @@
 </pre></div>
 </div>
 </div>
-<div class="section" id="id64">
-<h3>example<a class="headerlink" href="#id64" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id66">
+<h3>example<a class="headerlink" href="#id66" title="永久链接至标题">¶</a></h3>
 <p>略</p>
 </div>
 </div>
@@ -891,8 +908,8 @@
 <ul class="simple">
 <li>单元测试 - <tt class="xref py py-func docutils literal"><span class="pre">portal.manufacture.test_webservices.test_delete_quality_inspection_report()</span></tt></li>
 </ul>
-<div class="section" id="id65">
-<h3>request<a class="headerlink" href="#id65" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id67">
+<h3>request<a class="headerlink" href="#id67" title="永久链接至标题">¶</a></h3>
 <p><strong>DELETE /manufacture_ws/quality-inspection-report?id=&lt;int&gt;&amp;actor_id=&lt;int&gt;</strong></p>
 <p>或者</p>
 <p><strong>POST /manufacture_ws/delete-quality-inspection-report?id=&lt;int&gt;&amp;actor_id=&lt;int&gt;</strong></p>
@@ -901,8 +918,8 @@
 <li>actor_id - 提交人id</li>
 </ul>
 </div>
-<div class="section" id="id66">
-<h3>response<a class="headerlink" href="#id66" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id68">
+<h3>response<a class="headerlink" href="#id68" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li>200 - 成功</li>
 <li>403 - 失败</li>
@@ -911,8 +928,8 @@
 </pre></div>
 </div>
 </div>
-<div class="section" id="id67">
-<h3>example<a class="headerlink" href="#id67" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id69">
+<h3>example<a class="headerlink" href="#id69" title="永久链接至标题">¶</a></h3>
 <p>略</p>
 </div>
 </div>
@@ -922,12 +939,12 @@
 <ul class="simple">
 <li>单元测试 - <tt class="xref py py-func docutils literal"><span class="pre">portal.manufacture.test_webservices.test_get_quality_inspection_report_list()</span></tt></li>
 </ul>
-<div class="section" id="id68">
-<h3>request<a class="headerlink" href="#id68" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id70">
+<h3>request<a class="headerlink" href="#id70" title="永久链接至标题">¶</a></h3>
 <p><strong>GET /manufacture_ws/quality-inspection-report-list?work_command_id=&lt;int&gt;</strong></p>
 </div>
-<div class="section" id="id69">
-<h3>response<a class="headerlink" href="#id69" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id71">
+<h3>response<a class="headerlink" href="#id71" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li>200 - 成功</li>
 </ul>
@@ -945,7 +962,7 @@
 <span class="p">]</span>
 </pre></div>
 </div>
-<p>其中质检结果请查看 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.quality_inspection</span></tt></p>
+<p>其中质检结果请查看 <a class="reference internal" href="constants/quality_inspection.html#module-lite_mms.constants.quality_inspection" title="lite_mms.constants.quality_inspection"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.quality_inspection</span></tt></a></p>
 <ul class="simple">
 <li>403 - 失败</li>
 </ul>
@@ -953,8 +970,8 @@
 </pre></div>
 </div>
 </div>
-<div class="section" id="id70">
-<h3>example<a class="headerlink" href="#id70" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id72">
+<h3>example<a class="headerlink" href="#id72" title="永久链接至标题">¶</a></h3>
 <p>略</p>
 </div>
 </div>
@@ -964,18 +981,18 @@
 <ul class="simple">
 <li>单元测试 - <tt class="xref py py-func docutils literal"><span class="pre">portal.manufacture.test_webservices.test_submit_quality_inspection()</span></tt></li>
 </ul>
-<div class="section" id="id71">
-<h3>request<a class="headerlink" href="#id71" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id73">
+<h3>request<a class="headerlink" href="#id73" title="永久链接至标题">¶</a></h3>
 <p><strong>PUT /manufacture_ws/work-command?work_command_id=&lt;int&gt;&amp;actor_id=&lt;int&gt;&amp;action=212&amp;deduction=&lt;int&gt;</strong></p>
 <ul class="simple">
 <li>work_command_id - 工单id</li>
 <li>actor_id - 发起人id，这里为质检员</li>
-<li>action - 见 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt> 中对各种工单操作的说明</li>
-<li><a href="#id72"><span class="problematic" id="id73">*</span></a>deduction - 扣量，必须以公斤为单位，默认为0</li>
+<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
+<li><a href="#id74"><span class="problematic" id="id75">*</span></a>deduction - 扣量，必须以公斤为单位，默认为0</li>
 </ul>
 </div>
-<div class="section" id="id74">
-<h3>response<a class="headerlink" href="#id74" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id76">
+<h3>response<a class="headerlink" href="#id76" title="永久链接至标题">¶</a></h3>
 <ul>
 <li><p class="first">200 - 成功</p>
 <blockquote>
@@ -987,8 +1004,8 @@
 </ul>
 <p>一般可能发生在工单当前状态不是**待质检**</p>
 </div>
-<div class="section" id="id75">
-<h3>example<a class="headerlink" href="#id75" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id77">
+<h3>example<a class="headerlink" href="#id77" title="永久链接至标题">¶</a></h3>
 <blockquote>
 <div>请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></div></blockquote>
 </div>
@@ -996,12 +1013,12 @@
 <div class="section" id="get-delivery-session-list">
 <h2>get-delivery-session-list(获取发货会话列表)<a class="headerlink" href="#get-delivery-session-list" title="永久链接至标题">¶</a></h2>
 <p>获取的发货会话都是未完成的，而且有仓单的，按创建时间由近及远进行排序</p>
-<div class="section" id="id76">
-<h3>request<a class="headerlink" href="#id76" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id78">
+<h3>request<a class="headerlink" href="#id78" title="永久链接至标题">¶</a></h3>
 <p><strong>GET /delivery_ws/delivery-session-list</strong></p>
 </div>
-<div class="section" id="id77">
-<h3>response<a class="headerlink" href="#id77" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id79">
+<h3>response<a class="headerlink" href="#id79" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li>200 - 成功</li>
 </ul>
@@ -1022,8 +1039,8 @@
 </pre></div>
 </div>
 </div>
-<div class="section" id="id78">
-<h3>example<a class="headerlink" href="#id78" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id80">
+<h3>example<a class="headerlink" href="#id80" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li>请求</li>
 </ul>
@@ -1061,12 +1078,12 @@
 </div>
 <div class="section" id="get-delivery-session">
 <h2>get-delivery-session(获取发货会话详情)<a class="headerlink" href="#get-delivery-session" title="永久链接至标题">¶</a></h2>
-<div class="section" id="id79">
-<h3>request<a class="headerlink" href="#id79" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id81">
+<h3>request<a class="headerlink" href="#id81" title="永久链接至标题">¶</a></h3>
 <p><strong>GET /delivery_ws/delivery-session?id=&lt;int&gt;</strong></p>
 </div>
-<div class="section" id="id80">
-<h3>response<a class="headerlink" href="#id80" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id82">
+<h3>response<a class="headerlink" href="#id82" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li>200 - 成功</li>
 </ul>
@@ -1098,8 +1115,8 @@
 <li>404 - 不存在该卸货会话</li>
 </ul>
 </div>
-<div class="section" id="id81">
-<h3>example<a class="headerlink" href="#id81" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id83">
+<h3>example<a class="headerlink" href="#id83" title="永久链接至标题">¶</a></h3>
 <div class="highlight-python"><pre>{
     "id": 1,
     "plate": "浙A 00001",
@@ -1144,8 +1161,8 @@
 <div class="section" id="post-delivery-task">
 <h2>post-delivery-task(创建发货任务)<a class="headerlink" href="#post-delivery-task" title="永久链接至标题">¶</a></h2>
 <p>已经完成的仓单不能反复提交， 只能选择同一个订单的一个或多个仓单，只能有一个未完成仓单</p>
-<div class="section" id="id82">
-<h3>request<a class="headerlink" href="#id82" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id84">
+<h3>request<a class="headerlink" href="#id84" title="永久链接至标题">¶</a></h3>
 <p><strong>POST /delivery_ws/delivery-task?sid=&lt;int&gt;&amp;is_finished=[0|1]&amp;remain=&lt;int&gt;&amp;auth_token=&lt;str&gt;</strong></p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">[</span>
     <span class="p">{</span>
@@ -1160,11 +1177,11 @@
 <li>sid - 发货会话id</li>
 <li>is_finished - 是否发货会话结束, 1代表结束</li>
 <li>auth_token - login返回的token</li>
-<li><a href="#id83"><span class="problematic" id="id84">*</span></a>remain - 未完成件数(计件类型)或重量（计重类型），若有为完成仓单，为必填项</li>
+<li><a href="#id85"><span class="problematic" id="id86">*</span></a>remain - 未完成件数(计件类型)或重量（计重类型），若有为完成仓单，为必填项</li>
 </ul>
 </div>
-<div class="section" id="id85">
-<h3>response<a class="headerlink" href="#id85" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id87">
+<h3>response<a class="headerlink" href="#id87" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li>200 - 成功</li>
 </ul>
@@ -1188,17 +1205,17 @@
 <div class="section" id="retrive-quality-inspection">
 <h2>retrive-quality-inspection(打回质检单)<a class="headerlink" href="#retrive-quality-inspection" title="永久链接至标题">¶</a></h2>
 <p>前一天提交的或者生成的工单、仓单已经排产或者发货的都不能打回质检单</p>
-<div class="section" id="id86">
-<h3>request<a class="headerlink" href="#id86" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id88">
+<h3>request<a class="headerlink" href="#id88" title="永久链接至标题">¶</a></h3>
 <p><strong>PUT /manufacture_ws/work-command?work_command_id=&lt;int&gt;&amp;actor_id=&lt;int&gt;&amp;action=214</strong></p>
 <ul class="simple">
 <li>work_command_id - 工单id</li>
 <li>actor_id - 发起人id，这里为质检员</li>
-<li>action - 见 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt> 中对各种工单操作的说明</li>
+<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
 </ul>
 </div>
-<div class="section" id="id87">
-<h3>response<a class="headerlink" href="#id87" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id89">
+<h3>response<a class="headerlink" href="#id89" title="永久链接至标题">¶</a></h3>
 <ul>
 <li><p class="first">200 - 成功</p>
 <blockquote>
@@ -1209,8 +1226,8 @@
 </li>
 </ul>
 </div>
-<div class="section" id="id88">
-<h3>example<a class="headerlink" href="#id88" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id90">
+<h3>example<a class="headerlink" href="#id90" title="永久链接至标题">¶</a></h3>
 <blockquote>
 <div>请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></div></blockquote>
 </div>
@@ -1218,17 +1235,17 @@
 <div class="section" id="quick-carry-forward">
 <h2>quick-carry-forward(快速结转)<a class="headerlink" href="#quick-carry-forward" title="永久链接至标题">¶</a></h2>
 <p>班组长可以将工单快速结转，使工单完成的部分先质检剩下的继续做</p>
-<div class="section" id="id89">
-<h3>request<a class="headerlink" href="#id89" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id91">
+<h3>request<a class="headerlink" href="#id91" title="永久链接至标题">¶</a></h3>
 <p><strong>PUT /manufacture_ws/work-command?work_command_id=&lt;int&gt;&amp;actor_id=&lt;int&gt;&amp;action=215</strong></p>
 <ul class="simple">
 <li>work_command_id - 工单id</li>
 <li>actor_id - 发起人id，这里为质检员</li>
-<li>action - 见 <tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt> 中对各种工单操作的说明</li>
+<li>action - 见 <a class="reference internal" href="constants/work_command.html#module-lite_mms.constants.work_command" title="lite_mms.constants.work_command"><tt class="xref py py-mod docutils literal"><span class="pre">lite_mms.constants.work_command</span></tt></a> 中对各种工单操作的说明</li>
 </ul>
 </div>
-<div class="section" id="id90">
-<h3>response<a class="headerlink" href="#id90" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id92">
+<h3>response<a class="headerlink" href="#id92" title="永久链接至标题">¶</a></h3>
 <ul>
 <li><p class="first">200 - 成功</p>
 <blockquote>
@@ -1239,8 +1256,8 @@
 </li>
 </ul>
 </div>
-<div class="section" id="id91">
-<h3>example<a class="headerlink" href="#id91" title="永久链接至标题">¶</a></h3>
+<div class="section" id="id93">
+<h3>example<a class="headerlink" href="#id93" title="永久链接至标题">¶</a></h3>
 <blockquote>
 <div>请参考 <a class="reference internal" href="#assign-work-command"><em>assign-work-command(分配工单)</em></a></div></blockquote>
 </div>
@@ -1298,99 +1315,104 @@
 <li><a class="reference internal" href="#id34">example</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#get-department-list">get-department-list(获取车间列表)</a><ul>
+<li><a class="reference internal" href="#id35">request</a></li>
+<li><a class="reference internal" href="#id36">response</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#assign-work-command">assign-work-command(分配工单)</a><ul>
-<li><a class="reference internal" href="#id36">request</a></li>
-<li><a class="reference internal" href="#id37">response</a></li>
-<li><a class="reference internal" href="#id40">example</a></li>
+<li><a class="reference internal" href="#id38">request</a></li>
+<li><a class="reference internal" href="#id39">response</a></li>
+<li><a class="reference internal" href="#id42">example</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#add-processed-weight">add-processed-weight(增加工序后重量)</a><ul>
-<li><a class="reference internal" href="#id41">request</a></li>
-<li><a class="reference internal" href="#id42">response</a></li>
-<li><a class="reference internal" href="#id43">example</a></li>
+<li><a class="reference internal" href="#id43">request</a></li>
+<li><a class="reference internal" href="#id44">response</a></li>
+<li><a class="reference internal" href="#id45">example</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#request-end-work-command">request-end-work-command(请求结束或结转工单)</a><ul>
-<li><a class="reference internal" href="#id44">request</a></li>
-<li><a class="reference internal" href="#id45">response</a></li>
-<li><a class="reference internal" href="#id46">example</a></li>
+<li><a class="reference internal" href="#id46">request</a></li>
+<li><a class="reference internal" href="#id47">response</a></li>
+<li><a class="reference internal" href="#id48">example</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#refuse-work-command">refuse-work-command(打回工单)</a><ul>
 <li><a class="reference internal" href="#reqeust">reqeust</a></li>
-<li><a class="reference internal" href="#id49">response</a></li>
-<li><a class="reference internal" href="#id50">example</a></li>
+<li><a class="reference internal" href="#id51">response</a></li>
+<li><a class="reference internal" href="#id52">example</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#affirm-retrieve-work-command">affirm-retrieve-work-command(确认回收工单)</a><ul>
-<li><a class="reference internal" href="#id51">request</a></li>
-<li><a class="reference internal" href="#id52">response</a></li>
-<li><a class="reference internal" href="#id53">example</a></li>
+<li><a class="reference internal" href="#id53">request</a></li>
+<li><a class="reference internal" href="#id54">response</a></li>
+<li><a class="reference internal" href="#id55">example</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#refuse-retrieval-work-command">refuse-retrieval-work-command(拒绝回收工单)</a><ul>
-<li><a class="reference internal" href="#id54">request</a></li>
-<li><a class="reference internal" href="#id57">response</a></li>
-<li><a class="reference internal" href="#id58">example</a></li>
+<li><a class="reference internal" href="#id56">request</a></li>
+<li><a class="reference internal" href="#id59">response</a></li>
+<li><a class="reference internal" href="#id60">example</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#create-quality-inspection-report">create-quality-inspection-report(生成质检报告)</a><ul>
-<li><a class="reference internal" href="#id59">request</a></li>
-<li><a class="reference internal" href="#id60">response</a></li>
-<li><a class="reference internal" href="#id61">example</a></li>
+<li><a class="reference internal" href="#id61">request</a></li>
+<li><a class="reference internal" href="#id62">response</a></li>
+<li><a class="reference internal" href="#id63">example</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#update-quality-inspection-report">update-quality-inspection-report(修改质检报告)</a><ul>
-<li><a class="reference internal" href="#id62">request</a></li>
-<li><a class="reference internal" href="#id63">response</a></li>
-<li><a class="reference internal" href="#id64">example</a></li>
+<li><a class="reference internal" href="#id64">request</a></li>
+<li><a class="reference internal" href="#id65">response</a></li>
+<li><a class="reference internal" href="#id66">example</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#delete-quality-inspection-report">delete-quality-inspection-report(删除质检报告)</a><ul>
-<li><a class="reference internal" href="#id65">request</a></li>
-<li><a class="reference internal" href="#id66">response</a></li>
-<li><a class="reference internal" href="#id67">example</a></li>
+<li><a class="reference internal" href="#id67">request</a></li>
+<li><a class="reference internal" href="#id68">response</a></li>
+<li><a class="reference internal" href="#id69">example</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#get-quality-inspection-report-list">get-quality-inspection-report-list(查看质检报告列表)</a><ul>
-<li><a class="reference internal" href="#id68">request</a></li>
-<li><a class="reference internal" href="#id69">response</a></li>
-<li><a class="reference internal" href="#id70">example</a></li>
+<li><a class="reference internal" href="#id70">request</a></li>
+<li><a class="reference internal" href="#id71">response</a></li>
+<li><a class="reference internal" href="#id72">example</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#submit-quality-inspection">submit-quality-inspection(提交质检单)</a><ul>
-<li><a class="reference internal" href="#id71">request</a></li>
-<li><a class="reference internal" href="#id74">response</a></li>
-<li><a class="reference internal" href="#id75">example</a></li>
+<li><a class="reference internal" href="#id73">request</a></li>
+<li><a class="reference internal" href="#id76">response</a></li>
+<li><a class="reference internal" href="#id77">example</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#get-delivery-session-list">get-delivery-session-list(获取发货会话列表)</a><ul>
-<li><a class="reference internal" href="#id76">request</a></li>
-<li><a class="reference internal" href="#id77">response</a></li>
-<li><a class="reference internal" href="#id78">example</a></li>
+<li><a class="reference internal" href="#id78">request</a></li>
+<li><a class="reference internal" href="#id79">response</a></li>
+<li><a class="reference internal" href="#id80">example</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#get-delivery-session">get-delivery-session(获取发货会话详情)</a><ul>
-<li><a class="reference internal" href="#id79">request</a></li>
-<li><a class="reference internal" href="#id80">response</a></li>
-<li><a class="reference internal" href="#id81">example</a></li>
+<li><a class="reference internal" href="#id81">request</a></li>
+<li><a class="reference internal" href="#id82">response</a></li>
+<li><a class="reference internal" href="#id83">example</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#post-delivery-task">post-delivery-task(创建发货任务)</a><ul>
-<li><a class="reference internal" href="#id82">request</a></li>
-<li><a class="reference internal" href="#id85">response</a></li>
+<li><a class="reference internal" href="#id84">request</a></li>
+<li><a class="reference internal" href="#id87">response</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#retrive-quality-inspection">retrive-quality-inspection(打回质检单)</a><ul>
-<li><a class="reference internal" href="#id86">request</a></li>
-<li><a class="reference internal" href="#id87">response</a></li>
-<li><a class="reference internal" href="#id88">example</a></li>
+<li><a class="reference internal" href="#id88">request</a></li>
+<li><a class="reference internal" href="#id89">response</a></li>
+<li><a class="reference internal" href="#id90">example</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#quick-carry-forward">quick-carry-forward(快速结转)</a><ul>
-<li><a class="reference internal" href="#id89">request</a></li>
-<li><a class="reference internal" href="#id90">response</a></li>
-<li><a class="reference internal" href="#id91">example</a></li>
+<li><a class="reference internal" href="#id91">request</a></li>
+<li><a class="reference internal" href="#id92">response</a></li>
+<li><a class="reference internal" href="#id93">example</a></li>
 </ul>
 </li>
 </ul>
@@ -1431,6 +1453,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="总目录"
              >索引</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python 模块索引"
+             >模块</a> |</li>
         <li class="right" >
           <a href="mannual.html" title="简介"
              >下一页</a> |</li>

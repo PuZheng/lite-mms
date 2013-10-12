@@ -1,0 +1,4 @@
+2013-09-25 14:56:31,792 - INFO: 初始化开始, 数据库是: mysql://lite_mms:123456@localhost/lite_mms?charset=utf8
+2013-09-25 14:56:43,944 - INFO: 初始化完成
+2013-09-25 14:59:08,104 - INFO: 初始化开始, 数据库是: mysql://lite_mms:123456@localhost/lite_mms?charset=utf8
+2013-09-25 14:59:17,301 - INFO: 初始化完成

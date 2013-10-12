@@ -1,0 +1,26 @@
+2013-09-21 17:41:58,091 - INFO: 初始化开始, 数据库是: sqlite:///lite_mms.db
+2013-09-21 17:42:11,988 - INFO: 初始化完成
+2013-09-21 19:00:32,703 - INFO: 初始化开始, 数据库是: sqlite:///lite_mms.db
+2013-09-21 19:00:46,028 - INFO: 初始化完成
+2013-09-21 19:09:42,621 - INFO: 初始化开始, 数据库是: sqlite:///lite_mms.db
+2013-09-21 19:09:58,450 - INFO: 初始化完成
+2013-09-21 20:29:55,052 - INFO: 初始化开始, 数据库是: sqlite:///lite_mms.db
+2013-09-21 20:30:09,561 - INFO: 初始化完成
+2013-09-21 21:10:59,368 - INFO: 初始化开始, 数据库是: mysql://lite_mms:123456@localhost/lite_mms?charset=utf8
+2013-09-21 21:11:09,198 - INFO: 初始化完成
+2013-09-22 12:00:30,269 - INFO: 初始化开始, 数据库是: mysql://lite_mms:123456@localhost/lite_mms?charset=utf8
+2013-09-22 12:00:40,131 - INFO: 初始化完成
+2013-09-22 12:09:17,249 - INFO: 初始化开始, 数据库是: mysql://lite_mms:123456@localhost/lite_mms?charset=utf8
+2013-09-22 12:09:27,154 - INFO: 初始化完成
+2013-09-22 12:13:04,911 - INFO: 初始化开始, 数据库是: mysql://lite_mms:123456@localhost/lite_mms?charset=utf8
+2013-09-22 12:13:15,039 - INFO: 初始化完成
+2013-09-22 12:15:30,072 - INFO: 初始化开始, 数据库是: mysql://lite_mms:123456@localhost/lite_mms?charset=utf8
+2013-09-22 12:15:39,817 - INFO: 初始化完成
+2013-09-22 12:21:11,375 - INFO: 初始化开始, 数据库是: mysql://lite_mms:123456@localhost/lite_mms?charset=utf8
+2013-09-22 12:21:21,052 - INFO: 初始化完成
+2013-09-22 12:22:43,357 - INFO: 初始化开始, 数据库是: mysql://lite_mms:123456@localhost/lite_mms?charset=utf8
+2013-09-22 12:22:52,926 - INFO: 初始化完成
+2013-09-22 12:26:29,726 - INFO: 初始化开始, 数据库是: mysql://lite_mms:123456@localhost/lite_mms?charset=utf8
+2013-09-22 12:26:39,783 - INFO: 初始化完成
+2013-09-22 16:14:12,624 - INFO: 初始化开始, 数据库是: mysql://lite_mms:123456@localhost/lite_mms?charset=utf8
+2013-09-22 16:14:21,814 - INFO: 初始化完成

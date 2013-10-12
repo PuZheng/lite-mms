@@ -16,6 +16,7 @@ from lite_mms.utilities import _, get_or_404
 from lite_mms.basemain import app
 import lite_mms.constants.quality_inspection as qi_const
 import lite_mms.constants.work_command as wc_const
+from lite_mms import constants
 from lite_mms.portal.manufacture_ws import manufacture_ws
 from lite_mms.utilities.decorators import (webservice_call,
                                            login_required_webservice,
@@ -255,6 +256,14 @@ work command")
                                 for qir, pic_path in
                                 zip(json.loads(request.form['qirList']),
                                     pic_path_list)]
+                    if wc.sub_order.order_type == \
+                       constants.STANDARD_ORDER_TYPE:
+                        for qir in qir_list:
+                            qir['quantity'] = qir['weight']
+                    else:
+                        for qir in qir_list:
+                            if qir.quantity is None:
+                                return u'计件类型工单质检时必须上传数量', 403
                     wc.go(actor_id=current_user.id, action=form.action.data,
                           deduction=form.deduction.data or 0,
                           qir_list=qir_list)

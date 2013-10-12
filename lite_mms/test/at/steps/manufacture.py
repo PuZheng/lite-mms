@@ -150,8 +150,11 @@ def _(step, wc):
                           auth_token=auth_token)
             rv = c.put(url,
                        data={
-                           'file': (StringIO('foo picture'), 'foo.jpg'),
-                           'qirList': json.dumps([{'result': qi_const.FINISHED, 'weight': wc.processed_weight}])
+                           'file1': (StringIO('foo jpg 1'), 'foo1.jpg'),
+                           'file2': (StringIO('foo jpg 2'), 'foo2.jpg'),
+                           'qirList':
+                           json.dumps([{'result': qi_const.FINISHED,
+                                        'weight': wc.processed_weight}])
                        })
             assert rv.status_code == 200
             url = url_for('manufacture_ws.work_command', work_command_id=wc.id,
@@ -190,7 +193,8 @@ def _(step, wc):
                      'weight': wc.processed_weight}]
         rv = c.put(url,
                    data={
-                       'file': (StringIO('foo jpg'), 'foo.jpg'),
+                       'file': (StringIO('foo jpg 1'), 'foo1.jpg'),
+                       'file2': (StringIO('foo jpg 2'), 'foo2.jpg'),
                        'qirList': json.dumps(qir_list)
                    })
         assert rv.status_code == 200

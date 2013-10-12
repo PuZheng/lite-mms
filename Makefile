@@ -6,7 +6,7 @@ gh-pages:
 	git reset HEAD
 	cd docs; make html; cd ..;
 	cp -rf docs/build/html/* ./
-	rm -rf $(GH_PAGES_SOURCES) build
+	rm -rf $(GH_PAGES_SOURCES) build upload
 	git add -A
 	git commit -m "Generated gh-pages for `git log master -1 --pretty=short --abbrev-commit`" && git push origin gh-pages; 
 	git checkout master

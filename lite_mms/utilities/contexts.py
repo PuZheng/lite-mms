@@ -4,9 +4,6 @@
 @version: $
 """
 from contextlib import contextmanager
-from functools import wraps
-from sqlalchemy.exc import SQLAlchemyError
-import sys
 from lite_mms.basemain import app
 
 
@@ -22,24 +19,4 @@ def keep_db_session_alive():
     patcher.start()
     yield
     patcher.stop()
-
-
-@contextmanager
-def transaction():
-    from lite_mms.database import db
-
-    try:
-        yield
-        db.session.commit()
-    except SQLAlchemyError:
-        db.session.rollback()
-
-
-def transaction_decorator(func):
-    @wraps(func)
-    def decorator(*args, **kwargs):
-        with transaction():
-            return func(*args, **kwargs)
-
-    return decorator
 

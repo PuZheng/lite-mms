@@ -6,7 +6,7 @@ from lite_sm import StateMachine, State, InvalidAction
 
 from lite_mms.exceptions import InvalidStatus
 from lite_mms import constants, models
-from lite_mms.utilities import action_name, status_name, do_commit, contexts
+from lite_mms.utilities import action_name, status_name, do_commit
 
 
 class WorkCommandState(State):
@@ -291,7 +291,6 @@ class StateFinished(WorkCommandState):
                                   {"action": action_name(action),
                                    "status": status_name(self.status)}))
 
-    @contexts.transaction_decorator
     def side_effect(self, **kwargs):
         self.sm.obj.set_status(constants.work_command.STATUS_FINISHED)
         if self.last_status == constants.work_command.STATUS_QUALITY_INSPECTING:
@@ -364,7 +363,7 @@ class StateFinished(WorkCommandState):
                                                 work_command=old_wc,
                                                 actor=kwargs["actor"],
                                                 team=old_wc.team))
-
+            db.session.commit()
 
 class StateLocked(WorkCommandState):
     status = constants.work_command.STATUS_LOCKED

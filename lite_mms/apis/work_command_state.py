@@ -6,7 +6,7 @@ from lite_sm import StateMachine, State, InvalidAction
 
 from lite_mms.exceptions import InvalidStatus
 from lite_mms import constants, models
-from lite_mms.utilities import action_name, status_name, do_commit
+from lite_mms.utilities import action_name, status_name, do_commit, contexts
 
 
 class WorkCommandState(State):
@@ -291,6 +291,7 @@ class StateFinished(WorkCommandState):
                                   {"action": action_name(action),
                                    "status": status_name(self.status)}))
 
+    @contexts.transaction_decorator
     def side_effect(self, **kwargs):
         self.sm.obj.set_status(constants.work_command.STATUS_FINISHED)
         if self.last_status == constants.work_command.STATUS_QUALITY_INSPECTING:
@@ -301,19 +302,23 @@ class StateFinished(WorkCommandState):
             status = ""
             department = None
 
-            for qir_dict in kwargs['qir_list']:
-                do_commit(models.QIReport(old_wc, qir_dict['quantity'],
-                                          qir_dict['weight'], qir_dict['result'],
-                                          qir_dict['actor_id'], pic_path=qir_dict['pic_path']))
+            from lite_mms.database import db
+
+            old_wc.qir_list = []
+            db.session.add_all([models.QIReport(old_wc,
+                                                qir_dict['quantity'],
+                                                qir_dict['weight'],
+                                                qir_dict['result'],
+                                                qir_dict['actor_id'],
+                                                pic_path=qir_dict['pic_path']) for qir_dict in kwargs['qir_list']])
+
             for qir in old_wc.qir_list:
-                qir.report_time = datetime.now()
-                do_commit(qir)
                 if qir.result == constants.quality_inspection.FINISHED:
                     sb = models.StoreBill(qir)
                     if self.sm.obj.team:
                         sb.printed = True
                         sb.harbor = self.sm.obj.team.department.harbor_list[0]
-                    do_commit(sb)
+                    db.session.add(sb)
                     continue
                 elif qir.result == constants.quality_inspection.DISCARD:
                     # use QIReport as discard report
@@ -351,14 +356,14 @@ class StateFinished(WorkCommandState):
                                             department=department,
                                             previous_work_command=old_wc)
 
-                do_commit(new_wc)
+                db.session.add(new_wc)
                 qir.generated_work_command_id = new_wc.id
-                do_commit(qir)
+                db.session.add(qir)
             if kwargs.get("deduction"):
-                do_commit(models.Deduction(weight=kwargs["deduction"],
-                                           work_command=old_wc,
-                                           actor=kwargs["actor"],
-                                           team=old_wc.team))
+                db.session.add(models.Deduction(weight=kwargs["deduction"],
+                                                work_command=old_wc,
+                                                actor=kwargs["actor"],
+                                                team=old_wc.team))
 
 
 class StateLocked(WorkCommandState):

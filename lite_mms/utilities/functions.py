@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
-from flask import request, url_for
 import types
 import time
 from datetime import datetime
-from sqlalchemy.exc import SQLAlchemyError
 
 #from tornado import locale
 #user_locale = locale.get(app.config["LOCALE"])
@@ -22,6 +20,7 @@ def dictview(fields, d):
             items.append((field[0], d.get(field[1])))
     return dict(items)
 
+
 def convert_time(d):
     for k, v in d.items():
         if k == u"due_time":
@@ -29,8 +28,10 @@ def convert_time(d):
         if k == u"finish_time":
             d[k] = datetime.strptime(v, '%Y-%m-%d %H:%M:%S')
 
+
 def find_first(iterable, f):
     return ([o for o in iterable if f(o)] or [None])[0]
+
 
 def to_timestamp(dt):
     if isinstance(dt, datetime):
@@ -41,6 +42,7 @@ def to_timestamp(dt):
         return None
     else:
         raise ValueError("%s can't convert to timestamp" % str(dt))
+
 
 def action_name(action):
     from lite_mms.constants import work_command
@@ -74,6 +76,7 @@ def action_name(action):
     else:
         return _(u"<未知>")
 
+
 def status_name(status):
     from lite_mms.constants import work_command
 
@@ -92,8 +95,10 @@ def status_name(status):
     elif status == work_command.STATUS_FINISHED:
         return _(u"<已经结束>")
 
+
 def repr_wtforms_error(errors):
     return ";".join("%s: %s" % (k, ",".join(v)) for k, v in errors.items())
+
 
 def fslice(iterable, predict):
     a = []
@@ -104,6 +109,7 @@ def fslice(iterable, predict):
         else:
             b.append(i)
     return a, b
+
 
 class Config(object):
     __instance__ = None
@@ -119,7 +125,7 @@ class Config(object):
 
         self.config1 = config1
         try:
-            if os.environ.has_key("LITE_MMS_HOME"):
+            if 'LITE_MMS_HOME' in os.environ:
                 os.chdir(os.environ["LITE_MMS_HOME"])
                 from lite_mms import config
 
@@ -135,7 +141,7 @@ class Config(object):
         try:
             execfile("config.py", d.__dict__)
             self.config3 = d
-        except IOError, e:
+        except IOError:
             self.config3 = {}
 
     def __getattr__(self, name):
@@ -152,6 +158,7 @@ class Config(object):
         except AttributeError:
             raise AttributeError("no such option: " + name)
 
+
 def do_commit(obj, action="add"):
     from lite_mms.database import db
 
@@ -165,10 +172,12 @@ def do_commit(obj, action="add"):
     db.session.commit()
     return obj
 
+
 def check_raise(obj, f, ExceptionCls, msg=u""):
     if f(obj):
         raise ExceptionCls(msg)
     return obj
+
 
 def get_or_404(cls, id_):
     from lite_mms.database import db
@@ -178,27 +187,25 @@ def get_or_404(cls, id_):
 
     return wraps(cls.query.get_or_404(id_))
 
-def deduplicate(seq, idfun=None):
-    def _seek(seq, idfun):
-        seen = set()
-        if idfun is None:
-            for x in seq:
-                if x in seen:
-                    continue
-                seen.add(x)
-                yield x
-        else:
-            for x in seq:
-                try:
-                    x_ = idfun(x)
-                except:
-                    continue
-                if x_ in seen:
-                    continue
-                seen.add(x_)
-                yield x
 
+def _seek(seq, idfun):
+    seen = set()
+    if idfun is None:
+        idfun = lambda x: x
+    for x in seq:
+        try:
+            x_ = idfun(x)
+        except:
+            continue
+        if x_ in seen:
+            continue
+        seen.add(x_)
+        yield x
+
+
+def deduplicate(seq, idfun=None):
     return list(_seek(seq=seq, idfun=idfun))
+
 
 def camel_case(str_):
     import re
@@ -206,3 +213,6 @@ def camel_case(str_):
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 
+def gen_qir_pic_path(idx):
+    return 'qir-' + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + '_' + \
+        str(idx) + ".jpeg"

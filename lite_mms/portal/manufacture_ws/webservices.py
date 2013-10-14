@@ -20,12 +20,11 @@ from lite_mms.portal.manufacture_ws import manufacture_ws
 from lite_mms.utilities.decorators import (webservice_call,
                                            login_required_webservice,
                                            permission_required_webservice)
-from lite_mms.utilities import to_timestamp
+from lite_mms.utilities import to_timestamp, gen_qir_pic_path
 from lite_mms.database import db
 from lite_mms.permissions.roles import (TeamLeaderPermission,
                                         DepartmentLeaderPermission,
                                         QualityInspectorPermission)
-
 
 
 def _qir2dict(qir):
@@ -242,9 +241,8 @@ work command")
                     wc = get_or_404(models.WorkCommand, work_command_id)
 
                     pic_path_list = []
-                    for f in request.files.values():
-                        pic_path = datetime.now().strftime(
-                            "%Y-%m-%d_%H-%M-%S.jpg")
+                    for idx, f in enumerate(request.files.values()):
+                        pic_path = gen_qir_pic_path(idx)
                         f.save(os.path.join(app.config["UPLOAD_FOLDER"],
                                             pic_path))
                         pic_path_list.append(pic_path)
@@ -373,14 +371,23 @@ def quality_inspection_report_list():
 
     pic_path_list = []
 
-    for f in request.files.values():
-        pic_path = datetime.now().strftime("%Y-%m-%d_%H-%M-%S.jpg")
+    for idx, f in enumerate(request.files.values()):
+        pic_path = gen_qir_pic_path(idx)
         f.save(os.path.join(app.config["UPLOAD_FOLDER"], pic_path))
         pic_path_list.append(pic_path)
     wc.qir_list = []
-    for qir_dict, pic_path in zip(json.loads(request.form['qirList']),
+    qir_list = json.loads(request.form['qirList'])
+    if wc.sub_order.order_type == constants.STANDARD_ORDER_TYPE:
+        for qir in qir_list:
+            qir['quantity'] = qir['weight']
+    else:
+        for qir in qir_list:
+            if qir.quantity is None:
+                return u'计件类型工单质检时必须上传数量', 403
+    for qir_dict, pic_path in zip(qir_list,
                                   pic_path_list):
-        db.session.add(models.QIReport(wc.model, qir_dict.get('quantity'), qir_dict['weight'], qir_dict['result'],
+        db.session.add(models.QIReport(wc.model, qir_dict['quantity'],
+                                       qir_dict['weight'], qir_dict['result'],
                                        current_user.id, pic_path=pic_path))
     db.session.commit()
     return ""

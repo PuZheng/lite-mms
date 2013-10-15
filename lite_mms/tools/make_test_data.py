@@ -10,9 +10,9 @@ from datetime import datetime, date
 from lite_mms.constants import (groups, work_command as wc_const,
                                 quality_inspection, cargo as cargo_const,
                                 delivery as delivery_const)
+import lite_mms.basemain
 import lite_mms.constants as const
 from setuptools import Command
-import lite_mms.basemain
 from lite_mms.models import *
 from lite_mms.utilities import do_commit
 from lite_mms.database import db, init_db
@@ -171,6 +171,14 @@ class InitializeTestDB(Command):
         do_commit(SubOrder(product2, 1000, harbor2, order1, 1000, "KG",
                            due_time=date.today(), default_harbor=harbor2,
                            returned=True))
+        #     - 生成计件类型的子订单，
+        sub_order2 = do_commit(
+            SubOrder(product=product3, weight=3000,
+                     harbor=harbor2,
+                     order=order1, quantity=10,
+                     unit=u'桶',
+                     order_type=const.EXTRA_ORDER_TYPE,
+                     due_time=date.today(), default_harbor=harbor2))
 
         # 生成工单
         #     - DISPATCHING STATUS
@@ -180,6 +188,12 @@ class InitializeTestDB(Command):
                               tech_req=u"工单1的技术要求",
                               urgent=False, org_cnt=50,
                               pic_path="1.jpg"))
+        do_commit(WorkCommand(sub_order=sub_order2,
+                              org_weight=300,
+                              procedure=procedure0,
+                              tech_req=u'foo tech requirements',
+                              org_cnt=1))
+
         #     - ASSIGNING STATUS
         do_commit(WorkCommand(sub_order=sub_order1,
                               org_weight=50,
@@ -189,12 +203,31 @@ class InitializeTestDB(Command):
                               department=department1,
                               status=wc_const.STATUS_ASSIGNING,
                               pic_path="1.jpg"))
+        do_commit(WorkCommand(sub_order=sub_order2,
+                              org_weight=300,
+                              procedure=procedure1,
+                              tech_req=u"foo tech requirements",
+                              urgent=False,
+                              org_cnt=1,
+                              department=department1,
+                              status=wc_const.STATUS_ASSIGNING,
+                              pic_path="1.jpg"))
         #     - ENDING STATUS
         do_commit(WorkCommand(sub_order=sub_order1,
                               org_weight=50,
                               procedure=procedure2,
                               tech_req=u"工单3的技术要求",
                               urgent=False, org_cnt=100,
+                              pic_path="1.jpg",
+                              status=wc_const.STATUS_ENDING,
+                              department=department1,
+                              team=team1))
+        do_commit(WorkCommand(sub_order=sub_order2,
+                              org_weight=300,
+                              procedure=procedure2,
+                              tech_req=u"foo tech requirements",
+                              urgent=False,
+                              org_cnt=1,
                               pic_path="1.jpg",
                               status=wc_const.STATUS_ENDING,
                               department=department1,
@@ -210,34 +243,68 @@ class InitializeTestDB(Command):
                                     department=department1,
                                     team=team1,
                                     processed_weight=50)
-        do_commit(work_command4)
-        #     - FINISHED STATUS
-        WorkCommand(sub_order=sub_order1,
-                    org_weight=50,
-                    processed_weight=50,
-                    procedure=procedure2,
-                    tech_req=u"工单5的技术要求",
-                    urgent=False, org_cnt=50,
-                    processed_cnt=50,
-                    pic_path="1.jpg",
-                    status=wc_const.STATUS_FINISHED,
-                    department=department1,
-                    team=team1)
-        work_command4.completed_time = datetime.now()
-        do_commit(work_command4)
+        work_command5 = WorkCommand(sub_order=sub_order2,
+                                    org_weight=300,
+                                    procedure=procedure2,
+                                    tech_req=u"foo tech requirements",
+                                    urgent=False,
+                                    org_cnt=1,
+                                    pic_path="1.jpg",
+                                    status=wc_const.STATUS_QUALITY_INSPECTING,
+                                    department=department1,
+                                    team=team1,
+                                    processed_weight=300,
+                                    processed_cnt=1)
+        do_commit([work_command4, work_command5])
 
-        qir1 = do_commit(QIReport(work_command4, 20, 20,
+        #     - FINISHED STATUS
+        work_command6 = WorkCommand(sub_order=sub_order1,
+                                    org_weight=50,
+                                    processed_weight=50,
+                                    procedure=procedure2,
+                                    tech_req=u"foo tech requirements",
+                                    urgent=False, org_cnt=50,
+                                    processed_cnt=50,
+                                    pic_path="1.jpg",
+                                    status=wc_const.STATUS_FINISHED,
+                                    department=department1,
+                                    team=team1)
+        work_command6.completed_time = datetime.now()
+        work_command7 = WorkCommand(sub_order=sub_order2,
+                                    org_weight=600,
+                                    org_cnt=2,
+                                    processed_weight=600,
+                                    processed_cnt=2,
+                                    procedure=procedure2,
+                                    tech_req=u"foo tech requirements",
+                                    urgent=False,
+                                    pic_path="1.jpg",
+                                    status=wc_const.STATUS_FINISHED,
+                                    department=department1,
+                                    team=team1)
+        work_command7.completed_time = datetime.now()
+        do_commit([work_command6, work_command7])
+
+        qir1 = do_commit(QIReport(work_command6, 20, 20,
                                   quality_inspection.FINISHED, qi.id,
                                   pic_path='1.jpg'))
-        qir2 = do_commit(QIReport(work_command4, 10, 10,
-                                  quality_inspection.NEXT_PROCEDURE, qi.id,
-                                  pic_path='1.jpg'))
-        do_commit(QIReport(work_command4, 10, 10,
+        do_commit(QIReport(work_command6, 10, 10,
+                           quality_inspection.NEXT_PROCEDURE, qi.id,
+                           pic_path='1.jpg'))
+        do_commit(QIReport(work_command6, 10, 10,
                            quality_inspection.REPAIR, qi.id,
                            pic_path='1.jpg'))
-        do_commit(QIReport(work_command4, 10, 10,
+        do_commit(QIReport(work_command6, 10, 10,
                            quality_inspection.REPLATE, qi.id,
                            pic_path='1.jpg'))
+
+        qir3 = do_commit(QIReport(work_command7, 1, 300,
+                                  quality_inspection.FINISHED, qi.id,
+                                  pic_path='1.jpg'))
+        do_commit(QIReport(work_command7, 1, 300,
+                           quality_inspection.REPLATE, qi.id,
+                           pic_path='1.jpg'))
+
         delivery_session = DeliverySession(plate=vehicle1.name,
                                            tare=2300,
                                            status=delivery_const.STATUS_CLOSED)
@@ -245,7 +312,10 @@ class InitializeTestDB(Command):
         delivery_task = do_commit(DeliveryTask(delivery_session, cc.id))
         store_bill1 = StoreBill(qir1)
         store_bill1.delivery_task = delivery_task
-        do_commit(store_bill1)
+        store_bill2 = StoreBill(qir3)
+        store_bill2.delivery_task = delivery_task
+        do_commit([store_bill1, store_bill2])
+
         consignment = Consignment(customer1, delivery_session, True)
         consignment.actor = cc
         consignment.notes = "".join(str(i) for i in xrange(100))
@@ -256,14 +326,6 @@ class InitializeTestDB(Command):
         cp.weight = 100
         cp.returned_weight = 50
         do_commit(cp)
-
-        delivery_session = do_commit(DeliverySession(plate=vehicle2.name,
-                                                     tare=2300))
-        store_bill2 = StoreBill(qir2)
-        store_bill2.harbor = harbor2
-        store_bill2.printed = True
-        store_bill2.delivery_session = delivery_session
-        do_commit(store_bill2)
 
 if __name__ == "__main__":
     from distutils.dist import Distribution

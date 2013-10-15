@@ -275,7 +275,7 @@ work command")
                                       wc_const.ACT_REFUSE]:
                 try:
                     wc_id_list = [int(wc_id) for wc_id in
-                                  work_command_id.data.split(",")]
+                                  work_command_id.split(",")]
                 except ValueError:
                     return "work command id should be integer", 403
                 result = []

@@ -2,7 +2,6 @@
 import json
 from StringIO import StringIO
 
-import werkzeug
 from flask import url_for
 from flask.ext.login import current_user
 from sqlalchemy import and_
@@ -62,7 +61,7 @@ status=%d&auth_token=%s'
             assert rv.status_code == 200
             d = json.loads(rv.data)['data'][0]
             assert d['customerName'] == \
-                    wc.sub_order.order.goods_receipt.customer.name
+                wc.sub_order.order.goods_receipt.customer.name
             assert d['department']['id'] == department.id
             assert d['department']['name'] == department.name
             assert d['id'] == wc.id
@@ -166,7 +165,7 @@ def _(step, wc):
             qir_dict = d['qirList'][0]
             assert qir_dict['result'] == qi_const.FINISHED
             assert qir_dict['weight'] == wc.processed_weight
-            assert qir_dict['quantity'] is None
+            assert qir_dict['quantity'] == wc.processed_weight
             assert qir_dict['actorId'] == current_user.id
             return qir_dict
 
@@ -216,5 +215,6 @@ def _(step, wc, qir_list):
 
         assert qir_dict1['result'] == qi_const.FINISHED
         assert qir_dict1['weight'] == qir_dict2['weight']
-        assert qir_dict1['quantity'] == qir_dict2.get('quantity')
+        # 标准类型的质检单，重量与数量相同
+        assert qir_dict1['quantity'] == qir_dict2['weight']
         assert qir_dict1['actorId'] == current_user.id

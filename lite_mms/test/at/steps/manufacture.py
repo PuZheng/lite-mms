@@ -149,8 +149,8 @@ def _(step, wc):
                           auth_token=auth_token)
             rv = c.put(url,
                        data={
-                           'file1': (StringIO('foo jpg 1'), 'foo1.jpg'),
-                           'file2': (StringIO('foo jpg 2'), 'foo2.jpg'),
+                           '0.jpeg': (StringIO('foo jpg 0'), '0.jpeg'),
+                           '1.jpeg': (StringIO('foo jpg 1'), '1.jpeg'),
                            'qirList':
                            json.dumps([{'result': qi_const.FINISHED,
                                         'weight': wc.processed_weight}])
@@ -192,8 +192,8 @@ def _(step, wc):
                      'weight': wc.processed_weight}]
         rv = c.put(url,
                    data={
-                       'file': (StringIO('foo jpg 1'), 'foo1.jpg'),
-                       'file2': (StringIO('foo jpg 2'), 'foo2.jpg'),
+                       '0.jpeg': (StringIO('foo jpg 0'), '0.jpg'),
+                       '1.jpeg': (StringIO('foo jpg 1'), '1.jpg'),
                        'qirList': json.dumps(qir_list)
                    })
         assert rv.status_code == 200

@@ -814,7 +814,9 @@ request
 * work_command_id - 工单id
 * action - 见 :py:mod:`lite_mms.constants.work_command` 中对各种工单操作的说明
 * \*deduction - 扣量，必须以公斤为单位，默认为0
-* multiple_raw_picture_data - 必须和提交的质检报告个数相同
+* multiple_raw_picture_data - 多个图片文件，文件名为 **n.jpeg**, n从0开始计算，
+  对应第N个质检报告，例如"2.jpeg"对应第3个质检报告，这里允许质检报告没有对应的
+  图片
 
 response
 ========
@@ -1131,4 +1133,6 @@ response
 
 * work_command_id - 工单id
 * actor_id - 发起人id，这里为质检员
-* multiple_raw_picture_data - 必须和提交的质检报告个数相同
+* multiple_raw_picture_data - 多个图片文件，文件名为 **n.jpeg**, n从0开始计算，
+  对应第N个质检报告，例如"2.jpeg"对应第3个质检报告，这里允许质检报告没有对应的
+  图片

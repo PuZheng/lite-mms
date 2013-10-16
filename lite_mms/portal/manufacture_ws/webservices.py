@@ -6,6 +6,7 @@ import os
 import types
 from flask import request
 from flask.ext.login import current_user
+from flask.ext.babel import _
 from wtforms import (Form, IntegerField, StringField, validators,
                      ValidationError)
 import lite_mms

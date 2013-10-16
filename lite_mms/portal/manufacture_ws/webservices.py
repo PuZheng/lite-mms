@@ -4,7 +4,6 @@ from datetime import datetime, date, timedelta
 import json
 import os
 import types
-
 from flask import request
 from flask.ext.login import current_user
 from wtforms import (Form, IntegerField, StringField, validators,
@@ -12,7 +11,7 @@ from wtforms import (Form, IntegerField, StringField, validators,
 import lite_mms
 from lite_mms import apis
 from lite_mms import models
-from lite_mms.utilities import _, get_or_404
+from lite_mms.utilities import get_or_404
 from lite_mms.basemain import app
 import lite_mms.constants.work_command as wc_const
 from lite_mms import constants

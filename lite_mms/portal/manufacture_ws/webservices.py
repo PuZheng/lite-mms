@@ -240,21 +240,21 @@ work command")
                 try:
                     wc = get_or_404(models.WorkCommand, work_command_id)
 
-                    pic_path_list = []
-                    for idx, f in enumerate(request.files.values()):
+                    qir_pic_path_map = {}
+
+                    for path, f in request.files.items():
+                        idx = int(path.split(".")[0])
                         pic_path = gen_qir_pic_path(idx)
-                        f.save(os.path.join(app.config["UPLOAD_FOLDER"],
-                                            pic_path))
-                        pic_path_list.append(pic_path)
+                        f.save(os.path.join(app.config["UPLOAD_FOLDER"], pic_path))
+                        qir_pic_path_map[idx] = pic_path
 
                     qir_list = [dict(result=qir['result'],
                                      weight=qir['weight'],
                                      quantity=qir.get('quantity'),
                                      actor_id=current_user.id,
-                                     pic_path=pic_path)
-                                for qir, pic_path in
-                                zip(json.loads(request.form['qirList']),
-                                    pic_path_list)]
+                                     pic_path=qir_pic_path_map.get(idx, ""))
+                                for idx, qir in
+                                enumerate(json.loads(request.form['qirList']))]
                     if wc.sub_order.order_type == \
                        constants.STANDARD_ORDER_TYPE:
                         for qir in qir_list:
@@ -369,13 +369,6 @@ def quality_inspection_report_list():
     work_command_id = request.args.get('work_command_id', type=int)
     wc = get_or_404(models.WorkCommand, work_command_id)
 
-    pic_path_list = []
-
-    for idx, f in enumerate(request.files.values()):
-        pic_path = gen_qir_pic_path(idx)
-        f.save(os.path.join(app.config["UPLOAD_FOLDER"], pic_path))
-        pic_path_list.append(pic_path)
-    wc.qir_list = []
     qir_list = json.loads(request.form['qirList'])
     if wc.sub_order.order_type == constants.STANDARD_ORDER_TYPE:
         for qir in qir_list:
@@ -384,10 +377,21 @@ def quality_inspection_report_list():
         for qir in qir_list:
             if qir.quantity is None:
                 return u'计件类型工单质检时必须上传数量', 403
-    for qir_dict, pic_path in zip(qir_list,
-                                  pic_path_list):
+
+    # clear the original qir list
+    wc.qir_list = []
+    qir_pic_path_map = {}
+
+    for path, f in request.files.items():
+        idx = int(path.split(".")[0])
+        pic_path = gen_qir_pic_path(idx)
+        f.save(os.path.join(app.config["UPLOAD_FOLDER"], pic_path))
+        qir_pic_path_map[idx] = pic_path
+
+    for idx, qir_dict in enumerate(qir_list):
         db.session.add(models.QIReport(wc.model, qir_dict['quantity'],
                                        qir_dict['weight'], qir_dict['result'],
-                                       current_user.id, pic_path=pic_path))
+                                       current_user.id,
+                                       pic_path=qir_pic_path_map.get(idx, '')))
     db.session.commit()
     return ""

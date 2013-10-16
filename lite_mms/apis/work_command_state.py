@@ -17,6 +17,7 @@ class WorkCommandState(State):
                               {"action": action_name(action),
                                "status": status_name(self.status)}))
 
+
 class StateDispatching(WorkCommandState):
     """
     the initial state
@@ -184,7 +185,7 @@ class StateEnding(WorkCommandState):
 
         else:
             self.sm.obj.set_status(constants.work_command.STATUS_ENDING)
-            if kwargs.has_key("team"): # when it comes by ACT_ASSIGN
+            if "team" in kwargs:  # when it comes by ACT_ASSIGN
                 self.sm.obj.team = kwargs["team"]
 
             if self.last_status == constants.work_command.STATUS_ENDING:
@@ -192,8 +193,7 @@ class StateEnding(WorkCommandState):
                     self.sm.obj.processed_weight += kwargs["weight"]
                 except KeyError:
                     raise InvalidAction(_(u"该操作需要weight字段"))
-                if self.sm.obj.sub_order.order_type == constants \
-                    .EXTRA_ORDER_TYPE: # 计件类型
+                if self.sm.obj.sub_order.order_type == constants.EXTRA_ORDER_TYPE:  # 计件类型
                     try:
                         self.sm.obj.processed_cnt += kwargs["quantity"]
                     except KeyError:
@@ -201,6 +201,7 @@ class StateEnding(WorkCommandState):
                 else: # 普通类型
                     self.sm.obj.processed_cnt = self.sm.obj \
                         .processed_weight
+
 
 class StateQualityInspecting(WorkCommandState):
     status = constants.work_command.STATUS_QUALITY_INSPECTING
@@ -300,15 +301,23 @@ class StateFinished(WorkCommandState):
             status = ""
             department = None
 
+            from lite_mms.database import db
+
+            old_wc.qir_list = []
+            db.session.add_all([models.QIReport(old_wc,
+                                                qir_dict['quantity'],
+                                                qir_dict['weight'],
+                                                qir_dict['result'],
+                                                qir_dict['actor_id'],
+                                                pic_path=qir_dict['pic_path']) for qir_dict in kwargs['qir_list']])
+
             for qir in old_wc.qir_list:
-                qir.report_time = datetime.now()
-                do_commit(qir)
                 if qir.result == constants.quality_inspection.FINISHED:
                     sb = models.StoreBill(qir)
                     if self.sm.obj.team:
                         sb.printed = True
                         sb.harbor = self.sm.obj.team.department.harbor_list[0]
-                    do_commit(sb)
+                    db.session.add(sb)
                     continue
                 elif qir.result == constants.quality_inspection.DISCARD:
                     # use QIReport as discard report
@@ -323,7 +332,7 @@ class StateFinished(WorkCommandState):
                     handle_type = constants.work_command.HT_REPAIRE
                     procedure = old_wc.procedure
                     previous_procedure = old_wc.previous_procedure  # 可能有三道工序
-                    status = constants.work_command.STATUS_ASSIGNING if old_wc.department else constants\
+                    status = constants.work_command.STATUS_ASSIGNING if old_wc.department else constants \
                         .work_command.STATUS_DISPATCHING
                     # 这个工单可能是由退货产生的。
                     department = old_wc.department
@@ -331,7 +340,7 @@ class StateFinished(WorkCommandState):
                     handle_type = constants.work_command.HT_REPLATE
                     procedure = old_wc.procedure
                     previous_procedure = old_wc.previous_procedure
-                    status = constants.work_command.STATUS_ASSIGNING if old_wc.department else constants\
+                    status = constants.work_command.STATUS_ASSIGNING if old_wc.department else constants \
                         .work_command.STATUS_DISPATCHING
                     department = old_wc.department
                 new_wc = models.WorkCommand(sub_order=old_wc.sub_order,
@@ -346,15 +355,15 @@ class StateFinished(WorkCommandState):
                                             department=department,
                                             previous_work_command=old_wc)
 
-                do_commit(new_wc)
+                db.session.add(new_wc)
                 qir.generated_work_command_id = new_wc.id
-                do_commit(qir)
+                db.session.add(qir)
             if kwargs.get("deduction"):
-                do_commit(models.Deduction(weight=kwargs["deduction"],
-                                           work_command=old_wc,
-                                           actor=kwargs["actor"],
-                                           team=old_wc.team))
-
+                db.session.add(models.Deduction(weight=kwargs["deduction"],
+                                                work_command=old_wc,
+                                                actor=kwargs["actor"],
+                                                team=old_wc.team))
+            db.session.commit()
 
 class StateLocked(WorkCommandState):
     status = constants.work_command.STATUS_LOCKED
@@ -375,7 +384,6 @@ class StateLocked(WorkCommandState):
 
 
 class WorkCommandSM(StateMachine):
-
     def reset_obj(self, work_command):
         self.obj = work_command
         if work_command.status == constants.work_command.STATUS_DISPATCHING:
@@ -418,12 +426,14 @@ class WorkCommandSM(StateMachine):
     def do_log(self, action, actor=None):
         if not actor:
             from flask.ext.login import current_user
+
             if current_user.is_authenticated():
                 actor = current_user
         self.logger.info(u"操作: %s" % action_name(action),
                          extra={"obj": self.obj, "actor": actor,
                                 "action": action_name(action),
                                 "obj_pk": self.obj.id})
+
 
 work_command_sm = WorkCommandSM()
 

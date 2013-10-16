@@ -2,7 +2,9 @@
 
 from datetime import datetime
 
+import flask.ext.databrowser as databrowser
 from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.orm.properties import ColumnProperty
 
 from lite_mms import constants
 from lite_mms.database import db
@@ -36,6 +38,24 @@ procedure_and_department_table = db.Table("TB_PROCEDURE_AND_DEPARTMENT",
                                                     db.Integer,
                                                     db.ForeignKey(
                                                         "TB_DEPARTMENT.id")))
+
+user_and_team_table = db.Table("TB_USER_AND_TEAM", db.Column("team_id", db.Integer, db.ForeignKey("TB_TEAM.id")),
+                               db.Column("leader_id", db.Integer, db.ForeignKey("TB_USER.id")))
+class _ResyncMixin(object):
+
+
+
+    def resync(self):
+
+        pk = databrowser.utils.get_primary_key(self.__class__)
+        fresh_obj = self.query.filter(getattr(self.__class__, pk)==getattr(self, pk)).one()
+        props = self.__class__._sa_class_manager.mapper.iterate_properties
+
+        for p in props:
+            if isinstance(p, ColumnProperty) and not p.is_primary:
+                setattr(self, p.key, getattr(fresh_obj, p.key))
+        return self
+
 
 
 class Permission(db.Model):
@@ -239,9 +259,7 @@ class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(32), nullable=False, unique=True)
     department_id = db.Column(db.Integer, db.ForeignKey('TB_DEPARTMENT.id'), nullable=False)
-    leader_id = db.Column(db.Integer, db.ForeignKey('TB_USER.id'))
-    leader = db.relationship("User", backref=db.backref("team", uselist=False))
-
+    leader_list = db.relationship("User", secondary=user_and_team_table, backref="team_list")
 
     def __unicode__(self):
         return self.name
@@ -344,7 +362,7 @@ class Order(db.Model):
         return "<Order %s>" % self.id
 
 
-class SubOrder(db.Model):
+class SubOrder(db.Model, _ResyncMixin):
     __modelname__ = u"子订单"
     __tablename__ = "TB_SUB_ORDER"
 
@@ -421,7 +439,7 @@ class SubOrder(db.Model):
         return "<SubOrder %d>" % self.id
 
 
-class WorkCommand(db.Model):
+class WorkCommand(db.Model, _ResyncMixin):
     __modelname__ = u"工单"
     __tablename__ = "TB_WORK_COMMAND"
 
@@ -549,7 +567,7 @@ class QIReport(db.Model):
         self.weight = weight
         self.result = result
         self.actor_id = actor_id
-        self.report_time = report_time
+        self.report_time = report_time or datetime.now()
         self.pic_path = pic_path
 
     def __unicode__(self):

@@ -22,7 +22,7 @@ class WorkCommandWrapper(ModelWrapper):
             return self.qir_list[0].actor
         else:
             return None
-    
+
     @property
     def finish_time(self):
         if self.status == constants.work_command.STATUS_FINISHED:
@@ -154,7 +154,7 @@ class WorkCommandWrapper(ModelWrapper):
         """
         import types
 
-        wc_q = models.WorkCommand.query
+        wc_q = models.WorkCommand.query.join(models.SubOrder)
 
         if isinstance(status_list, types.ListType):
             wc_q = wc_q.filter(models.WorkCommand.status.in_(status_list))
@@ -164,7 +164,7 @@ class WorkCommandWrapper(ModelWrapper):
         if team_id:
             wc_q = wc_q.filter(models.WorkCommand.team_id == team_id)
         if harbor and harbor != u"全部":
-            wc_q = wc_q.join(models.SubOrder).filter(
+            wc_q = wc_q.filter(
                 models.SubOrder.harbor_name == harbor)
         if normal:
             wc_q = wc_q.filter(models.WorkCommand.org_weight > 0)
@@ -178,7 +178,9 @@ class WorkCommandWrapper(ModelWrapper):
         if date:
             wc_q = wc_q.filter(models.WorkCommand.last_mod > date)
         total_cnt = wc_q.count()
-        wc_q = wc_q.order_by(models.WorkCommand.urgent.desc()).order_by(
+        wc_q = wc_q.order_by(models.SubOrder.returned.desc()).order_by(
+            models.WorkCommand.urgent.desc()).order_by(
+            models.SubOrder.returned.desc()).order_by(
             models.WorkCommand.create_time.asc()).offset(start).limit(cnt)
         return [WorkCommandWrapper(wc) for wc in wc_q.all()], total_cnt
 
@@ -284,8 +286,10 @@ class WorkCommandWrapper(ModelWrapper):
             work_command_sm.logger = timeline_logger
         try:
             work_command_sm.reset_obj(work_command=self.model)
-            work_command_sm.next(actor=models.User.query.get(actor_id),
-                                 **form.values)
+            d = form.values
+            if 'qir_list' in kwargs:
+                d.update([('qir_list', kwargs['qir_list'])])
+            work_command_sm.next(actor=models.User.query.get(actor_id), **d)
         except Exception, e:
             raise ValueError(e.message)
         self.model.last_mod = datetime.now()

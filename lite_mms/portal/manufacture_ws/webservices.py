@@ -261,7 +261,7 @@ work command")
                             qir['quantity'] = qir['weight']
                     else:
                         for qir in qir_list:
-                            if qir.quantity is None:
+                            if qir['quantity'] is None:
                                 return u'计件类型工单质检时必须上传数量', 403
                     wc.go(actor_id=current_user.id, action=form.action.data,
                           deduction=form.deduction.data or 0,
@@ -375,7 +375,7 @@ def quality_inspection_report_list():
             qir['quantity'] = qir['weight']
     else:
         for qir in qir_list:
-            if qir.quantity is None:
+            if qir['quantity'] is None:
                 return u'计件类型工单质检时必须上传数量', 403
 
     # clear the original qir list

@@ -356,7 +356,7 @@ class StateFinished(WorkCommandState):
                                             previous_work_command=old_wc)
 
                 db.session.add(new_wc)
-                qir.generated_work_command_id = new_wc.id
+                qir.generated_work_command = new_wc
                 db.session.add(qir)
             if kwargs.get("deduction"):
                 db.session.add(models.Deduction(weight=kwargs["deduction"],

@@ -1,8 +1,11 @@
 {% extends "layout.html" %}
 {% block __data_browser__customized_head_block %}
   {{ super() }}
+  <link rel="stylesheet" href="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.css") }}" type="text/css" media="screen">
+  <script type="text/javascript" src="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.pack.js") }}"></script>
   <script type="text/javascript">
     $(function () {
+
       var products = {{ products|safe }};
       var selected_product_type = {{ task.product.product_type.id }};
       if (selected_product_type in products) {
@@ -27,6 +30,7 @@
           $(this).parents("form").submit();
         }
       });
+      $(".fancybox").fancybox();
     });
   </script>
 {% endblock %}
@@ -96,9 +100,16 @@
         <label for="pic-url" class="control-label">
           <strong>此次卸货的图片</strong>
         </label>
-
         <div class="controls">
-          <img class="img-rounded" src="{{ task.pic_url }}" alt="图片" id="pic-url">
+          {% if task.pic_url %}
+            <ul class="thumbnails">
+              <li class="span2">
+                <a class="fancybox thumbnail" href="{{ task.pic_url }}" rel="group" title="{{ task.product.name }}">
+                  <img class="bordered" src="{{ task.pic_url }}" alt="{{ task.product.name }}"/>
+                </a>
+              </li>
+            </ul>
+          {% endif %}
         </div>
       </div>
       <input type="hidden" name="url" value="{{ request.args.get('url') or url_for('cargo.unload_session',id_=task.unload_session.id) }}">

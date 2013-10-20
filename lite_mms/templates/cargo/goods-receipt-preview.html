@@ -84,7 +84,7 @@
           <tr>
             <td colspan="2">客户签名:</td>
             <td colspan="2">
-              总重量(KG):{{ receipt.product_list|sum(attribute='weight') }}
+              总重量(KG):{{ receipt.goods_receipt_entries|sum(attribute='weight') }}
             </td>
           </tr>
           </tbody>

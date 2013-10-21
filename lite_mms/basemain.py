@@ -354,8 +354,9 @@ class GoodsReceiptNode(ModelNode):
     @property
     def events(self):
         return [
-            Event(self.obj.unload_session.create_time, u'开始卸货', self.obj.creator.username if self.obj.creator else ''),
-            Event(self.obj.unload_session.finish_time, u'卸货完毕', ",".join(task.creator.username for task in self.obj.unload_session.task_list)),
+            Event(self.obj.unload_session.create_time, u'开始卸货', _get_username(self.obj.creator) if self.obj.creator else ''),
+            Event(self.obj.unload_session.finish_time, u'卸货完毕', ",".join(
+                _get_username(task.creator) for task in self.obj.unload_session.task_list)),
             Event(self.obj.order.create_time, u'生成订单', self.obj.order.creator.username),
         ]
 
@@ -384,10 +385,10 @@ class OrderNode(ModelNode):
     @property
     def events(self):
         ret = [
-            Event(self.obj.create_time, u'创建', self.obj.creator.username, description=u'[%s] 创建' % str(self.obj.create_time), by=u'生成订单'),
+            Event(self.obj.create_time, u'创建', _get_username(self.obj.creator), description=u'[%s] 创建' % str(self.obj.create_time), by=u'生成订单'),
         ]
         if self.obj.dispatched:
-            ret.append(Event(self.obj.dispatched_time, u'下发订单', self.obj.creator.username, description=u'[%s] 下发' % str(self.obj.dispatched_time)))
+            ret.append(Event(self.obj.dispatched_time, u'下发订单',  _get_username(self.obj.creator), description=u'[%s] 下发' % str(self.obj.dispatched_time)))
         return ret
 
     @property
@@ -411,12 +412,12 @@ class SubOrderNode(ModelNode):
     @property
     def events(self):
         ret = [
-            Event(self.obj.create_time, u'创建', self.obj.order.creator.username, by=u'生成子订单'),
+            Event(self.obj.create_time, u'创建', _get_username(self.obj.order.creator), by=u'生成子订单'),
         ]
 
         for wc in self.obj.work_command_list:
             if wc.cause == constants.work_command.CAUSE_NORMAL:
-                ret.append(Event(wc.create_time, u'预排产', self.obj.order.creator.username))
+                ret.append(Event(wc.create_time, u'预排产', _get_username(self.obj.order.creator)))
         return ret
 
     @property
@@ -439,8 +440,12 @@ class WorkCommandNode(ModelNode):
 
     @property
     def events(self):
-        logs = Log.query.filter(Log.obj_cls==self.obj.model.__class__.__name__).filter(Log.obj_pk==self.obj.id).filter(Log.action!=u'<增加重量>').filter(Log.action!=u'新建').all()
-        return [Event(self.obj.create_time, u'新建', self.obj.order.creator.username, u'[%s]: 创建' % self.obj.create_time)] + [Event(log.create_time, log.action.strip('<>'), self.obj.order.creator.username, u'[%s] %s' % (str(log.create_time), log.action.strip('<>'))) for log in logs]
+        logs = Log.query.filter(Log.obj_cls == self.obj.model.__class__.__name__).filter(
+            Log.obj_pk == self.obj.id).filter(Log.action != u'<增加重量>').filter(Log.action != u'新建').all()
+        return [Event(self.obj.create_time, u'新建', _get_username(self.obj.order.creator),
+                      u'[%s]: 创建' % self.obj.create_time)] + [
+                   Event(log.create_time, log.action.strip('<>'), _get_username(self.obj.order.creator),
+                         u'[%s] %s' % (str(log.create_time), log.action.strip('<>'))) for log in logs]
 
     @property
     def children_model_groups(self):
@@ -472,10 +477,10 @@ class StoreBillNode(ModelNode):
     @property
     def events(self):
         ret = [
-            Event(self.obj.create_time, u'创建', self.obj.qir.actor.username, by='创建仓单', description=u'[%s] 创建' % str(self.obj.create_time))
+            Event(self.obj.create_time, u'创建', _get_username(self.obj.qir.actor), by='创建仓单', description=u'[%s] 创建' % str(self.obj.create_time))
         ]
         if self.obj.delivery_task:
-            ret.append(Event(self.obj.delivery_task.create_time, u'发货', self.obj.delivery_task.actor.username, description=u'[%s] 发货' % str(self.obj.delivery_task.create_time)))
+            ret.append(Event(self.obj.delivery_task.create_time, u'发货', _get_username(self.obj.delivery_task.actor), description=u'[%s] 发货' % str(self.obj.delivery_task.create_time)))
         return ret
 
     @property
@@ -484,7 +489,11 @@ class StoreBillNode(ModelNode):
         if next_store_bill_list:
             return [(u'仓单', next_store_bill_list)]
         return []
-        
+
+
+def _get_username(obj):
+    return obj.username if obj is not None else ""
+
 annotate_model(GoodsReceipt, GoodsReceiptNode)
 annotate_model(Order, OrderNode)
 annotate_model(SubOrder, SubOrderNode)

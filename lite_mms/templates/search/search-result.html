@@ -115,12 +115,8 @@
             {% else %}
               {% for order in order_list %}
                 {{ loop.index }}.
-                {% if permissions.order.view_order.can() %}
+                {% if permissions.order.view_order.can() or permissions.order.schedule_order.can() %}
                   <a href="{{ url_for('order.order',id_=order.id, url=request.url) }}">
-                {% elif permissions.order.schedule_order.can() %}
-                  <a href="{{ url_for('schedule.order',id_=order.id, url=request.url) }}">
-                {% else %}
-                  <a>
                 {% endif %}
               {{ order.customer_order_number }}
               </a>

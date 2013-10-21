@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 from flask import (redirect, send_from_directory, url_for, abort, render_template, request, json, g)
 from flask.ext.login import current_user, login_required
+from flask.helpers import safe_join
 from lite_mms.basemain import app, nav_bar
 from lite_mms.utilities import decorators
 
@@ -33,6 +34,32 @@ def default():
 @app.route("/serv-pic/<filename>")
 def serv_pic(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+
+def _resize_file(filename, size=(180, 180)):
+    _dir = app.config['UPLOAD_FOLDER']
+    new_filename = filename.replace(".", "-%d%d." % size)
+    import os
+
+    if not os.path.exists(safe_join(_dir, new_filename)):
+        from PIL import Image
+
+        try:
+            im = Image.open(safe_join(_dir, filename))
+            ori_w, ori_h = im.size
+            if ori_w > ori_h:
+                _size = size[0], ori_h * size[1] / ori_w
+            else:
+                _size = ori_w * size[0] / ori_h, size[1]
+            im.resize(_size, Image.ANTIALIAS).save(safe_join(_dir, new_filename), "JPEG")
+        except IOError:
+            pass
+    return new_filename
+
+@app.route("/serv-small-pic/<filename>")
+def serv_small_pic(filename):
+    new_filename = _resize_file(filename)
+    return send_from_directory(app.config['UPLOAD_FOLDER'], new_filename)
 
 
 @app.route("/message")

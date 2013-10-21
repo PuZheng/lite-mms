@@ -53,6 +53,7 @@ def _work_command_to_dict(wc):
                 orgCount=wc.org_cnt,
                 orgWeight=wc.org_weight,
                 picPath=wc.pic_url,
+                smallPicPath=wc.small_pic_url,
                 previousProcedure=wc.previous_procedure.name if wc
                 .previous_procedure else "",
                 procedure=wc.procedure.name if wc.procedure else "",

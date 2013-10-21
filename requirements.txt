@@ -59,3 +59,4 @@ CodernityDB>=0.4.2
 -e git+https://github.com/xiechao06/pyfeature.git@92e086490ab44384dc21ecea65592c302273feab#egg=pyfeature-dev
 -e git+https://github.com/xiechao06/Flask-DataBrowser.git@0f5c4d6a0acd14f630422420da04a71317485b68#egg=Flask_DataBrowser-dev
 -e git+https://github.com/xiechao06/yawf.git@dc581f919c853eed866684c11082dac1a6522d83#egg=yawf-dev
+Pillow>=2.2.1

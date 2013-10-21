@@ -177,7 +177,8 @@ class SubOrderModelView(ModelView):
     can_batchly_edit = False
 
     edit_template = "order/sub-order.html"
-    def  try_edit(self, processed_objs=None):
+
+    def try_edit(self, processed_objs=None):
         Permission.union(SchedulerPermission, CargoClerkPermission).test()
 
         if processed_objs:

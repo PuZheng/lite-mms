@@ -52,6 +52,10 @@ class WorkCommandWrapper(ModelWrapper):
         else:
             return ""
 
+    @property
+    def small_pic_url(self):
+        return url_for("serv_small_pic", filename=self.pic_path) if self.pic_path else ""
+
     @cached_property
     def harbor(self):
         return self.sub_order.harbor

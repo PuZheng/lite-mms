@@ -30,7 +30,7 @@ from lite_mms.permissions.roles import (TeamLeaderPermission,
 def _qir2dict(qir):
     return dict(id=qir.id, actorId=qir.actor_id, quantity=qir.quantity,
                 weight=qir.weight, result=qir.result,
-                picUrl=qir.pic_url)
+                picUrl=qir.pic_url, smallPicUrl=qir.small_pic_url)
 
 
 def _work_command_to_dict(wc):

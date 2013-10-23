@@ -18,6 +18,7 @@ timeline_logger.handlers = []
 app.config["CSRF_ENABLED"] = False
 app.config["WTF_CSRF_ENABLED"] = False
 
+
 def refresh(obj):
     return db.session.query(obj.__class__).filter(obj.__class__.id == obj.id).one()
 
@@ -43,10 +44,10 @@ def patch():
     """
     g.identity.can = lambda p: True
     from lite_mms.apis.auth import UserWrapper
+
     user = UserWrapper(models.User.query.first())
     session['current_group_id'] = user.groups[0].id
     _request_ctx_stack.top.user = user
-
 
 
 @step(u"收发员称重(\d+)公斤")
@@ -54,7 +55,7 @@ def _(step, weight, unload_task):
     with app.test_request_context():
         with app.test_client() as c:
             rv = c.post("/cargo/weigh-unload-task/%d" % unload_task.id,
-                        data={"weight": weight, "product_type": 1, "product": 1})
+                        data={"weight": weight, "product_type": 1, "product": 1, "customer": unload_task.customer.id})
             assert 302 == rv.status_code
 
 
@@ -86,7 +87,6 @@ def _(step, customer_name, weight, gr_list):
 def _(step, us):
     with app.test_request_context():
         with app.test_client() as c:
-
             auth_token = client_login('l', 'l', c)
             rv = c.get("/cargo_ws/unload-session-list?auth_token=" + auth_token)
             from flask import json
@@ -371,10 +371,12 @@ def _(step, us):
         with app.test_client() as c:
             auth_token = client_login('l', 'l', c)
             rv = c.post(
-                u"/cargo_ws/unload-task?actor_id=1&customer_id=1&harbour=foo车间&is_finished=1&session_id=%d&auth_token=%s" % (us.id, auth_token))
+                u"/cargo_ws/unload-task?actor_id=1&customer_id=1&harbour=foo车间&is_finished=1&session_id=%d"
+                u"&auth_token=%s" % (
+                us.id, auth_token))
             assert 200 == rv.status_code
             rv = c.post("/cargo/weigh-unload-task/%s" % rv.data,
-                        data={"weight": 2213, "product_type": 1, "product": 1})
+                        data={"weight": 2213, "product_type": 1, "product": 1, "customer": 1})
             assert 302 == rv.status_code
 
 

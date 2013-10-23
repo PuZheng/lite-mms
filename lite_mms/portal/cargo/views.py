@@ -271,19 +271,22 @@ def weigh_unload_task(id_):
         abort(404)
     if request.method == 'GET':
         return dict(plate=task.unload_session.plate, task=task,
-            product_types=apis.product.get_product_types(),
-            products=json.dumps(apis.product.get_products()),
-            titlename=u"收货任务")
-    else: # POST
+                    product_types=apis.product.get_product_types(),
+                    products=json.dumps(apis.product.get_products()),
+                    customers=apis.customer.get_customer_list(),
+                    titlename=u"收货任务")
+    else:  # POST
         class _ValidationForm(Form):
             weight = IntegerField('weight', [validators.required()])
+            customer = IntegerField('customer', [validators.required()])
             product = IntegerField('product')
         form = _ValidationForm(request.form)
         if form.validate():
+            customer = apis.customer.get_customer(form.customer.data)
             weight = task.last_weight - form.weight.data
-            if weight < 0:
+            if weight < 0 or not customer:
                 abort(403)
-            task.update(weight=weight, product_id=form.product.data)
+            task.update(weight=weight, product_id=form.product.data, customer=customer)
             from flask.ext.login import current_user
             fsm.fsm.reset_obj(task.unload_session)
             fsm.fsm.next(cargo_const.ACT_WEIGHT, current_user)
@@ -301,6 +304,7 @@ def weigh_unload_task(id_):
                                    nav_bar=nav_bar), 403
 
 class UnloadTaskModelView(ModelView):
+    edit_template = "cargo/unload-task-spinnet.html"
 
     create_in_steps = True
 
@@ -323,11 +327,12 @@ class UnloadTaskModelView(ModelView):
 
     __form_columns__ = [
         ColumnSpec("id", label=u"编号"),
+        ColumnSpec("customer", label=u"客户"),
         InputColumnSpec("product", group_by=Product.product_type, label=u"产品",
-                        filter_=lambda q: q.filter(Product.enabled==True)),
+                        filter_=lambda q: q.filter(Product.enabled == True)),
         InputColumnSpec("weight", label=u"重量"),
         InputColumnSpec("harbor", label=u"装卸点"),
-        ImageColumnSpec("pic_url", label=u"图片")]
+        PlaceHolderColumnSpec(col_name="pic_url", label=u"图片", template_fname="pic-snippet.html")]
 
     def preprocess(self, obj):
         return UnloadTaskWrapper(obj)

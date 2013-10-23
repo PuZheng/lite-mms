@@ -55,6 +55,19 @@
           <input type="hidden" name="method" value="">{% endif %}
       </legend>
       <div class="control-group">
+        <label for="customer" class="control-label"><strong>客户</strong></label>
+
+        <div class="controls">
+          <select name="customer" id="customer">
+            {% for customer in customers %}
+              <option value="{{ customer.id }}" {% if customer.id == task.customer.id %}selected{% endif %}>
+                {{ customer.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="control-group">
         <label for="product_type" class="control-label"><strong>产品类型</strong></label>
 
         <div class="controls"><select id="product_type" name="product_type">
@@ -100,6 +113,7 @@
         <label for="pic-url" class="control-label">
           <strong>此次卸货的图片</strong>
         </label>
+
         <div class="controls">
           {% if task.pic_url %}
             <ul class="thumbnails">

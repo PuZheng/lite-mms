@@ -162,6 +162,8 @@ class UnloadTaskWrapper(ModelWrapper):
                     models.Product.id == kwargs["product_id"]).one()
             except NoResultFound:
                 raise ValueError(u"无此产品%s" % kwargs["product_id"])
+        if kwargs.get("customer"):
+            self.model.customer = kwargs["customer"]
         do_commit(self.model)
 
     @property

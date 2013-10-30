@@ -38,11 +38,11 @@ class DeliverySessionModelView(ModelView):
             # 格式化每个发货单，未打印或者过期，需要提示出来
             ret = unicode(v)
             if v.pay_in_cash and not v.is_paid:
-                ret += u'<small class="text-error"> (未支付)</small>'
+                ret += u'<small class="text-danger"> (未支付)</small>'
             if not v.MSSQL_ID:
-                ret += u'<small class="text-error"> (未导入)</small>'
+                ret += u'<small class="text-danger"> (未导入)</small>'
             if v.stale:
-                ret += u'<small class="text-error"> (过期)</small>'
+                ret += u'<small class="text-danger"> (过期)</small>'
             return ret
 
         return ["id", "plate_", ColumnSpec("tare", label=u"净重", formatter=lambda v, obj: sum(
@@ -123,7 +123,7 @@ class DeliverySessionModelView(ModelView):
         if test or stale:
             return {
                 "title": u"有客户发货单没有生成，或者存在已经过期的发货单, 强烈建议您重新生成发货单!",
-                "class": "alert alert-error"}
+                "class": "alert alert-danger"}
         elif unimported:
             return {
                 "title": u"有客户发货单未导入",
@@ -312,7 +312,7 @@ class ConsignmentModelView(ModelView):
 
     def patch_row_attr(self, idx, row):
         if row.stale:
-            return {"class": u"alert alert-error", "title": u"发货单已过时，请重新生成"}
+            return {"class": u"alert alert-danger", "title": u"发货单已过时，请重新生成"}
 
     def get_customized_actions(self, processed_objs=None):
         from .actions import PayAction, PreviewConsignment, DeleteConsignment
@@ -345,7 +345,7 @@ class ConsignmentModelView(ModelView):
 
     __column_formatters__ = {"actor": lambda v, obj: u"--" if v is None else v,
                              "pay_in_cash": lambda v, obj: u"现金支付" if v else u"月结",
-                             "MSSQL_ID": lambda v, obj: v if v is not None else u"<span class='text-error'>未导入</span>"
+                             "MSSQL_ID": lambda v, obj: v if v is not None else u"<span class='text-danger'>未导入</span>"
                              }
 
     def get_column_filters(self):

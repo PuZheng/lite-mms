@@ -1,6 +1,6 @@
 @media (min-width: 979px) {
     body {
-        padding-top: 45px !important;
+        padding-top: 60px !important;
     }
 
     .form-signin {
@@ -14,13 +14,13 @@
     body {
         padding-top: 60px;
     }
+
     .page-body {
         padding-bottom: 60px;
     }
 }
 
-
-.navbar-fixed-top{
+.navbar-fixed-top {
     position: fixed;
     margin: 0;
 }
@@ -68,6 +68,7 @@ thead th, tfoot th {
     .table-bordered td, .table-bordered th {
         border: 1px solid #000000;
     }
+
     div {
         padding-top: 0;
         page-break-before: avoid;
@@ -77,22 +78,14 @@ thead th, tfoot th {
     .page-next:not(:last-child) {
         page-break-after: always;
     }
-  a[href]:after {
-    content: none !important;
-  }
+
+    a[href]:after {
+        content: none !important;
+    }
 }
 
-.well {
-    padding: 8px 0;
-}
-
-
-header li.dropdown>a.dropdown-toggle {
+header li.dropdown > a.dropdown-toggle {
     padding-left: 0px;
-}
-
-.icon-off {
-    color: red;
 }
 
 .context-menu {
@@ -105,9 +98,10 @@ header li.dropdown>a.dropdown-toggle {
     text-align: center;
     opacity: 1.0;
 }
+
 .context-menu .btn-group {
     height: 100%;
-    margin-bottom:0;
+    margin-bottom: 0;
 }
 
 .context-menu .btn-group a {
@@ -118,7 +112,18 @@ header li.dropdown>a.dropdown-toggle {
     height: 100%;
 }
 
+.controls ul .control-text {
+    float: none;
+}
 
-.controls ul .control-text{
-    float:none;
+.modal-body h3 {
+    margin-top: 0;
+}
+
+blockquote a {
+    color: #333333;
+}
+
+#myTab {
+    margin-bottom: 15px;
 }

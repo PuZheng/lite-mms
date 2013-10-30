@@ -1,24 +1,8 @@
 {% extends "__data_browser__/list.html" %}
 {% block __data_browser__customized_head_block %}
   {{ super() }}
-  <style type="text/css">
-    li form {
-      margin: 0;
-      display: inline;
-    }
-  </style>
   <script type="text/javascript">
     $(function () {
-      $("ul.dropdown-menu li a").click(function () {
-        $(this).parents("li").children("form").submit();
-      });
-      $('#accordion1').collapse({
-        toggle: false
-      }).on('show',function (e) {
-            $(e.target).parent().find(".icon-chevron-down").removeClass("icon-chevron-down").addClass("icon-chevron-up");
-          }).on('hide', function (e) {
-            $(e.target).parent().find(".icon-chevron-up").removeClass("icon-chevron-up").addClass("icon-chevron-down");
-          });
       $("[name=delete-button]").click(function () {
         btn = $(this);
         if (confirm("删除该待办事项吗？")) {
@@ -30,31 +14,32 @@
 {% endblock %}
 {% block lists %}
   {% if __data__ %}
-    <div class="accordion container" id="accordion1">
+    <div class="panel-group container" id="accordion1">
       {% for grouper, list in __data__|groupby("create_date")|reverse %}
         {% if grouper == today %}
           {% set grouper = '今天' %}
         {% elif grouper == yesterday %}
           {% set grouper = '昨天' %}
         {% endif %}
-
-        <div class="accordion-group">
-          <div class="accordion-heading">
-            <a class="accordion-toggle" href="#{{ grouper }}" data-toggle="collapse" data-parent="#accordion1">
-              <i class="icon-chevron-down"></i>&nbsp;{{ grouper }}<i>({{ list|length }})</i>
-            </a>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h4 class="panel-title">
+              <a class="accordion-toggle" href="#{{ grouper }}" data-toggle="collapse" data-parent="#accordion1">
+                {{ grouper }}<b>({{ list|length }})</b><i class="fa fa-chevron-up"></i>
+              </a>
+            </h4>
           </div>
-          <div class="accordion-body collapse" id="{{ grouper }}">
-            <div class="accordion-inner">
+          <div class="panel-collapse collapse" id="{{ grouper }}">
+            <div class="panel-body">
               {% for todo in list %}
-                <form action="{{ url_for("todo.delete", id_=todo.id) }}" method="POST">
-                  <blockquote>
-                    <button class="btn-link" name="delete-button" type="button">
-                      <i class="icon-remove text-error"></i>
+                <blockquote>
+                  <form action="{{ url_for("todo.delete", id_=todo.id) }}" method="POST">
+                    <button class="btn btn-link" name="delete-button" type="button">
+                      <i class="fa fa-times text-danger"></i>
                     </button>
-                <span class="muted">
-                  {{ todo.create_time.strftime("%H:%M") }}
-                </span>
+                    <span class="text-muted">
+                      {{ todo.create_time.strftime("%H:%M") }}
+                    </span>
                     {{ todo.msg }}
                     {% if todo.context_url %}
                       {% if "?" in todo.context_url %}
@@ -63,8 +48,8 @@
                         <a href="{{ todo.context_url + "?url=" + request.url|urlencode }}">开始&gt;&gt;</a>
                       {% endif %}
                     {% endif %}
-                  </blockquote>
-                </form>
+                  </form>
+                </blockquote>
               {% endfor %}
             </div>
           </div>

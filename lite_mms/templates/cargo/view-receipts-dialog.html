@@ -22,7 +22,7 @@
       {% endif %}
 
       if (jQuery.type(session_id) == "undefined" || session_id == "") {
-        $("#view-receipts-content").html('<p class="text-error">' + "当前无记录" + '</p>');
+        $("#view-receipts-content").html('<p class="text-danger">' + "当前无记录" + '</p>');
         return;
       }
       $("#view-receipts-content").children('ul').children('li').remove();
@@ -35,7 +35,7 @@
                       v.receipt_id + '(' + v.customer + ')' + '</a> </li>');
             });
           }).error(function (data) {
-            $("#view-receipts-content").children("ul").html('<p class="text-error">' + data.responseText + '</p>');
+            $("#view-receipts-content").children("ul").html('<p class="text-danger">' + data.responseText + '</p>');
           });
     });
   });

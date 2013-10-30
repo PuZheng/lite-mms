@@ -70,12 +70,12 @@
           否{% endif %}</td>
         {% if permissions.SchedulerPermission.can() %}
           <td {% if not sub_order.pre_work_command_list %}
-            class="text-error"
+            class="text-danger"
           {% endif %} >
             {{ sub_order.pre_work_command_list|length }}
           </td>
           <td
-              {% if not sub_order.remaining_quantity %} class="text-error" {% endif %} >
+              {% if not sub_order.remaining_quantity %} class="text-danger" {% endif %} >
             {{ sub_order.remaining_quantity }}({{ sub_order.unit }})
           </td>
         {% else %}

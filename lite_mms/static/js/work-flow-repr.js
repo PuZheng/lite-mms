@@ -108,7 +108,7 @@ WorkFlowRepr.prototype.getMaxPeriod = function () {
     return max
 }
 
-$("input[type=checkbox][name=visiable-check]").live("click", function () {
+$("input[type=checkbox][name=visiable-check]").on("click", function () {
     var node = $(this).attr("data-node");
     if($(this).attr("checked")){
         $("[data-node="+node+"]:not([type=checkbox])").show();
@@ -116,7 +116,6 @@ $("input[type=checkbox][name=visiable-check]").live("click", function () {
         $("[data-node="+node+"]:not([type=checkbox])").hide();
     }
 });
-
 
 WorkFlowRepr.prototype.draw = function () {
     var nodes = _traversTree(this.tree);

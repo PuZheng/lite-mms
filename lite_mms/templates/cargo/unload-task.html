@@ -5,7 +5,6 @@
   <script type="text/javascript" src="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.pack.js") }}"></script>
   <script type="text/javascript">
     $(function () {
-
       var products = {{ products|safe }};
       var selected_product_type = {{ task.product.product_type.id }};
       if (selected_product_type in products) {
@@ -26,7 +25,6 @@
       });
       $("#delete-button").click(function () {
         if (confirm("确定删除该卸货任务？")) {
-          $("input[type=hidden][name=method]").val("delete");
           $(this).parents("form").submit();
         }
       });
@@ -47,18 +45,14 @@
       的卸货任务
     </div>
     <form class="form-horizontal" method="POST">
-      <legend>卸货任务详情&nbsp;
-        {% if not task.weight %}
-          <button class="btn btn-danger" type="button" id="delete-button">
-            <i class="icon-trash icon-white"></i>&nbsp;删除卸货任务
-          </button>
-          <input type="hidden" name="method" value="">{% endif %}
+      <legend>
+        卸货任务详情
       </legend>
-      <div class="control-group">
-        <label for="customer" class="control-label"><strong>客户</strong></label>
+      <div class="form-group">
+        <label for="customer" class="control-label col-lg-2">客户</label>
 
-        <div class="controls">
-          <select name="customer" id="customer">
+        <div class="col-lg-3">
+          <select name="customer" id="customer" class="form-control">
             {% for customer in customers %}
               <option value="{{ customer.id }}" {% if customer.id == task.customer.id %}selected{% endif %}>
                 {{ customer.name }}
@@ -67,75 +61,80 @@
           </select>
         </div>
       </div>
-      <div class="control-group">
-        <label for="product_type" class="control-label"><strong>产品类型</strong></label>
 
-        <div class="controls"><select id="product_type" name="product_type">
-          {% for pt in product_types %}
-            <option value="{{ pt.id }}" {% if pt.id == task.product.product_type.id %}selected="selected"{% endif %}>{{ pt.name }}</option>
-          {% endfor %}
-        </select></div>
+      <div class="form-group">
+        <label for="product_type" class="control-label col-lg-2">产品类型</label>
+
+        <div class="col-lg-3">
+          <select id="product_type" name="product_type" class="form-control">
+            {% for pt in product_types %}
+              <option value="{{ pt.id }}" {% if pt.id == task.product.product_type.id %}selected="selected"{% endif %}>{{ pt.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
       </div>
-      <div class="control-group">
-        <label for="product" class="control-label"><strong>产品名称</strong></label>
+      <div class="form-group">
+        <label for="product" class="control-label col-lg-2">产品名称</label>
 
-        <div class="controls">
-          <select name="product" id="product"></select>
+        <div class="col-lg-3">
+          <select name="product" id="product" class="form-control"></select>
         </div>
       </div>
 
-      <div class="control-group">
-        <label class="control-label"><strong>上次称重重量(KG)</strong> </label>
+     <div class="form-group">
+        <label class="control-label col-lg-2">上次称重是否车上有人</label>
 
-        <div class="controls">
-          <p class="padding">{{ task.last_weight }}</p>
+        <div class="col-lg-3">
+          <p class="form-control-static">{{ task.unload_session.with_person_des }}</p>
         </div>
       </div>
 
-      <div class="control-group">
-        <label class="control-label"><strong>上次称重是否车上有人</strong> </label>
+      <div class="form-group">
+        <label class="control-label col-lg-2">上次称重重量(KG)</label>
 
-        <div class="controls">
-          <p class="padding">{{ task.unload_session.with_person_des }}</p>
+        <div class="col-lg-3">
+          <p class="form-control-static">{{ task.last_weight }}</p>
         </div>
       </div>
-      <div class="control-group">
-        <label for="weight" class="control-label"><strong>本次称重的重量为(KG)</strong></label>
 
-        <div class="controls">
-          <input type="number" name="weight" id="weight" size="20" required="True" min="1" max="{{ task.last_weight - 1 }}"
+      <div class="form-group">
+        <label for="weight" class="control-label col-lg-2">本次称重的重量为(KG)</label>
+
+        <div class="col-lg-3">
+          <input type="number" name="weight" id="weight" size="20" required="True" min="1" max="{{ task.last_weight - 1 }}" class="form-control"
               {% if task.weight %}
                  value="{{ task.last_weight - task.weight }}"
               {% endif %} />
         </div>
       </div>
-      <div class="control-group">
-        <label for="pic-url" class="control-label">
-          <strong>此次卸货的图片</strong>
+      <div class="form-group">
+        <label for="pic-url" class="control-label col-lg-2">
+          此次卸货的图片
         </label>
 
-        <div class="controls">
+        <div class="col-lg-3">
           {% if task.pic_url %}
-            <ul class="thumbnails">
-              <li class="span2">
-                <a class="fancybox thumbnail" href="{{ task.pic_url }}" rel="group" title="{{ task.product.name }}">
-                  <img class="bordered" src="{{ task.pic_url }}" alt="{{ task.product.name }}"/>
-                </a>
-              </li>
-            </ul>
+            <a class="fancybox thumbnail" href="{{ task.pic_url }}" rel="group" title="{{ task.product.name }}">
+              <img class="img-responsive" src="{{ task.pic_url }}" alt="{{ task.product.name }}" style="max-height: 180px; max-width: 180px;"/>
+            </a>
           {% endif %}
         </div>
       </div>
       <input type="hidden" name="url" value="{{ request.args.get('url') or url_for('cargo.unload_session',id_=task.unload_session.id) }}">
 
-      <div class="control-group">
-        <div class="controls">
-          <button class="btn btn-large btn-primary">
-            <i class="icon-ok icon-white"></i>&nbsp;保存
+      <div class="form-group">
+        <div class="col-lg-offset-2 col-lg-10">
+          <button class="btn btn-lg btn-primary">
+            <i class="fa fa-save fa-fw"></i>保存
           </button>
-          <a class="btn btn-large" href="{{ request.args.get("url") or url_for('cargo.unload_session',id_=task.unload_session.id) }}">
-            <i class="icon-backward"></i>&nbsp;返回
+          <a class="btn btn-lg btn-default" href="{{ request.args.get("url") or url_for('cargo.unload_session',id_=task.unload_session.id) }}">
+            <i class="fa fa-step-backward"></i>&nbsp;返回
           </a>
+          {% if not task.weight %}
+          <button class="btn btn-lg btn-danger" type="button" id="delete-button" value="delete">
+            <i class="fa fa-times fa-fw"></i>删除
+          </button>
+          {% endif %}
         </div>
       </div>
     </form>

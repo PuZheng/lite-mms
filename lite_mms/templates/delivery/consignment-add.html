@@ -10,7 +10,7 @@
         <div class="control-group">
           <label for="customer" class="control-label">
             <strong>请选择公司名称</strong>
-            <span class="text-error" title="请选择公司名称.">*</span>
+            <span class="text-danger" title="请选择公司名称.">*</span>
           </label>
 
           <div class="controls">
@@ -21,7 +21,7 @@
         <div class="control-group">
           <label for="pay_mode">
             <strong>请选择支付类型</strong>
-            <span class="text-error" title="请选择支付类型.">*</span>
+            <span class="text-danger" title="请选择支付类型.">*</span>
           </label>
 
           <div class="controls">
@@ -56,7 +56,7 @@
 
       if (jQuery.type(id) == "undefined" || id == "") {
         temp = $("#new-consignment-content").html();
-        $("#new-consignment-content").html('<p class="text-error">' + "当前无记录" + '</p>');
+        $("#new-consignment-content").html('<p class="text-danger">' + "当前无记录" + '</p>');
         $("#consignment-button").addClass("hide");
         return;
       }
@@ -71,7 +71,7 @@
             });
           }).error(function (data) {
             temp = $("#new-consignment-content").html();
-            $("#new-consignment-content").html('<p class="text-error">' + data.responseText + '</p>');
+            $("#new-consignment-content").html('<p class="text-danger">' + data.responseText + '</p>');
             $("consignment-button").addClass("hide");
           });
     });

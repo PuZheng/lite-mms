@@ -5,7 +5,7 @@
 <script src="{{ url_for('static', filename='js/md5-min.js') }}" ></script>
 <script type="text/javascript">
   $(function () {
-      $("#md5-modal .alert-error").hide(); 
+      $("#md5-modal .alert-danger").hide();
       $("#md5-modal").on('shown', function () {
         $('input[name="raw_password"]').focus();
         });
@@ -16,7 +16,7 @@
         $("#md5-modal").modal("show");
         });
       $('input[name="raw_password"]').keydown(function (event) {
-        $("#md5-modal .alert-error").hide(); 
+        $("#md5-modal .alert-danger").hide();
         if (event.which == 13) {
           $("#md5-ok").click();
         }
@@ -24,7 +24,7 @@
       $("#md5-ok").click(function () {
         var raw_password = $('input[name="raw_password"]').val();
         if (raw_password.length == 0) {
-          $("#md5-modal .alert-error").show(); 
+          $("#md5-modal .alert-danger").show();
           $("#password").focus();
           return;
         }
@@ -43,7 +43,7 @@
     <h3>md5密码生成器</h3>
   </div>
   <div class="modal-body text-center form-horizontal">
-    <div class="alert alert-error">
+    <div class="alert alert-danger">
       密码不能为空!
     </div>
     <div class="control-group">

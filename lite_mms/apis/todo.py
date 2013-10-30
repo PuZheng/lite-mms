@@ -81,7 +81,7 @@ def weigh_unload_task(whom, action, obj, msg, sender, **kwargs):
     from lite_mms.basemain import data_browser
 
     msg = u'装卸工%s完成了一次来自%s(车牌号"%s")卸货任务，请称重！' % (obj.creator.username, obj.customer.name, obj.unload_session.plate) + (
-    msg and " - " + msg)
+        msg and " - " + msg)
     return models.TODO(user=whom, action=action, obj_pk=obj.id, actor=sender,
                        msg=msg,
                        context_url=data_browser.get_form_url(obj.unload_session))
@@ -95,7 +95,7 @@ def weigh_delivery_task(whom, action, obj, msg, sender, **kwargs):
     from lite_mms.basemain import data_browser
 
     msg = u'装卸工%s完成了一次来自%s(车牌号"%s")发货任务，请称重！' % (obj.actor.username, obj.customer.name, obj.delivery_session.plate) + (
-    msg and " - " + msg)
+        msg and " - " + msg)
     return models.TODO(user=whom, action=action, obj_pk=obj.id, actor=sender,
                        msg=msg,
                        context_url=data_browser.get_form_url(obj.delivery_session))
@@ -122,7 +122,7 @@ def dispatch_order(whom, action, obj, msg, sender, **kwargs):
     from lite_mms.basemain import data_browser
 
     msg = u'收发员%s下发了一张编号是%s的订单，请预排产！' % (obj.creator.username if obj.creator else "",
-        obj.customer_order_number) + (msg and " - " + msg)
+                                         obj.customer_order_number) + (msg and " - " + msg)
     return models.TODO(user=whom, action=action, obj_pk=obj.id, actor=sender, msg=msg,
                        context_url=data_browser.get_form_url(obj))
 
@@ -131,7 +131,7 @@ def dispatch_order(whom, action, obj, msg, sender, **kwargs):
 def permit_delivery_task_with_abnormal_weight(whom, action, obj, msg, sender, **kwargs):
     doc = database.codernity_db.get('id', obj.tag, with_doc=True)
     loader = models.User.query.get(doc['loader_id'])
-    msg = u'装卸工%s完成了剩余重量异常的发货任务，请处理!' % loader.username 
+    msg = u'装卸工%s完成了剩余重量异常的发货任务，请处理!' % loader.username
     return models.TODO(user=whom, action=action, obj_pk=obj.id, actor=sender, msg=msg,
                        context_url=url_for('work_flow.node_list'))
 

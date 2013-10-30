@@ -3,14 +3,13 @@ from collections import deque
 
 
 class Notification(object):
-
     __slots__ = "dictionary",
 
     __maxsize__ = 5
 
     def __init__(self, *args, **kwargs):
         self.dictionary = {}
-        if kwargs.has_key("maxsize"):
+        if "maxsize" in kwargs:
             self.__maxsize__ = int(kwargs.get("maxsize"))
 
     def delete(self, key):
@@ -21,7 +20,7 @@ class Notification(object):
         return 0
 
     def add(self, key, val):
-        q = self.dictionary.setdefault(key , deque(maxlen=self.__maxsize__))
+        q = self.dictionary.setdefault(key, deque(maxlen=self.__maxsize__))
         q.appendleft(val)
         return 1
 
@@ -36,5 +35,6 @@ class Notification(object):
     def __repr__(self):
         modname = "" if __name__ == "__main__" else __name__ + "."
         return "<%s %r>" % (modname, self.dictionary)
+
 
 notifications = Notification()

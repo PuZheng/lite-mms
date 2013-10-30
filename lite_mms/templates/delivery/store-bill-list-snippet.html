@@ -38,7 +38,7 @@
   {% endfor %}
 
 {% else %}
-  <span class="text-error">无</span>
+  <span class="text-danger">无</span>
 {% endif %}
 {% if obj and obj.id %}
   <a class="btn btn-primary" href="{{ url_for("delivery.store_bill_add", url=request.url, delivery_session_id=obj.id) }}">

@@ -19,10 +19,10 @@
         <td>
           <a href="{{ model_view.data_browser.get_form_url(cn.customer) }}">{{ cn.customer.name }}</a>
         </td>
-        <td>{% if cn.MSSQL_ID %}是{% else %}<div class="text-error">否</div>{% endif %}</td>
-        <td>{% if cn.stale %}<div class="text-error">是</div>{% else %}否{% endif %}</td>
+        <td>{% if cn.MSSQL_ID %}是{% else %}<div class="text-danger">否</div>{% endif %}</td>
+        <td>{% if cn.stale %}<div class="text-danger">是</div>{% else %}否{% endif %}</td>
         <td>{% if cn.pay_in_cash %}
-        现金支付({{ "已支付" if cn.is_paid else "<span class='text-error'>未支付</span>"|safe }})
+        现金支付({{ "已支付" if cn.is_paid else "<span class='text-danger'>未支付</span>"|safe }})
          {% else %}
           月结
         {% endif %} </td>
@@ -48,5 +48,5 @@
     </tbody>
   </table>
 {% else %}
-  <span class="text-error">无</span>
+  <span class="text-danger">无</span>
 {% endif %}

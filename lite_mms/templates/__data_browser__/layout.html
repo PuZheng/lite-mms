@@ -5,12 +5,15 @@
 {% endblock %}
 
 {% block __data_browser__customized_head_block %}
-  <script src="{{ url_for('static', filename='select2/select2_locale_zh-CN.js') }}"></script>
+  <script src="{{ url_for('__data_browser__.static', filename='js/select2_locale_zh-CN.js') }}"></script>
+  <script src="{{ url_for("__data_browser__.static", filename="js/locales/bootstrap-datetimepicker.zh-CN.js") }}" charset="UTF-8"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename="css/customer.css") }}"/>
   <link rel="stylesheet" href="{{ url_for('static', filename="css/opentip.css") }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename="css/jquery.pnotify.default.css") }}"/>
   {% if g.request_from_mobile %}
     <script type="text/javascript" src="{{ url_for("static", filename="js/cordova-2.5.0.js") }}"></script>
   {% endif %}
+  <script type="text/javascript" src="{{ url_for("static", filename="js/jquery.pnotify.min.js") }}"></script>
   <script type="text/javascript" src="{{ url_for("static", filename="js/JSPinYin.js") }}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename='js/svg.min.js') }}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename='js/svg.foreignobject.js') }}"></script>
@@ -104,6 +107,7 @@
       $("[data-toggle=tooltip]").tooltip();
       // 展示代办事项
       $.pnotify.defaults.history = false;
+      $.pnotify.defaults.styling = "bootstrap";
       var stack_bottomright = {"dir1": "up", "dir2": "left", "firstpos1": 25, "firstpos2": 25};
 
       function display(message) {
@@ -134,7 +138,7 @@
           }
           var e = $('header a[href="/todo/todo-list"]');
           if (e.html() != undefined) {
-            e.html(e.html().replace(/待办事项(\(\d+\))?/, "待办事项(" + data["total_cnt"] + ")"));
+            e.html(e.html().replace(/>\d*</, ">" + data["total_cnt"] + "<"));
           }
           setTimeout(f, 30000);
         })
@@ -154,103 +158,117 @@
 {% endblock %}
 
 {% block __data_browser__nav_bar_block %}
-  <header class="navbar navbar-inverse navbar-fixed-top">
-    <div class="navbar-inner">
-      {% if g.request_from_mobile %}
-        <div class="brand">
+  <header>
+    <nav class="navbar navbar-default navbar-inverse navbar-fixed-top" role="navigation">
+    {% if g.request_from_mobile %}
+      <div class="navbar-header">
+        <a class="navbar-brand">
           LITE-MMS
           <small><i>- {{ titlename }}</i></small>
-        </div>
-        {% if current_user.is_authenticated() and nav_bar %}
-          <a href="#" class="btn btn-navbar">
-            <i class="icon-search nav-text"></i>
-          </a>
-          <button class="btn btn-navbar" data-target=".nav-collapse" data-toggle="collapse" type="button">
-            <i class="icon-reorder"></i>
-          </button>
-          <nav class="nav-collapse">
-            {{ nav_bar.as_ul("active")|safe }}
-            <ul class="nav">
-              <li>
-                <a href="{{ url_for('auth.logout') }}" class="navbar-text">
-                  <i class="icon-off icon-large"></i>
-                </a>
-              </li>
-            </ul>
-          </nav>
+        </a>
+      {% if current_user.is_authenticated() and nav_bar is defined %}
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
         {% endif %}
-      {% else %}
-        <div class="brand">
-          LITE-MMS
-        </div>
-        {% if current_user.is_authenticated() and nav_bar is defined %}
-          <button class="btn btn-navbar" data-target=".nav-collapse" data-toggle="collapse" type="button">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <nav class="nav-collapse">
-            {{ nav_bar.as_ul("active", grouped=True)|safe }}
-            <form class="navbar-search pull-right form-search"
-                  action="{{ url_for('search.search') }}" method="GET">
-              <div class="input-append">
-                <input class="search-query span2" type="text"
-                       placeholder="关键词..." name="content"
-                       {% if keywords %}value="{{ keywords }}"{% endif %}/>
-                <button class="btn btn-inverse">搜索</button>
-              </div>
-            </form>
-            <bold class="navbar-text pull-right">
-              欢迎
-              <mark><strong>{{ current_user.username }}</strong>
-              </mark>
-              您是
-              <strong>
-                {% if current_user.groups|length > 1 %}
-                  <a href="#switch-group-modal" data-role="switch-group" data-toggle="modal">
-                {% endif %}
-                {{ current_user.group_name }}
-                {% if current_user.groups|length > 1 %}
-                  </a>
-                {% endif %}
-              </strong>
-              <a href="{{ url_for('auth.logout') }}">退出</a>
-            </bold>
-          </nav>
-        {% endif %}
+      </div>
+      {% if current_user.is_authenticated() and nav_bar %}
+        <nav class="collapse navbar-collapse navbar-ex1-collapse">
+          {{ nav_bar.as_ul("active")|safe }}
+          <ul class="nav navbar-nav">
+            <li>
+              <a href="{{ url_for('auth.logout') }}">
+                <i class="fa fa-power-off fa-lg text-danger"></i>
+              </a>
+            </li>
+          </ul>
+        </nav>
       {% endif %}
-    </div>
+    {% else %}
+      <div class="navbar-header">
+        <a class="navbar-brand" href="#">
+          LITE-MMS
+        </a>
+        {% if current_user.is_authenticated() and nav_bar is defined %}
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        {% endif %}
+      </div>
+      {% if current_user.is_authenticated() and nav_bar is defined %}
+        <nav class="collapse navbar-collapse navbar-ex1-collapse">
+          {{ nav_bar.as_ul("active", grouped=True)|safe }}
+          <form class="navbar-form navbar-right" role="search" action="{{ url_for('search.search') }}" method="GET">
+            <div class="form-group">
+              <input class="form-control" type="text" placeholder="关键词..." name="content"
+                     {% if keywords %}value="{{ keywords }}"{% endif %}/>
+            </div>
+            <button class="btn btn-default"><i class="fa fa-search"></i></button>
+          </form>
+
+          <ul class="nav navbar-nav navbar-right">
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" href="#">
+                <strong><i class="fa fa-user fa-fw"></i>{{ current_user.group_name }}&nbsp;{{ current_user.username }}</strong>
+                <span class="fa fa-caret-down"></span>
+              </a>
+              <ul class="dropdown-menu" role="menu">
+                {% if current_user.groups|length > 1 %}
+                  <li class="text-center">
+                    <a href="#switch-group-modal" data-role="switch-group" data-toggle="modal">
+                      <i class="fa fa-cogs fa-fw"></i>&nbsp;{{ current_user.group_name }}
+                    </a>
+                  </li>
+                  <li class="divider"></li>
+                {% endif %}
+                <li class="text-center">
+                  <a href="{{ url_for('auth.logout') }}"><i class="fa fa-sign-out"></i>&nbsp;退出</a>
+                </li>
+              </ul>
+            </li>
+          </nav>
+        </div>
+      {% endif %}
+    {% endif %}
+    </nav>
   </header>
-  <div id="switch-group-modal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-header">
-      <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-      <h3 id="myModalLabel">切换角色</h3>
-    </div>
-    <div class="modal-body">
-      <ul class="nav nav-pills nav-stacked">
-        {% for group in current_user.groups %}
-          {% if group.id == current_user.group.id %}
-            <li class='active pagination-centered'>
-              <a href='#'><b>{{ group.name }} (当前角色)</b></a>
-            </li>
-          {% else %}
-            <li class='pagination-centered'>
-              <a href="{{ url_for('auth.switch_group', id_=group.id) }}"><b>{{ group.name }}</b></a>
-            </li>
-          {% endif %}
-        {% endfor %}
-      </ul>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" data-dismiss="modal" aria-hidden="true">关闭</button>
+  {% if current_user.groups|length > 1 %}
+  <div id="switch-group-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h3 id="myModalLabel" class="modal-title">切换角色</h3>
+        </div>
+        <div class="modal-body">
+          <ul class="nav nav-pills nav-stacked">
+            {% for group in current_user.groups %}
+              <li class='pagination-centered{% if group.id == current_user.group.id %} active{% endif %}'>
+                <a href="{{ '#' if group.id == current_user.group.id else url_for('auth.switch_group', id_=group.id) }}">
+                  <b>{{ group.name }}</b></a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">关闭</button>
+        </div>
+      </div>
     </div>
   </div>
+  {% endif %}
 {% endblock %}
 
 {% block __data_browser__footer_block %}
-  <footer class="footer hidden-phone">
+  <footer class="footer visible-md visible-lg">
     <div class="container">
-      <div class="muted">
+      <div class="text-muted">
         copyright@ LITE-MMS
       </div>
     </div>

@@ -22,7 +22,7 @@
       {% endif %}
 
       if (jQuery.type(session_id) == "undefined" || session_id == "") {
-        $("#view-consignments-content").html('<p class="text-error">' + "当前无记录" + '</p>');
+        $("#view-consignments-content").html('<p class="text-danger">' + "当前无记录" + '</p>');
         return;
       }
       $("#view-consignments-content").children('ul').children('li').remove();
@@ -33,7 +33,7 @@
               $("#view-consignments-content").children("ul").append('<li><a href="{{ url_for('delivery.consignment') }}' + v.id + '?url=' + encodeURIComponent(location.href) + '">' + v.consignment_id + '(' + v.customer + ')' + '</a></li>');
             });
           }).error(function (data) {
-            $("#view-consignments-content").children("ul").html('<p class="text-error">' + data.responseText + '</p>');
+            $("#view-consignments-content").children("ul").html('<p class="text-danger">' + data.responseText + '</p>');
           });
     });
   });

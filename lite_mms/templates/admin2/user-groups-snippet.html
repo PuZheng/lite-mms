@@ -1,4 +1,4 @@
-<ul>
+<ul class="nav nav-pills">
   {% for row in field_value %}
   <li><a href="{{ url_for("admin2.group", id_=row.id, url=request.url) }}">{{ row.name}}</a></li>
   {% endfor %}

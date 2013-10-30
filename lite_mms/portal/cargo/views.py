@@ -7,10 +7,10 @@ from flask import request, abort, url_for, render_template, flash, g
 from flask.ext.login import login_required
 from sqlalchemy import exists, and_
 from flask.ext.databrowser import ModelView
-from flask.ext.databrowser.action import DeleteAction, BaseAction
+from flask.ext.databrowser.action import BaseAction
 from flask.ext.databrowser.column_spec import (InputColumnSpec, ColumnSpec,
                                                PlaceHolderColumnSpec, ListColumnSpec,
-                                               TableColumnSpec, ImageColumnSpec, LinkColumnSpec)
+                                               TableColumnSpec, LinkColumnSpec)
 
 from flask.ext.principal import PermissionDenied
 from werkzeug.utils import redirect
@@ -18,7 +18,7 @@ from wtforms import Form, IntegerField, validators
 
 from lite_mms.portal.cargo import cargo_page, fsm, gr_page
 from lite_mms.utilities import decorators, get_or_404
-from lite_mms.permissions import CargoClerkPermission,AdminPermission
+from lite_mms.permissions import CargoClerkPermission, AdminPermission
 from lite_mms.basemain import nav_bar
 import lite_mms.constants.cargo as cargo_const
 from lite_mms.database import db
@@ -26,9 +26,11 @@ from lite_mms.models import (UnloadSession, Plate, GoodsReceipt,
                              GoodsReceiptEntry, Product, UnloadTask, DeliverySession)
 from lite_mms.apis.cargo import UnloadSessionWrapper, UnloadTaskWrapper, GoodsReceiptWrapper, GoodsReceiptEntryWrapper
 
+
 @cargo_page.route('/')
 def index():
     return redirect(unload_session_model_view.url_for_list())
+
 
 @gr_page.route('/')
 def index():
@@ -37,7 +39,6 @@ def index():
 
 class UnloadSessionModelView(ModelView):
 
-    list_template = "cargo/unload-session-list.html"
     edit_template = "cargo/unload-session.html"
 
     can_batchly_edit = False
@@ -64,17 +65,16 @@ class UnloadSessionModelView(ModelView):
             ret = unicode(v)
             v = GoodsReceiptWrapper(v)
             if not v.printed:
-                ret += u'<small class="text-error"> (未打印)</small>'
+                ret += u'<small class="text-danger"> (未打印)</small>'
             if v.stale:
-                ret += u'<small class="text-error"> (过期)</small>'
+                ret += u'<small class="text-danger"> (过期)</small>'
             return ret
         return ["id", "plate_", "create_time", "finish_time", "with_person", "status",
                 ListColumnSpec("customer_list_unwrapped", label=u"客 户", compressed=True),
                 ListColumnSpec("goods_receipt_list_unwrapped",
                                label=u"收货单",
                                compressed=True,
-                               item_col_spec=ColumnSpec("", formatter=gr_item_formatter)),
-               ]
+                               item_col_spec=ColumnSpec("", formatter=gr_item_formatter))]
 
     __column_labels__ = {"id": u"编号", "plate_": u"车辆", "create_time": u"创建时间", "finish_time": u"结束时间",
                          "with_person": u"驾驶室", "status": u"状态", "goods_receipt_list": u"收货单", "gross_weight": u"净重"}
@@ -91,7 +91,7 @@ class UnloadSessionModelView(ModelView):
         if test or stale:
             return {
                 "title": u"有客户收货单没有生成，或者存在已经过期的收货单, 强烈建议您重新生成收货单!",
-                "class": "alert alert-error"}
+                "class": "alert alert-danger"}
         elif unprinted:
             return {
                 "title": u"有客户收货单没有打印",
@@ -132,6 +132,7 @@ class UnloadSessionModelView(ModelView):
         from lite_mms.portal.cargo.actions import (CloseAction, OpenAction,
                                                    CreateReceiptAction,
                                                    DeleteUnloadSessionAction)
+
         class _PrintGoodsReceipt(BaseAction):
             def op_upon_list(self, objs, model_list):
                 obj = objs[0]
@@ -180,7 +181,7 @@ class UnloadSessionModelView(ModelView):
                    css_class="uneditable-input"),
         InputColumnSpec("create_time", label=u"创建时间", read_only=True),
         InputColumnSpec("finish_time", label=u"结束时间", read_only=True),
-        PlaceHolderColumnSpec(col_name="log_list", label=u"日志", template_fname="cargo/us-log-snippet.html")
+        PlaceHolderColumnSpec(col_name="log_list", label=u"日志", template_fname="logs-snippet.html")
     ]
     __form_columns__[u"收货任务列表"] = [
         PlaceHolderColumnSpec(col_name="task_list", label=u"",
@@ -195,7 +196,8 @@ class UnloadSessionModelView(ModelView):
 
 unload_session_model_view = UnloadSessionModelView(UnloadSession, u"卸货会话")
 
-class plateModelView(ModelView):
+
+class PlateModelView(ModelView):
 
     can_edit = False
     create_template = "cargo/plate.html"
@@ -214,7 +216,8 @@ class plateModelView(ModelView):
         name = name.upper()
         return Plate(name=name)
 
-plate_model_view = plateModelView(Plate, u"车辆")
+plate_model_view = PlateModelView(Plate, u"车辆")
+
 
 class GoodsReceiptEntryModelView(ModelView):
 
@@ -228,7 +231,7 @@ class GoodsReceiptEntryModelView(ModelView):
         InputColumnSpec("goods_receipt", label=u"收货单", read_only=True),
         InputColumnSpec("weight", label=u"重量"),
         InputColumnSpec("harbor", label=u"装卸点"),
-        ImageColumnSpec("pic_url", label=u"图片")]
+        PlaceHolderColumnSpec("pic_url", label=u"图片", template_fname="pic-snippet.html", form_width_class="col-lg-3")]
 
     def preprocess(self, obj):
         return GoodsReceiptEntryWrapper(obj)
@@ -261,6 +264,7 @@ class GoodsReceiptEntryModelView(ModelView):
 
 goods_receipt_entry_view = GoodsReceiptEntryModelView(GoodsReceiptEntry, u"收货单产品")
 
+
 @cargo_page.route("/weigh-unload-task/<int:id_>", methods=["GET", "POST"])
 @decorators.templated("/cargo/unload-task.html")
 def weigh_unload_task(id_):
@@ -270,7 +274,7 @@ def weigh_unload_task(id_):
     if not task:
         abort(404)
     if request.method == 'GET':
-        return dict(plate=task.unload_session.plate, task=task,
+        return dict(plate=task.unload_session.plate, task=task, nav_bar=nav_bar,
                     product_types=apis.product.get_product_types(),
                     products=json.dumps(apis.product.get_products()),
                     customers=apis.customer.get_customer_list(),
@@ -303,27 +307,9 @@ def weigh_unload_task(id_):
                                    back_url=unload_session_model_view.url_for_object(model=task.unload_session.model),
                                    nav_bar=nav_bar), 403
 
+
 class UnloadTaskModelView(ModelView):
     edit_template = "cargo/unload-task-spinnet.html"
-
-    create_in_steps = True
-
-    step_create_templates = [None, None, None, 'cargo/unload-task-pic.html', None]
-
-    __create_columns__ = OrderedDict()
-    __create_columns__[u"选择车辆"] = [
-        PlaceHolderColumnSpec("unload_session", filter_=lambda q: q.filter(UnloadSession.finish_time == None),
-                              template_fname="cargo/unload-task-plate.html", as_input=True, label="")]
-
-    __create_columns__[u"选择卸货点"] = [
-        PlaceHolderColumnSpec("harbor", template_fname="cargo/unload-task-harbor.html", as_input=True, label="")]
-
-    __create_columns__[u"选择客户"] = [InputColumnSpec("customer", label="")]
-
-
-    __create_columns__[u"拍照"] = [PlaceHolderColumnSpec("pic_path", template_fname="cargo/unload-task-pic.html", as_input=True, label="")]
-
-    __create_columns__[u"是否完全卸货"] = [PlaceHolderColumnSpec("is_finished", template_fname="cargo/unload-task-finished.html")]
 
     __form_columns__ = [
         ColumnSpec("id", label=u"编号"),
@@ -332,15 +318,20 @@ class UnloadTaskModelView(ModelView):
                         filter_=lambda q: q.filter(Product.enabled == True)),
         InputColumnSpec("weight", label=u"重量"),
         InputColumnSpec("harbor", label=u"装卸点"),
-        PlaceHolderColumnSpec(col_name="pic_url", label=u"图片", template_fname="pic-snippet.html")]
+        PlaceHolderColumnSpec(col_name="pic_url", label=u"图片", template_fname="pic-snippet.html",
+                              form_width_class="col-lg-3"),
+        PlaceHolderColumnSpec(col_name="log_list", label=u"日志", template_fname="logs-snippet.html"), ]
 
     def preprocess(self, obj):
         return UnloadTaskWrapper(obj)
 
+    def try_create(self):
+        raise PermissionDenied
+
     def try_edit(self, objs=None):
         CargoClerkPermission.test()
 
-        if any(obj.unload_session.status==cargo_const.STATUS_CLOSED for obj in objs):
+        if any(obj.unload_session.status == cargo_const.STATUS_CLOSED for obj in objs):
             raise PermissionDenied
 
     def edit_hint_message(self, objs, read_only=False):
@@ -383,7 +374,7 @@ class GoodsReceiptModelView(ModelView):
     def patch_row_attr(self, idx, obj):
         if obj.stale:
             return {
-                "class": "alert alert-error",
+                "class": "alert alert-danger",
                 "title": u"本收货单已经过时，请回到卸货会话重新生成"
             }
         if not obj.printed:
@@ -421,10 +412,10 @@ class GoodsReceiptModelView(ModelView):
         ColumnSpec("create_time", label=u"创建时间"),
         ColumnSpec("creator"),
         ColumnSpec("printed", label=u"是否打印",
-                        formatter=lambda v, obj: u"是" if v else u'<span class="text-error">否</span>'),
+                        formatter=lambda v, obj: u"是" if v else u'<span class="text-danger">否</span>'),
         ColumnSpec("stale", label=u"是否过时",
-                  formatter=lambda v, obj: u'<span class="text-error">是</span>' if v else u"否"),
-        PlaceHolderColumnSpec("log_list", label=u"日志", template_fname="cargo/gr-logs-snippet.html")
+                  formatter=lambda v, obj: u'<span class="text-danger">是</span>' if v else u"否"),
+        PlaceHolderColumnSpec("log_list", label=u"日志", template_fname="logs-snippet.html")
     ]
     __form_columns__[u"产品列表"] = [
         TableColumnSpec("goods_receipt_entries", label="",
@@ -435,7 +426,8 @@ class GoodsReceiptModelView(ModelView):
                             ColumnSpec("product.product_type", label=u"产品类型"),
                             ColumnSpec("weight", label=u"净重(KG)"),
                             PlaceHolderColumnSpec(col_name="pic_url", label=u"图片",
-                                                  template_fname="cargo/pic-snippet.html")],
+                                                  template_fname="pic-snippet.html",
+                                                  form_width_class="col-lg-3")],
                         preprocess=lambda obj: GoodsReceiptWrapper(obj))
     ]
     __column_labels__ = {"receipt_id": u'编 号', "customer": u'客 户', "unload_session.plate": u"车牌号",

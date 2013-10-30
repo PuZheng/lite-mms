@@ -40,19 +40,6 @@ class UnloadSessionWrapper(ModelWrapper):
         return bool(
             self.finish_time and all(t.weight for t in self.task_list))
 
-    # @property
-    # def status(self):
-    #     if self.finish_time:
-    #         if len(self.customer_list) > len(self.goods_receipt_list):
-    #             return u"待生成收货单"
-    #         else:
-    #             return u"已完成"
-    #     else:
-    #         if self.task_list and not all(t.weight for t in self.task_list):
-    #             return u"待称重"
-    #         else:
-    #             return u"待卸货"
-
     @property
     def status_desc(self):
         return g_status_desc.get(self.status) or u"未知"
@@ -99,7 +86,6 @@ class UnloadSessionWrapper(ModelWrapper):
                                                              s_create_time,
                                                              s_finish_time)
 
-
     def update(self, finish_time):
         """
         update the unload session's scalar attribute persistently
@@ -118,7 +104,6 @@ class UnloadSessionWrapper(ModelWrapper):
             if gr.customer.id not in self.customer_id_list:
                 do_commit(gr.model, "delete")
 
-
     def clean_goods_receipts(self):
         """
         Iterator the customers and create a goods_receipt.
@@ -126,7 +111,7 @@ class UnloadSessionWrapper(ModelWrapper):
         """
         for id_ in self.customer_id_list:
             create_or_update_goods_receipt(unload_session_id=self.id,
-                                                      customer_id=id_)
+                                           customer_id=id_)
 
         self.gc_goods_receipts()
 

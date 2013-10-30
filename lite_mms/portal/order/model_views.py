@@ -49,7 +49,7 @@ class OrderModelView(ModelView):
                         PlaceHolderColumnSpec(col_name="to_deliver_store_bill_list", label=u"待发货重量",
                                               template_fname="order/store-bill-list-snippet.html"),
                         "delivered_weight", "create_time", "dispatched_time", "goods_receipt",
-                        ColumnSpec("urgent", formatter=lambda v,obj:u"<span class='text-error'>是</span>" if v else u"否"),
+                        ColumnSpec("urgent", formatter=lambda v,obj:u"<span class='text-danger'>是</span>" if v else u"否"),
                         "refined"]
 
     def repr_obj(self, obj):
@@ -115,7 +115,7 @@ class OrderModelView(ModelView):
         if not row.refined:
             return {"class": "alert alert-warning", "title": u"此订单没有完善，请先完善订单"}
         elif row.urgent and row.remaining_quantity:
-            return {"class": "alert alert-error", "title": u"此订单请加急完成"}
+            return {"class": "alert alert-danger", "title": u"此订单请加急完成"}
         elif row.warning:
             return {"title": u"此订单的收货重量大于未分配重量，生产中重量，已发货重量，待发货重量之和"}
 
@@ -141,8 +141,8 @@ class OrderModelView(ModelView):
                 LinkColumnSpec("id", label=u"编号", anchor=lambda v: v,
                                formatter=lambda v, obj: work_command_view.url_for_object(obj, url=request.url)),
                 ColumnSpec("sub_order.id", label=u"子订单编号"), ColumnSpec("product", label=u"产品名称"),
-                ColumnSpec("urgent", label=u"加急", formatter=lambda v,obj: u"<span class='text-error'>是</span>" if v else u"否"),
-                ColumnSpec("sub_order.returned", label=u"退镀", formatter=lambda v,obj: u"<span class='text-error'>是</span>" if v else u"否"),
+                ColumnSpec("urgent", label=u"加急", formatter=lambda v,obj: u"<span class='text-danger'>是</span>" if v else u"否"),
+                ColumnSpec("sub_order.returned", label=u"退镀", formatter=lambda v,obj: u"<span class='text-danger'>是</span>" if v else u"否"),
                 ColumnSpec("org_weight", label=u"工序前重量"), ColumnSpec("org_cnt", label=u"工序前数量"),
                 ColumnSpec("unit", label=u"单位"), ColumnSpec("processed_weight", label=u"工序后重量"),
                 ColumnSpec("processed_cnt", label=u"工序后数量"),ColumnSpec("tech_req", label=u"技术要求"),

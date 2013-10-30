@@ -62,6 +62,8 @@ class TimeLineModelView(ModelView):
     def scaffold_list(self, objs):
         return [wraps(obj) for obj in objs]
 
+    __default_order__ = ("create_time", "desc")
+
     list_template = "timeline/timeline.html"
 
     __column_labels__ = {"actor": u"操作员", "create_time": u"创建时间"}

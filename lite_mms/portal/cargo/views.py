@@ -91,11 +91,11 @@ class UnloadSessionModelView(ModelView):
         if test or stale:
             return {
                 "title": u"有客户收货单没有生成，或者存在已经过期的收货单, 强烈建议您重新生成收货单!",
-                "class": "alert alert-danger"}
+                "class": "danger"}
         elif unprinted:
             return {
                 "title": u"有客户收货单没有打印",
-                "class": "alert alert-warning"}
+                "class": "warning"}
 
     __column_formatters__ = {
         "create_time": lambda v, obj: v.strftime("%m月%d日 %H点").decode("utf-8"),
@@ -374,12 +374,12 @@ class GoodsReceiptModelView(ModelView):
     def patch_row_attr(self, idx, obj):
         if obj.stale:
             return {
-                "class": "alert alert-danger",
+                "class": "danger",
                 "title": u"本收货单已经过时，请回到卸货会话重新生成"
             }
         if not obj.printed:
             return {
-                "class": "alert alert-warning",
+                "class": "warning",
                 "title": u"本收货单尚未打印"
             }
 

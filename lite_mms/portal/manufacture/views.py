@@ -34,7 +34,7 @@ class WorkCommandView(ModelView):
 
     def patch_row_attr(self, idx, row):
         if row.status != constants.work_command.STATUS_FINISHED and (row.urgent or row.sub_order.returned):
-            return {"class":"error", "title":u"退镀或加急"}
+            return {"class": "danger", "title": u"退镀或加急"}
 
     from datetime import datetime, timedelta
     today = datetime.today()

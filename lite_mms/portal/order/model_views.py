@@ -113,9 +113,9 @@ class OrderModelView(ModelView):
 
     def patch_row_attr(self, idx, row):
         if not row.refined:
-            return {"class": "alert alert-warning", "title": u"此订单没有完善，请先完善订单"}
+            return {"class": "warning", "title": u"此订单没有完善，请先完善订单"}
         elif row.urgent and row.remaining_quantity:
-            return {"class": "alert alert-danger", "title": u"此订单请加急完成"}
+            return {"class": "danger", "title": u"此订单请加急完成"}
         elif row.warning:
             return {"title": u"此订单的收货重量大于未分配重量，生产中重量，已发货重量，待发货重量之和"}
 

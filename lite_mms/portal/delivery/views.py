@@ -123,15 +123,13 @@ class DeliverySessionModelView(ModelView):
         if test or stale:
             return {
                 "title": u"有客户发货单没有生成，或者存在已经过期的发货单, 强烈建议您重新生成发货单!",
-                "class": "alert alert-danger"}
+                "class": "danger"}
         elif unimported:
             return {
                 "title": u"有客户发货单未导入",
-                "class": "alert alert-warning"}
+                "class": "warning"}
 
     def get_create_columns(self):
-
-
         def filter_plate(q):
             return q.filter(and_(~exists().where(models.UnloadSession.plate == models.Plate.name).where(
                 models.UnloadSession.finish_time == None),
@@ -312,7 +310,7 @@ class ConsignmentModelView(ModelView):
 
     def patch_row_attr(self, idx, row):
         if row.stale:
-            return {"class": u"alert alert-danger", "title": u"发货单已过时，请重新生成"}
+            return {"class": u"danger", "title": u"发货单已过时，请重新生成"}
 
     def get_customized_actions(self, processed_objs=None):
         from .actions import PayAction, PreviewConsignment, DeleteConsignment

@@ -64,18 +64,21 @@ def serv_small_pic(filename):
 
 @app.route("/message")
 def ajax_new_message():
-    from lite_mms.models import TODO
-    from lite_mms.apis.todo import get_all_notify
+    if current_user.is_authenticated():
+        from lite_mms.models import TODO
+        from lite_mms.apis.todo import get_all_notify
 
-    messages = [
-        {
-            "create_time": str(todo.create_time),
-            "actor": todo.actor.username if todo.actor else "",
-            "action": todo.action,
-            "msg": todo.msg,
-            "context_url": todo.context_url
-        }
-        for todo in get_all_notify(current_user.id)
-    ]
-    return json.dumps({"total_cnt": TODO.query.filter(TODO.user_id == current_user.id).count(), "messages": messages})
+        messages = [
+            {
+                "create_time": str(todo.create_time),
+                "actor": todo.actor.username if todo.actor else "",
+                "action": todo.action,
+                "msg": todo.msg,
+                "context_url": todo.context_url
+            }
+            for todo in get_all_notify(current_user.id)
+        ]
+        return json.dumps({"total_cnt": TODO.query.filter(TODO.user_id == current_user.id).count(), "messages": messages})
+    else:
+        return json.dumps({"total_cnt": 0, "messages": []})
 

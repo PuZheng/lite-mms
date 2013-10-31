@@ -21,8 +21,8 @@
 
 {% block body %}
   <div class="container">
-    <button class="btn btn-primary" id="print"><i class="icon-print"></i>&nbsp;打印</button>
-    <a href="{{ back_url }}" class="btn">返回</a>
+    <button class="btn btn-primary" id="print"><i class="fa fa-print fa-fw"></i>打印</button>
+    <a href="{{ back_url }}" class="btn btn-default"><i class="fa fa-step-backward fa-fw"></i>返回</a>
 
     <div id="print-area">
       {% for gr in gr_list %}

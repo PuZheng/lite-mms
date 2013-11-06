@@ -689,7 +689,7 @@ class DeliveryTask(db.Model):
             sb = self.store_bill_list[0]
             return sb.qir.work_command.sub_order.product
         else:
-            return ""
+            return None
 
     def __unicode__(self):
         return unicode(self.id)

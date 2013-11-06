@@ -268,7 +268,7 @@ class DeliveryTaskModelView(ModelView):
         columns.extend([ListColumnSpec("pic_url_list", label=u"图片",
                                        formatter=lambda v, obj: None if not v else [i[-1] for i in v],
                                        item_col_spec=ImageColumnSpec("", css_class="img-polaroid",
-                                                                     alt=obj.product.name if obj else ""),
+                                                                     alt=obj.product.name if obj and obj.product else ""),
                                        css_class="list-group",
                                        form_width_class="col-lg-3",
                                        item_css_class="list-group-item"),

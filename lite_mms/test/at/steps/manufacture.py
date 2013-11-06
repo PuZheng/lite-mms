@@ -43,8 +43,7 @@ def _(step, wc, department):
     with app.test_request_context():
         with app.test_client() as c:
             login('s', 's', c)
-            rv = c.post('/manufacture/schedule',
-                        data=dict(department_id=department.id, id=wc.id))
+            rv = c.post('/manufacture/schedule/[%d]' % wc.id, data=dict(department_id=department.id, procedure_id=1))
             assert rv.status_code == 302
 
 

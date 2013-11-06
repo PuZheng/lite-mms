@@ -1,4 +1,4 @@
-{% macro render_nav_bar(user, nav_bar, titlename) %}
+{% macro render_nav_bar(user, nav_bar, titlename, g) %}
   <nav class="navbar navbar-default navbar-inverse navbar-fixed-top" role="navigation">
     {% if g.request_from_mobile %}
       <div class="navbar-header">

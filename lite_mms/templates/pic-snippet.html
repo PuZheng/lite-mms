@@ -1,9 +1,5 @@
-{% if obj.pic_path %}
-  <ul class="thumbnails">
-    <li class="span2">
-      <a class="thumbnail fancybox" href="{{ field_value }}" rel="{{ obj.product }}" title="{{ obj.product }}">
-        <img src="{{ field_value }}" alt="{{ obj.product }}" class="bordered"/>
-      </a>
-    </li>
-  </ul>
+{% if obj.pic_url %}
+  <a class="fancybox thumbnail" href="{{ obj.pic_url }}" rel="group" title="{{ obj.product.name }}">
+    <img class="img-responsive img-polaroid" src="{{ obj.pic_url }}" alt="{{ obj.product.name }}"/>
+  </a>
 {% endif %}

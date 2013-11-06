@@ -137,7 +137,7 @@ class StateEnding(WorkCommandState):
         elif action == constants.work_command.ACT_END:
             return state_quality_inspecting
         elif action == constants.work_command.ACT_CARRY_FORWARD:
-            if self.sm.obj.processed_cnt == 0: # carry forward COMPLETELY
+            if self.sm.obj.processed_cnt == 0:  # carry forward COMPLETELY
                 return state_assigning
             else:
                 return state_quality_inspecting

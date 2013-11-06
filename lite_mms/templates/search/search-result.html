@@ -3,9 +3,7 @@
   {{ super() }}
   <script type="text/javascript">
     $(function () {
-      $('#myTab a:first').each(function (e) {
-        $(this).tab("show");
-      });
+      $('#myTab a:first').tab("show");
     });
   </script>
 {% endblock %}
@@ -13,16 +11,12 @@
   <div class="container">
     {% if not keywords %}
       <form class="form-horizontal" action="{{ url_for('search.search') }}" method="GET">
-        <div class="control-group">
-          <label for="content-input" class="control-label">
-            <strong>
-                请输入关键字
-            </strong>
-          </label>
+        <div class="form-group">
+          <label for="content-input" class="control-label col-lg-2">请输入关键字</label>
 
-          <div class="controls">
-            <input id="content-input" type="search" placeholder="搜索..." name="content"/>
-             <span class="help-inline">{% if permissions.roles.CargoClerkPermission.can() %}
+          <div class="col-lg-3">
+            <input id="content-input" type="search" placeholder="搜索..." name="content" class="form-control"/>
+             <span class="help-block">{% if permissions.roles.CargoClerkPermission.can() %}
                只支持搜索卸货会话（发货会话）的车牌号码或客户名称，以及订单的订单编号
              {% elif permissions.roles.SchedulerPermission.can() %}
                只支持搜索订单的订单编号或者工单号
@@ -30,15 +24,15 @@
              </span>
           </div>
         </div>
-        <div class="control-group">
-          <div class="controls">
-            <button class="btn btn-primary btn-large"><i class="icon-search pull-left"></i>搜索</button>
+        <div class="form-group">
+          <div class="col-lg-offset-2 col-lg-3">
+            <button class="btn btn-primary btn-lg"><i class="fa fa-search fa-fw"></i>搜索</button>
           </div>
         </div>
       </form>
     {% else %}
       <strong><em>{{ keywords }}</em></strong> 的搜索结果:
-      <ul class="nav nav-tabs" id="myTab">
+      <ul class="nav nav-tabs nav-justified" id="myTab">
         {% if permissions.roles.CargoClerkPermission.can() %}
           <li>
             <a href="#unload_session_list" data-toggle="tab">卸货会话({{ unload_session_list|count }})</a>
@@ -62,46 +56,43 @@
         {% if permissions.roles.CargoClerkPermission.can() %}
           <div id="unload_session_list" class="tab-pane">
             {% if not unload_session_list %}
-              <p class="text-error">
+              <p class="text-danger">
                 对不起，没有客户名称或者车牌号为<em>{{ keywords }}</em>的卸货会话!
               </p>
             {% else %}
               {% for us in unload_session_list %}
-                <div class="ym-wbox">
-                  {{ loop.index }}.
-
-                  <a href="{{ url_for("cargo.unload_session",id_=us.id, url=request.url) }}">
-                    卸货会话：{{ us.id }}
-                  </a>
-                  -车牌号：
-                  <em>{{ us.plate }}</em>
-                  -客户名称：
-                  <em>{{ us.task_list|groupby("customer.name")|join("，",attribute="grouper") }}</em>
-                  <blockquote>--
-                    在{{ us.create_time }}创建
-                  </blockquote>
+                <div class="panel panel-default">
+                  <div class="panel-body">
+                    {{ loop.index }}.
+                    <a href="{{ url_for("cargo.unload_session",id_=us.id, url=request.url) }}">
+                      卸货会话: {{ us.id }}
+                    </a>
+                    -车牌号: <em>{{ us.plate }}</em>
+                    -客户名称: <em>{{ us.task_list|groupby("customer.name")|join("，",attribute="grouper") }}</em>
+                    <blockquote>--在{{ us.create_time }}创建</blockquote>
+                  </div>
                 </div>
               {% endfor %}
             {% endif %}
           </div>
           <div id="delivery_session_list" class="tab-pane">
             {% if not delivery_session_list %}
-              <p class="text-error">
+              <p class="text-danger">
                 对不起，没有客户名称或者车牌号为<em>{{ keywords }}</em>的发货会话!
               </p>
             {% else %}
               {% for ds in delivery_session_list %}
-                {{ loop.index }}.
-                <a href="{{ url_for("delivery.delivery_session",id_=ds.id, url=request.url) }}">
-                  发货会话：{{ ds.id }}
-                </a>
-                -车牌号：
-                <em>{{ ds.plate }}</em>
-                -客户名称：
-                <em>{{ ds.delivery_task_list|join(",", attribute="customer.name") }}</em>
-                <blockquote>--
-                  在{{ ds.create_time }}创建
-                </blockquote>
+                <div class="panel panel-default">
+                  <div class="panel-body">
+                    {{ loop.index }}.
+                    <a href="{{ url_for("delivery.delivery_session",id_=ds.id, url=request.url) }}">
+                      发货会话: {{ ds.id }}
+                    </a>
+                    -车牌号: <em>{{ ds.plate }}</em>
+                    -客户名称: <em>{{ ds.delivery_task_list|join(",", attribute="customer.name") }}</em>
+                    <blockquote>--在{{ ds.create_time }}创建</blockquote>
+                  </div>
+                </div>
               {% endfor %}
             {% endif %}
           </div>
@@ -109,29 +100,29 @@
         {% if permissions.order.view_order.can() or permissions.order.schedule_order.can() %}
           <div id="order_list" class="tab-pane">
             {% if not order_list %}
-              <p class="text-error">
+              <p class="text-danger">
                 对不起，没有编号为<em>{{ keywords }}</em>的订单!
               </p>
             {% else %}
               {% for order in order_list %}
-                {{ loop.index }}.
-                {% if permissions.order.view_order.can() or permissions.order.schedule_order.can() %}
-                  <a href="{{ url_for('order.order',id_=order.id, url=request.url) }}">
-                {% endif %}
-              {{ order.customer_order_number }}
-              </a>
-                - 客户：<em>{{ order.customer.name }}</em>
-                -
-                产品:
-                <em>{{ order.product_list|join(",", attribute="name") }}</em>
-                - 重量:
-                <em>{{ order.sub_orders|sum(attribute="weight") }}(公斤)</em>
-                - {% if order.dispatched %}<em>已经下发
-                </em>
-                {% else %}<em>尚未下发</em>{% endif %}
-                <blockquote>--
-                  由{{ order.creator.username }}在{{ order.create_time }}创建
-                </blockquote>
+                <div class="panel panel-default">
+                  <div class="panel-body">
+                    {{ loop.index }}.
+                    {% if permissions.order.view_order.can() or permissions.order.schedule_order.can() %}
+                      <a href="{{ url_for('order.order',id_=order.id, url=request.url) }}">
+                    {% endif %}
+                    订单: {{ order.customer_order_number }}
+                    {% if permissions.order.view_order.can() or permissions.order.schedule_order.can() %}
+                      </a>
+                    {% endif %}
+                    - 客户: <em>{{ order.customer.name }}</em>
+                    - 产品: <em>{{ order.product_list|join(",", attribute="name") }}</em>
+                    - 重量: <em>{{ order.sub_orders|sum(attribute="weight") }}(公斤)</em>
+                    - {% if order.dispatched %}<em>已经下发</em>{% else %}<em>尚未下发</em>{% endif %}
+                    <blockquote>--由{{ order.creator.username }}在{{ order.create_time }}创建
+                    </blockquote>
+                  </div>
+                </div>
               {% endfor %}
             {% endif %}
           </div>
@@ -140,7 +131,7 @@
         {% if permissions.roles.SchedulerPermission.can() %}
           <div id="work_command_list" class="tab-pane">
             {% if not work_command_list %}
-              <p class="text-error">
+              <p class="text-danger">
                 对不起，没有编号为<em>{{ keywords }}</em>的工单!
               </p>
             {% else %}
@@ -149,20 +140,12 @@
                 <a href="{{ url_for("manufacture.work_command",id_=wc.id, url=request.url) }}">
                   {{ wc.id }}
                 </a>
-                -客户：
-                <em>{{ wc.sub_order.order.goods_receipt.customer.name }}</em>
-                -产品：
-                <em>{{ wc.sub_order.product.name }}</em>
-                -车间：
-                <em>{{ wc.department.name or "未分配" }}</em>
-                -班组：
-                <em>{{ wc.team.name or "未分配" }}</em>
-                -状态:
-                <em>{{ wc.status_name }}
-                </em>
-                <blockquote>--
-                  在{{ wc.create_time }}创建
-                </blockquote>
+                -客户: <em>{{ wc.sub_order.order.goods_receipt.customer.name }}</em>
+                -产品: <em>{{ wc.sub_order.product.name }}</em>
+                -车间: <em>{{ wc.department.name or "未分配" }}</em>
+                -班组: <em>{{ wc.team.name or "未分配" }}</em>
+                -状态: <em>{{ wc.status_name }}</em>
+                <blockquote>--在{{ wc.create_time }}创建</blockquote>
               {% endfor %}
             {% endif %}
           </div>

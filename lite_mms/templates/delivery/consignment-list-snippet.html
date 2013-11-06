@@ -19,22 +19,34 @@
         <td>
           <a href="{{ model_view.data_browser.get_form_url(cn.customer) }}">{{ cn.customer.name }}</a>
         </td>
-        <td>{% if cn.MSSQL_ID %}是{% else %}<div class="text-error">否</div>{% endif %}</td>
-        <td>{% if cn.stale %}<div class="text-error">是</div>{% else %}否{% endif %}</td>
+        <td>{% if cn.MSSQL_ID %}是{% else %}
+          <div class="text-danger">否
+          </div>{% endif %}</td>
+        <td>{% if cn.stale %}
+          <div class="text-danger">是</div>{% else %}否{% endif %}</td>
         <td>{% if cn.pay_in_cash %}
-        现金支付({{ "已支付" if cn.is_paid else "<span class='text-error'>未支付</span>"|safe }})
-         {% else %}
+          现金支付({{ "已支付" if cn.is_paid else "<span class='text-danger'>未支付</span>"|safe }})
+        {% else %}
           月结
         {% endif %} </td>
         <td>
           {% if cn.product_list %}
-            <a data-toggle="collapse" href="#cn-{{ cn.id }}-entries">{{ cn.product_list|length }}</a>
-            <i class="icon-chevron-down"></i>
-            <div id="cn-{{ cn.id }}-entries" class="collapse" data-role="cn-entries">
-              <div class="accordion-inner">
-                {% for entry in cn.product_list %}
-                  <div><a href="{{ model_view.data_browser.get_form_url(entry) }}">{{ entry.product.product_type}} - {{ entry.product }}({{ entry.weight}}公斤)</a></div>
-                {% endfor %}
+            <div class="panel-group">
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h4 class="panel-title">
+                    <a data-toggle="collapse" href="#cn-{{ cn.id }}-entries">
+                      {{ cn.product_list|length }}
+                      <i class="fa fa-chevron-up"></i>
+                    </a>
+                  </h4>
+                </div>
+                <div id="cn-{{ cn.id }}-entries" class="collapse panel-collapse list-group" data-role="cn-entries">
+                  {% for entry in cn.product_list %}
+                    <a href="{{ model_view.data_browser.get_form_url(entry, url=request.url) }}" class="list-group-item">
+                      {{ entry.product.product_type }} - {{ entry.product }}({{ entry.weight }}公斤)</a>
+                  {% endfor %}
+                </div>
               </div>
             </div>
           {% else %}
@@ -48,5 +60,5 @@
     </tbody>
   </table>
 {% else %}
-  <span class="text-error">无</span>
+  <span class="text-danger">无</span>
 {% endif %}

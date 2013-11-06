@@ -72,7 +72,7 @@ def build_db():
         accountant.permissions = [models.Permission.query.filter(models.Permission.name.like("%export_consignment%")).one()]
         accountant = do_commit(accountant)
         #   - 管理员
-        administrator = models.Group(id=groups.ADMINISTRATOR, name=u"管理员", default_url=url_for("admin2.index"))
+        administrator = models.Group(id=groups.ADMINISTRATOR, name=u"管理员", default_url=url_for("admin.index"))
         administrator.permissions = models.Permission.query.all()
         administrator = do_commit(administrator)
 

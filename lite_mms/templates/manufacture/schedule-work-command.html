@@ -38,19 +38,19 @@
 {% block body %}
   <div class="container">
     <legend>排产</legend>
-    <form class="form-horizontal" action="{{ url_for('manufacture.schedule') }}" method="POST">
-      <div class="">
-        <label class="control-label"><strong>数量(单位:{{ work_command.unit }})</strong></label>
+    <form class="form-horizontal" method="POST">
+      <div class="form-group">
+        <label class="control-label col-lg-2">数量(单位:{{ work_command.unit }})</label>
 
-        <div class="controls">
-          <p class="padding">{{ work_command.org_cnt }}</p>
+        <div class="col-lg-3">
+          <p class="form-control-static">{{ work_command.org_cnt }}</p>
         </div>
       </div>
-      <div class="control-group">
-        <label for="department_id" class="control-label"><strong>车间</strong></label>
+      <div class="form-group">
+        <label for="department_id" class="control-label col-lg-2">车间</label>
 
-        <div class="controls">
-          <select name="department_id" id="department_id" required='required'>
+        <div class="col-lg-3">
+          <select name="department_id" id="department_id" required='required' class="form-control">
             {% for department in department_list %}
               <option value="{{ department.id }}"
                   {% if department.id == work_command.default_department.id %}
@@ -58,44 +58,46 @@
                   {% endif %} >{{ department.name }}</option>
             {% endfor %}
           </select>
-          <span class="help-inline">工单<em>{{ work_command.id }}</em>的默认车间是<em>{{ work_command.default_department.name }}</em></span>
+          <span class="help-block">工单<em>{{ work_command.id }}</em>的默认车间是<em>{{ work_command.default_department.name }}</em></span>
         </div>
       </div>
-      <div class="control-group">
-        <label for="tech_req" class="control-label"><strong>技术要求</strong></label>
+      <div class="form-group">
+        <label for="tech_req" class="control-label col-lg-2">技术要求</label>
 
-        <div class="controls">
-          <input size="10" name="tech_req" id="tech_req" type="text" value="{{ work_command.tech_req }}"/>
+        <div class="col-lg-3">
+          <input size="10" name="tech_req" id="tech_req" type="text" value="{{ work_command.tech_req }}" class="form-control"/>
         </div>
       </div>
-      <div class="control-group">
-        <div class="controls">
-          <label for="urgent-input" class="checkbox">
+      <div class="form-group">
+        <label for="urgent-input" class="control-label col-lg-2">加急</label>
+
+        <div class="col-lg-3">
+          <div class="checkbox">
             <input name="urgent" id="urgent-input" type="checkbox"
                 {% if work_command.urgent %}
                    checked="checkbox"
-                {% endif %} /><strong>加急</strong>
-          </label>
+                {% endif %} />
+          </div>
         </div>
       </div>
-      <div class="control-group">
-        <label for="procedure_id" class="control-label"><strong>工序</strong></label>
+      <div class="form-group">
+        <label for="procedure_id" class="control-label col-lg-2">工序</label>
 
-        <div class="controls">
-          <select size="1" name="procedure_id" id="procedure_id" required='required'>
+        <div class="col-lg-3">
+          <select size="1" name="procedure_id" id="procedure_id" required='required' class="form-control">
           </select>
         </div>
       </div>
       <input type="hidden" name="id" value="{{ work_command.id }}"/>
       <input type="hidden" name="url" value="{{ request.args.get("url") or url_for("manufacture.work_command_list") }}"/>
 
-      <div class="control-group">
-        <div class="controls">
-          <button class="btn btn-primary btn-large">
-            <i class="icon-ok icon-white"></i>&nbsp;排产
+      <div class="form-group">
+        <div class="col-lg-3 col-lg-offset-2">
+          <button class="btn btn-primary btn-lg">
+            <i class="fa fa-wrench fa-fw"></i>排产
           </button>
-          <a class="btn btn-large" href="{{ request.args.get("url") or url_for("manufacture.work_command_list") }}">
-            <i class="icon-backward"></i>&nbsp;返回
+          <a class="btn btn-lg btn-default" href="{{ request.args.get("url") or url_for("manufacture.work_command_list") }}">
+            <i class="fa fa-step-backward fa-fw"></i>返回
           </a>
         </div>
       </div>

@@ -1,12 +1,10 @@
 # -*- coding: UTF-8 -*-
 
 from flask import Blueprint
-from lite_mms.permissions import CargoClerkPermission
 
 cargo_page = Blueprint("cargo", __name__, static_folder="static", template_folder="templates")
 
 gr_page = Blueprint("goods_receipt", __name__, static_folder="static", template_folder="templates")
-
 
 from lite_mms.portal.cargo.views import (unload_session_model_view,
                                          plate_model_view,
@@ -15,6 +13,7 @@ from lite_mms.portal.cargo.views import (unload_session_model_view,
                                          unload_task_model_view)
 
 from lite_mms.basemain import data_browser, nav_bar
+
 
 def _do_register(model_view, bp):
     extra_params = {
@@ -34,8 +33,9 @@ def _do_register(model_view, bp):
     }
     data_browser.register_model_view(model_view, bp, extra_params)
 
+
 for model_view in [unload_session_model_view, goods_receipt_entry_view,
-                   plate_model_view, 
+                   plate_model_view,
                    unload_task_model_view]:
     _do_register(model_view, cargo_page)
 

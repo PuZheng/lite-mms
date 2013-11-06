@@ -50,6 +50,7 @@ class CreateConsignmentAction(DirectAction):
     """
     生成发货单是很特殊的action。需要传入额外的参数。
     """
+
     def test_enabled(self, model):
         if model.consignment_list:
             if all(not cn.stale for cn in model.consignment_list) and len(
@@ -109,7 +110,6 @@ class PreviewConsignment(DirectAction):
 
 
 class DeleteDeliverySession(DeleteAction):
-
     def test_enabled(self, model):
         if model.consignment_list:
             return -2
@@ -120,12 +120,13 @@ class DeleteDeliverySession(DeleteAction):
 
     def op(self, obj):
         from lite_mms.apis.todo import remove_todo, WEIGH_DELIVERY_TASK
+
         for task in obj.delivery_task_list:
             remove_todo(WEIGH_DELIVERY_TASK, task.id)
         super(DeleteDeliverySession, self).op(obj)
 
-class DeleteConsignment(DeleteAction):
 
+class DeleteConsignment(DeleteAction):
     def test_enabled(self, model):
         if model.MSSQL_ID:
             return -2
@@ -133,3 +134,25 @@ class DeleteConsignment(DeleteAction):
 
     def get_forbidden_msg_formats(self):
         return {-2: u"已导入到MSSQL的发货单不能删除"}
+
+
+class PersistConsignmentAction(BaseAction):
+    def test_enabled(self, model):
+        if model.MSSQL_ID:
+            return -2
+        return 0
+
+    def get_forbidden_msg_formats(self):
+        return {-2: u"已导入到MSSQL的发货单不能删除"}
+
+    def op(self, obj):
+        obj.persist()
+
+    def op_upon_list(self, objs, model_view):
+        error = ""
+        for obj in objs:
+            try:
+                self._op(obj, model_view)
+            except ValueError, e:
+                error += unicode(e.message)
+        return "", error

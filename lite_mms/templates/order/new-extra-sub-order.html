@@ -52,11 +52,8 @@
           alert("产品及产品类型不能选择为默认加工件");
           return false;
         }
-        if ($("#due_time").val() == "") {
-          alert("交易时间不能为空");
-          return false;
-        }
       });
+      $("#due_time").datetimepicker('setStartDate', new Date().toJSON().substr(0, 10));
     });
   </script>
 {% endblock %}
@@ -68,11 +65,22 @@
     </p>
 
     <form class="form-horizontal" action="{{ url_for('order.new_sub_order') }}" method="POST">
-      <div class="control-group">
-        <label class="control-label" for="product_type"><strong>产品类型</strong>&nbsp;<span class="required">*</span></label>
+      <div class="form-group">
+        <label for="harbor" class="control-label col-lg-2">卸货点&nbsp;<span class="required">*</span></label>
 
-        <div class="controls">
-          <select id="product_type" name="product_type" required="required">
+        <div class="col-lg-3">
+          <select name="harbor" id="harbor" required="required" class="form-control">
+            {% for harbor in harbor_list %}
+              <option value="{{ harbor.name }}">{{ harbor.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="control-label col-lg-2" for="product_type">产品类型&nbsp;<span class="required">*</span></label>
+
+        <div class="col-lg-3">
+          <select id="product_type" name="product_type" required="required" class="form-control">
             {% for t in product_types %}
               <option value="{{ t.id }}">
                 {{ t.name }}</option>
@@ -80,103 +88,95 @@
           </select>
         </div>
       </div>
-      <div class="control-group">
-        <label class="control-label" for="product"><strong>产品名称</strong>&nbsp;<span class="required">*</span></label>
+      <div class="form-group">
+        <label class="control-label col-lg-2" for="product">产品名称&nbsp;<span class="required">*</span></label>
 
-        <div class="controls">
-          <select name="product" id="product" required="required">
+        <div class="col-lg-3">
+          <select name="product" id="product" required="required" class="form-control">
           </select>
         </div>
       </div>
-      <div class="control-group">
-        <label class="control-label" for="tech_req"><strong>技术要求</strong></label>
+      <div class="form-group">
+        <label class="control-label col-lg-2" for="due_time">交货日期&nbsp;<span class="required">*</span></label>
 
-        <div class="controls">
-          <input name="tech_req" size="10" type="text" id="tech_req"/>
+        <div class="col-lg-3">
+          <input name="due_time" id="due_time" type="text" required="required" class="form-control" data-role="datepicker"/>
         </div>
       </div>
-      <div class="control-group">
-        <label class="control-label" for="due_time"><strong>交货日期</strong>&nbsp;<span class="required">*</span></label>
+      <div class="form-group">
+        <label class="control-label col-lg-2" for="weight">净重(公斤)&nbsp;<span class="required">*</span></label>
 
-        <div class="controls">
-          <input name="due_time" id="due_time" type="date" required="required"/>
+        <div class="col-lg-3">
+          <input name="weight" type="number" required="required" id="weight" class="form-control"/>
         </div>
       </div>
-      <div class="control-group">
-        <label class="control-label" for="weight"><strong>净重(KG)</strong>&nbsp;<span class="required">*</span></label>
+      <div class="form-group">
+        <label for="quantity" class="control-label col-lg-2">数量&nbsp;<span class="required">*</span></label>
 
-        <div class="controls">
-          <input name="weight" type="number" required="required" id="weight"/>
+        <div class="col-lg-3">
+          <input id="quantity" name="quantity" type="number" min="1" required="required" class="form-control"/>
         </div>
       </div>
-      <div class="control-group">
-        <label class="control-label"><strong>规格</strong></label>
+      <div class="form-group">
+        <label for="unit" class="control-label col-lg-2">数量单位&nbsp;<span class="required">*</span></label>
 
-        <div class="controls">
-          <input type="text" name="spec" id="spec">
+        <div class="col-lg-3">
+          <input name="unit" type="text" id="unit" required="required" class="form-control"/>
+          <span id="unit_weight" class="help-block"></span>
         </div>
       </div>
-      <div class="control-group">
-        <label class="control-label"><strong>型号</strong></label>
 
-        <div class="controls">
-          <input type="text" name="type" id="type">
+      <div class="form-group">
+        <label class="control-label col-lg-2" for="spec">规格</label>
+
+        <div class="col-lg-3">
+          <input type="text" name="spec" id="spec" class="form-control"/>
         </div>
       </div>
-      <div class="control-group">
-        <label for="quantity" class="control-label"><strong>数量</strong>&nbsp;<span class="required">*</span></label>
+      <div class="form-group">
+        <label class="control-label col-lg-2" for="type">型号</label>
 
-        <div class="controls">
-          <input id="quantity" name="quantity" type="number" min="1" required="required"/>
+        <div class="col-lg-3">
+          <input type="text" name="type" id="type" class="form-control"/>
         </div>
       </div>
-      <div class="control-group">
-        <label for="unit" class="control-label"><strong>数量单位</strong>&nbsp;<span class="required">*</span></label>
 
-        <div class="controls">
-          <input name="unit" type="text" id="unit" required="required"/>
-          <span id="unit_weight" class="help-inline"></span>
+      <div class="form-group">
+        <label class="control-label col-lg-2" for="tech_req">技术要求</label>
+
+        <div class="col-lg-3">
+          <input name="tech_req" size="10" type="text" id="tech_req" class="form-control"/>
         </div>
       </div>
-      <div class="control-group">
-        <label for="harbor" class="control-label"><strong>卸货点</strong>&nbsp;<span class="required">*</span></label>
+      <div class="form-group">
+        <label for="urgent-input" class="control-label col-lg-2">加急</label>
 
-        <div class="controls">
-          <select name="harbor" id="harbor" required="required">
-            {% for harbor in harbor_list %}
-              <option value="{{ harbor.name }}">{{ harbor.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-      </div>
-      <div class="control-group">
-        <div class="controls">
-          <label class="checkbox" for="urgent-input">
+        <div class="col-lg-3">
+          <div class="checkbox">
             <input name="urgent" id="urgent-input" type="checkbox"/>
-            <strong>加急</strong>
-          </label>
+          </div>
         </div>
       </div>
-      <div class="control-group">
-        <div class="controls">
-          <label class="checkbox" for="returned-input">
-            <input name="returned" id="returned-input" type="checkbox"/>
-            <strong>退货</strong>
-          </label>
-        </div>
-      </div>
+      <div class="form-group">
+        <label for="returned-input" class="control-label col-lg-2">退镀</label>
 
-      <div class="control-group">
-        <div class="controls">
-          <input type="hidden" name="order_id" value="{{ order.id }}">
-          <button class="btn btn-large btn-primary">
-            <i class="icon-ok icon-white"></i>&nbsp;保存并返回
+        <div class="col-lg-3">
+          <div class="checkbox">
+            <input name="returned" id="returned-input" type="checkbox"/>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="col-lg-3 col-lg-offset-2">
+          <button class="btn btn-lg btn-primary">
+            <i class="fa fa-check fa-fw"></i>提交
           </button>
-          <a class="btn btn-large" href="{{ request.args.get("url") or url_for("order.order",id_=order.id) }}">
-            <i class="icon-backward"></i>&nbsp;返回
+          <a class="btn btn-lg btn-default" href="{{ request.args.get("url") or url_for("order.order",id_=order.id) }}">
+            <i class="fa fa-step-backward fa-fw"></i>返回
           </a>
         </div>
       </div>
+      <input type="hidden" name="order_id" value="{{ order.id }}">
     </form>
   </div>
   </div>

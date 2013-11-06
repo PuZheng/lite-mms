@@ -3,8 +3,8 @@
   <script type="text/javascript">
     $(function () {
       $("input:checkbox[name='check_all']").click(function () {
-        var val = 'table' + $(this).val().match(/\d+/);
-        $("#" + val + " input:checkbox[name='store_bill_list']").attr("checked", this.checked);
+        var target = $(this).attr("data-target");
+        $(target + " [name='store_bill_list']").prop("checked", this.checked);
       });
       $("#select").click(function () {
         if ($("input:checkbox[name='store_bill_list']:checked").val() == undefined) {
@@ -22,15 +22,12 @@
           }
         });
       {% endif %}
-      $(".collapse").each(function () {
-        $(this).collapse({toggle: false});
-      });
       $("#customer").change(function () {
         var current_id = $(this).val();
         if (current_id != 0) {
-          $(".collapse").each(
+          $(".panel-collapse").each(
               function () {
-                var e = $(this).parent("div.accordion-group");
+                var e = $(this).parent("div.panel");
                 if ($(this).attr("id") != "customer" + current_id) {
                   e.hide();
                 } else {
@@ -40,166 +37,182 @@
               }
           );
         } else {
-          $(".collapse").each(
+          $(".panel-collapse").each(
               function () {
-                $(this).parent("div.accordion-group").show();
+                $(this).parent("div.panel").show();
               }
           );
         }
       });
       function genatext() {
-        var text = "";
-        $(".accordion-group").each(function () {
-          var head = $(this).find("a").text();
+        var html = $("#selected-ids");
+        if (html.length == 0) {
+          html = $("<ul id='selected-ids'></ul>").addClass("list-group")
+        } else {
+          html.empty();
+        }
+        $(".panel-collapse").each(function () {
+          var customer = $(this).attr("data-customer");
           var checkbox = $(this).find("[name=store_bill_list]:checked");
           if (checkbox.length != 0) {
-            text += head + ":";
-            checkbox.each(function (inx) {
-              text += $(this).val();
-              if (inx != checkbox.length - 1) {
-                text += ",";
-              } else {
-                text += "; ";
-              }
-            })
+            var inner = $("<li></li>").addClass("list-group-item").append(
+                    $("<span></span>").addClass("badge").text(checkbox.length)).append(
+                    $("<h4></h4>").addClass("list-group-item-heading").text(customer));
+
+            var p = $("<p></p>").addClass("list-group-item-text");
+            checkbox.each(function () {
+              p.text(p.text() + $(this).val() + " ");
+            });
+            inner.append(p);
+            html.append(inner);
           }
         });
-        $(".text-success").text(text);
+        return html;
       }
 
-      genatext();
       $("[type=checkbox]").click(genatext);
+      $("#selected-sb-popover").popover({"content": genatext, "html": true});
     })
   </script>
 {% endblock %}
 
 {% block body %}
+  {% if customer_list %}
+    <div data-spy="affix">
+      <button class="btn btn-info" data-toggle="popover" type="button" title="已选择仓单" data-placement="bottom"
+              data-original-title="已选择仓单" role="button" id="selected-sb-popover">
+        已选择仓单<i class="fa fa-question-circle"></i>
+      </button>
+    </div>
+  {% endif %}
   <div class="container">
     <legend>仓单列表</legend>
     {% if not customer_list %}
-      <p class="text-error">当前无可发货的仓单</p>
-      <a class="btn btn-large" href="{{ request.args.get("url") or url_for('delivery.session_list') }}">
+      <p class="text-danger">当前无可发货的仓单</p>
+      <a class="btn btn-lg" href="{{ request.args.get("url") or url_for('delivery.session_list') }}">
         返回
       </a>
     {% else %}
-      <p>
-        已选择的仓单：
-        <span class="text-success"></span>
-      </p>
-      <div class="form-inline">
-        <label class="padding" for="customer">客户</label>
-        <select name="customer" id="customer">
-          <option value="0">所有</option>
-          {% for customer in customer_list %}
-            <option value="{{ customer.id }}">{{ customer.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
+      <div class="col-lg-12">
+        <div class="form-horizontal">
+          <div class="form-group">
+            <label class="col-lg-1 control-label" for="customer">客户</label>
 
-      <form class="form-horizontal"
-          {% if delivery_session_id %}
-            method="POST" action="{{ url_for('delivery.store_bill_add', delivery_session_id=delivery_session_id) }}"
-          {% else %}
-            action="{{ request.args.get("url", url_for("delivery.delivery_session")) }}"
-          {% endif %} >
-        {% for keyword in ["plate_", "tare", "with_person"] %}
-          {% if request.args.get(keyword) %}
-            <input type="hidden" name="{{ keyword }}" value="{{ request.args.get(keyword) }}"/>
-          {% endif %}
-        {% endfor %}
-        <div id="accordion-div" class="accordion">
-          {% for customer in customer_list %}
-            <div class="accordion-group">
-              <div class="accordion-heading">
-                <a class="accordion-toggle" href="#customer{{ customer.id }}" data-toggle="collapse">
-                  {{ customer.name }}
-                </a>
-              </div>
-              <div class="accordion-body collapse" id="customer{{ customer.id }}">
-                <div class="accordion-inner">
-                  <table class="table table-striped table-bordered table-condensed" id="table{{ customer.id }}">
-                    <thead>
-                    <tr>
-                      <th>
-                        <input type="checkbox" name="check_all" value="check_box{{ customer.id }}"/>
-                      </th>
-                      <th>仓单号</th>
-                      <th>对应的订单编号</th>
-                      <th>对应的收货单号</th>
-                      <th>存放点</th>
-                      <th>产品名称</th>
-                      <th>大约净重(KG)</th>
-                      <th>数量</th>
-                      <th>图片</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for store_bill in customer.store_bill_list %}
-                      <tr {% if not store_bill.printed %}
-                        class="warning" title="未打印">
-                        <td></td>
-                        {% elif not store_bill.harbor %}
-                          class="warning" title="未选择存放点">
-                          <td></td>
-                      {% else %}
-                        >
-                        <td>
-                          <div class="ym-fbox-check">
-                            <input type="checkbox"
-                                   value="{{ store_bill.id }}"
-                                   name="store_bill_list"/>
-                          </div>
-                        </td>
-                      {% endif %}
-                      <td>{{ store_bill.id }}</td>
-                      <td>{{ store_bill.sub_order.order.customer_order_number }}</td>
-                      <td>
-                        {{ store_bill.sub_order.order.goods_receipt.receipt_id }}</td>
-                      <td>{{ store_bill.harbor.name if store_bill.harbor or "" }}</td>
-                      <td>{{ store_bill.product_name }}</td>
-                      <td>{{ store_bill.weight }}</td>
-                      <td>
-                        {{ store_bill.quantity }}(
-                        {{ store_bill.unit }})
-                      </td>
-                      <td>{% if store_bill.pic_url %}
-                        <a href="{{ store_bill.pic_url }}"
-                           class="fancybox" rel="group"
-                           title="{{ store_bill.product_name }}">
-                          <img src="{{ store_bill.pic_url }}"
-                               class="bordered"
-                               alt="{{ store_bill.product_name }}"/>
-                        </a>{% endif %}</td>
-                      </tr>
-                    {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+            <div class="col-lg-3">
+              <select name="customer" id="customer" class="form-control">
+                <option value="0">所有</option>
+                {% for customer in customer_list %}
+                  <option value="{{ customer.id }}">{{ customer.name }}</option>
+                {% endfor %}
+              </select>
             </div>
-          {% endfor %}
-
-        </div>
-        <div class="control-group">
-          <div class="controls">
-            {% if delivery_session_id %}
-              <input type="hidden" name="url" value="{{ request.args.get("url") or url_for('delivery.delivery_session', id_=delivery_session_id) }}">
-              <button class="btn btn-large btn-primary" id="select">添加
-              </button>
-              <a class="btn btn-large"
-                 href="{{ request.args.get("url") or url_for('delivery.delivery_session', id_=delivery_session_id) }}">返回
-              </a>
-            {% else %}
-              <button class="btn btn-large btn-primary" id="select">
-                添加
-              </button>
-              <button class="btn btn-large" type="button" onclick="window.history.go(-1)">
-                返回
-              </button>
-            {% endif %}
           </div>
         </div>
-      </form>
+
+        <form class="form-horizontal"
+            {% if delivery_session_id %}
+              method="POST" action="{{ url_for('delivery.store_bill_add', delivery_session_id=delivery_session_id) }}"
+            {% else %}
+              action="{{ request.args.get("url", url_for("delivery.delivery_session")) }}"
+            {% endif %} >
+          {% for keyword in ["plate_", "tare", "with_person"] %}
+            {% if request.args.get(keyword) %}
+              <input type="hidden" name="{{ keyword }}" value="{{ request.args.get(keyword) }}"/>
+            {% endif %}
+          {% endfor %}
+          <div id="accordion-div" class="panel-group form-group">
+            {% for customer in customer_list %}
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h4 class="panel-title">
+                    <a href="#customer{{ customer.id }}" data-toggle="collapse" data-target="#customer{{ customer.id }}">
+                      {{ customer.name }} <i class="fa fa-chevron-up"></i>
+                    </a>
+                  </h4>
+                </div>
+                <table class="table table-striped table-bordered table-condensed panel-collapse collapse" id="customer{{ customer.id }}"
+                       data-customer="{{ customer.name }}">
+                  <thead>
+                  <tr>
+                    <th>
+                      <input type="checkbox" name="check_all" data-target="#customer{{ customer.id }}"/>
+                    </th>
+                    <th>仓单号</th>
+                    <th>对应的订单编号(收货单号)</th>
+                    <th>存放点</th>
+                    <th>产品名称</th>
+                    <th>大约净重
+                      {% if not customer.measured_by_weight %}
+                       / 数量</th>
+                        <th>规格 - 型号</th>
+                      {% else %}
+                        </th>
+                      {% endif %}
+                    <th>图片</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  {% for store_bill in customer.store_bill_list %}
+                    {% if not store_bill.printed %}
+                      <tr class="warning" title="未打印">
+                        <td></td>
+                        {% elif not store_bill.harbor %}
+                      <tr class="warning" title="未选择存放点">
+                        <td></td>
+                        {% else %}
+                      <tr>
+                      <td>
+                        <input type="checkbox" value="{{ store_bill.id }}" name="store_bill_list"/>
+                      </td>
+                    {% endif %}
+                  <td>{{ store_bill.id }}</td>
+                  <td>{{ store_bill.sub_order.order.customer_order_number }}
+                    {% if store_bill.sub_order.order.goods_receipt.receipt_id != store_bill.sub_order.order.customer_order_number %}
+                      (store_bill.sub_order.order.goods_receipt.receipt_id)
+                    {% endif %}
+                  </td>
+                  <td>{{ store_bill.harbor.name if store_bill.harbor or "" }}</td>
+                  <td>{{ store_bill.product_name }}</td>
+                  <td>{{ store_bill.weight }}(公斤)
+                  {% if not customer.measured_by_weight %}
+                      / {{ store_bill.quantity }}({{ store_bill.unit }})
+                    </td>
+                    <td>{{ store_bill.spec }} - {{ store_bill.type }}</td>
+                   {% else %}
+                    </td>
+                  {% endif %}
+                  <td>
+                    {% if store_bill.pic_url %}
+                      <a class="fancybox thumbnail" href="{{ store_bill.pic_url }}" rel="group" title="{{ store_bill.product_name }}">
+                        <img class="img-responsive img-polaroid" src="{{ store_bill.pic_url }}" alt="{{ store_bill.product_name }}"/>
+                      </a>
+                    {% endif %}
+                  </td>
+                  </tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% endfor %}
+          </div>
+
+          <div class="form-group">
+            <div class="col-lg-offset-1">
+              {% if delivery_session_id %}
+                <input type="hidden" name="url" value="{{ request.args.get("url") or url_for('delivery.delivery_session', id_=delivery_session_id) }}">
+              {% endif %}
+              <button class="btn btn-lg btn-primary" id="select">添加</button>
+              {% if delivery_session_id %}
+                <a class="btn btn-lg btn-default"
+                   href="{{ request.args.get("url") or url_for('delivery.delivery_session', id_=delivery_session_id) }}">返回
+                </a>
+              {% else %}
+                <button class="btn btn-lg btn-default" type="button" onclick="window.history.go(-1)">返回</button>
+              {% endif %}
+            </div>
+          </div>
+        </form>
+      </div>
       </div>
     {% endif %}
 {% endblock %}

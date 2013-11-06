@@ -22,53 +22,56 @@
 {% block body %}
   <div class="container">
     <form class="form-horizontal" action="{{ url_for('order.work_command') }}" method="POST">
-      <div class="control-group">
-        <label class="control-label"><strong>默认车间</strong></label>
+      <div class="form-group">
+        <label class="control-label col-lg-2">默认车间</label>
 
-        <div class="controls">
-          <p class="padding">{{ department.name }}</p>
+        <div class="col-lg-3">
+          <p class="form-control-static">{{ department.name }}</p>
         </div>
       </div>
       {% if not sub_order.measured_by_weight %}
-        <div class="control-group">
-          <label for="schedule_count" class="control-label">
-            <strong>排产数量(单位:{{ sub_order.unit }})</strong>
+        <div class="form-group">
+          <label for="schedule_count" class="control-label col-lg-2">
+            排产数量(单位:{{ sub_order.unit }})
           </label>
 
-          <div class="controls">
-            <input size="10" name="schedule_count" id="schedule_count" type="number" value="{{ sub_order.remaining_quantity }}" max="{{ sub_order.remaining_quantity }}" min="1" required="required"/>
-            <span class="help-inline">平均每（{{ sub_order.unit }}）重量为：{{ sub_order.weight/sub_order.quantity }}（KG）</span>
+          <div class="col-lg-3">
+            <input size="10" name="schedule_count" id="schedule_count" type="number" value="{{ sub_order.remaining_quantity }}" max="{{ sub_order.remaining_quantity }}" min="1" required="required" class="form-control"/>
+            <span class="help-block">待预排产{{ sub_order.remaining_quantity }}({{ sub_order.unit }})， 平均每({{ sub_order.unit }})重量为：{{ sub_order.weight/sub_order.quantity }}(公斤)</span>
           </div>
         </div>
       {% endif %}
-      <div class="control-group">
-        <label for="schedule_weight" class="control-label"><strong>排产重量(KG)</strong></label>
+      <div class="form-group">
+        <label for="schedule_weight" class="control-label col-lg-2">排产重量(公斤)</label>
 
-        <div class="controls">
-          <input name="schedule_weight" id="schedule_weight" type="number" value="{{ sub_order.remaining_weight }}" max="{{ sub_order.remaining_weight }}" min="1"
+        <div class="col-lg-3">
+          <input name="schedule_weight" id="schedule_weight" type="number" value="{{ sub_order.remaining_weight }}" max="{{ sub_order.remaining_weight }}" min="1" class="form-control"
               {% if not sub_order.measured_by_weight %}
                  readonly="readonly"
               {% endif %}
                  required="required"/>
+          {% if sub_order.measured_by_weight %}
+            <span class="help-block">待预排产{{ sub_order.remaining_weight }}(公斤)</span>
+          {% endif %}
         </div>
       </div>
 
-      <div class="control-group">
-        <label for="tech_req" class="control-label"><strong>技术要求</strong></label>
+      <div class="form-group">
+        <label for="tech_req" class="control-label col-lg-2">技术要求</label>
 
-        <div class="controls">
-          <input size="10" name="tech_req" id="tech_req" type="text" value="{{ sub_order.tech_req }}"/>
+        <div class="col-lg-3">
+          <input size="10" name="tech_req" id="tech_req" type="text" value="{{ sub_order.tech_req }}" class="form-control"/>
         </div>
       </div>
 
       {% if not sub_order.returned %}
-        <div class="control-group">
-          <label for="procedure" class="control-label">
-              <strong>工序</strong>
+        <div class="form-group">
+          <label for="procedure" class="control-label col-lg-2">
+            工序
           </label>
 
-          <div class="controls">
-            <select size="1" name="procedure" id="procedure" required='required'>
+          <div class="col-lg-3">
+            <select size="1" name="procedure" id="procedure" required='required' class="form-control">
               {% for procedure in procedure_list %}
                 <option value="{{ procedure.id }}">{{ procedure.name }}</option>
               {% endfor %}
@@ -76,22 +79,24 @@
           </div>
         </div>
       {% endif %}
-      <div class="control-group">
-        <div class="controls">
-          <label for="urgent-input" class="checkbox">
-            <input name="urgent" id="urgent-input" type="checkbox" {% if sub_order.urgent %} checked="checked" {% endif %}/>加急
-          </label>
+      <div class="form-group">
+        <label for="urgent-input" class="control-label col-lg-2">加急</label>
+
+        <div class="col-lg-3">
+          <div class="checkbox"><input name="urgent" id="urgent-input" type="checkbox"
+              {% if sub_order.urgent %} checked="checked" {% endif %}/></div>
         </div>
       </div>
       <input type="hidden" name="sub_order_id" value="{{ sub_order.id }}"/>
       <input type="hidden" name="url" value="{{ request.args.get("url") or url_for("order.order", id_=sub_order.order.id) }}">
-      <div class="control-group">
-        <div class="controls">
-          <button class="btn btn-large btn-primary">
-              <i class="icon-ok icon-white"></i>&nbsp;保存
+
+      <div class="form-group">
+        <div class="col-lg-offset-2 col-lg-3">
+          <button class="btn btn-lg btn-primary">
+            <i class="fa fa-check fa-fw"></i>提交
           </button>
-          <a class="btn btn-large" href="{{ request.args.get("url") or url_for("order.order", id_=sub_order.order.id) }}">
-              <i class="icon-backward"></i>&nbsp;返回
+          <a class="btn btn-lg btn-default" href="{{ request.args.get("url") or url_for("order.order", id_=sub_order.order.id) }}">
+            <i class="fa fa-step-backward fa-fw"></i>返回
           </a>
         </div>
       </div>

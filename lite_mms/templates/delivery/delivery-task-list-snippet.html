@@ -1,8 +1,12 @@
 {% if field_value %}
+  {% set need_weight = field_value|rejectattr("weight")|list|length > 0 %}
+
   <table class="table table-bordered table-condensed">
     <thead>
     <tr>
-      <th>                </th>
+      {% if need_weight %}
+        <th></th>
+      {% endif %}
       <th>任务ID</th>
       <th>装卸工</th>
       <th>产品名称</th>
@@ -15,11 +19,12 @@
     <tbody>
     {% for row in field_value %}
       <tr>
-        <td>
-          {% if not row.weight %}
-            <a class="del-ut" href="#" data-pk={{ row.id }}><i class="icon-remove"></i></a>
-          {% endif %}
-        </td>
+        {% if need_weight %}
+          <td>
+            {% if not row.weight %}
+              <a class="del-ut" href="#" data-pk={{ row.id }}><i class="fa fa-times text-danger"></i></a>
+            {% endif %}
+          </td>{% endif %}
         <td>
           {% if row.weight %}
             <a href={{ url_for("delivery.delivery_task", id_=row.id, url=request.url) }}>{{ row.id }}</a>
@@ -28,33 +33,32 @@
           {% endif %}
         </td>
         <td>{{ row.actor.username }}</td>
-        <td>{{row.product}}</td>
-        <td>[{% for sb in row.store_bill_list %}
-          <a href="{{ url_for('store_bill.store_bill', id_=sb.id, url=request.url) }}">{{ sb.id }}</a>
-          {% if not loop.last %},
-          {% endif %}
-        {% endfor %}]
+        <td>{{ row.product }}</td>
+        <td>
+          <ul class="nav nav-pills">
+            {% for sb in row.store_bill_list %}
+              <li>
+                <a href="{{ url_for('store_bill.store_bill', id_=sb.id, url=request.url) }}">{{ sb.id }}</a>
+              </li>
+            {% endfor %}
+          </ul>
         </td>
         <td>
           {% if row.weight %}
             {{ row.weight }}
           {% else %}
             <a href="{{ url_for("delivery.weigh_delivery_task", id_=row.id, url=request.url) }}" class="btn btn-primary">
-            <i class="icon-truck icon-large"></i>&nbsp;称重
+              称重
             </a>
           {% endif %}
         </td>
         <td>{{ row.spec_type_list|join("<br>")|safe }}</td>
         <td>
           {% if row.pic_url_list %}
-            {% for pic_url in row.pic_url_list if pic_url%}
-              <ul class="thumbnails">
-                <li class="span2">
-                  <a class="fancybox thumbnail" href="{{ pic_url }}" rel="group" title="{{ row.product.name }}">
-                    <img class="bordered" src="{{ pic_url }}" alt="{{ row.product.name }}"/>
-                  </a>
-                </li>
-              </ul>
+            {% for id, pic_url in row.pic_url_list if pic_url %}
+              <a class="fancybox thumbnail" href="{{ pic_url }}" rel="group" title="{{ id }} - {{ row.product.name }}">
+                <img class="img-responsive img-polaroid" src="{{ pic_url }}" alt="{{ id }} - {{ row.product.name }}"/>
+              </a>
             {% endfor %}
           {% endif %}
         </td>
@@ -71,9 +75,11 @@
                 window.location.reload(false);
               });
         }
-      }).error(function(){alert("删除失败")});
+      }).error(function () {
+            alert("删除失败");
+          });
     });
   </script>
 {% else %}
-  <span class="text-error">无</span>
+  <span class="text-danger">无</span>
 {% endif %}

@@ -228,7 +228,7 @@ class DeliveryTaskWrapper(ModelWrapper):
 
     @property
     def pic_url_list(self):
-        return [store_bill.pic_url for store_bill in self.store_bill_list if store_bill.pic_url]
+        return [(store_bill.id, store_bill.pic_url) for store_bill in self.store_bill_list if store_bill.pic_url]
 
     @cached_property
     def last_weight(self):
@@ -478,6 +478,25 @@ class ConsignmentWrapper(ModelWrapper):
                 task_list.append(task)
         return task_list
 
+    def persist(self):
+        import json
+        from socket import error
+        from sqlalchemy.exc import SQLAlchemyError
+        from lite_mms.apis import broker
+
+        if self.MSSQL_ID:
+            raise ValueError(u"%d已保存" % self.id)
+        try:
+            mssql_id = json.loads(broker.export_consignment(self))
+            try:
+                self.model.MSSQL_ID = mssql_id["id"]
+                db.session.add(self.model)
+                db.session.commit()
+            except SQLAlchemyError:
+                raise ValueError(u"%d插入数据库失败" % self.id)
+        except (ValueError, error):
+            raise ValueError(u"%d插入MS SQL失败，请手工插入" % self.id)
+
 
 class ConsignmentProductWrapper(ModelWrapper):
     @classmethod
@@ -538,10 +557,14 @@ class StoreBillWrapper(ModelWrapper):
         getter = attrgetter("customer.name")
 
         customer_list = []
-        for k, g in groupby(sorted(store_bill_list, key=lambda x: getter(x).encode("gbk")),
-                            lambda x: getattr(x, "customer")):
-            k.store_bill_list = list(g)
-            customer_list.append(k)
+        for customer, g in groupby(sorted(store_bill_list, key=lambda x: getter(x).encode("gbk")),
+                                   lambda x: getattr(x, "customer")):
+            customer.store_bill_list = list(g)
+
+            # store_bill_list不可能为空
+            customer.measured_by_weight = any(
+                store_bill.sub_order.measured_by_weight for store_bill in customer.store_bill_list)
+            customer_list.append(customer)
 
         return customer_list
 

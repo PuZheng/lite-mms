@@ -14,12 +14,10 @@ from lite_mms.portal.search import search_page
 @decorators.templated("/search/search-result.html")
 @decorators.nav_bar_set
 def search():
-    # TODO only order supported now
     import lite_mms.apis as apis
 
     keywords = request.args.get("content")
-    wc_list = order_list = unload_session_list = \
-    delivery_session_list = None
+    wc_list = order_list = unload_session_list = delivery_session_list = None
     if keywords:
         if view_order.can() or schedule_order.can():
             order_list = apis.order.get_order_list(
@@ -37,5 +35,4 @@ def search():
                 keywords=keywords,
                 work_command_list=wc_list,
                 unload_session_list=unload_session_list,
-                delivery_session_list=delivery_session_list
-    )
+                delivery_session_list=delivery_session_list)

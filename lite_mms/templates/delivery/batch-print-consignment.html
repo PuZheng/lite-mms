@@ -17,7 +17,7 @@
   <div class="container">
     {% if error_message %}
       <div class="alert">
-        <p class="text-error">{{ error_message }}</p>
+        <p class="text-danger">{{ error_message }}</p>
       </div>
     {% endif %}
     <button class="btn btn-primary" id="print">打印</button>
@@ -58,11 +58,11 @@
               <tr>
                 <th>产品名称</th>
                 {% if consignment.measured_by_weight %}
-                  <th colspan="3">净重(KG)</th>
+                  <th colspan="3">净重(公斤)</th>
                 {% else %}
                   <th>规格-型号</th>
                   <th>数量</th>
-                  <th>净重(KG)</th>
+                  <th>净重(公斤)</th>
                 {% endif %}
                 <th>生产班组</th>
               </tr>
@@ -98,7 +98,7 @@
               <tr>
                 <td colspan="3">客户签名：</td>
                 <td colspan="2">
-                  总重量(KG):{{ consignment.product_list|sum(attribute='weight') }}</td>
+                  总重量(公斤):{{ consignment.product_list|sum(attribute='weight') }}</td>
               </tr>
             </table>
             <p class="text-right">注:若有质量疑义，请在收货之日起三日内以书面形式告知</p>

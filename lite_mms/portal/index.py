@@ -19,8 +19,18 @@ def index():
 
 @app.route("/error")
 def error():
-    return render_template("error.html", msg=request.args["msg"], back_url=request.args.get("back_url", "/"),
-                           nav_bar=nav_bar, titlename=u"错误")
+    errors = request.args["errors"]
+    if isinstance(errors, dict):
+        return render_template("validation-error.html", errors=errors, url=request.args.get("url", "/"),
+                               nav_bar=nav_bar, titlename=u"错误"), 403
+    else:
+        return render_template("result.html", errors=errors, url=request.args.get("url", "/"),
+                               detail=request.args.get("detail"), nav_bar=nav_bar, titlename=u"错误"), 403
+
+
+@app.route("/result")
+def result():
+    pass
 
 
 @app.route("/index")
@@ -56,6 +66,7 @@ def _resize_file(filename, size=(180, 180)):
             pass
     return new_filename
 
+
 @app.route("/serv-small-pic/<filename>")
 def serv_small_pic(filename):
     new_filename = _resize_file(filename)
@@ -64,18 +75,22 @@ def serv_small_pic(filename):
 
 @app.route("/message")
 def ajax_new_message():
-    from lite_mms.models import TODO
-    from lite_mms.apis.todo import get_all_notify
+    if current_user.is_authenticated():
+        from lite_mms.models import TODO
+        from lite_mms.apis.todo import get_all_notify
 
-    messages = [
-        {
-            "create_time": str(todo.create_time),
-            "actor": todo.actor.username if todo.actor else "",
-            "action": todo.action,
-            "msg": todo.msg,
-            "context_url": todo.context_url
-        }
-        for todo in get_all_notify(current_user.id)
-    ]
-    return json.dumps({"total_cnt": TODO.query.filter(TODO.user_id == current_user.id).count(), "messages": messages})
+        messages = [
+            {
+                "create_time": str(todo.create_time),
+                "actor": todo.actor.username if todo.actor else "",
+                "action": todo.action,
+                "msg": todo.msg,
+                "context_url": todo.context_url
+            }
+            for todo in get_all_notify(current_user.id)
+        ]
+        return json.dumps(
+            {"total_cnt": TODO.query.filter(TODO.user_id == current_user.id).count(), "messages": messages})
+    else:
+        return json.dumps({"total_cnt": 0, "messages": []})
 

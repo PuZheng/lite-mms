@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 import os
 from sqlalchemy.exc import SQLAlchemyError
-from flask import Flask, render_template, request, session, g, url_for
+from flask import Flask, render_template, request, session, g, url_for, redirect
 from flask.ext.babel import Babel, gettext
 from flask.ext.nav_bar import FlaskNavBar
 
@@ -64,7 +64,6 @@ serve_ws = app.config["SERVE_TYPE"] in ["both", "ws"]
 
 
 if serve_web:
-
     from lite_mms.portal.report import report_page
     from flask.ext.report import FlaskReport
     from flask.ext.report.utils import collect_models
@@ -108,8 +107,7 @@ if serve_web:
         'notification': {
             'nav_bar': nav_bar,
         }
-    }, 
-    collect_model_names())
+    }, collect_model_names())
     app.register_blueprint(report_page, url_prefix="/report")
     from lite_mms.portal.store import store_bill_page
     app.register_blueprint(store_bill_page, url_prefix="/store")
@@ -131,8 +129,8 @@ if serve_web:
     app.register_blueprint(order_page, url_prefix="/order")
     from lite_mms.portal.op import op_page
     app.register_blueprint(op_page, url_prefix="/op")
-    from lite_mms.portal.admin2 import admin2_page
-    app.register_blueprint(admin2_page, url_prefix="/admin2")
+    from lite_mms.portal.admin import admin_page
+    app.register_blueprint(admin_page, url_prefix="/admin")
     
     from lite_mms.portal.import_data import import_data_page
     app.register_blueprint(import_data_page, url_prefix="/import_data")
@@ -144,8 +142,6 @@ if serve_web:
 
     from lite_mms.portal.todo import to_do_page
     app.register_blueprint(to_do_page, url_prefix="/todo")
-
-    import lite_mms.portal.admin
 
     from lite_mms.portal.quality_inspection import qir_page
     app.register_blueprint(qir_page, url_prefix="/qir")
@@ -172,29 +168,22 @@ if serve_ws:
 
 # ====================== REGISTER NAV BAR ===================================
 from lite_mms.permissions.roles import (CargoClerkPermission, AccountantPermission, QualityInspectorPermission,
-                                        DepartmentLeaderPermission, AdminPermission, SchedulerPermission)
+                                        AdminPermission, SchedulerPermission)
 from lite_mms.permissions.order import view_order, schedule_order
-from lite_mms.permissions.work_command import view_work_command
 nav_bar.register(cargo_page, name=u"卸货会话", permissions=[CargoClerkPermission], group=u"卸货管理")
 nav_bar.register(gr_page, name=u"收货单", permissions=[CargoClerkPermission], group=u"卸货管理")
 nav_bar.register(order_page, default_url='/order/order-list', name=u"订单管理",
-                 permissions=[view_order])
-nav_bar.register(order_page, default_url='/order/order-list', name=u"订单管理",
-                 permissions=[schedule_order])
+                 permissions=[view_order.union(schedule_order)])
 nav_bar.register(delivery_page, name=u'发货会话',
                  permissions=[CargoClerkPermission], group=u"发货管理")
 nav_bar.register(consignment_page, name=u'发货单',
                  permissions=[CargoClerkPermission.union(AccountantPermission)], group=u"发货管理")
 nav_bar.register(manufacture_page, name=u"工单管理",
                  permissions=[SchedulerPermission])
-#nav_bar.register(delivery_page, name=u"发货单管理",
-                 #default_url="/delivery/consignment-list",
-                 #permissions=[AccountantPermission])
-nav_bar.register(manufacture_page, name=u"质检管理",
-                 default_url="/manufacture/qir-list",
-                 permissions=[DepartmentLeaderPermission])
 nav_bar.register(store_bill_page, name=u"仓单管理",
                  default_url="/store/store-bill-list",
+                 permissions=[QualityInspectorPermission])
+nav_bar.register(qir_page, name=u"质检报告", default_url="/qir/qireport-list",
                  permissions=[QualityInspectorPermission])
 nav_bar.register(deduction_page, name=u"扣重管理", default_url="/deduction/",
                  permissions=[QualityInspectorPermission])
@@ -202,21 +191,23 @@ nav_bar.register(dashboard, name=u"仪表盘", permissions=[AdminPermission])
 
 nav_bar.register(time_line_page, name=u"时间线", default_url="/timeline/log-list")
 nav_bar.register(search_page, name=u"搜索", default_url="/search/search")
-nav_bar.register(admin2_page, name=u"管理中心", default_url="/admin2/user-list", permissions=[AdminPermission])
-nav_bar.register(report_page, name=u"报表列表", default_url="/report/report-list", permissions=[Permission.union(AdminPermission, AccountantPermission)], group=u'报表',
+nav_bar.register(admin_page, name=u"管理中心", default_url="/admin/user-list", permissions=[AdminPermission])
+nav_bar.register(report_page, name=u"报表列表", default_url="/report/report-list",
+                 permissions=[Permission.union(AdminPermission, AccountantPermission)], group=u'报表',
                  enabler=lambda nav: request.path.startswith('/report/report'))
-nav_bar.register(report_page, name=u"数据集合列表", default_url="/report/data-sets", permissions=[Permission.union(AdminPermission, AccountantPermission)], group=u'报表',
+nav_bar.register(report_page, name=u"数据集合列表", default_url="/report/data-sets",
+                 permissions=[Permission.union(AdminPermission, AccountantPermission)], group=u'报表',
                  enabler=lambda nav: request.path.startswith('/report/data-set'))
-nav_bar.register(report_page, name=u"推送列表", default_url="/report/notification-list", permissions=[Permission.union(AdminPermission, AccountantPermission)], group=u'报表', 
+nav_bar.register(report_page, name=u"推送列表", default_url="/report/notification-list",
+                 permissions=[Permission.union(AdminPermission, AccountantPermission)], group=u'报表',
                  enabler=lambda nav: request.path.startswith('/report/notification-list'))
-nav_bar.register(to_do_page, name=u"待办事项", default_url="/todo/todo-list")
-nav_bar.register(qir_page, name=u"质检报告", default_url="/qir/qireport-list", permissions=[QualityInspectorPermission])
-nav_bar.register(work_flow_page, name=lambda: u"工作流(%d)" % models.Node.query.filter(models.Node.handle_time==None).count(), 
+nav_bar.register(to_do_page, name=u"待办事项", default_url="/todo/todo-list", count=0)
+nav_bar.register(work_flow_page, name=lambda: u"工作流",
+                 count=lambda: models.Node.query.filter(models.Node.handle_time == None).count(),
                  default_url="/work-flow/node-list", permissions=[CargoClerkPermission])
 
 #install jinja utilities
 from lite_mms.utilities import url_for_other_page, datetimeformat
-from lite_mms.utilities.decorators import after_this_request 
 from lite_mms import permissions
 
 app.jinja_env.globals['url_for_other_page'] = url_for_other_page
@@ -233,6 +224,7 @@ def load_user(user_id):
 
 
 from lite_mms.permissions.work_flow import HandleNodeNeed
+
 
 @identity_loaded.connect_via(app)
 def permission_handler(sender, identity):
@@ -275,6 +267,7 @@ def permission_handler(sender, identity):
             if node.handler_group_id == current_user.group.id:
                 identity.provides.add(HandleNodeNeed)
 
+
 #设置无权限处理器
 @app.errorhandler(PermissionDenied)
 @app.errorhandler(401)
@@ -283,8 +276,7 @@ def permission_denied(error):
     #如果用户已登录则显示无权限页面
     from flask import redirect, url_for
     if not current_user.is_anonymous():
-        return redirect(url_for("error", msg=u'请联系管理员获得访问权限!',
-                                back_url=request.args.get("url")))
+        return redirect(url_for("error", errors=u'请联系管理员获得访问权限!', url=request.args.get("url")))
         #如果用户还未登录则转向到登录面
     return render_template("auth/login.html",
                            error=gettext(u"请登录"), next_url=request.url, titlename=u"请登录")
@@ -316,10 +308,8 @@ if not app.debug:
         app.logger.error("%s %s" % (request.method, request.url))
         app.logger.error(traceback.plaintext)
         sender_email(traceback)
-        return render_template("error.html", msg=u"%s %s时，系统异常" % (request.method, request.url),
-                               detail=traceback.render_summary(),
-                               back_url=request.args.get("back_url", "/"),
-                               nav_bar=nav_bar, titlename=u"错误"), 403
+        return redirect(url_for("error", errors=u"%s %s时，系统异常" % (request.method, request.url),
+                                detail=traceback.render_summary(), url=request.args.get("url", "/")))
 
 
 @app.after_request
@@ -341,6 +331,7 @@ def _():
 from work_flow_repr import Event
 from work_flow_repr.utils import ModelNode, annotate_model
 from lite_mms.models import (GoodsReceipt, Order, SubOrder, WorkCommand, Log, StoreBill)
+
 
 class GoodsReceiptNode(ModelNode):
     @property
@@ -367,6 +358,7 @@ class GoodsReceiptNode(ModelNode):
     @property
     def children_model_groups(self):
         return [(u'订单', [self.obj.order]),]
+
 
 class OrderNode(ModelNode):
 
@@ -395,6 +387,7 @@ class OrderNode(ModelNode):
     def children_model_groups(self):
         return [(u'子订单', self.obj.sub_order_list)] 
 
+
 class SubOrderNode(ModelNode):
 
     @property
@@ -422,7 +415,9 @@ class SubOrderNode(ModelNode):
 
     @property
     def children_model_groups(self):
-        return [(u'预排产工单', [wc for wc in self.obj.work_command_list if wc.cause == constants.work_command.CAUSE_NORMAL]),]
+        return [
+            (u'预排产工单', [wc for wc in self.obj.work_command_list if wc.cause == constants.work_command.CAUSE_NORMAL]), ]
+
 
 class WorkCommandNode(ModelNode):
 
@@ -459,6 +454,7 @@ class WorkCommandNode(ModelNode):
                 store_bills.append(sb)
 
         return [(k, v) for k, v in d.items()] + [('仓单', store_bills)]
+
 
 class StoreBillNode(ModelNode):
 

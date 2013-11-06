@@ -178,9 +178,7 @@ class OrderWrapper(ModelWrapper):
         """
         生产中重量
         """
-        return sum(
-            sub_order.manufacturing_weight for sub_order in self.sub_order_list
-        )
+        return sum(sub_order.manufacturing_weight for sub_order in self.sub_order_list)
 
     @cached_property
     def manufacturing_work_command_list(self):
@@ -191,24 +189,19 @@ class OrderWrapper(ModelWrapper):
 
     @property
     def can_refine(self):
-        from lite_mms.constants import DEFAULT_PRODUCT_NAME
-
-        return self.sub_order_list and all(
-            sb.due_time for sb in self.sub_order_list) and all(
-            sb.product.name != DEFAULT_PRODUCT_NAME for sb in
-            self.sub_order_list)
+        return self.sub_order_list and all(sb.refined for sb in self.sub_order_list)
 
     @property
     def can_account(self):
         # 所有的子订单已经排产
-        ret = all(so.remaining_quantity==0 for so in self.sub_order_list)
+        ret = all(so.remaining_quantity == 0 for so in self.sub_order_list)
         # 所有子订单都已经生产完毕
         for so in self.sub_order_list:
-            ret = ret and all(wc.status==constants.work_command.STATUS_FINISHED for wc in so.work_command_list)
-        # 至少有一个仓单尚未发货
-        ret = ret and any(any(sb.weight>0 and not sb.delivery_task for sb in so.store_bill_list) for so in self.sub_order_list)
+            ret = ret and all(wc.status == constants.work_command.STATUS_FINISHED for wc in so.work_command_list)
+            # 至少有一个仓单尚未发货
+        ret = ret and any(
+            any(sb.weight > 0 and not sb.delivery_task for sb in so.store_bill_list) for so in self.sub_order_list)
         return ret
-
 
     @property
     def customer(self):
@@ -235,9 +228,7 @@ class OrderWrapper(ModelWrapper):
 
     @property
     def todo_work_cnt(self):
-        return sum(len(
-            sub_order.pre_work_command_list) for sub_order in self
-                   .sub_order_list)
+        return sum(len(sub_order.pre_work_command_list) for sub_order in self.sub_order_list)
 
     @property
     def order_type(self):
@@ -253,9 +244,9 @@ class OrderWrapper(ModelWrapper):
 
     @property
     def warning(self):
-        return self.net_weight > (self.remaining_weight + self.to_work_weight + 
-        self.manufacturing_weight + self.qi_weight + 
-        self.to_deliver_weight + self.delivered_weight)
+        return self.net_weight > (self.remaining_weight + self.to_work_weight +
+                                  self.manufacturing_weight + self.qi_weight +
+                                  self.to_deliver_weight + self.delivered_weight)
 
     @property
     def url(self):
@@ -266,6 +257,7 @@ class OrderWrapper(ModelWrapper):
             return url_for("schedule.order", id_=self.id, url=request.url)
         else:
             return ""
+
     @cached_property
     def qi_work_command_list(self):
         import itertools
@@ -459,6 +451,9 @@ class SubOrderWrapper(ModelWrapper):
         ret = LogWrapper.get_log_list(str(self.id), self.model.__class__.__name__)
         return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time), reverse=True)
 
+    @property
+    def refined(self):
+        return self.due_time and self.product.name != constants.DEFAULT_PRODUCT_NAME
 
 def get_order_type_list():
     t1 = dict(id=constants.STANDARD_ORDER_TYPE,

@@ -71,8 +71,8 @@
             <th>数量</th>
             <th>单位</th>
           {% endif %}
-          <th>净重(KG)</th>
-          <th>退镀重量(KG)</th>
+          <th>净重(公斤)</th>
+          <th>退镀重量(公斤)</th>
           <th>生产班组</th>
         </tr>
         </thead>
@@ -110,10 +110,10 @@
       <div class="control-group">
         <p>
           <span class="span4">
-             <strong><em>总净量(KG)</em></strong>&nbsp;{{ consignment.product_list|sum("weight") }}
+             <strong><em>总净量(公斤)</em></strong>&nbsp;{{ consignment.product_list|sum("weight") }}
           </span>
           <span>
-              <strong><em>总退镀重量(KG)</em></strong>&nbsp;{{ consignment.product_list|sum("returned_weight") }}
+              <strong><em>总退镀重量(公斤)</em></strong>&nbsp;{{ consignment.product_list|sum("returned_weight") }}
           </span>
         </p>
       </div>

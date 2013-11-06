@@ -17,15 +17,15 @@ from lite_mms.models import (User, Group, Department, Team, Procedure,
 import lite_mms.constants as constants
 import lite_mms.constants.groups as groups_const
 from lite_mms.permissions.roles import AdminPermission, CargoClerkPermission
-from lite_mms.portal.admin2 import admin2_page
+from lite_mms.portal.admin import admin_page
 from lite_mms.basemain import nav_bar
 from lite_mms.utilities.decorators import templated
 
 
 class AdminModelView(ModelView):
     can_batchly_edit = False
-    list_template = "admin2/list.html"
-    create_template = edit_template = "admin2/object.html"
+    list_template = "admin/list.html"
+    create_template = edit_template = "admin/object.html"
 
     def try_view(self, objs=None):
         AdminPermission.test()
@@ -35,11 +35,11 @@ class AdminModelView(ModelView):
 
 
 class UserModelView(AdminModelView):
-    edit_template = create_template = "admin2/user.html"
+    edit_template = create_template = "admin/user.html"
     column_hide_backrefs = False
 
     __list_columns__ = ["id", "username", column_spec.PlaceHolderColumnSpec("groups", label=u"用户组",
-                                                                            template_fname="admin2/user-groups-snippet.html"),
+                                                                            template_fname="admin/user-groups-snippet.html"),
                         'enabled']
     __column_labels__ = {"id": u"编号", "username": u"用户名", "group": u"用户组", "password": u"密码(md5加密)",
                          "groups": u"用户组列表", 'enabled': u'激活'}
@@ -127,11 +127,11 @@ group_model_view = GroupModelView(Group, u"用户组")
 class DepartmentModelView(AdminModelView):
     __list_columns__ = ["id", "name",
                         column_spec.PlaceHolderColumnSpec("team_list", label=u"班组列表",
-                                                          template_fname="admin2/department-team-list-snippet.html"),
+                                                          template_fname="admin/department-team-list-snippet.html"),
                         column_spec.PlaceHolderColumnSpec("leader_list", label=u"车间主任",
-                                                          template_fname="admin2/department-leader-list-snippet.html"),
+                                                          template_fname="admin/department-leader-list-snippet.html"),
                         column_spec.PlaceHolderColumnSpec("procedure_list", label=u"允许工序",
-                                                          template_fname="admin2/department-procedure-list-snippet"
+                                                          template_fname="admin/department-procedure-list-snippet"
                                                                          ".html")]
 
     __create_columns__ = __form_columns__ = ["name",
@@ -232,15 +232,15 @@ class ProductModelView(AdminModelView):
 product_model_view = ProductModelView(Product, u"产品")
 
 
-@admin2_page.route("/broker/index.html")
-@templated("/admin2/broker/index.html")
+@admin_page.route("/broker/index.html")
+@templated("/admin/broker/index.html")
 def broker_index():
-    from lite_mms.portal.admin2 import sub_nav_bar
+    from lite_mms.portal.admin import sub_nav_bar
 
     return {"nav_bar": nav_bar, "sub_nav_bar": sub_nav_bar, "titlename": u"数据导入"}
 
 
-@admin2_page.route("/broker/products.html")
+@admin_page.route("/broker/products.html")
 def import_products():
     import lite_mms.apis as apis
 
@@ -251,10 +251,10 @@ def import_products():
     content1 += apis.product.post_types(types_data)
     content2 += apis.product.post_product(products_data)
     flash(u"导入成功: " + content1 + "," + content2, 'success')
-    return redirect(url_for("admin2.broker_index"))
+    return redirect(url_for("admin.broker_index"))
 
 
-@admin2_page.route("/broker/customers.html")
+@admin_page.route("/broker/customers.html")
 def import_customers():
     import lite_mms.apis as apis
 
@@ -262,10 +262,10 @@ def import_customers():
     content = u"读入%d条客户信息，" % len(customers)
     content += apis.customer.post_customers(customers)
     flash(u"导入成功: " + content, 'success')
-    return redirect(url_for("admin2.broker_index"))
+    return redirect(url_for("admin.broker_index"))
 
 
-@admin2_page.route("/broker/consigments.html")
+@admin_page.route("/broker/consigments.html")
 def export_consignments():
     import lite_mms.apis as apis
 
@@ -280,10 +280,10 @@ def export_consignments():
         count += 1
     content += u"成功导出%d条发货单" % count
     flash(u"导出成功: " + content, 'success')
-    return redirect(url_for("admin2.broker_index"))
+    return redirect(url_for("admin.broker_index"))
 
 
-@admin2_page.route("/broker/team-performance.html", methods=["GET", "POST"])
+@admin_page.route("/broker/team-performance.html", methods=["GET", "POST"])
 def team_performance():
     class _DateForm(Form):
         begin_date = DateField("begin_date")
@@ -300,9 +300,9 @@ def team_performance():
         elif begin_date > end_date:
             begin_date, end_date = end_date, begin_date
 
-        from lite_mms.portal.admin2 import sub_nav_bar
+        from lite_mms.portal.admin import sub_nav_bar
 
-        return render_template("/admin2/broker/team-performance.html",
+        return render_template("/admin/broker/team-performance.html",
                                titlename=u"班组绩效管理", begin_date=begin_date,
                                end_date=end_date, nav_bar=nav_bar, sub_nav_bar=sub_nav_bar)
     else:
@@ -347,7 +347,7 @@ def team_performance():
             from StringIO import StringIO
         return_fileobj = StringIO()
         writer = UnicodeWriter(return_fileobj)
-        fieldnames = [u'车间', u'班组', u'生产日期', u'工单号', u'生产重量（KG）', u'扣除重量（KG）']
+        fieldnames = [u'车间', u'班组', u'生产日期', u'工单号', u'生产重量(公斤)', u'扣除重量(公斤)']
         writer.writerow(fieldnames)
         form = _DateForm(request.form)
         begin_date = form.begin_date.data

@@ -1,21 +1,11 @@
 {% extends "__data_browser__/form.html" %}
-{% block __data_browser__custom_external_block %}
-  <link rel="stylesheet" href="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.css") }}" type="text/css" media="screen">
-  <script type="text/javascript" src="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.pack.js") }}"></script>
-  <script src="{{ url_for('__data_browser__.static', filename='js/sprintf-0.6.js') }}"></script>
-  <script type="text/javascript">
-    $(function () {
-      $(".fancybox").fancybox();
-    });
-  </script>
-{% endblock %}
 
 {% block body %}
   {% if obj.stale %}
-  <div class="alert alert-danger">
-    <h3>警告</h3>
-    由于您修改过卸货会话，本收货单已经过时，请重新生成!
-  </div>
+    <div class="alert alert-danger">
+      <h3>警告</h3>
+      由于您修改过卸货会话，本收货单已经过时，请重新生成!
+    </div>
   {% endif %}
   {{ super() }}
 {% endblock %}

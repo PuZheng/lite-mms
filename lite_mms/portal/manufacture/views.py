@@ -1,16 +1,18 @@
 # -*- coding: UTF-8 -*-
 from collections import OrderedDict
-from flask import url_for, request
+from flask import url_for, request, render_template, abort, flash, redirect, json
 
 from flask.ext.databrowser import ModelView, filters, column_spec
-from flask.ext.login import login_required
+from flask.ext.login import login_required, current_user
 from flask.ext.principal import PermissionDenied
-from werkzeug.utils import cached_property
-from lite_mms import constants
+from wtforms import Form, validators, HiddenField, BooleanField, TextField, IntegerField
 
-from lite_mms.models import WorkCommand, Order, SubOrder
-from lite_mms.apis.manufacture import get_wc_status_list, get_status_list, get_handle_type_list
+from lite_mms import constants
+from lite_mms.basemain import nav_bar
+from lite_mms.models import WorkCommand
+from lite_mms.apis.manufacture import get_wc_status_list, get_status_list, get_handle_type_list, get_department_list
 from lite_mms.permissions import SchedulerPermission
+from lite_mms.portal.manufacture import manufacture_page
 
 
 class WorkCommandView(ModelView):
@@ -30,6 +32,7 @@ class WorkCommandView(ModelView):
 
     def preprocess(self, obj):
         from lite_mms import apis
+
         return apis.manufacture.WorkCommandWrapper(obj)
 
     def patch_row_attr(self, idx, row):
@@ -37,6 +40,7 @@ class WorkCommandView(ModelView):
             return {"class": "danger", "title": u"退镀或加急"}
 
     from datetime import datetime, timedelta
+
     today = datetime.today()
     yesterday = today.date()
     week_ago = (today - timedelta(days=7)).date()
@@ -56,29 +60,31 @@ class WorkCommandView(ModelView):
         filters.EqualTo("sub_order.order.id", name="", hidden=True),
         filters.Only("urgent", display_col_name=u"只展示加急", test=lambda v: v == True, notation="__urgent"),
         filters.Only("sub_order.returned", display_col_name=u"只展示退镀", test=lambda v: v == True, notation="__returned"),
-        filters.EqualTo("department", u"是")
-    ]
+        filters.EqualTo("department", u"是")]
+
+    f = lambda v, model: u"<span class='text-danger'>是</span>" if v else u"否"
 
     __column_formatters__ = {
         "status": lambda v, model: get_wc_status_list().get(v)[0],
         "department": lambda v, model: v if v else "",
         "team": lambda v, model: v if v else "",
-        "sub_order.returned": lambda v, model: u"是" if v else u"否",
-        "urgent": lambda v, model: u"是" if v else u"否",
+        "sub_order.returned": f,
+        "urgent": f,
         "procedure": lambda v, model: v if v else "",
         "previous_procedure": lambda v, model: v if v else "",
         "handle_type": lambda v, model: get_handle_type_list().get(v, u"未知")
     }
-    
+
     def repr_obj(self, obj):
         return u"""
         <span>
         %(wc)s - <small>%(customer)s</small>
-        <small class='pull-right muted'>
+        <small class='pull-right text-muted'>
         %(datetime)s 
         </small>
         </span> 
-        """ % {"wc": unicode(obj), "customer": obj.order.goods_receipt.customer, "datetime": obj.create_time.strftime("%m-%d %H:%M")}
+        """ % {"wc": unicode(obj), "customer": obj.order.goods_receipt.customer,
+               "datetime": obj.create_time.strftime("%m-%d %H:%M")}
 
     def try_create(self):
         raise PermissionDenied
@@ -95,8 +101,7 @@ class WorkCommandView(ModelView):
         else:
             raise PermissionDenied
 
-
-    def edit_hint_message(self,obj, read_only=False):
+    def edit_hint_message(self, obj, read_only=False):
         if read_only:
             if not SchedulerPermission.can():
                 return u"无修改订单的权限"
@@ -146,35 +151,97 @@ class WorkCommandView(ModelView):
                                  column_spec.ListColumnSpec("next_work_command_list", label=u"下级工单",
                                                             item_col_spec=c),
                                  column_spec.PlaceHolderColumnSpec("log_list", label=u"日志",
-                                                                   template_fname="logs-snippet.html")
-        ]
+                                                                   template_fname="logs-snippet.html")]
         form_columns[u"加工信息"] = [column_spec.ColumnSpec("department"),
-                                     column_spec.ColumnSpec("team"), "procedure",
-                                     column_spec.ColumnSpec("previous_procedure"),
-                                     column_spec.ColumnSpec("processed_weight", label=u"工序后重量"),
-                                     column_spec.ColumnSpec("processed_cnt", label=u"工序后数量"),
-                                     column_spec.ColumnSpec("status_name", label=u"状态"),
-                                     column_spec.ColumnSpec("completed_time", label=u"生产结束时间"),
-                                     column_spec.ColumnSpec("handle_type", label=u"处理类型",
-                                                            formatter=lambda v, obj: get_handle_type_list().get(v, u"未知"))]
+                                 column_spec.ColumnSpec("team"),
+                                 column_spec.ColumnSpec("procedure"),
+                                 column_spec.ColumnSpec("previous_procedure"),
+                                 column_spec.ColumnSpec("processed_weight", label=u"工序后重量"),
+                                 column_spec.ColumnSpec("processed_cnt", label=u"工序后数量"),
+                                 column_spec.ColumnSpec("status_name", label=u"状态"),
+                                 column_spec.ColumnSpec("completed_time", label=u"生产结束时间"),
+                                 column_spec.ColumnSpec("handle_type", label=u"处理类型",
+                                                        formatter=lambda v, obj: get_handle_type_list().get(v, u"未知"))]
         if obj and obj.qir_list:
             from lite_mms.apis.quality_inspection import get_QI_result_list
             from lite_mms.portal.quality_inspection.views import qir_model_view
+
             def result(qir):
                 for i in get_QI_result_list():
                     if qir.result == i[0]:
-                        status =  i[1]
+                        status = i[1]
                         break
                 else:
                     status = u"未知"
                 return u"<a href='%s'>质检单%s%s了%s（公斤）</a>" % (
-                qir_model_view.url_for_object(qir, url=request.url), qir.id, status, qir.weight)
+                    qir_model_view.url_for_object(qir, url=request.url), qir.id, status, qir.weight)
 
             form_columns[u"质检信息"] = [column_spec.ListColumnSpec("qir_list", label=u"质检结果",
                                                                 formatter=lambda v, obj: [result(qir) for qir in v])]
 
-        form_columns[u"订单信息"] = [ column_spec.ColumnSpec("sub_order"),
-                            column_spec.ColumnSpec("sub_order.order", label=u"订单号")]
+        form_columns[u"订单信息"] = [column_spec.ColumnSpec("sub_order"),
+                                 column_spec.ColumnSpec("sub_order.order", label=u"订单号")]
         return form_columns
 
 work_command_view = WorkCommandView(WorkCommand)
+
+
+def _wrapper(department):
+    return dict(id=department.id, name=department.name,
+                procedure_list=[dict(id=p.id, name=p.name) for p in
+                                department.procedure_list])
+
+
+@manufacture_page.route('/schedule/<work_command_id>', methods=['GET', 'POST'])
+def schedule(work_command_id):
+    import lite_mms.apis as apis
+
+    work_command_list = [apis.manufacture.get_work_command(id_) for id_ in json.loads(work_command_id)]
+    if request.method == 'GET':
+        if 1 == len(work_command_list):
+            work_command = work_command_list[0]
+            return render_template("manufacture/schedule-work-command.html", titlename=u'排产', nav_bar=nav_bar,
+                                   department_list=[_wrapper(d) for d in get_department_list()],
+                                   work_command=work_command)
+        else:
+            from lite_mms.utilities.functions import deduplicate
+
+            department_set = deduplicate([wc.department for wc in work_command_list], lambda x: x.name)
+
+            param_dic = {'titlename': u'批量排产', 'department_list': [_wrapper(d) for d in get_department_list()],
+                         'work_command_list': work_command_list,
+                         'default_department_id': department_set[0].id if len(department_set) == 1 else None}
+
+            return render_template("manufacture/batch-schedule.html", nav_bar=nav_bar, **param_dic)
+    else:  # POST
+        class WorkCommandForm(Form):
+            url = HiddenField('url')
+            procedure_id = IntegerField('procedure_id')
+            department_id = IntegerField('department_id', [validators.required()])
+            tech_req = TextField('tech_req')
+            urgent = BooleanField('urgent')
+
+        form = WorkCommandForm(request.form)
+        if form.validate():
+            department = apis.manufacture.get_department(form.department_id.data)
+            if not department:
+                abort(404)
+            if not form.procedure_id.data and any(not work_command.procedure for work_command in work_command_list):
+                abort(403)
+            for work_command in work_command_list:
+                if work_command:
+                    d = dict(tech_req=form.tech_req.data,
+                             urgent=form.urgent.data,
+                             department_id=department.id)
+                    if form.procedure_id.data:
+                        d.update(procedure_id=form.procedure_id.data)
+
+                    work_command.go(actor_id=current_user.id,
+                                    action=constants.work_command.ACT_DISPATCH,
+                                    **d)
+                else:
+                    abort(404)
+            flash(u"工单(%s)已经被成功排产至车间(%s)" % (work_command_id, department.name))
+            return redirect(form.url.data or url_for("manufacture.work_command_list"))
+        else:
+            return redirect(url_for("error", error=form.errors))

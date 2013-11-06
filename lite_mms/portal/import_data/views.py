@@ -25,7 +25,7 @@ def consignments():
     from lite_mms import apis
 
     try:
-        current_consignments,totalcnt = apis.delivery.get_consignment_list(exporting=True)
+        current_consignments, totalcnt = apis.delivery.get_consignment_list(exporting=True)
         content = u"读出%d条发货单信息，" % len(current_consignments)
         count = 0
         for consignment in current_consignments:
@@ -33,7 +33,7 @@ def consignments():
                 MSSQL_ID = json.loads(
                     apis.broker.export_consignment(consignment))
             except error:
-                content=u"链接超时"
+                content = u"链接超时"
                 return dict(titlename=u"导出失败，链接超时", content=content,
                             back_url=url_for('.index'))
 

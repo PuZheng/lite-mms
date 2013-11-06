@@ -1,23 +1,41 @@
 {% set total_weight = field_value|sum("processed_weight") %}
 {% if field_value|length %}
-  <a href="#modal_{{ obj.id }}_wcl" role="button" data-toggle="modal">{{ total_weight }}</a>
-  <div class="modal hide fade" id="modal_{{ obj.id }}_wcl" tabindex="-1">
-    <div class="modal-header">
-      <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-      <h3>订单{{ obj.customer_order_number }}的待质检工单列表</h3>
-    </div>
-    <div class="modal-body">
-      <ul>
-        {% for entry in field_value %}
-          <li>
-            工单编号{{ entry.id }}，生产重量{{ entry.processed_weight }}公斤{% if not entry.sub_order.measured_by_weight %}，数量
-            {{ entry.org_cnt }}（{{ entry.unit }}）{% endif %}，生产班组<em>{{ entry.team or "无"}}</em>
-          </li>
-        {% endfor %}
-      </ul>
-    </div>
-    <div class="modal-footer">
-      <a class="btn" href="#" data-dismiss="modal">关闭</a>
+  <a href="#modal_{{ obj.id }}_qi" role="button" data-toggle="modal">{{ total_weight }}</a>
+  <div class="modal fade" id="modal_{{ obj.id }}_qi" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h3 class="modal-title">订单{{ obj.customer_order_number }}的待质检工单列表</h3>
+        </div>
+        <div class="modal-body">
+          <table class="table table-striped table-bordered table-condensed">
+            <thead>
+            <tr>
+              <th>工单编号</th>
+              <th>生产重量 {% if not obj.measured_by_weight %}
+                / 数量
+              {% endif %} </th>
+              <th>生成班组</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for entry in field_value %}
+              <tr>
+                <td>{{ entry.id }}</td>
+                <td>{{ entry.processed_weight }}(公斤) {% if not obj.measured_by_weight %}
+                  / {{ entry.processed_cnt }}({{ entry.unit }})
+                {% endif %} </td>
+                <td>{{ entry.team or "" }}</td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+        </div>
+      </div>
     </div>
   </div>
 {% else %}

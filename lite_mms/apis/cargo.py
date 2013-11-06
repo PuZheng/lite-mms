@@ -194,7 +194,7 @@ class UnloadTaskWrapper(ModelWrapper):
         fsm.next(constants.cargo.ACT_WEIGHT, current_user)
 
         from lite_mms.apis import todo
-        # delete todo
+        # delete
         todo.remove_todo(todo.WEIGH_UNLOAD_TASK, self.id)
         return True
     

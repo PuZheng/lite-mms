@@ -113,7 +113,7 @@ def export2csv():
         from StringIO import StringIO
     return_fileobj = StringIO()
     writer = UnicodeWriter(return_fileobj)
-    fieldnames = [u'班组', u'生产日期',u'工单号' , u'生产重量（KG）', u'扣除重量（KG）']
+    fieldnames = [u'班组', u'生产日期', u'工单号', u'生产重量(公斤)', u'扣除重量(公斤']
     writer.writerow(fieldnames)
     begin_date_s = request.form.get("begin_date")
     begin_date, end_date = None, None

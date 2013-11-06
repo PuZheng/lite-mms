@@ -62,7 +62,7 @@
               <tr>
                 <th>产品类型</th>
                 <th>产品名称</th>
-                <th>净重(KG)</th>
+                <th>净重(公斤)</th>
                 <th>交货日期</th>
               </tr>
               {% for entry in entries %}
@@ -82,7 +82,7 @@
               <tr>
                 <td colspan="2">客户签名:</td>
                 <td colspan="2">
-                  总重量(KG):{{ gr.product_list|sum(attribute='weight') }}
+                  总重量(公斤):{{ gr.product_list|sum(attribute='weight') }}
                 </td>
               </tr>
               </tbody>

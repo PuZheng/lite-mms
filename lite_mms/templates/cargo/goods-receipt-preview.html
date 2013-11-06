@@ -63,7 +63,7 @@
         <tr>
           <th>产品类型</th>
           <th>产品名称</th>
-          <th>净重(KG)</th>
+          <th>净重(公斤)</th>
           <th>交货日期</th>
         </tr>
         {% for entry in receipt.goods_receipt_entries %}
@@ -83,7 +83,7 @@
         <tr>
           <td colspan="2">客户签名:</td>
           <td colspan="2">
-            总重量(KG):{{ receipt.goods_receipt_entries|sum(attribute='weight') }}
+            总重量(公斤):{{ receipt.goods_receipt_entries|sum(attribute='weight') }}
           </td>
         </tr>
         </tbody>
@@ -124,7 +124,7 @@
               <tr>
                 <th>产品类型</th>
                 <th>产品名称</th>
-                <th>净重(KG)</th>
+                <th>净重(公斤)</th>
                 <th>交货日期</th>
               </tr>
               {% for task in receipt.goods_receipt_entries %}
@@ -146,7 +146,7 @@
               <tr>
                 <td colspan="2">客户签名:</td>
                 <td colspan="2">
-                  总重量(KG):{{ receipt.goods_receipt_entries|sum(attribute='weight') }}
+                  总重量(公斤):{{ receipt.goods_receipt_entries|sum(attribute='weight') }}
                 </td>
               </tr>
               </tbody>

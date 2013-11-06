@@ -7,8 +7,8 @@
     });
 </script>
 
-<a data-toggle='modal' href="#help-modal" class="icon-question-sign pull-right work-flow-help" ></a>
-<div class="modal fade hide" id="help-modal" tabindex="-1">
+<a data-toggle='modal' href="#help-modal" class="fa fa-question-circle pull-right work-flow-help" ></a>
+<div class="modal fade" id="help-modal" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -36,7 +36,7 @@
         </ul>
       </div>
       <div class="modal-footer">
-        <a href="#" class="btn" data-dismiss='modal'>{{ _('Close') }}</a>
+        <button type="button" class="btn btn-default" data-dismiss='modal'>{{ _('Close') }}</button>
       </div>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->

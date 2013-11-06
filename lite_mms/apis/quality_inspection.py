@@ -129,3 +129,11 @@ def get_QI_result_list():
         (qi_const.REPLATE, u'返镀'),
         (qi_const.DISCARD, u'报废'),
     ]
+
+
+def get_QI_result(result):
+    for i in get_QI_result_list():
+        if i[0] == result:
+            return i[1]
+    else:
+        return u"未知"

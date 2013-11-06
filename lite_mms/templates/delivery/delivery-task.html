@@ -1,16 +1,16 @@
 {% extends "layout.html" %}
 {% block __data_browser__custom_external_block %}
-  <link rel="stylesheet" href="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.css") }}" type="text/css" media="screen">
-  <script type="text/javascript" src="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.pack.js") }}"></script>
   <script type="text/javascript">
     $(function () {
-      $(".fancybox").fancybox();
-    });
-    $("#delete-button").click(function () {
-      if (confirm("确定删除该卸货任务？")) {
-        $("input[type=hidden][name=method]").val("delete");
-        $(this).parents("form").submit();
-      }
+      $("#delete-button").click(function () {
+        if (confirm("确定删除该卸货任务？")) {
+          var form = $(this).parents("form");
+          var input = $("<input type='hidden' name='action'></input>").val("delete");
+          form.append(input).submit();
+        } else {
+          return false;
+        }
+      })
     });
   </script>
 {% endblock %}
@@ -18,59 +18,54 @@
   <div class="container">
     <div class="alert alert-info">
       车辆
-      <strong>{{ task.delivery_session.plate }}</strong>
+      {{ task.delivery_session.plate }}
       {% if task.store_bill_list[0].harbor %}在装货点
-        <strong>{{ task.store_bill_list[0].harbor.name }}</strong>{% endif %}
+        {{ task.store_bill_list[0].harbor.name }}{% endif %}
       完成了一次客户
-      <strong>{{ task.customer.name }}</strong>
+      {{ task.customer.name }}
       的装货任务
     </div>
     <form class="form-horizontal" method="POST">
-      <legend>发货任务详情&nbsp;
-        <button class="btn btn-danger" id="delete-button" type="button"><i class="icon-remove"></i>&nbsp;删除</button>
-      </legend>
-      <input type="hidden" name="method"/>
-      <div class="control-group">
-        <label class="control-label"><strong>产品名称</strong></label>
+      <legend>发货任务详情</legend>
+      <div class="form-group">
+        <label class="control-label col-lg-2">产品名称</label>
 
-        <div class="controls">
-          <p class="padding">{{ task.product.name }}</p>
+        <div class="col-lg-3">
+          <p class="form-control-static">{{ task.product.name }}</p>
         </div>
       </div>
 
-      <div class="control-group">
-        <label class="control-label"><strong>上次称重重量(KG)</strong></label>
+      <div class="form-group">
+        <label class="control-label col-lg-2">上次称重重量(公斤)</label>
 
-        <div class="controls">
-          <p class="padding">{{ task.last_weight }}</p>
+        <div class="col-lg-3">
+          <p class="form-control-static">{{ task.last_weight }}</p>
         </div>
       </div>
-      <div class="control-group">
-        <label class="control-label"><strong>上次称重时车上有人</strong></label>
+      <div class="form-group">
+        <label class="control-label col-lg-2">上次称重时车上有人</label>
 
-        <div class="controls">
-          <p class="padding">{{ task.delivery_session.with_person_des }}</p>
+        <div class="col-lg-3">
+          <p class="form-control-static">{{ task.delivery_session.with_person_des }}</p>
         </div>
       </div>
-      <div class="control-group">
-        <label for="weight" class="control-label"><strong>本次称重的重量为(KG)</strong></label>
+      <div class="form-group">
+        <label for="weight" class="control-label col-lg-2">本次称重的重量为(公斤)</label>
 
-        <div class="controls">
-          <input type="number" name="weight" id="weight" size="20" required="True" min="{{ task.last_weight + 1 }}"/>
+        <div class="col-lg-3">
+          <input type="number" name="weight" id="weight" size="20" required="True" min="{{ task.last_weight + 1 }}" class="form-control"/>
         </div>
       </div>
-      <div class="control-group">
-        <label class="control-label">
-          <strong>此次装货的图片</strong>
-        </label>
+      <div class="form-group">
+        <label class="control-label col-lg-2">此次装货的图片</label>
 
-        <div class="controls">
-          <ul class="thumbnails">
-            {% for pic_url in task.pic_url_list %}
+        <div class="col-lg-3">
+          <ul class="list-group">
+            {% for id, pic_url in task.pic_url_list %}
               {% if pic_url %}
-                <li class="span2">
-                  <a href="{{ pic_url }}" class="fancybox thumbnail" rel="group" title="{{ task.product.name }}">
-                    <img src="{{ pic_url }}" class="bordered" alt="{{ task.product.name }}"/>
+                <li class="list-group-item">
+                  <a href="{{ pic_url }}" class="fancybox" rel="group" title="{{ id }}-{{ task.product.name }}">
+                    <img src="{{ pic_url }}" class="img-polaroid img-responsive" alt="{{ id }}-'{{ task.product.name }}"/>
                   </a>
                 </li>
               {% endif %}
@@ -78,13 +73,18 @@
           </ul>
         </div>
       </div>
-      <div class="control-group">
-        <div class="controls">
+      <div class="form-group">
+        <div class="col-lg-10 col-lg-offset-2">
           <input type="hidden" name="url" value="{{ request.args.get("url") or url_for("delivery.delivery_session", id_=task.delivery_session.id) }}">
-          <button class="btn btn-primary btn-large"><i class="icon-ok icon-white"></i>&nbsp;保存</button>
-          <a class="btn btn-large" href="{{ request.args.get("url") or url_for("delivery.delivery_session", id_=task.delivery_session.id) }}">
-            <i class="icon-backward"></i>&nbsp;返回
+
+          <button class="btn btn-primary btn-lg"><i class="fa fa-save fa-fw"></i>保存</button>
+
+          <a class="btn btn-lg btn-default" href="{{ request.args.get("url") or url_for("delivery.delivery_session", id_=task.delivery_session.id) }}">
+            <i class="fa fa-backward fa-fw"></i>返回
           </a>
+          <button class="btn btn-danger btn-lg" id="delete-button" type="button" >
+            <i class="fa fa-times fa-fw"></i>删除
+          </button>
         </div>
       </div>
     </form>

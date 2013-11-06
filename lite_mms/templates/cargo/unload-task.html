@@ -1,8 +1,6 @@
 {% extends "layout.html" %}
 {% block __data_browser__customized_head_block %}
   {{ super() }}
-  <link rel="stylesheet" href="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.css") }}" type="text/css" media="screen">
-  <script type="text/javascript" src="{{ url_for('static',filename="js/fancybox/source/jquery.fancybox.pack.js") }}"></script>
   <script type="text/javascript">
     $(function () {
       var products = {{ products|safe }};
@@ -25,10 +23,14 @@
       });
       $("#delete-button").click(function () {
         if (confirm("确定删除该卸货任务？")) {
-          $(this).parents("form").submit();
+          var form = $(this).parents("form");
+          var input = $("<input type='hidden' name='action'></input>").val("delete");
+          form.append(input);
+          form.submit();
+        } else {
+          return false;
         }
       });
-      $(".fancybox").fancybox();
     });
   </script>
 {% endblock %}
@@ -81,7 +83,7 @@
         </div>
       </div>
 
-     <div class="form-group">
+      <div class="form-group">
         <label class="control-label col-lg-2">上次称重是否车上有人</label>
 
         <div class="col-lg-3">
@@ -90,7 +92,7 @@
       </div>
 
       <div class="form-group">
-        <label class="control-label col-lg-2">上次称重重量(KG)</label>
+        <label class="control-label col-lg-2">上次称重重量(公斤)</label>
 
         <div class="col-lg-3">
           <p class="form-control-static">{{ task.last_weight }}</p>
@@ -98,7 +100,7 @@
       </div>
 
       <div class="form-group">
-        <label for="weight" class="control-label col-lg-2">本次称重的重量为(KG)</label>
+        <label for="weight" class="control-label col-lg-2">本次称重的重量为(公斤)</label>
 
         <div class="col-lg-3">
           <input type="number" name="weight" id="weight" size="20" required="True" min="1" max="{{ task.last_weight - 1 }}" class="form-control"
@@ -115,7 +117,7 @@
         <div class="col-lg-3">
           {% if task.pic_url %}
             <a class="fancybox thumbnail" href="{{ task.pic_url }}" rel="group" title="{{ task.product.name }}">
-              <img class="img-responsive" src="{{ task.pic_url }}" alt="{{ task.product.name }}" style="max-height: 180px; max-width: 180px;"/>
+              <img class="img-responsive img-polaroid" src="{{ task.pic_url }}" alt="{{ task.product.name }}"/>
             </a>
           {% endif %}
         </div>
@@ -128,12 +130,12 @@
             <i class="fa fa-save fa-fw"></i>保存
           </button>
           <a class="btn btn-lg btn-default" href="{{ request.args.get("url") or url_for('cargo.unload_session',id_=task.unload_session.id) }}">
-            <i class="fa fa-step-backward"></i>&nbsp;返回
+            <i class="fa fa-step-backward fa-fw"></i>返回
           </a>
           {% if not task.weight %}
-          <button class="btn btn-lg btn-danger" type="button" id="delete-button" value="delete">
-            <i class="fa fa-times fa-fw"></i>删除
-          </button>
+            <button class="btn btn-lg btn-danger" type="button" id="delete-button">
+              <i class="fa fa-times fa-fw"></i>删除
+            </button>
           {% endif %}
         </div>
       </div>

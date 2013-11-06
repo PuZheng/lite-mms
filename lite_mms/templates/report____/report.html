@@ -13,17 +13,21 @@
 {% endblock %}
 
 {% block drill_down %}
-  <div id="drill-down-detail" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-header">
-      <h3></h3>
-    </div>
-    <div class="modal-body">
-      <p class="pagination-centered">
-      </p>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" data-dismiss="modal" aria-hidden="true">{{ _('Close') }}</button>
-      <button class="btn btn-primary" id="print-area">打印</button>
+  <div id="drill-down-detail" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3></h3>
+        </div>
+        <div class="modal-body">
+          <p class="pagination-centered">
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">{{ _('Close') }}</button>
+          <button class="btn btn-primary" id="print-area">打印</button>
+        </div>
+      </div>
     </div>
   </div>
 {% endblock %}

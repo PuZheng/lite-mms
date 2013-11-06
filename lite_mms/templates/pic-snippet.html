@@ -1,5 +1,5 @@
-{% if obj.pic_path %}
+{% if obj.pic_url %}
   <a class="fancybox thumbnail" href="{{ obj.pic_url }}" rel="group" title="{{ obj.product.name }}">
-    <img class="img-responsive" src="{{ obj.pic_url }}" alt="{{ obj.product.name }}" style="max-height: 180px; max-width: 180px;"/>
+    <img class="img-responsive img-polaroid" src="{{ obj.pic_url }}" alt="{{ obj.product.name }}"/>
   </a>
 {% endif %}

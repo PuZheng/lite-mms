@@ -139,7 +139,7 @@ class UnloadSessionModelView(ModelView):
                 return redirect(url_for("goods_receipt.goods_receipts_batch_print", id_=",".join([str(gr.id) for gr in obj.goods_receipt_list]), url=request.url))
 
         action_list = []
-        if model_list is None: # for list
+        if model_list is None:  # for list
             action_list.extend([CloseAction(u"关闭"), OpenAction(u"打开"), CreateReceiptAction(u"生成收货单"), DeleteUnloadSessionAction(u"删除", None)])
         else:
             if len(model_list) ==1:
@@ -162,11 +162,11 @@ class UnloadSessionModelView(ModelView):
                 and_(~exists().where(UnloadSession.plate == Plate.name).where(UnloadSession.finish_time == None),
                      ~exists().where(DeliverySession.finish_time == None).where(DeliverySession.plate == Plate.name)))
 
-        return [InputColumnSpec("plate_",filter_=filter_plate),
+        return [InputColumnSpec("plate_", filter_=filter_plate),
                 InputColumnSpec("with_person", label=u"驾驶室是否有人"),
                 "gross_weight"]
 
-    def edit_hint_message(self,obj, read_only=False):
+    def edit_hint_message(self, obj, read_only=False):
         if read_only:
             return u"已关闭的卸货会话不能修改"
         else:
@@ -177,8 +177,7 @@ class UnloadSessionModelView(ModelView):
         "plate_",
         InputColumnSpec("gross_weight", label=u"毛重"),
         InputColumnSpec("with_person", label=u"驾驶室是否有人"),
-        ColumnSpec("status", label=u"状态", formatter=lambda v, obj: '<strong>' + cargo_const.desc_status(v) + '</strong>',
-                   css_class="uneditable-input"),
+        ColumnSpec("status", label=u"状态", formatter=lambda v, obj: cargo_const.desc_status(v)),
         InputColumnSpec("create_time", label=u"创建时间", read_only=True),
         InputColumnSpec("finish_time", label=u"结束时间", read_only=True),
         PlaceHolderColumnSpec(col_name="log_list", label=u"日志", template_fname="logs-snippet.html")
@@ -227,7 +226,7 @@ class GoodsReceiptEntryModelView(ModelView):
 
     __form_columns__ = [
         InputColumnSpec("product", group_by=Product.product_type, label=u"产品",
-                        filter_=lambda q: q.filter(Product.enabled==True)),
+                        filter_=lambda q: q.filter(Product.enabled == True)),
         InputColumnSpec("goods_receipt", label=u"收货单", read_only=True),
         InputColumnSpec("weight", label=u"重量"),
         InputColumnSpec("harbor", label=u"装卸点"),
@@ -298,18 +297,16 @@ def weigh_unload_task(id_):
             return redirect(
                 request.form.get("url", unload_session_model_view.url_for_object(model=task.unload_session.model)))
         else:
-            if request.form.get("method") == "delete":
+            if request.form.get("action") == "delete":
                 if task.delete():
                     flash(u"删除卸货任务%d成功" % task.id)
                     return redirect(request.form.get("url", unload_session_model_view.url_for_object(
                         model=task.unload_session.model)))
-            return render_template("validation-error.html", errors=form.errors,
-                                   back_url=unload_session_model_view.url_for_object(model=task.unload_session.model),
-                                   nav_bar=nav_bar), 403
+            return redirect(url_for("error", errors=form.errors,
+                                    url=unload_session_model_view.url_for_object(model=task.unload_session.model)))
 
 
 class UnloadTaskModelView(ModelView):
-    edit_template = "cargo/unload-task-spinnet.html"
 
     __form_columns__ = [
         ColumnSpec("id", label=u"编号"),
@@ -345,6 +342,7 @@ class UnloadTaskModelView(ModelView):
 
 unload_task_model_view = UnloadTaskModelView(UnloadTask, u"卸货任务")
 
+
 class GoodsReceiptModelView(ModelView):
 
     edit_template = "cargo/goods-receipt.html"
@@ -352,6 +350,7 @@ class GoodsReceiptModelView(ModelView):
     can_batchly_edit = True
 
     __default_order__ = ("create_time", "desc")
+
     def try_create(self):
         raise PermissionDenied
 
@@ -364,12 +363,16 @@ class GoodsReceiptModelView(ModelView):
 
     __sortable_columns__ = ["id", "create_time"]
 
-    __list_columns__ = ["id", "receipt_id", "customer", "unload_session.plate", InputColumnSpec("order", formatter=lambda v, obj: v or "--", label=u"订单"),
+    __list_columns__ = ["id", "receipt_id", "customer", "unload_session.plate",
+                        InputColumnSpec("order", formatter=lambda v, obj: v or "--", label=u"订单"),
                         ColumnSpec("printed", formatter=lambda v, obj: u"是" if v else u"否", label=u"是否打印"),
                         ColumnSpec("stale", formatter=lambda v, obj: u"是" if v else u"否", label=u"是否过时"),
-                        ColumnSpec("create_time", formatter=lambda v, obj: v.strftime("%y年%m月%d日 %H时%M分").decode("utf-8"), label=u"创建时间"), ColumnSpec("creator"),
+                        ColumnSpec("create_time",
+                                   formatter=lambda v, obj: v.strftime("%y年%m月%d日 %H时%M分").decode("utf-8"),
+                                   label=u"创建时间"), ColumnSpec("creator"),
                         ListColumnSpec("goods_receipt_entries", label=u"产品", compressed=True,
-                                       item_col_spec=ColumnSpec("", formatter=lambda v, obj: unicode(v.product.product_type) + u"-" + unicode(v.product)))]
+                                       item_col_spec=ColumnSpec("", formatter=lambda v, obj: unicode(
+                                           v.product.product_type) + u"-" + unicode(v.product)))]
 
     def patch_row_attr(self, idx, obj):
         if obj.stale:
@@ -398,38 +401,38 @@ class GoodsReceiptModelView(ModelView):
                 return q
 
     __column_filters__ = [filters.BiggerThan("create_time", name=u"在", default_value=str(yesterday),
-                                             options=[(yesterday, u'一天内'), (week_ago, u'一周内'), (_30days_ago, u'30天内')]),
+                                             options=[(yesterday, u'一天内'), (week_ago, u'一周内'),
+                                                      (_30days_ago, u'30天内')]),
                           filters.EqualTo("customer", name=u"是"),
-                          filters.Only("printed", display_col_name=u"仅展示未打印收货单", test=lambda col: ~col, notation="__only_unprinted"),
-                          NoneOrder("order", display_col_name=u"仅展示未生成订单", test=None, notation="__none")
-                         ]
+                          filters.Only("printed", display_col_name=u"仅展示未打印收货单", test=lambda col: ~col,
+                                       notation="__only_unprinted"),
+                          NoneOrder("order", display_col_name=u"仅展示未生成订单", test=None, notation="__none")]
 
     __form_columns__ = OrderedDict()
     __form_columns__[u"详细信息"] = [
-        "receipt_id",
-        "customer",
-        "unload_session.plate",
+        "receipt_id", "customer", "unload_session.plate",
         ColumnSpec("create_time", label=u"创建时间"),
         ColumnSpec("creator"),
         ColumnSpec("printed", label=u"是否打印",
-                        formatter=lambda v, obj: u"是" if v else u'<span class="text-danger">否</span>'),
+                   formatter=lambda v,
+                                    obj: u"是" if v else u'<span class="text-danger">否</span>'),
         ColumnSpec("stale", label=u"是否过时",
-                  formatter=lambda v, obj: u'<span class="text-danger">是</span>' if v else u"否"),
-        PlaceHolderColumnSpec("log_list", label=u"日志", template_fname="logs-snippet.html")
-    ]
+                   formatter=lambda v, obj: u'<span class="text-danger">是</span>' if v else u"否"),
+        PlaceHolderColumnSpec("log_list", label=u"日志", template_fname="logs-snippet.html")]
+
     __form_columns__[u"产品列表"] = [
-        TableColumnSpec("goods_receipt_entries", label="",
-                        col_specs=[
-                            LinkColumnSpec("id", label=u"编号",
-                                           formatter=lambda v, obj: goods_receipt_entry_view.url_for_object(obj,url=request.url), anchor=lambda v:v),
-                            ColumnSpec("product", label=u"产品"),
-                            ColumnSpec("product.product_type", label=u"产品类型"),
-                            ColumnSpec("weight", label=u"净重(KG)"),
-                            PlaceHolderColumnSpec(col_name="pic_url", label=u"图片",
-                                                  template_fname="pic-snippet.html",
-                                                  form_width_class="col-lg-3")],
-                        preprocess=lambda obj: GoodsReceiptWrapper(obj))
-    ]
+        TableColumnSpec(
+            "goods_receipt_entries", label="", preprocess=lambda obj: GoodsReceiptWrapper(obj),
+            col_specs=[
+                LinkColumnSpec("id", label=u"编号", anchor=lambda v: v,
+                               formatter=lambda v, obj: goods_receipt_entry_view.url_for_object(obj, url=request.url)),
+                ColumnSpec("product", label=u"产品"),
+                ColumnSpec("product.product_type", label=u"产品类型"),
+                ColumnSpec("weight", label=u"净重(公斤)"),
+                PlaceHolderColumnSpec(col_name="pic_url", label=u"图片",
+                                      template_fname="pic-snippet.html",
+                                      form_width_class="col-lg-3")])]
+
     __column_labels__ = {"receipt_id": u'编 号', "customer": u'客 户', "unload_session.plate": u"车牌号",
                          "printed": u'是否打印', "stale": u"是否过时", "create_time": u"创建时间", "order": u"订 单",
                          "creator": u"创建者"}
@@ -444,25 +447,25 @@ class GoodsReceiptModelView(ModelView):
             else:
                 return [BatchPrintGoodsReceipt(u"批量打印"), delete_goods_receipt_action]
         else:
-            def _l(obj):
+            def _get_actions(obj):
                 if obj.order:
                     return [ViewOrderAction(u"查看订单")]
                 else:
-                    l = [CreateOrderAction(u"生成计重类型订单"), CreateExtraOrderAction(u"生成计件类型订单")]
+                    _actions = [CreateOrderAction(u"生成计重类型订单"), CreateExtraOrderAction(u"生成计件类型订单")]
                     if not obj.printed:
-                        l.append(delete_goods_receipt_action)
-                    return l
+                        _actions.append(delete_goods_receipt_action)
+                    return _actions
 
             if isinstance(objs, (list, tuple)):
                 if len(objs) == 1:
-                    l = _l(objs[0])
+                    actions = _get_actions(objs[0])
                 else:
-                    l = []
+                    actions = []
             else:
-                l = _l(objs)
+                actions = _get_actions(objs)
             if not g.request_from_mobile:
-                l.append(PrintGoodsReceipt(u"打印"))
-            return l
+                actions.append(PrintGoodsReceipt(u"打印"))
+            return actions
 
     def try_edit(self, objs=None):
         def _try_edit(obj):
@@ -473,12 +476,12 @@ class GoodsReceiptModelView(ModelView):
                     raise PermissionDenied
         CargoClerkPermission.test()
 
-        if isinstance(objs, list) or isinstance(objs, tuple):
+        if isinstance(objs, (list, tuple)):
             return any(_try_edit(obj) for obj in objs)
         else:
             return _try_edit(objs)
 
-    def edit_hint_message(self,obj, read_only=False):
+    def edit_hint_message(self, obj, read_only=False):
         if read_only:
             if obj.order:
                 return u"已生成订单的收货单不能修改"
@@ -505,6 +508,7 @@ class GoodsReceiptModelView(ModelView):
 
 goods_receipt_model_view = GoodsReceiptModelView(GoodsReceipt, u"收货单")
 
+
 @cargo_page.route("/goods-receipt-preview/<int:id_>")
 @decorators.templated("cargo/goods-receipt-preview.html")
 @decorators.nav_bar_set
@@ -512,13 +516,13 @@ def goods_receipt_preview(id_):
     from lite_mms import apis
 
     receipt = apis.cargo.get_goods_receipt(id_)
-    PER_PAGE  = apis.config.get("print_count_per_page", 5.0, type=float)
+    per_page = apis.config.get("print_count_per_page", 5.0, type=float)
     import math
-    pages = int(math.ceil(len(receipt.goods_receipt_entries) / PER_PAGE))
+    pages = int(math.ceil(len(receipt.goods_receipt_entries) / per_page))
     if not receipt:
         abort(404)
-    return {"receipt": receipt, "titlename": u"收货单打印预览", "pages": pages,
-            "per_page": PER_PAGE}
+    return {"receipt": receipt, "titlename": u"收货单打印预览", "pages": pages, "per_page": per_page}
+
 
 def refresh_gr(id_):
     from lite_mms import apis
@@ -528,24 +532,8 @@ def refresh_gr(id_):
     if not receipt:
         abort(404)
     if not receipt.stale:
-        return render_template("error.html", msg=u"收货单%d未过时，不需要更新" % id_), 403
+        return redirect(url_for("error", errors=u"收货单%d未过时，不需要更新" % id_))
     else:
         receipt.add_product_entries()
         return redirect(request.args.get("url") or url_for("goods_receipt.goods_receipt", id_=id_))
-
-@gr_page.route("/goods-receipts-batch-print/<id_>")
-@decorators.templated("cargo/goods-receipts-batch-print.html")
-@decorators.nav_bar_set
-def goods_receipts_batch_print(id_):
-    from lite_mms import apis
-    per_page  = apis.config.get("print_count_per_page", 5, type=int)
-    gr_list = [get_or_404(GoodsReceipt, i) for i in id_.split(",")]
-    pages = 0
-    for gr in gr_list:
-        gr.printed = True
-        import math
-        pages += int(math.ceil(len(gr.unload_task_list) / per_page))
-    db.session.commit()
-    return {"gr_list": gr_list, "titlename":u"批量打印",
-            "per_page": per_page, "pages": pages, "back_url": request.args.get("url", "/")}
 

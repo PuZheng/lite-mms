@@ -190,7 +190,6 @@ nav_bar.register(deduction_page, name=u"扣重管理", default_url="/deduction/"
 nav_bar.register(dashboard, name=u"仪表盘", permissions=[AdminPermission])
 
 nav_bar.register(time_line_page, name=u"时间线", default_url="/timeline/log-list")
-nav_bar.register(search_page, name=u"搜索", default_url="/search/search")
 nav_bar.register(admin_page, name=u"管理中心", default_url="/admin/user-list", permissions=[AdminPermission])
 nav_bar.register(report_page, name=u"报表列表", default_url="/report/report-list",
                  permissions=[Permission.union(AdminPermission, AccountantPermission)], group=u'报表',

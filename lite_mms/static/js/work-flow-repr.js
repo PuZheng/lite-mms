@@ -108,12 +108,12 @@ WorkFlowRepr.prototype.getMaxPeriod = function () {
     return max
 }
 
-$("input[type=checkbox][name=visiable-check]").on("click", function () {
+$(document).on("click", "input[type=checkbox][name=visiable-check]", function () {
     var node = $(this).attr("data-node");
-    if($(this).attr("checked")){
-        $("[data-node="+node+"]:not([type=checkbox])").show();
-    }else{
-        $("[data-node="+node+"]:not([type=checkbox])").hide();
+    if ($(this).prop("checked")) {
+        $("[data-node=" + node + "]:not([type=checkbox])").show();
+    } else {
+        $("[data-node=" + node + "]:not([type=checkbox])").hide();
     }
 });
 

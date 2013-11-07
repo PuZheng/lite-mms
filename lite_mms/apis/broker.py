@@ -5,15 +5,16 @@
 与MSSQL交互
 """
 
-
 import httplib
 import json
 from lite_mms.basemain import app
 
+
 def get_connection():
     return httplib.HTTPConnection(app.config["BROKER_IP"],
-                                app.config["BROKER_PORT"],
-                                timeout=app.config["BROKER_TIMEOUT"])
+                                  app.config["BROKER_PORT"],
+                                  timeout=app.config["BROKER_TIMEOUT"])
+
 
 def _get_data_from_remote(data_type):
     connection = get_connection()
@@ -24,6 +25,7 @@ def _get_data_from_remote(data_type):
     obj = json.loads(rv.read())
     return obj
 
+
 def import_products():
     return _get_data_from_remote("products")
 
@@ -31,8 +33,10 @@ def import_products():
 def import_types():
     return _get_data_from_remote("product-types")
 
+
 def import_customers():
     return _get_data_from_remote("customers")
+
 
 def import_consignments():
     return _get_data_from_remote("consignments")
@@ -49,9 +53,10 @@ def export_consignment(consignment):
                                   "name": p.product.name,
                                   "quantity": p.quantity,
                                   "weight": p.weight,
-                                  "isReturned":1 if p.returned_weight else 0} for p in
+                                  "isReturned": 1 if p.returned_weight else 0} for p in
                                  consignment.product_list]}
         return _dic
+
     connection = get_connection()
     connection.request("POST", "/consignments", json.dumps(consignment2dict(consignment)))
     rv = connection.getresponse()

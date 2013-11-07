@@ -25,20 +25,11 @@ def consignments():
     from lite_mms import apis
 
     try:
-        current_consignments, totalcnt = apis.delivery.get_consignment_list(exporting=True)
-        content = u"读出%d条发货单信息，" % len(current_consignments)
+        persisting_consignments, totalcnt = apis.delivery.get_consignment_list(exporting=True)
+        content = u"读出%d条发货单信息，" % len(persisting_consignments)
         count = 0
-        for consignment in current_consignments:
-            try:
-                MSSQL_ID = json.loads(
-                    apis.broker.export_consignment(consignment))
-            except error:
-                content = u"链接超时"
-                return dict(titlename=u"导出失败，链接超时", content=content,
-                            back_url=url_for('.index'))
-
-            apis.delivery.ConsignmentWrapper.update(consignment.id,
-                                                    MSSQL_ID=MSSQL_ID["id"])
+        for consignment in persisting_consignments:
+            consignment.persist()
             count += 1
         content += u"成功导出%d条发货单" % count
 

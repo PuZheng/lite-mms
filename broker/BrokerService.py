@@ -5,6 +5,8 @@
 """
 import ConfigParser
 import json
+import os
+import sys
 from pyodbc import DatabaseError
 import types
 import datetime
@@ -16,9 +18,8 @@ import win32event
 
 cursor = None
 
-def get_config():
-    import sys, os
 
+def get_config():
     cf = ConfigParser.ConfigParser()
     cf.readfp(open(os.path.join(sys.prefix, "config.ini")))
     return cf
@@ -78,8 +79,8 @@ class BaseRequestHandler(tornado.web.RequestHandler):
     def _write(self, f, *args, **kwargs):
         try:
             result = f(*args, **kwargs)
-            if isinstance(result, types.DictType) or\
-               isinstance(result, types.ListType):
+            if isinstance(result, types.DictType) or \
+                    isinstance(result, types.ListType):
                 self.write(json.dumps(result))
                 self.set_header("Content-Type",
                                 "application/json; charset=UTF-8")
@@ -168,12 +169,13 @@ class ConsignmentRequestHandler(BaseRequestHandler):
 
     def _get(self, *args, **kwargs):
         acceptances = []
-        cursor.execute("select PaperID, ClientID from OutDepotNew")
+        cursor.execute("select num, PaperID, ClientID from OutDepotNew")
         rows = cursor.fetchall()
         for row in rows:
             acceptances.append(dict(id=row.PaperID.strip().decode("GBK"),
+                                    MSSQL_id=row.num,
                                     clientID=row.ClientID))
-        return  acceptances
+        return acceptances
 
 
 class IndexRequestHandler(tornado.web.RequestHandler):
@@ -236,5 +238,5 @@ class BrokerService(win32serviceutil.ServiceFramework):
 
 
 if __name__ == '__main__':
-    win32serviceutil.HandleCommandLine(BrokerService)
-
+    #win32serviceutil.HandleCommandLine(BrokerService)
+    main("0.0.0.0", 9001)

@@ -487,15 +487,19 @@ class ConsignmentWrapper(ModelWrapper):
         if self.MSSQL_ID:
             raise ValueError(u"%d已保存" % self.id)
         try:
-            mssql_id = json.loads(broker.export_consignment(self))
-            try:
+            remote_consignments = broker.import_consignments()
+            for c in remote_consignments:
+                if c["id"] == self.id:
+                    self.model.MSSQL_ID = c["MSSQL_ID"]
+            else:
+                mssql_id = json.loads(broker.export_consignment(self))
                 self.model.MSSQL_ID = mssql_id["id"]
-                db.session.add(self.model)
-                db.session.commit()
-            except SQLAlchemyError:
-                raise ValueError(u"%d插入数据库失败" % self.id)
+            db.session.add(self.model)
+            db.session.commit()
         except (ValueError, error):
-            raise ValueError(u"%d插入MS SQL失败，请手工插入" % self.id)
+            raise ValueError(u"与远端连接异常")
+        except SQLAlchemyError:
+            raise ValueError(u"%d修改本地数据库失败" % self.id)
 
 
 class ConsignmentProductWrapper(ModelWrapper):

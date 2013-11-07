@@ -138,9 +138,9 @@ class DepartmentModelView(AdminModelView):
                                              column_spec.InputColumnSpec("leader_list",
                                                                          label=u"车间主任列表",
                                                                          opt_filter=lambda obj: any((
-                                                                                                    group.id ==
-                                                                                                    groups_const
-                                                                                                    .DEPARTMENT_LEADER)
+                                                                                                        group.id ==
+                                                                                                        groups_const
+                                                                                                        .DEPARTMENT_LEADER)
                                                                                                     for group in
                                                                                                     obj.groups),
                                                                          doc=u'只有用户组是"车间主任", 才能作为车间主任'),
@@ -273,10 +273,10 @@ def export_consignments():
     content = u"读出%d条发货单信息，" % len(current_consignments)
     count = 0
     for consignment in current_consignments:
-        MSSQL_ID = json.loads(apis.broker.export_consignment(consignment))
-
-        apis.delivery.ConsignmentWrapper.update(consignment.id,
-                                                MSSQL_ID=MSSQL_ID["id"])
+        try:
+            consignment.persist()
+        except ValueError, e:
+            return redirect(url_for("error", errors=e))
         count += 1
     content += u"成功导出%d条发货单" % count
     flash(u"导出成功: " + content, 'success')

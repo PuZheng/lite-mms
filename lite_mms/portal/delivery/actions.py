@@ -150,9 +150,9 @@ class PersistConsignmentAction(BaseAction):
 
     def op_upon_list(self, objs, model_view):
         error = ""
-        for obj in objs:
-            try:
+        try:
+            for obj in objs:
                 self._op(obj, model_view)
-            except ValueError, e:
-                error += unicode(e.message)
-        return "", error
+        except ValueError, e:
+            error += unicode(e.message)
+            return "", error

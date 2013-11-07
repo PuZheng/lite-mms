@@ -487,10 +487,10 @@ class ConsignmentWrapper(ModelWrapper):
         if self.MSSQL_ID:
             raise ValueError(u"%d已保存" % self.id)
         try:
-            remote_consignments = broker.import_consignments()
+            remote_consignments = broker.get_consignments(self.consignment_id)
             for c in remote_consignments:
-                if c["id"] == self.id:
-                    self.model.MSSQL_ID = c["MSSQL_ID"]
+                self.model.MSSQL_ID = c["MSSQL_ID"]
+                break
             else:
                 mssql_id = json.loads(broker.export_consignment(self))
                 self.model.MSSQL_ID = mssql_id["id"]

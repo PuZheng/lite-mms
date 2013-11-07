@@ -169,11 +169,15 @@ class ConsignmentRequestHandler(BaseRequestHandler):
 
     def _get(self, *args, **kwargs):
         acceptances = []
-        cursor.execute("select num, PaperID, ClientID from OutDepotNew")
+        sql = "select num, PaperID, ClientID from OutDepotNew"
+        PaperID = self.get_argument("PaperID", "")
+        if PaperID:
+            sql += " where PaperId = '%s'" % PaperID
+        cursor.execute(sql)
         rows = cursor.fetchall()
         for row in rows:
             acceptances.append(dict(id=row.PaperID.strip().decode("GBK"),
-                                    MSSQL_id=row.num,
+                                    MSSQL_ID=row.num,
                                     clientID=row.ClientID))
         return acceptances
 

@@ -16,9 +16,17 @@ def get_connection():
                                   timeout=app.config["BROKER_TIMEOUT"])
 
 
-def _get_data_from_remote(data_type):
+def _get_data_from_remote(data_type, **kwargs):
     connection = get_connection()
-    connection.request("GET", "/" + data_type)
+    if kwargs:
+        first = True
+        query = ""
+        for k, v in kwargs.iteritems():
+            query += "%s%s=%s" % ("?" if first else "&", k, v)
+            first = False
+        connection.request("GET", "/" + data_type + query)
+    else:
+        connection.request("GET", "/" + data_type)
     rv = connection.getresponse()
     if rv.status != 200:
         raise ValueError(rv.read())
@@ -40,6 +48,10 @@ def import_customers():
 
 def import_consignments():
     return _get_data_from_remote("consignments")
+
+
+def get_consignments(consignment_id):
+    return _get_data_from_remote("consignments", PaperID=consignment_id)
 
 
 def export_consignment(consignment):

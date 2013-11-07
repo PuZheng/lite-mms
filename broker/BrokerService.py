@@ -242,5 +242,4 @@ class BrokerService(win32serviceutil.ServiceFramework):
 
 
 if __name__ == '__main__':
-    #win32serviceutil.HandleCommandLine(BrokerService)
-    main("0.0.0.0", 9001)
+    win32serviceutil.HandleCommandLine(BrokerService)

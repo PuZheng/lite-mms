@@ -35,43 +35,47 @@
 
 {% macro consignment_gene(delivery_session) %}
   {% if delivery_session.customer_list %}
-    <div id="{{ delivery_session.id }}-dialog" class="modal hide fade" tabindex="-1">
-      <div class="modal-header">
-        <a class="close" data-dismiss="modal">&times;</a>
+    <div id="{{ delivery_session.id }}-dialog" class="modal fade" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 
-        <h3>{{ _("请选择支付类型") }}</h3>
+
+            <h3 class="modal-title">{{ _("请选择支付类型") }}</h3>
+          </div>
+          <form class="modal-form form-horizontal" action="{{ url_for("delivery.create_consignment_list", id_=delivery_session.id) }}" method="POST" data-delivery="{{ delivery_session.id }}">
+            <input type="hidden" name="customer-pay_mod" value="" data-delivery="{{ delivery_session.id }}"/>
+            <input type="hidden" name="url" value="{{ request.url }}"/>
+
+            <div class="modal-body" id="new-consignment-content">
+              <fieldset>
+                {% for customer in delivery_session.customer_list %}
+
+                  <div class="form-group">
+                    <label for="pay_mode" class="control-label col-lg-2">
+                      <span>{{ customer.name }}</span>
+                    </label>
+
+                    <div class="col-lg-5">
+                      <select name="pay_mod" id="pay_mode" required="required" class="form-control"
+                              data-customer="{{ customer.id }}" data-delivery="{{ delivery_session.id }}">
+                        <option value="0">月结</option>
+                        <option value="1">现金支付</option>
+                      </select></div>
+                  </div>
+                {% endfor %}
+              </fieldset>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-primary" name="consignment-button" type="button" data-delivery="{{ delivery_session.id }}">
+                提交
+              </button>
+              <a class="btn btn-default" data-dismiss="modal">返回</a>
+            </div>
+          </form>
+        </div>
       </div>
-      <form class="modal-form form-horizontal" action="{{ url_for("delivery.create_consignment_list", id_=delivery_session.id) }}" method="POST" data-delivery="{{ delivery_session.id }}">
-        <input type="hidden" name="customer-pay_mod" value="" data-delivery="{{ delivery_session.id }}"/>
-        <input type="hidden" name="url" value="{{ request.url }}"/>
-        <div class="modal-body" id="new-consignment-content">
-          <fieldset>
-            {% for customer in delivery_session.customer_list %}
-
-              <div class="control-group">
-                <label for="pay_mode" class="control-label">
-                  <span>{{ customer.name }}</span>
-                </label>
-
-                <div class="controls">
-                  <select name="pay_mod" id="pay_mode" required="required" class="input-medium"
-                          data-customer="{{ customer.id }}" data-delivery="{{ delivery_session.id }}">
-                    <option value="0">月结</option>
-                    <option value="1">现金支付</option>
-                  </select></div>
-              </div>
-            {% endfor %}
-          </fieldset>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-primary" name="consignment-button" type="button" data-delivery="{{ delivery_session.id }}">
-            提交
-          </button>
-          <a class="btn" data-dismiss="modal">
-            返回
-          </a>
-        </div>
-      </form>
     </div>
   {% endif %}
 {% endmacro %}

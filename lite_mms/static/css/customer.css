@@ -95,7 +95,6 @@
         margin-top: 0;
     }
 
-
     #myTab {
         margin-bottom: 15px;
     }
@@ -113,30 +112,30 @@
 
 @media print {
     body {
-        margin: 0;
-        width: 100%;
-        height: 100%;
+        margin: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        color: #000000 !important;
     }
 
-    .table-bordered {
-        border: 1px solid #000000;
-        border-spacing: 0;
-        border-collapse: collapse;
+    table {
+        border-spacing: 0 !important;
+        border-collapse: collapse !important;
     }
 
-    .table-bordered td, .table-bordered th {
-        border: 1px solid #000000;
+    table, th, td {
+        border: thin solid #000000 !important;
     }
 
     div.printAreaDiv {
-        margin-top: auto;
-        margin-bottom: auto;
-        page-break-before: avoid;
-        page-break-after: avoid;
+        margin-top: auto !important;
+        margin-bottom: auto !important;
+        page-break-before: avoid !important;
+        page-break-after: avoid !important;
     }
 
     .page-next {
-        page-break-after: always;
+        page-break-after: always !important;
     }
 
     a[href]:after {

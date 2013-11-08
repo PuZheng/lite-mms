@@ -140,10 +140,11 @@ class DeliverySessionWrapper(ModelWrapper):
 
     @property
     def log_list(self):
-        from lite_mms.models import Log
 
-        ret = Log.query.filter(Log.obj_pk == str(self.id)).filter(
-            Log.obj_cls == self.model.__class__.__name__).all()
+        from lite_mms.apis.log import LogWrapper
+
+        ret = LogWrapper.get_log_list(str(self.id), self.model.__class__.__name__)
+
         for task in self.delivery_task_list:
             ret.extend(task.log_list)
         return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time), reverse=True)
@@ -220,10 +221,9 @@ class DeliveryTaskWrapper(ModelWrapper):
 
     @property
     def log_list(self):
-        from lite_mms.models import Log
+        from lite_mms.apis.log import LogWrapper
 
-        ret = Log.query.filter(Log.obj_pk == str(self.id)).filter(
-            Log.obj_cls == self.model.__class__.__name__).all()
+        ret = LogWrapper.get_log_list(str(self.id), self.model.__class__.__name__)
         return sorted(ret, lambda a, b: cmp(a.create_time, b.create_time), reverse=True)
 
     @property

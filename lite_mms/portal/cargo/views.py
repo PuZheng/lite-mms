@@ -540,7 +540,7 @@ def goods_receipt_preview(id_):
     per_page = apis.config.get("print_count_per_page", 5.0, type=float)
     import math
 
-    pages = int(math.ceil(len(receipt.goods_receipt_entries) / per_page))
+    pages = int((len(receipt.goods_receipt_entries) - 1) / per_page) + 1
     if not receipt:
         abort(404)
     return {"receipt": receipt, "titlename": u"收货单打印预览", "pages": pages, "per_page": per_page}

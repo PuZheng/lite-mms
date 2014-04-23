@@ -190,7 +190,7 @@ class InitializeTestDB(Command):
                               pic_path="1.jpg"))
         do_commit(WorkCommand(sub_order=sub_order2,
                               org_weight=300,
-                              procedure=procedure0,
+                              procedure=procedure1,
                               tech_req=u'foo tech requirements',
                               org_cnt=1))
 

@@ -35,3 +35,4 @@ nosetests.xml
 tags
 config.py
 *.log
+flask_report/static/components

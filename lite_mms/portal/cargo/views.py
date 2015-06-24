@@ -168,9 +168,14 @@ class UnloadSessionModelView(ModelView):
     # ================= FORM PART ============================
     def get_create_columns(self):
         def filter_plate(q):
-            return q.filter(
-                and_(~exists().where(UnloadSession.plate == Plate.name).where(UnloadSession.finish_time == None),
-                     ~exists().where(DeliverySession.finish_time == None).where(DeliverySession.plate == Plate.name)))
+            unfinished_us_list = UnloadSession.query.filter(UnloadSession.finish_time == None)
+            unfinished_ds_list = DeliverySession.query.filter(DeliverySession.finish_time == None)
+            plates = [us.plate for us in unfinished_us_list]
+            plates.extend(ds.plate for ds in unfinished_ds_list)
+            return q.filter(~Plate.name.in_(plates))
+            # return q.filter(
+            #    and_(~exists().where(UnloadSession.plate == Plate.name).where(UnloadSession.finish_time == None),
+            #         ~exists().where(DeliverySession.finish_time == None).where(DeliverySession.plate == Plate.name)))
 
         return [InputColumnSpec("plate_", filter_=filter_plate),
                 InputColumnSpec("with_person", label=u"驾驶室是否有人"),

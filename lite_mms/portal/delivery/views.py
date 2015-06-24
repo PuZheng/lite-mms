@@ -129,10 +129,11 @@ class DeliverySessionModelView(ModelView):
 
     def get_create_columns(self):
         def filter_plate(q):
-            return q.filter(and_(~exists().where(models.UnloadSession.plate == models.Plate.name).where(
-                models.UnloadSession.finish_time == None),
-                                 ~exists().where(models.DeliverySession.finish_time == None).where(
-                                     models.DeliverySession.plate == models.Plate.name)))
+            unfinished_us_list = models.UnloadSession.query.filter(models.UnloadSession.finish_time == None)
+            unfinished_ds_list = models.DeliverySession.query.filter(models.DeliverySession.finish_time == None)
+            plates = [us.plate for us in unfinished_us_list]
+            plates.extend(ds.plate for ds in unfinished_ds_list)
+            return q.filter(~models.Plate.name.in_(plates))
 
         columns = OrderedDict()
         columns[u"基本信息"] = [InputColumnSpec("plate_", filter_=filter_plate),

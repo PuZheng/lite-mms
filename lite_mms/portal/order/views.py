@@ -393,7 +393,7 @@ def work_command():
 
                     timeline_logger.info(u"新建",
                                          extra={"obj": inst,
-                                                "actor": current_user if current_user.is_authenticated() else None,
+                                                "actor": current_user if current_user.is_authenticated else None,
                                                 "action": u"新建", "obj_pk": inst.id})
 
                     if inst.sub_order.returned:

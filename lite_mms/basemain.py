@@ -131,7 +131,7 @@ if serve_web:
     app.register_blueprint(op_page, url_prefix="/op")
     from lite_mms.portal.admin import admin_page
     app.register_blueprint(admin_page, url_prefix="/admin")
-    
+
     from lite_mms.portal.import_data import import_data_page
     app.register_blueprint(import_data_page, url_prefix="/import_data")
     from lite_mms.portal.search import search_page
@@ -227,7 +227,7 @@ from lite_mms.permissions.work_flow import HandleNodeNeed
 
 @identity_loaded.connect_via(app)
 def permission_handler(sender, identity):
-    
+
     from flask.ext import login
 
     identity.user = login.current_user
@@ -274,7 +274,7 @@ def permission_denied(error):
 
     #如果用户已登录则显示无权限页面
     from flask import redirect, url_for
-    if not current_user.is_anonymous():
+    if not current_user.is_anonymous:
         return redirect(url_for("error", errors=u'请联系管理员获得访问权限!', url=request.args.get("url")))
         #如果用户还未登录则转向到登录面
     return render_template("auth/login.html",
@@ -384,7 +384,7 @@ class OrderNode(ModelNode):
 
     @property
     def children_model_groups(self):
-        return [(u'子订单', self.obj.sub_order_list)] 
+        return [(u'子订单', self.obj.sub_order_list)]
 
 
 class SubOrderNode(ModelNode):

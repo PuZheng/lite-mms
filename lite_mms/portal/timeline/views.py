@@ -69,7 +69,7 @@ class TimeLineModelView(ModelView):
     __column_labels__ = {"actor": u"操作员", "create_time": u"创建时间"}
 
     def try_view(self, processed_obj=None):
-        if current_user.is_anonymous():
+        if current_user.is_anonymous:
             raise PermissionDenied
 
     def get_column_filters(self):

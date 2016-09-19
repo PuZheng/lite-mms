@@ -154,7 +154,7 @@ def login_required_webservice(view):
 
     @wraps(view)
     def f(*args, **kwargs):
-        if not current_user.is_authenticated():
+        if not current_user.is_authenticated:
             return u'您没有权限查看数据', 401
         return view(*args, **kwargs)
 

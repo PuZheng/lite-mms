@@ -8,7 +8,7 @@ from lite_mms.utilities import decorators
 
 @app.route("/")
 def index():
-    if current_user.is_authenticated():
+    if current_user.is_authenticated:
         next_url = current_user.default_url
     else:
         next_url = url_for("auth.login")
@@ -75,7 +75,7 @@ def serv_small_pic(filename):
 
 @app.route("/message")
 def ajax_new_message():
-    if current_user.is_authenticated():
+    if current_user.is_authenticated:
         from lite_mms.models import TODO
         from lite_mms.apis.todo import get_all_notify
 

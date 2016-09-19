@@ -427,7 +427,7 @@ class WorkCommandSM(StateMachine):
         if not actor:
             from flask.ext.login import current_user
 
-            if current_user.is_authenticated():
+            if current_user.is_authenticated:
                 actor = current_user
         self.logger.info(u"操作: %s" % action_name(action),
                          extra={"obj": self.obj, "actor": actor,

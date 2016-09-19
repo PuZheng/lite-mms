@@ -343,7 +343,7 @@ def _handle_delete():
 @manufacture_ws.route("/off-duty", methods=["POST"])
 @login_required_webservice
 def off_duty():
-    if not current_user.is_anonymous():
+    if not current_user.is_anonymous:
         cnt = 0
         from lite_mms.apis import manufacture
 

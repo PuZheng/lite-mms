@@ -1,13 +1,13 @@
 # -*- coding: UTF-8 -*-
 from flask import (request, render_template, redirect, url_for, current_app,
     session, session)
-from flask.ext.principal import (Principal, Identity, AnonymousIdentity, 
+from flask.ext.principal import (Principal, Identity, AnonymousIdentity,
      identity_changed)
 from flask.ext.login import current_user
 from lite_mms.portal.auth import auth
 from flask.ext.principal import identity_changed, Identity, AnonymousIdentity
 from lite_mms.utilities import _
-from lite_mms.utilities.decorators import after_this_request 
+from lite_mms.utilities.decorators import after_this_request
 from wtforms import PasswordField, TextField, Form, HiddenField
 from flask.ext.login import login_user, logout_user, login_required, \
     current_user
@@ -17,7 +17,7 @@ from lite_mms.exceptions import AuthenticateFailure
 @auth.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "GET":
-        if current_user.is_anonymous():
+        if current_user.is_anonymous:
             return render_template("auth/login.html", titlename=u'登录')
         return redirect("/")
     else:

@@ -197,8 +197,8 @@ class UnloadTaskWrapper(ModelWrapper):
         # delete
         todo.remove_todo(todo.WEIGH_UNLOAD_TASK, self.id)
         return True
-    
-    
+
+
 class GoodsReceiptWrapper(ModelWrapper):
     def __repr__(self):
         return u"<GoodsReceiptWrapper %d customer-%s>" % (
@@ -274,8 +274,8 @@ def get_unload_session_list(idx=0, cnt=sys.maxint, unfinished_only=False,
     :type idx: int
     :param cnt: the number of unload sessions to get
     :type cnt: int
-    :return: the unloading sessions between idx and "idx + cnt" and the 
-        number of all unload sessions, when there's no sessions, the 
+    :return: the unloading sessions between idx and "idx + cnt" and the
+        number of all unload sessions, when there's no sessions, the
         first part will be None
     :rtype: (iterable of UnloadSession|None, total_session_count)
     """
@@ -297,7 +297,7 @@ def get_unload_session_list(idx=0, cnt=sys.maxint, unfinished_only=False,
 def get_unload_session(session_id):
     """
     get unload session from database of given id
-    :param session_id: 
+    :param session_id:
     :return: unload session of given id if succeed or None
     """
     if not session_id:
@@ -371,7 +371,7 @@ def new_goods_receipt(customer_id, unload_session_id):
     from flask.ext.login import current_user
 
     model = do_commit(
-        models.GoodsReceipt(customer=customer.model, creator=current_user if current_user.is_authenticated() else None,
+        models.GoodsReceipt(customer=customer.model, creator=current_user if current_user.is_authenticated else None,
                             unload_session=unload_session.model))
     gr = GoodsReceiptWrapper(model)
     gr.add_product_entries()
@@ -396,7 +396,7 @@ def new_unload_task(session_id, harbor, customer_id, creator_id,
     持久化创建一个unload task
     :return: 若创建成功，返回创建的unload task
     :rtype: UnloadTaskWrapper
-    :raise: 
+    :raise:
         * ValueError - 如果参数发生错误
     """
 

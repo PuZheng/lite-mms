@@ -27,7 +27,7 @@ class DeliverySessionWrapper(ModelWrapper):
     @property
     def is_locked(self):
         return bool(self.delivery_task_list and
-                    any(not t.weight for t in self.delivery_task_list) or 
+                    any(not t.weight for t in self.delivery_task_list) or
                     yawf.token_bound(constants.work_flow.DELIVERY_TASK_WITH_ABNORMAL_WEIGHT, str(self.id)))
 
     @property
@@ -429,7 +429,7 @@ class ConsignmentWrapper(ModelWrapper):
             raise ValueError("delivery session %d has no customer %s" % (delivery_session_id, customer.name))
         consignment = ConsignmentWrapper(do_commit(models.Consignment(customer, delivery_session, pay_in_cash)))
         from flask.ext.login import current_user
-        if current_user.is_authenticated():
+        if current_user.is_authenticated:
             consignment.actor = current_user
         consignment.add_product_entries()
         consignment.add_todo()
@@ -614,7 +614,7 @@ class StoreBillWrapper(ModelWrapper):
                              extra={"obj": self.model,
                                     "obj_pk": self.id,
                                     "action": u"创建",
-                                    "actor": actor or (current_user if current_user.is_authenticated() else None)})
+                                    "actor": actor or (current_user if current_user.is_authenticated else None)})
 
     def do_update_log(self, message="", actor=None):
         from flask.ext.login import current_user
@@ -624,7 +624,7 @@ class StoreBillWrapper(ModelWrapper):
                              extra={"obj": self.model,
                                     "obj_pk": self.id,
                                     "action": u"更新",
-                                    "actor": actor or (current_user if current_user.is_authenticated() else None)})
+                                    "actor": actor or (current_user if current_user.is_authenticated else None)})
 
     @property
     def previous_store_bill(self):
@@ -741,19 +741,19 @@ class CreateDeliveryTaskWithAbnormalWeight(yawf.Policy):
         is_finished = doc['is_last_task']
         loader = models.User.query.get(doc['loader_id'])
         from lite_mms.portal.delivery_ws.webservices import create_delivery_task
-        create_delivery_task(delivery_session, remain, finished_store_bill_list, 
+        create_delivery_task(delivery_session, remain, finished_store_bill_list,
                              unfinished_store_bill, loader, is_finished)
 
     @property
     def dependencies(self):
-        return [('PermitDeliveryTaskWithAbnormalWeight', 
+        return [('PermitDeliveryTaskWithAbnormalWeight',
                      {'name': u'批准生成剩余重量异常的发货任务',
                      'handler_group': models.Group.query.filter(models.Group.id==constants.groups.CARGO_CLERK).one(),
                      'tag': self.node.tag,})]
 
 
     def on_delayed(self, unmet_node):
-    
+
         from lite_mms.apis.todo import new_todo, PERMIT_DELIVERY_TASK_WITH_ABNORMAL_WEIGHT
         from lite_mms.apis.auth import get_user_list
         for user in get_user_list(unmet_node.handler_group_id):

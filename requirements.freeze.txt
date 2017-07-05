@@ -1,0 +1,72 @@
+APScheduler==2.1.1
+Babel==1.3
+Brownie==0.5.1
+CodernityDB==0.4.2
+Fabric==1.5.1
+Flask==0.10.1
+Flask-Admin==1.0.4
+Flask-Babel==0.9
+-e git+https://github.com/xiechao06/Flask-DataBrowser.git@2468574a813df7287b55c2e358ad2147eb62c745#egg=Flask_DataBrowser-dev
+Flask-DebugToolbar==0.8.0
+Flask-Login==0.2.4
+Flask-Mail==0.9.0
+-e git+https://github.com/xiechao06/Flask-NavBar.git@35909ef3ae73e6b18cacf188584fbb81d9366a01#egg=Flask_NavBar-dev
+Flask-Principal==0.3.3
+Flask-SQLAlchemy==0.16
+Flask-WTF==0.8.3
+Geraldo==0.4.17
+Hamlish-Jinja==0.3.0
+Jinja2==2.7
+Mako==0.8.1
+MarkupSafe==0.18
+MySQL-python==1.2.3
+Pillow==2.2.1
+PyYAML==3.10
+Pygments==1.6
+SQLAlchemy==0.8.1
+Tempita==0.5.1
+WTForms==1.0.2
+Werkzeug==0.9.1
+alembic==0.5.0
+argparse==1.2.1
+beautifulsoup4==4.1.3
+blinker==1.2
+colorama==0.2.4
+cssselect==0.7.1
+decorator==3.4.0
+distribute==0.6.24
+docutils==0.9.1
+-e git+https://github.com/xiechao06/Flask-Report.git@ed8a6b2858d14504a6e464b622fdf2ffeb4810d9#egg=flask_report-dev
+import-file==1.11
+ipython==1.1.0
+itsdangerous==0.21
+-e git+https://github.com/PuZheng/lite-mms.git@78d9e3e6364c9a2353abbac3866411fa1d5d86a6#egg=lite_mms-dev
+-e git+https://github.com/xiechao06/lite-sm.git@9204dcaba550ab8da9450576ba95c54c93259406#egg=lite_sm-dev
+-e git+https://github.com/xiechao06/lite-task-flow.git@3217d9692a43f5d4d38744cb5fa8c1886071c08f#egg=lite_task_flow-dev
+lockfile==0.9.1
+logilab-astng==0.24.1
+logilab-common==0.58.3
+lxml==3.2.3
+mock==1.0.1
+-e git+https://github.com/xiechao06/nav-bar.git@a6090d416e0a3c5a32bc5a64b694e41c4e6d11c6#egg=nav_bar-dev
+nose==1.2.1
+paramiko==1.9.0
+path.py==3.0.1
+py==1.4.12
+pycrypto==2.6
+-e git+https://github.com/xiechao06/pyfeature.git@92e086490ab44384dc21ecea65592c302273feab#egg=pyfeature-dev
+pyflakes==0.7.2
+pylint==0.26.0
+pyquery==1.2.4
+pytest==2.3.4
+python-daemon==1.6
+pytz==2013b
+reportlab==2.7
+speaklater==1.3
+sqlparse==0.1.8
+tornado==2.4
+transaction==1.3.0
+-e git+https://github.com/xiechao06/WorkFlowRepr.git@4f7c4ea0a9b449c75aeb762124c96c97d0676454#egg=work_flow_repr-dev
+wsgiref==0.1.2
+-e git+https://github.com/xiechao06/yawf.git@dc581f919c853eed866684c11082dac1a6522d83#egg=yawf-dev
+zope.interface==4.0.5

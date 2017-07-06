@@ -7,7 +7,7 @@ from lite_mms.models import Order, WorkCommand, SubOrder
 from lite_mms import constants
 
 class CategoryFilter(filters.BaseFilter):
-    
+
     UNDISPATCHED_ONLY = 1
     DELIVERABLE_ONLY = 2
     ACCOUNTABLE_ONLY = 3
@@ -46,11 +46,11 @@ class CategoryFilter(filters.BaseFilter):
                     models.SubOrder.work_command_list.any(
                         models.WorkCommand.status != constants.work_command
                         .STATUS_FINISHED)))
-                
+
 
         return query
 
-category_filter = CategoryFilter("category", name=u"是", options=[(CategoryFilter.UNDISPATCHED_ONLY, u"仅展示待下发订单"), 
+category_filter = CategoryFilter("category", name=u"是", options=[(CategoryFilter.UNDISPATCHED_ONLY, u"仅展示待下发订单"),
         (CategoryFilter.DELIVERABLE_ONLY, u"仅展示可发货订单"), (CategoryFilter.ACCOUNTABLE_ONLY, u"仅展示可盘点订单")],
         hidden=True)
 
@@ -61,5 +61,13 @@ def only_finished_filter_test(col):
                                 constants.work_command.STATUS_LOCKED}
     return col.any(or_(SubOrder.work_command_list.any(WorkCommand.status.in_(manufacturing_status_set)), SubOrder.remaining_quantity>0))
 
-only_unfinished_filter = filters.Only('sub_order_list', display_col_name=u'仅展示未生产完毕订单', test=only_finished_filter_test, notation='__unfinished_only')
+only_unfinished_filter = filters.Only(
+    'sub_order_list', display_col_name=u'仅展示未生产完毕订单',
+    test=only_finished_filter_test, notation='__unfinished_only'
+)
 
+class NotContains(filters.BaseFilter):
+    __notation__ = "__not_contains"
+    __operator__ = lambda self, attr, value: ~attr.like(value.join(["%", "%"]))
+
+no_individual = NotContains(u'goods_receipt.customer.name', value=u'个体')

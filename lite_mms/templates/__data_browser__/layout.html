@@ -25,7 +25,10 @@
         $(".flash").fadeOut("slow")
       }, 3000);
       function my_matcher(term, text) {
-        return pinyin.getCamelChars(text).toUpperCase().indexOf(term.toUpperCase()) >= 0;
+        term = term.toUpperCase();
+        abbr = pinyin.getCamelChars(text).toUpperCase();
+        text = text.toUpperCase();
+        return text.indexOf(term) >= 0 || abbr.indexOf(term) >= 0;
       }
 
       if ($("select").data("select2") == undefined || $("select").data("select2") == null) {

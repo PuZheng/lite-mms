@@ -5,7 +5,8 @@
 from collections import OrderedDict
 from datetime import date
 
-from flask import request, url_for, render_template, abort, flash, redirect, json
+from flask import (request, url_for, render_template, abort, flash, redirect,
+                   json, current_app)
 from flask.ext.login import current_user, login_required
 from flask.ext.principal import PermissionDenied, Permission
 from flask.ext.databrowser import ModelView, filters
@@ -17,8 +18,8 @@ from lite_mms import constants
 from lite_mms.portal.order import order_page
 from lite_mms.utilities import decorators
 from lite_mms.permissions import SchedulerPermission, CargoClerkPermission
-from lite_mms.models import Order, SubOrder, Product
-from lite_mms.portal.order.filters import category_filter, only_unfinished_filter
+from lite_mms.models import Order, SubOrder, Product, Customer
+from lite_mms.portal.order.filters import category_filter, only_unfinished_filter, no_individual
 
 
 class OrderModelView(ModelView):
@@ -35,13 +36,17 @@ class OrderModelView(ModelView):
 
     def __list_filters__(self):
         if SchedulerPermission.can():
-            return [filters.EqualTo("finish_time", value=None),
-                    filters.EqualTo("refined", value=True),
-                    filters.EqualTo("dispatched", value=True),
-                    only_unfinished_filter
+            ret = [
+                filters.EqualTo("finish_time", value=None),
+                filters.EqualTo("refined", value=True),
+                filters.EqualTo("dispatched", value=True),
+                only_unfinished_filter,
             ]
         else:
-            return []
+            ret = []
+        if current_app.config['HIDE_INDIVIDUAL']:
+            ret.append(no_individual)
+        return ret
 
     __list_columns__ = ["id", "customer_order_number", "goods_receipt.customer", "net_weight", "remaining_weight",
                         PlaceHolderColumnSpec(col_name="manufacturing_work_command_list", label=u"生产中重量",
@@ -90,10 +95,19 @@ class OrderModelView(ModelView):
         yesterday = today.date()
         week_ago = (today - timedelta(days=7)).date()
         _30days_ago = (today - timedelta(days=30)).date()
-        ret = [filters.EqualTo("goods_receipt.customer", name=u"是"),
-               filters.BiggerThan("create_time", name=u"在", options=[
-                   (yesterday, u'一天内'), (week_ago, u'一周内'), (_30days_ago, u'30天内')]),
-               category_filter]
+        ret = [
+            filters.EqualTo(
+                "goods_receipt.customer", name=u"是",
+                options=(
+                    [(i.id, i.name) for i in Customer.query.all() if u'个体' not in i.name] if
+                    current_app.config['HIDE_INDIVIDUAL'] else
+                    [(i.id, i.name) for i in Customer.query.all()]
+                )
+            ),
+            filters.BiggerThan("create_time", name=u"在", options=[
+                (yesterday, u'一天内'), (week_ago, u'一周内'), (_30days_ago, u'30天内')]),
+            category_filter
+        ]
         if not SchedulerPermission.can():
             ret.append(only_unfinished_filter)
         return ret

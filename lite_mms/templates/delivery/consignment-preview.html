@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block __data_browser__custom_external_block %}
   <link rel="stylesheet" href="{{ url_for('static', filename="css/customer.css") }}" media="print">
-  <script type="text/javascript" src="{{ url_for("static", filename="js/jquery-printarea.js") }}"></script>
+  <script type="text/javascript" src="{{ url_for("static", filename="js/print-area.js") }}"></script>
   <script type="text/javascript">
     $(function () {
       $("#print").click(function () {
@@ -14,13 +14,13 @@
                 $.post("/delivery/ajax/consignment", {id:{{ consignment.id}}}).error(function (data) {
                   $("button").attr("disabled", false);
                   if (confirm(data.responseText + "，继续打印？")) {
-                    $("#printArea").printArea();
+                    printArea(document.querySelector('#printArea'));
                   }
                 }).success(function () {
-                      $("#printArea").printArea();
-                    });
+                  printArea(document.querySelector('#printArea'));
+                });
               {% else %}
-                $("#printArea").printArea();
+                printArea(document.querySelector('#printArea'));
               {% endif %}
 
             {% endif %}

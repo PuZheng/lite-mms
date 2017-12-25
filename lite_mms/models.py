@@ -703,7 +703,7 @@ class Consignment(db.Model):
     __tablename__ = "TB_CONSIGNMENT"
 
     id = db.Column(db.Integer, primary_key=True)
-    consignment_id = db.Column(db.String(15), unique=True)
+    consignment_id = db.Column(db.String(15))
     delivery_session_id = db.Column(db.Integer,
                                     db.ForeignKey("TB_DELIVERY_SESSION.id"))
     delivery_session = db.relationship("DeliverySession",

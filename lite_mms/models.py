@@ -272,7 +272,7 @@ class GoodsReceipt(db.Model):
     __tablename__ = "TB_GOODS_RECEIPT"
 
     id = db.Column(db.Integer, primary_key=True)
-    receipt_id = db.Column(db.String(15), unique=True)
+    receipt_id = db.Column(db.String(20), unique=True)
     customer_id = db.Column(db.Integer, db.ForeignKey('TB_CUSTOMER.id'))
     customer = db.relationship(Customer)
     unload_session_id = db.Column(db.Integer,
@@ -293,8 +293,7 @@ class GoodsReceipt(db.Model):
         self.receipt_id = self.id_generator()
 
     def id_generator(self):
-        return self.create_time.strftime('%Y%m%d%H%M%S') + \
-               str((self.unload_session.id + self.customer.id) % 100)[0]
+        return self.create_time.strftime('%Y%m%d%H%M%S%f')
 
     def __unicode__(self):
         return self.receipt_id
@@ -703,7 +702,7 @@ class Consignment(db.Model):
     __tablename__ = "TB_CONSIGNMENT"
 
     id = db.Column(db.Integer, primary_key=True)
-    consignment_id = db.Column(db.String(15))
+    consignment_id = db.Column(db.String(20), unique=True)
     delivery_session_id = db.Column(db.Integer,
                                     db.ForeignKey("TB_DELIVERY_SESSION.id"))
     delivery_session = db.relationship("DeliverySession",
@@ -728,8 +727,7 @@ class Consignment(db.Model):
         self.consignment_id = self.id_generator()
 
     def id_generator(self):
-        return self.create_time.strftime('%Y%m%d%H%M%S') + \
-               str((self.delivery_session.id + self.customer.id) % 100)[0]
+        return self.create_time.strftime('%Y%m%d%H%M%S%f')
 
     def __unicode__(self):
         return unicode(self.consignment_id)

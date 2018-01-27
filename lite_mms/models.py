@@ -330,7 +330,7 @@ class Order(db.Model):
     __tablename__ = "TB_ORDER"
 
     id = db.Column(db.Integer, primary_key=True)
-    customer_order_number = db.Column(db.String(15), unique=True)
+    customer_order_number = db.Column(db.String(20), unique=True)
     goods_receipt_id = db.Column(db.Integer,
                                  db.ForeignKey('TB_GOODS_RECEIPT.id'))
     create_time = db.Column(db.DateTime)
